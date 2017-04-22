@@ -3,6 +3,11 @@ switch/static/
 switch/media/
 *.sw[nop]
 switch/media.bkp/
+.idea/
+
+
+
+
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template
 # Byte-compiled / optimized / DLL files
