@@ -252,6 +252,8 @@ class Wrappers:
         params = {}
         params['rows'] = []
         params['cols'] = []
+        max_id = 0
+        min_id = 0
 
 
         try:
@@ -366,12 +368,16 @@ class Wrappers:
 
                 report_list = report_list.annotate(**kwargs)
 
+            trans = report_list.aggregate(max_id=Max('id'), min_id=Min('id'))
+            max_id = trans.get('max_id')
+            min_id = trans.get('min_id')
+
             #Set Data
             params['rows'] = report_list
 
         except Exception, e:
             lgr.info('Error on report: %s' % e)
-        return params
+        return params,max_id,min_id
 
     def balance(self, payload, gateway_profile, profile_tz, data):
         params = {}
@@ -856,7 +862,7 @@ class System(Wrappers):
                     elif d.query not in ['', None]:
                         lgr.info('Is a Query: ')
                         try:
-                            params = self.report(payload, gateway_profile, profile_tz, d)
+                            params,max_id,min_id = self.report(payload, gateway_profile, profile_tz, d)
                             cols = params['cols'] if 'cols' in params.keys() else []
                             rowsParams = params['rows'] if 'rows' in params.keys() else []
                             for item in rowsParams:
