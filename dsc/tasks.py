@@ -254,6 +254,7 @@ class Wrappers:
         params['cols'] = []
         max_id = 0
         min_id = 0
+        ct = 0
 
 
         try:
@@ -368,7 +369,7 @@ class Wrappers:
 
                 report_list = report_list.annotate(**kwargs)
 
-            params['count'] = report_list.count()
+            ct = report_list.count()
 
             if 'max_id' in payload.keys() and payload['max_id'] > 0:
                 report_list = report_list.filter(id__lt=payload['max_id'])
@@ -386,7 +387,7 @@ class Wrappers:
 
         except Exception, e:
             lgr.info('Error on report: %s' % e)
-        return params,max_id,min_id
+        return params,max_id,min_id,ct
 
     def balance(self, payload, gateway_profile, profile_tz, data):
         params = {}
@@ -820,6 +821,7 @@ class System(Wrappers):
             data = []
             min_id = 0
             max_id = 0
+            t_count = 0
             gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
             profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
 
@@ -871,7 +873,7 @@ class System(Wrappers):
                     elif d.query not in ['', None]:
                         lgr.info('Is a Query: ')
                         try:
-                            params,max_id,min_id = self.report(payload, gateway_profile, profile_tz, d)
+                            params,max_id,min_id,t_count = self.report(payload, gateway_profile, profile_tz, d)
                             cols = params['cols'] if 'cols' in params.keys() else []
                             rowsParams = params['rows'] if 'rows' in params.keys() else []
                             for item in rowsParams:
@@ -2318,6 +2320,7 @@ class System(Wrappers):
                 'data': data,
                 'min_id': min_id,
                 'max_id': max_id,
+                'row_count': t_count,
             }
             payload['response_status'] = '00'
         except Exception, e:
