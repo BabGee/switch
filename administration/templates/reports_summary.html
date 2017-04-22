@@ -1,0 +1,79 @@
+{% extends "base_pages.html" %}
+{% load staticfiles %}
+{% load interface_tags %}
+{% block page_header %}
+Reports Summary
+{% endblock %}
+{% block jumbo %}
+<div class="row" ng-controller="profileCtrl" id="printcontent">
+     <pre id="removecontent"> <input type="button" class="btn btn-xs btn-primary" style="float: right;" value="Print Reports Summary" onclick="window.print();" id="removecontent" ></input></pre>
+<div class="col-md-6">
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">Panel title </h3>
+            </div>
+            <div class="panel-body" >
+	<div chart-view chartdata="charts.content" charttype="Table" ></div>
+
+            </div>
+          </div><!-- first panel -->
+
+          <div class="panel panel-primary" >
+            <div class="panel-heading">
+              <h3 class="panel-title">Panel title</h3>
+            </div>
+            <div class="panel-body">
+	<div chart-view chartdata="charts.content" charttype="AreaChart" ></div>
+            </div>
+          </div> <!-- second panel -->
+          <div class="panel panel-primary"  >
+            <div class="panel-heading">
+              <h3 class="panel-title">Panel title</h3>
+            </div>
+            <div class="panel-body">
+	<div chart-view chartdata="charts.content" charttype="LineChart" ></div>
+            </div>
+          </div><!-- third panel -->
+          <div class="panel panel-primary"  >
+            <div class="panel-heading">
+              <h3 class="panel-title">Panel title</h3>
+            </div>
+            <div class="panel-body">
+	<div map-view mapdata="charts.content" maptype="Map"  ></div>
+            </div>
+          </div><!-- fourth panel -->
+          </div> <!-- column -->
+
+
+<div class="col-md-6">
+          <div class="panel panel-primary"  >
+            <div class="panel-heading">
+              <h3 class="panel-title">Panel title</h3>
+            </div>
+            <div class="panel-body">
+	<div chart-view chartdata="charts.content" charttype="PieChart" ></div>
+            </div>
+          </div><!-- first panel -->
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">Panel title</h3>
+            </div>
+            <div class="panel-body">
+	<div map-view mapdata="charts.content"  maptype="GeoChart"></div>
+            </div>
+          </div> <!-- second panel -->
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">Panel title</h3>
+            </div>
+            <div class="panel-body">
+	<div chart-view chartdata="charts.content"  charttype="MotionChart"></div> 
+            </div>
+          </div> <!-- third panel -->
+          </div> <!-- column -->
+
+	</div> <!-- row -->
+
+{% endblock %}
+
+

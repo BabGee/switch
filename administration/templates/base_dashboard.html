@@ -1,0 +1,19 @@
+{% extends "base_switch.html" %}
+{% load staticfiles %}
+{% load interface_tags %}
+{% block content %}
+		<div ui-view="dash">
+           {% block dashboard %} 
+	
+		{% endblock %}
+
+		</div>
+{% endblock %}
+	{% block js %}
+	<script src="{% static "js/ang/dashboard_controllers.js" %}" ></script>
+
+	<script src="{% static "js/ang/dashboard_configs.js" %}" ></script>
+	<script src="{% static "js/ang/dashboard_directives.js" %}" ></script>
+	<script src="{% static "js/ang/dashboard_filters.js" %}" ></script>
+	{% endblock %}
+

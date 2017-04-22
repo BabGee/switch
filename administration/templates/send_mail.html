@@ -1,0 +1,314 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>InterIntel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href='http://fonts.googleapis.com/css?family=Raleway:400,600' rel='stylesheet' type='text/css'>
+  <style type="text/css">
+
+	.main_container{
+		width: 850px;
+		height: 100%;
+		background: #ffffff;
+		overflow: hidden;
+		margin: 100px auto 0 auto;
+		box-shadow: 0 0 7px #cdcccc;
+	}
+
+    
+    html{
+        width: 100%; 
+    }
+
+	body{
+        width: 100%;  
+        margin:0; 
+        padding:0; 
+        -webkit-font-smoothing: antialiased;
+        mso-margin-top-alt:0px; 
+        mso-margin-bottom-alt:0px; 
+        mso-padding-alt: 0px 0px 0px 0px;
+        background: #E7E7E7;
+    }
+    
+    p,h1,h2,h3,h4{
+        margin-top:0;
+		margin-bottom:0;
+		padding-top:0;
+		padding-bottom:0;
+    }
+    
+    table{
+        font-size: 14px;
+        border: 0;
+    }
+
+    img{
+    	border: none!important;
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0;">
+	<div class="main_container">
+		<!--  Header #003e55 -->
+		<table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="{{payload.default_color}}" background="img/hero_gradient.jpg" style="height:450px; background-image: url('img/hero_gradient.jpg'); background-size: cover; -webkit-background-size: cover; -moz-background-size: cover -o-background-size: cover; background-position: 50% 50%; background-repeat: no-repeat;">
+		  <tr>
+		   <td>
+
+			   	<table width="600" cellpadding="0" cellspacing="0" align="center" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
+			   		<tbody>
+						<tr>
+							<td width="100%" height="100"></td>
+						</tr>
+
+			   			<tr>
+			   				<td>
+			   					<!--  Logo  -->
+								<!--
+			   					<table border="0" align="left" cellpadding="0" cellspacing="0" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
+			   						<tbody>
+			   							<tr>
+			   								<td>
+			   									<a href="#"><img src="https://www.interintel.org/images/INTERINTEL-OFFICIAL-LOGO.png" alt="Logo" border="0" style="display: block;max-width:100px;max-heght:100px;"/> </a>
+			   								</td>
+			   							</tr>
+			   						</tbody>
+			   					</table>
+								-->
+			   					<!--  navigation menu  -->
+								<!--
+			   					<table border="0" align="right" cellpadding="0" cellspacing="0" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
+			   						<tbody>
+			   							<tr>
+			   								<td height="8"></td>
+			   							</tr>
+
+			   							<tr>
+			   								<td style="color: #fff; font-family: 'Raleway', arial; font-weight:600; font-size: 14px; letter-spacing:0.5px;">
+		   										<a href="#" style="color: #fff; text-decoration:none;">About</a>
+		   										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		   										<a href="#" style="color: #fff; text-decoration:none;">Team</a>
+		   										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		   										<a href="#" style="color: #fff; text-decoration:none;">News</a>
+		   										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		   										<a href="#" style="color: #fff; text-decoration:none;">Contact</a>
+			   								</td>
+			   							</tr>
+			   						</tbody>
+			   					</table>
+								-->
+			   				</td>
+			   			</tr>
+			   			<tr>
+			   				<td style="text-align:center; color: #fff; font-family: 'Raleway', arial; font-weight:600; font-size: 36px; text-transform:uppercase; letter-spacing:3px;">{{payload.name}}</td>
+			   			</tr>
+								<tr>
+									<td width="100%" height="20"></td>
+								</tr>
+								<tr>
+									<!--  testimonial  -->
+									<td align="center" style="color: #8a8a8a; font-family: 'Raleway', arial; font-size: 18px; line-height:28px;">
+<div>Hi {{payload.first_name}}. </div>
+<div>Your account has been created. </div>
+<div>To Login, go to <a style="color:#fff;" href="http://{{payload.gateway_host}}">{{payload.gateway_host}}</a></div>
+<div>Your username is <i style="color:#fff;">{{payload.username}}</i></div>
+<div>Please click the button/link below to set your password.</div>
+<div style="width:100%;height:20px;">
+    <a style="text-decoration: none;height:60px;padding: 10px 15px;background: #4479BA;color: #FFF;-webkit-border-radius: 4px;-moz-border-radius: 4px;border-radius: 4px;border: solid 1px #20538D;text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);-webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);-moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);"href="{{main_url}}" target="_blank">Set Password</a>
+</div>
+									</td>
+								</tr>
+								<tr>
+									<td width="100%" height="100"></td>
+								</tr>
+							</tbody>
+						</table>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<!-- Blog -->
+
+
+		<!-- Services -->
+	<table width="600" align="center"  cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
+			<tbody>
+
+				<tr>
+					<td width="100%" height="100"></td>
+				</tr>
+				<tr>
+					<td>
+
+						<table width="390" align="left" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
+							<tbody>
+								<tr>
+									<td>
+
+										<!--  Service1  -->
+										<!--
+										<table width="180" align="left" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
+											<tbody>
+												<tr>
+													<td align="center">
+														<img src="img/s1.png" alt="Service 1" border="0" style="display: block;"/>
+													</td>
+												</tr>
+												<tr>
+													<td width="100%" height="40"></td>
+												</tr>
+												<tr>
+													<td align="center" style="color: #545454; font-family: 'Raleway', arial; font-weight:600; font-size: 16px; text-transform:uppercase;">Massa quis enim</td>
+												</tr>
+												<tr>
+													<td width="100%" height="30"></td>
+												</tr>
+												<tr>
+													<td align="center" style="color: #8a8a8a; font-family: 'Raleway'; font-size: 14px; line-height:22px;">Aenean commodo ligula eget dolor enean massa. Cum sociis natoque penati bus et magnis.</td>
+												</tr>
+											</tbody>
+										</table>
+										-->
+										<!--  Service2  -->
+										<!--
+										<table width="180" align="right"  cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
+											<tbody>
+												<tr>
+													<td align="center">
+														<img src="img/s2.png" alt="Service 1" border="0" style="display: block;"/>
+													</td>
+												</tr>
+												<tr>
+													<td width="100%" height="40"></td>
+												</tr>
+												<tr>
+													<td align="center" style="color: #545454; font-family: 'Raleway', arial; font-weight:600; font-size: 16px; text-transform:uppercase;">pede vel pretium</td>
+												</tr>
+												<tr>
+													<td width="100%" height="30"></td>
+												</tr>
+												<tr>
+													<td align="center" style="color: #8a8a8a; font-family: 'Raleway'; font-size: 14px; line-height:22px;">Aenean commodo ligula eget dolor enean massa. Cum sociis natoque penati bus et magnis.</td>
+												</tr>
+											</tbody>
+										</table>
+										-->
+									</td>
+								</tr>
+							</tbody>
+						</table>
+
+						<!--  Service3  -->
+						<!--
+						<table width="180" align="right" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
+							<tbody>
+								<tr>
+									<td align="center">
+										<img src="img/s3.png" alt="Service 1" border="0" style="display: block;"/>
+									</td>
+								</tr>
+								<tr>
+									<td width="100%" height="40"></td>
+								</tr>
+								<tr>
+									<td align="center" style="color: #545454; font-family: 'Raleway', arial; font-weight:600; font-size: 16px; text-transform:uppercase;">ligula eget dolor</td>
+								</tr>
+								<tr>
+									<td width="100%" height="30"></td>
+								</tr>
+								<tr>
+									<td align="center" style="color: #8a8a8a; font-family: 'Raleway'; font-size: 14px; line-height:22px;">Aenean commodo ligula eget dolor enean massa. Cum sociis natoque penat ibus et magnis.</td>
+								</tr>
+							</tbody>
+						</table>
+						-->
+					</td>
+				</tr>
+				<tr>
+					<td width="100%" height="100"></td>
+				</tr>
+			</tbody>
+		</table>
+
+		<!-- Services -->
+
+		<!-- Footer -->
+		<!--  footer  -->
+		<table width="100%" bgcolor="{{payload.default_color}}" cellpadding="0" border="0" cellspacing="0" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
+			<tbody>
+				<tr>
+					<td>
+						<table width="600" align="center" cellpadding="0" border="0" cellspacing="0" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
+							<tbody>
+								<tr>
+									<td width="100%" height="40px"></td>
+								</tr>
+								<tr>
+									<td>
+										<!--  footer logo  -->
+										<!--
+										<table  align="left" cellpadding="0" border="0" cellspacing="0" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
+											<tbody>
+												<tr>
+													<td><a href="#"><img src="https://www.interintel.org/images/INTERINTEL-OFFICIAL-LOGO.png" alt="Logo" border="0" style="display: block;max-width:100px;max-heght:100px;"/> </a></td>
+
+													<td width="20"></td>
+													<td>
+														<table cellpadding="0" border="0" cellspacing="0" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
+															<tr>
+																<td width="100%" height="16"></td>
+															</tr>
+															<tr>
+																<td style="color: #fff; font-family: 'Raleway'; font-size: 12px;">All rights reserved</td>
+															</tr>
+														</table>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+										-->
+										<!--  footer social media  -->
+										<!--
+										<table align="right" cellpadding="0" border="0" cellspacing="0" style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;">
+											<tbody>
+												<tr>
+													<td width="100%" height="8"></td>
+												</tr>
+												<tr>
+													<td>
+														<a href="#"><img src="img/facebook.png" alt="facebook" border="0"/></a>
+														&nbsp;&nbsp;&nbsp;&nbsp;
+														<a href="#"><img src="img/twitter.png" alt="twitter" border="0"/></a>
+														&nbsp;&nbsp;&nbsp;&nbsp;
+														<a href="#"><img src="img/google+.png" alt="google+" border="0"/></a>
+														&nbsp;&nbsp;&nbsp;&nbsp;
+														<a href="#"><img src="img/dribbble.png" alt="dribbble" border="0"/></a>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+										-->
+									</td>
+								</tr>
+								<tr>
+									<td width="100%" height="40px"></td>
+								</tr>
+							</tbody>
+						</table>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+		<!-- Footer -->
+
+
+	</div><!-- /. main_container-->
+
+	<p style="text-align:center; margin: 50px 0; color: #6B6B6B; font-size:13px; font-family: 'Raleway', arial; font-weight:600;">&copy; {%now "Y"%}. <a href="http://interintel.co.ke" style="color:#3f3f3f; text-decoration:none;">InterIntel</a> </p>
+
+</body>
+</html>

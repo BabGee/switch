@@ -1,0 +1,289 @@
+{% load staticfiles %}
+{% load interface_tags %}
+      <div class="jumbotron">
+       <div class="page-header" id="printcontent"> 
+		<h4>
+		{% block page_header %}
+
+		My Profile
+
+		{% endblock %}
+		</h4>
+	</div>
+
+			<div class="row" ng-controller="profileCtrl">
+			{% for key, value in payload.response.get_interface.this_page_inputs|page_inputs %}
+<!-- <div my-interface info="interface" response="response"></div> -->
+			<div  class="col-md-4" ng-show="!interface" id="removecontent">
+{% verbatim %}
+<div class="progress" ng-if="dynamic>0">
+    <progressbar class="progress-striped active" value="dynamic" type="{{type}}">{{dynamic}}% Loaded <i ng-show="showWarning">!!! Watch out !!!</i></progressbar>
+      </div>
+{% endverbatim%}
+		          <ul class="list-group" >
+
+                                <form ng-submit="submitForm(payload)" ng-init='payload={ csrf_token: "{{ csrf_token }}", SERVICE: "{{ value.input_var.4 }}" }' class="form-inline" role="form" >
+				{% verbatim %}
+				<div class="alert alert-info" role="alert"   ng-repeat="(key, value) in response" ng-show="value|notObject">
+					<span><strong style="text-transform: capitalize;">{{ key|splitJoin }}</strong> &nbsp;{{ value}}</span>
+				      </div>
+				{% endverbatim %}
+
+				{% for keyiz, values in value.items|sort %}
+					{% if keyiz != 'input_var' %}
+						{% if values.1 == 'TEXT INPUT' %}
+							<li class="list-group-item">
+							<div class="input-group">
+							<div class="input-group-addon">
+							<i
+								{% if values.0 == 'FIRST NAME' or values.0 == 'LAST NAME' or values.0 == 'MIDDLE NAME' %} class="glyphicon glyphicon-user"
+								{% elif values.0 == 'NATIONALITY' %} class="glyphicon glyphicon-globe" {% endif %}
+							></i>
+							</div>
+				        	        <input type="text" ng-model="payload['{{values.0}}']" class="form-control" name="{{ values.0 }}" placeholder="{{ values.4 }}" {% if values.2|add:"0" > 0 %} required {% endif %}  />
+							</div>
+							</li>
+
+						{% elif values.1 == 'TEXT AREA' %}
+							<li class="list-group-item">
+							<div class="input-group">
+							<div class="input-group-addon">
+							<i
+								{% if values.0 == 'FIRST NAME' or values.0 == 'LAST NAME' %} class="glyphicon glyphicon-user"
+								{% elif values.0 == 'NATIONALITY' %} class="glyphicon glyphicon-globe" {% endif %}
+							></i>
+							</div>
+				        	        <textarea rows="3" ng-model="payload['{{values.0}}']" class="form-control" name="{{ values.0 }}" placeholder="{{ values.4 }}" {% if values.2 > 0 %} required {% endif %}  />								</textarea>
+							</div>
+							</li>
+						{% elif values.1 == 'NUMBER INPUT' %}
+							<li class="list-group-item">
+							<div class="input-group">
+							<div class="input-group-addon">
+							<i class="glyphicon glyphicon-calc"></i>
+							</div>
+				        	        <input type="number" ng-model="payload['{{values.0}}']" class="form-control" name="{{ values.0 }}" placeholder="{{ values.4 }}" {% if values.2 > 0 %} required {% endif %} step="any" />
+							</div>
+							</li>
+						{% elif values.1 == 'EMAIL INPUT' %}
+							<li class="list-group-item">
+							<div class="input-group">
+							<div class="input-group-addon">
+							<i class="glyphicon glyphicon-envelope"></i>
+							</div>
+				        	        <input type="email" ng-model="payload['{{values.0}}']" class="form-control" name="{{ values.0 }}" placeholder="{{ values.4 }}" {% if values.2 > 0 %} required {% endif %}  />
+							</div>
+							</li>
+						{% elif values.1 == 'SELECT' %}
+							<li class="list-group-item">
+							<div class="input-group">
+							<div class="input-group-addon">
+					                <i {% if values.0 == 'GENDER' %} class="glyphicon glyphicon-circle-arrow-left" {% endif %}></i>
+							</div>
+							<select ng-model="payload['{{values.0}}']" name="{{ values.0 }}" class="form-control" {% if values.2 > 0 %} required {% endif %} >
+							<option value="" selected>{{ values.0 }}</option>
+								{% for k,v in values.4.items|sort %}
+								  <option value="{{ k }}">{{ v }}</option>
+								{% endfor %}
+							</select>
+							</div>
+							</li>
+						{% elif values.1 == 'DATE' %}
+							<li class="list-group-item">
+							<label>{{ values.4| title }}</label>
+						        <div class="input-group" ng-controller="DatePickerCtrl" ng-init="payload['{{values.0}}']=dt;" >
+							<div class="input-group-addon">
+							<i class=""></i>
+							</div>
+						              <input type="text" class="form-control" datepicker-popup="yyyy-MM-dd" is-open="opened" min-date="mindate" max-date="maxdate" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="false" close-text="Close" ng-model="payload['{{values.0}}']" name="{{ values.0 }}" placeholder="{{ values.4 }}" {% if values.2 > 0 %} required {% endif %} />
+						              <span class="input-group-btn">
+					                <button type="button" class="btn btn-default" ng-click="open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+					              </span>
+						        </div>
+							</li>
+
+						{% elif values.1 == 'PASSWORD INPUT' %}
+							<div class="input-group">
+							<div class="input-group-addon">
+								<i class="glyphicon glyphicon-lock"></i>
+							</div>
+
+					                <input type="password"  ng-model="payload['{{values.0}}']"  class="form-control" name="{{ values.0 }}" placeholder="{{ values.4 }}" {% if values.2 > 0 %} required {% endif %}  />
+
+					               </div> 
+							</li>
+						{% elif values.1 == 'CHECKED RADIO' %}
+							<li class="list-group-item">
+					                <input type="radio" ng-model="payload['{{values.0}}']"  class="form-control" name="{{ values.0 }}" placeholder="{{ values.4 }}" value="{{ values.4 }}" {% if values.2 > 0 %} required {% endif %} checked  />
+							<span> {{ values.4 }} </span><br>
+							<br>
+						{% elif values.1 == 'RADIO' %}
+					                <input type="radio" ng-model="payload['{{values.0}}']"  class="form-control" name="{{ values.0 }}" placeholder="{{ values.4 }}" value="{{ values.4 }}" {% if values.2 > 0 %} required {% endif %}  />
+							<span> {{ values.4 }} </span><br>
+							<br>
+						{% elif values.1 == 'HYPERLINK' %}
+					                <a href="{{ values.4 }}" class="signIn_link" style="color:#2869af; font-weight:600;">{{ values.0 }}</a>
+							</li>
+						{% elif values.1 == 'SUBMIT' %}
+							<li class="list-group-item">
+					                <input type="submit" value="{{ values.4 }}"  class="btn btn-primary" name="{{ values.0 }}" >
+							</li>
+						{% endif %}
+
+					{% endif %}
+				{% endfor %}
+
+			        </form>
+			</ul>
+			<br>
+			</div>
+			{% endfor %}
+
+			{% verbatim %}
+			<div class="col-md-4"  ng-repeat="(keys, values) in interface" id="removecontent">
+		          <ul class="list-group" >
+
+                                <form ng-submit="submitForm(payload)" ng-init='payload={ SERVICE: values.input_var.4 }' class="form-inline" role="form" >
+				<div class="alert alert-info" role="alert"  ng-repeat="(key, value) in response" ng-show="value|notObject">
+					<span><strong style="text-transform: capitalize;">{{ key|splitJoin }}</strong> &nbsp;{{ value}}</span>
+				      </div>
+				<div ng-repeat="(key, value) in values">
+					<div ng-show="key!=input_var">	
+                                                        <div ng-if="value.1=='HIDDEN'" ng-init="payload[value.0]=value.4;"></div>
+							<li class="list-group-item" ng-if="value.1 == 'TEXT INPUT'">
+							<div class="input-group">
+							<div class="input-group-addon">
+							<i ng-if="value.0 == 'FIRST NAME' || value.0 == 'LAST NAME' || value.0 == 'MIDDLE NAME'" class="glyphicon glyphicon-user"></i>
+							<i ig-if="value.0 == 'NATIONALITY'" class="glyphicon glyphicon-globe"></i>
+							</div>
+				        	        <input type="text" ng-model="payload[value.0]" class="form-control" name="{{ value.0 }}" placeholder="{{ value.4 }}"  ng-minlength="{{value.2}}" ng-maxlength="{{value.3}}" ng-required="{{value.2|isRequired}}" />
+							</div>
+							</li>
+
+							<li class="list-group-item" ng-if="value.1 == 'TEXT AREA'">
+							<div class="input-group">
+							<div class="input-group-addon">
+							<i ng-if="value.0 == 'FIRST NAME' || value.0 == 'LAST NAME' || value.0 == 'MIDDLE NAME'" class="glyphicon glyphicon-user"></i>
+							<i ig-if="value.0 == 'NATIONALITY'" class="glyphicon glyphicon-globe"></i>
+							</div>
+				        	        <textarea rows="3" ng-model="payload[value.0]" class="form-control" name="{{ value.0 }}" placeholder="{{ value.4 }}"   ng-minlength="{{value.2}}" ng-maxlength="{{value.3}}" ng-required="{{value.2|isRequired}}">	</textarea>
+							</div>
+							</li>
+
+							<li class="list-group-item" ng-if="value.1 == 'NUMBER INPUT'">
+							<label>{{ value.4 }}</label>
+							<div class="input-group">
+							<div class="input-group-addon">
+							<i class="glyphicon glyphicon-calc"></i>
+							</div>
+				        	        <input type="number" ng-model="payload[value.0]" class="form-control" name="{{ value.0 }}" placeholder="Please Enter a Number!"  ng-minlength="{{value.2}}" ng-maxlength="{{value.3}}" ng-required="{{value.2|isRequired}}" step="any"/>
+							</div>
+							</li>
+
+							<li class="list-group-item" ng-if="value.1 == 'EMAIL INPUT'">
+							<div class="input-group">
+							<div class="input-group-addon">
+							<i class="glyphicon glyphicon-envelope"></i>
+							</div>
+				        	        <input type="email" ng-model="payload[value.0]" class="form-control" name="{{ value.0 }}" placeholder="value.4"  ng-minlength="{{value.2}}" ng-maxlength="{{value.3}}" ng-required="{{value.2|isRequired}}"/>
+							</div>
+							</li>
+
+							<li class="list-group-item" ng-if="value.1 == 'SELECT'" >
+							<div class="input-group">
+							<div class="input-group-addon">
+					                <i ng-if="value.0 == 'GENDER'" class="glyphicon glyphicon-circle-arrow-left" ></i>
+							</div>
+							<select ng-model="payload[value.0]" name="value.0" class="form-control"  ng-minlength="{{value.2}}" ng-maxlength="{{value.3}}" ng-required="{{value.2|isRequired}}" >
+							<option value="" selected>{{ value.0 }}</option>
+								  <option ng-repeat="(k,v) in value.4" value="{{k}}">{{v}}</option>
+							</select>
+							</div>
+							</li>
+
+							<li class="list-group-item" ng-if="value.1 == 'DATE'" >
+							<label>{{ value.4}}</label>
+						        <div class="input-group" ng-controller="DatePickerCtrl" ng-init="payload.{{ value.0 }}=dt;" >
+							<div class="input-group-addon">
+							<i class=""></i>
+							</div>
+						              <input type="text" class="form-control" datepicker-popup="yyyy-MM-dd" is-open="opened" ng-minlength-date="'1900-01-01'" max-date="'2015-06-22'" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="false" close-text="Close" ng-model="payload[value.0]" name="value.0" placeholder="value.4"  ng-minlength="{{value.2}}" ng-maxlength="{{value.3}}" ng-required="{{value.2|isRequired}}"/>
+						              <span class="input-group-btn">
+					                <button type="button" class="btn btn-default" ng-click="open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+					              </span>
+						        </div>
+							</li>
+
+							<div class="input-group" ng-if="value.1 == 'PASSWORD INPUT'" >
+							<div class="input-group-addon">
+								<i class="glyphicon glyphicon-lock"></i>
+							</div>
+
+					                <input type="password"  ng-model="payload[value.0]"  class="form-control" name="value.0" placeholder="value.4"  ng-minlength="{{value.2}}" ng-maxlength="{{value.3}}" ng-required="{{value.2|isRequired}}"/>
+
+					               </div> 
+							</li>
+
+							<li class="list-group-item" ng-if="value.1 == 'CHECKED RADIO'" >
+					                <input type="radio" ng-model="payload[value.0]"  class="form-control" name="value.0" placeholder="value.4" value="value.4" checked   ng-minlength="{{value.2}}" ng-maxlength="{{value.3}}" ng-required="{{value.2|isRequired}}"/>
+							<span> {{ value.4 }} </span><br>
+							<br>
+							</li>
+							<li ng-if="value.1 == 'RADIO'">
+					                <input type="radio" ng-model="payload[value.0]"  class="form-control" name="value.0" placeholder="value.4" value="value.4"   ng-minlength="{{value.2}}" ng-maxlength="{{value.3}}" ng-required="{{value.2|isRequired}}"/>
+							<span> {{ value.4 }} </span><br>
+							</li>
+
+							<li ng-if="value.1 == 'HYPERLINK'">
+					                <a href="{{ value.4 }}" class="signIn_link" style="color:#2869af; font-weight:600;">{{ value.0 }}</a>
+							</li>
+
+							<li class="list-group-item" ng-if="value.1 == 'SUBMIT'">
+					                <input type="submit" value="{{ value.4 }}"  class="btn btn-primary" name="value.0" >
+							</li>
+					</div>
+				</div>
+			        </form>
+			</ul>
+			</div>
+
+<div class="col-md-8" ng-show="filteredContent">
+	<div id="removecontent">
+	<input type="button" class="btn btn-xs btn-primary" value="Print Report" onclick="window.print();"></input>
+	<button class="btn btn-xs btn-primary" ng-csv="content" >Download CSV</button>
+	</div>
+	<div id="printcontent">
+		<h4><small>{{ payload.SERVICE }}</small></h4>
+	</div>
+	<br>
+     <pre id="removecontent">Page: {{bigCurrentPage}} / {{numPages}} & {{content.length}} total records </pre>
+
+	<!-- <input ng-model="q" ng-change="setFilter() id="search" class="form-control" placeholder="Filter text"> -->
+          <table class="table table-striped" id="printcontent">
+            <thead>
+              <tr>
+                <th ng-repeat="head in header">{{ head }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="cont in filteredContent">
+                <td ng-repeat="c in cont track by $index" ng-bind-html="c"></td>
+              </tr>
+            </tbody>
+          </table>
+    <pagination id="removecontent" ng-change="setPage(bigCurrentPage)" items-per-page="numPerPage" total-items="bigTotalItems" ng-model="bigCurrentPage" max-size="maxSize" class="pager pagination-sm" boundary-links="true" rotate="false" num-pages="numPages"></pagination>
+
+</div>
+
+
+			{% endverbatim %}
+
+			<br>
+			</div>
+
+{% block jumbo %}
+
+{% endblock %}
+      </div> <!-- jumbo -->
+
+

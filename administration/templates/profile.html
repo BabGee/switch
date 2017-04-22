@@ -1,0 +1,41 @@
+{% extends "base_pages.html" %}
+{% load staticfiles %}
+{% load interface_tags %}
+{% block page_header %}
+My Profile
+{% endblock %}
+{% block jumbo %}
+
+<div ng-controller="profileCtrl" class="row">
+
+		<div ui-view="editProfile" class="col-md-4">
+          <ul class="list-group">
+	    <li class="list-group-item"><a href="#" ui-sref="profile.editProfile" class="btn btn-sm btn-default" role="button"><i class="glyphicon glyphicon-edit"></i>&nbsp; Edit Profile</a></li>
+	    <li class="list-group-item">
+		<div class="row">
+                <div class="col-sm-5">
+                <img data-src="holder.js/200x200" class="img-thumbnail" alt="200x200" src="{% static "images/INTERINTEL-OFFICIAL-LOGO_TM.png" %}" style="width: 100px; height: 100px;">
+                </div>
+		</div>
+		</li>
+            <li class="list-group-item"><b>Access Level</b> <pre>{{ request.session.access_level|title }}</pre> </li>
+            <li class="list-group-item"><b>Full Names</b><pre>{{ request.session.first_name|title }} {{ request.session.last_name|title }}</pre></li>
+            <li class="list-group-item"><b>Gateway</b><pre> {{ request.session.gateway|title }}</pre></li>
+            <li class="list-group-item"><b>Profile Status</b><pre> {{ request.session.profile_status|title }}</pre></li>
+          </ul>
+		</div>
+
+		<div ui-view="editProfile" class="col-md-4">
+          <ul class="list-group">
+	    <li class="list-group-item"><a href="#" ui-sref="profile.editProfile" class="btn btn-sm btn-default" role="button"><i class="glyphicon glyphicon-edit"></i>&nbsp; Edit Profile</a></li>
+            <li class="list-group-item"><b>MSISDN</b> <pre> </pre> </li>
+            <li class="list-group-item"><b>Nationality</b><pre> </pre></li>
+            <li class="list-group-item"><b>ID NUMBER</b><pre> </pre></li>
+            <li class="list-group-item"><b>Date of Birth</b><pre> </pre></li>
+            <li class="list-group-item"><b>Physical Address</b> <pre></pre> </li>
+            <li class="list-group-item"><b>Country</b><pre></pre></li>
+          </ul>
+		</div>
+</div>
+{% endblock %}
+
