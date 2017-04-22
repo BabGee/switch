@@ -206,7 +206,7 @@ class Wrappers:
 			item['name'] = i['name']
 			item['type'] = i['type']
 			survey = SurveySystem().survey_tally({'institution_id':'42','survey_code':i['code_allocation']},{})
-			item['kind'] = survey['survey'] 
+			item['kind'] = survey['survey']
 			item['description'] = survey['response']
 			item['count'] = survey['survey_tally']
 			params['rows'].append(item)
@@ -239,7 +239,7 @@ class Wrappers:
 			item['name'] = i['name']
 			item['type'] = i['type']
 			survey = SurveySystem().survey_tally({'institution_id':'42','survey_code':i['code_allocation']},{})
-			item['kind'] = survey['survey'] 
+			item['kind'] = survey['survey']
 			item['description'] = survey['response']
 			item['count'] = survey['survey_tally']
 			params['rows'].append(item)
@@ -250,20 +250,20 @@ class Wrappers:
 
     def report(self, payload, gateway_profile, profile_tz, data):
         params = {}
-	params['rows'] = []
-	params['cols'] = []
+        params['rows'] = []
+        params['cols'] = []
 
 
         try:
             model_class = apps.get_model(data.query.module_name, data.query.model_name)
             # model_class = globals()[data.query.model_name]
-            filters = data.query.filters 
-            or_filters = data.query.or_filters 
-            and_filters = data.query.and_filters 
-            institution_filters = data.query.institution_filters 
+            filters = data.query.filters
+            or_filters = data.query.or_filters
+            and_filters = data.query.and_filters
+            institution_filters = data.query.institution_filters
 
-            values = data.query.values 
-            count = data.query.count 
+            values = data.query.values
+            count = data.query.count
 
             filter_data = {}
             or_filter_data = {}
@@ -271,54 +271,51 @@ class Wrappers:
             institution_filter_data = {}
 
             report_list = model_class.objects.all()
-	    if filters not in ['',None]:
-		    kwargs = {}
-		    for i in filters.split("|"):
-			k,v = i.split('%')
-			if k <> v:
-				kwargs[k] = F(v)
-				filter_data[k] = v
-		    if len(filter_data):
-			query = reduce(operator.and_, (Q(k) for k in filter_data.items()))
-			report_list = report_list.filter(query)
+            if filters not in ['',None]:
+                kwargs = {}
+                for i in filters.split("|"):
+                    k,v = i.split('%')
+                    if k <> v:
+                        kwargs[k] = F(v)
+                        filter_data[k] = v
+                if len(filter_data):
+                    query = reduce(operator.and_, (Q(k) for k in filter_data.items()))
+                    report_list = report_list.filter(query)
 
-
-	    #q_list = [Q(**{f:q}) for f in field_lookups]
+            #q_list = [Q(**{f:q}) for f in field_lookups]
 
             if 'q' in payload.keys() and payload['q'] not in ['', None]:
                 # for a in filters.split("&"):
                 for f in or_filters.split("|"):
                     lgr.info('F: %s' % f)
-		    if f not in ['',None]: or_filter_data[f + '__icontains'] = payload['q']
-		if len(or_filter_data):
-	                or_query = reduce(operator.or_, (Q(k) for k in or_filter_data.items()))
-        	        report_list = report_list.filter(or_query)
+                    if f not in ['',None]: or_filter_data[f + '__icontains'] = payload['q']
+                if len(or_filter_data):
+                    or_query = reduce(operator.or_, (Q(k) for k in or_filter_data.items()))
+                    report_list = report_list.filter(or_query)
 
                 for f in and_filters.split("|"):
                     lgr.info('F: %s' % f)
- 		    if f not in ['',None]: and_filter_data[f + '__icontains'] = payload['q']
-		if len(and_filter_data):
-	                and_query = reduce(operator.and_, (Q(k) for k in and_filter_data.items()))
-        	        report_list = report_list.filter(and_query)
+                    if f not in ['',None]: and_filter_data[f + '__icontains'] = payload['q']
+                if len(and_filter_data):
+                    and_query = reduce(operator.and_, (Q(k) for k in and_filter_data.items()))
+                    report_list = report_list.filter(and_query)
 
             if 'institution_id' in payload.keys() and payload['institution_id'] not in ['', None]:
 
                 for f in institution_filters.split("|"):
                     lgr.info('F: %s' % f)
- 		    if f not in ['',None]: institution_filter_data[f + '__id'] = payload['institution_id']
-		if len(institution_filter_data):
-	                institution_query = reduce(operator.and_, (Q(k) for k in institution_filter_data.items()))
-        	        report_list = report_list.filter(institution_query)
+                    if f not in ['',None]: institution_filter_data[f + '__id'] = payload['institution_id']
+                if len(institution_filter_data):
+                    institution_query = reduce(operator.and_, (Q(k) for k in institution_filter_data.items()))
+                    report_list = report_list.filter(institution_query)
 
             elif gateway_profile.institution not in ['', None]:
-
                 for f in institution_filters.split("|"):
                     lgr.info('F: %s' % f)
- 		    if f not in ['',None]: institution_filter_data[f] = gateway_profile.institution
-		if len(institution_filter_data):
-	                institution_query = reduce(operator.and_, (Q(k) for k in institution_filter_data.items()))
-        	        report_list = report_list.filter(institution_query)
-
+                    if f not in ['',None]: institution_filter_data[f] = gateway_profile.institution
+                if len(institution_filter_data):
+                    institution_query = reduce(operator.and_, (Q(k) for k in institution_filter_data.items()))
+                    report_list = report_list.filter(institution_query)
 
             if 'start_date' in payload.keys():
                 try:
@@ -334,6 +331,7 @@ class Wrappers:
                     profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
                     start_date = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
                 report_list = report_list.filter(date_created__gte=start_date)
+
             if 'end_date' in payload.keys():
                 try:
                     date_obj = datetime.strptime(payload["end_date"] + ' 11:59 pm', '%d/%m/%Y %I:%M %p')
@@ -350,30 +348,25 @@ class Wrappers:
                 report_list = report_list.filter(date_created__lte=end_date)
 
             lgr.info('Report List: %s' % values)
-	    args = []
-	    kwargs = {}
-	    for i in values.split('|'):
-		k,v = i.split('%')
-		args.append(k)
-		params['cols'].append({"label": k, "type": "string"})
+            args = []
+            kwargs = {}
+            for i in values.split('|'):
+                k,v = i.split('%')
+                args.append(k)
+                params['cols'].append({"label": k, "type": "string"})
 
-
-
-		if k <> v:
-			kwargs[k] = F(v)
-
+                if k <> v:kwargs[k] = F(v)
             report_list = report_list.annotate(**kwargs).values(*args)
-	    if count not in [None,'']:
-		kwargs = {}
-		for i in count.split('|'):
-			k,v = i.split('%')
-			params['cols'].append({"label": k, "type": "string"})
-			if k <> v:
-				kwargs[k] = Count(v)
+            if count not in [None,'']:
+                kwargs = {}
+                for i in count.split('|'):
+                    k,v = i.split('%')
+                    params['cols'].append({"label": k, "type": "string"})
+                    if k <> v:kwargs[k] = Count(v)
 
-		report_list = report_list.annotate(**kwargs)
+                report_list = report_list.annotate(**kwargs)
 
-	    #Set Data
+            #Set Data
             params['rows'] = report_list
 
         except Exception, e:
