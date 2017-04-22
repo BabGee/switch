@@ -368,6 +368,15 @@ class Wrappers:
 
                 report_list = report_list.annotate(**kwargs)
 
+            params['count'] = report_list.count()
+
+            if 'max_id' in payload.keys() and payload['max_id'] > 0:
+                report_list = report_list.filter(id__lt=payload['max_id'])
+            if 'min_id' in payload.keys() and payload['min_id'] > 0:
+                report_list = report_list.filter(id__gt=payload['min_id'])
+
+            report_list = report_list[:50]
+
             trans = report_list.aggregate(max_id=Max('id'), min_id=Min('id'))
             max_id = trans.get('max_id')
             min_id = trans.get('min_id')
