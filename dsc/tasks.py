@@ -26,8 +26,8 @@ from django.core.files.storage import default_storage
 from django.core.validators import validate_email
 from django.db import IntegrityError
 from django.db import transaction
-from django.db.models import Count, Sum, Max, Min, Avg
-from django.db.models import Q, F
+from django.db.models import Count, Sum, Max, Min, Avg, Q, F, Func, Value, CharField, CharField, Case, Value, When
+from django.db.models.functions import Concat, Substr
 from django.shortcuts import render
 from django.utils import timezone
 from django.utils.timezone import localtime
@@ -44,6 +44,8 @@ from switch.celery import single_instance_task
 from thirdparty.amkagroup_co_ke.models import *
 from thirdparty.bidfather.models import *
 from vbs.models import *
+import numpy as np
+from django.core.paginator import Paginator, EmptyPage, InvalidPage
 
 lgr = logging.getLogger('dsc')
 
@@ -261,17 +263,25 @@ class Wrappers:
             model_class = apps.get_model(data.query.module_name, data.query.model_name)
             # model_class = globals()[data.query.model_name]
             filters = data.query.filters
+            not_filters = data.query.not_filters
             or_filters = data.query.or_filters
             and_filters = data.query.and_filters
             institution_filters = data.query.institution_filters
+            list_filters = data.query.list_filters
 
             values = data.query.values
-            count = data.query.count
+            count_values = data.query.count_values
+            sum_values = data.query.sum_values
+            last_balance = data.query.last_balance
 
+
+	    filter_query = {}
             filter_data = {}
+            not_filter_data = {}
             or_filter_data = {}
             and_filter_data = {}
             institution_filter_data = {}
+	    list_filter_data = {}
 
             report_list = model_class.objects.all()
             if filters not in ['',None]:
@@ -285,22 +295,57 @@ class Wrappers:
                     query = reduce(operator.and_, (Q(k) for k in filter_data.items()))
                     report_list = report_list.filter(query)
 
+            if not_filters not in ['',None]:
+                kwargs = {}
+                for i in not_filters.split("|"):
+                    k,v = i.split('%')
+                    if k <> v:
+                        kwargs[k] = F(v)
+                        not_filter_data[k] = v
+                if len(not_filter_data):
+                    query = reduce(operator.and_, (~Q(k) for k in not_filter_data.items()))
+                    report_list = report_list.filter(query)
+
+
+
             #q_list = [Q(**{f:q}) for f in field_lookups]
 
-            if 'q' in payload.keys() and payload['q'] not in ['', None]:
+	    if or_filters not in [None,'']:
                 # for a in filters.split("&"):
                 for f in or_filters.split("|"):
                     lgr.info('F: %s' % f)
-                    if f not in ['',None]: or_filter_data[f + '__icontains'] = payload['q']
+            	    if 'q' in payload.keys() and payload['q'] not in ['', None]:
+                    	if f not in ['',None]: or_filter_data[f + '__icontains'] = payload['q']
+            	    if f in payload.keys():
+                    	if f not in ['',None]: or_filter_data[f + '__icontains'] = payload[f]
+
                 if len(or_filter_data):
                     or_query = reduce(operator.or_, (Q(k) for k in or_filter_data.items()))
                     report_list = report_list.filter(or_query)
 
+	    if and_filters not in [None,'']:
                 for f in and_filters.split("|"):
                     lgr.info('F: %s' % f)
-                    if f not in ['',None]: and_filter_data[f + '__icontains'] = payload['q']
+            	    if 'q' in payload.keys() and payload['q'] not in ['', None]:
+                    	if f not in ['',None]: and_filter_data[f + '__icontains'] = payload['q']
+            	    if f in payload.keys():
+                    	if f not in ['',None]: and_filter_data[f + '__icontains'] = payload[f]
+
                 if len(and_filter_data):
                     and_query = reduce(operator.and_, (Q(k) for k in and_filter_data.items()))
+                    report_list = report_list.filter(and_query)
+
+
+	    if list_filters not in [None,'']:
+                for f in list_filters.split("|"):
+                    lgr.info('F: %s' % f)
+            	    if 'q' in payload.keys() and payload['q'] not in ['', None]:
+                    	if f not in ['',None]: list_filter_data[f + '__icontains'] = payload['q']
+            	    if f in payload.keys():
+                    	if f not in ['',None]: list_filter_data[f + '__iexact'] = payload[f]
+
+                if len(list_filter_data):
+                    and_query = reduce(operator.and_, (Q(k) for k in list_filter_data.items()))
                     report_list = report_list.filter(and_query)
 
             if 'institution_id' in payload.keys() and payload['institution_id'] not in ['', None]:
@@ -350,44 +395,180 @@ class Wrappers:
                     end_date = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
                 report_list = report_list.filter(date_created__lte=end_date)
 
-            lgr.info('Report List: %s' % values)
+
+	    ############################################VALUES BLOCK
             args = []
+            lgr.info('Report List: %s' % values)
             kwargs = {}
             for i in values.split('|'):
                 k,v = i.split('%')
-                args.append(k)
-                params['cols'].append({"label": k, "type": "string"})
+                args.append(k.strip())
+                params['cols'].append({"label": k.strip(), "type": "string", "value": v.strip()})
+                if k <> v:kwargs[k.strip()] = F(v.strip())
 
-                if k <> v:kwargs[k] = F(v)
-            report_list = report_list.annotate(**kwargs).values(*args)
-            if count not in [None,'']:
+	    selected_data = {}
+	    if data.query.date_values not in [None,'']:
+	            for i in data.query.date_values.split('|'):
+			k,v = i.split('%')
+	                args.append(k.strip())
+			selected_data[k.strip()] = "to_char("+ data.query.module_name +"_"+ data.query.model_name +"."+v+", 'DD, Month, YYYY')"
+                    	params['cols'].append({"label": k.strip(), "type": "string", "value": v.strip()})
+
+	    if data.query.date_time_values not in [None,'']:
+	            for i in data.query.date_time_values.split('|'):
+			k,v = i.split('%')
+	                args.append(k.strip())
+			selected_data[k.strip()] = "to_char("+ data.query.module_name +"_"+ data.query.model_name +"."+v+", 'DD, Month, YYYY HH:MI:SS TZ')"
+                    	params['cols'].append({"label": k.strip(), "type": "string", "value": v.strip()})
+
+	    lgr.info('Selected Data: %s' % selected_data)
+            report_list = report_list.extra(select=selected_data)
+
+
+	    if data.data_response:
+		    #Values
+        	    report_list = report_list.annotate(**kwargs).values(*args)
+	    else:
+		    #Values List
+        	    report_list = report_list.annotate(**kwargs).values_list(*args)
+
+	    ############################################END VALUES BLOCK
+
+
+	    #Count Sum MUST come after values in order to group
+            if count_values not in [None,'']:
                 kwargs = {}
-                for i in count.split('|'):
+                for i in count_values.split('|'):
                     k,v = i.split('%')
-                    params['cols'].append({"label": k, "type": "string"})
-                    if k <> v:kwargs[k] = Count(v)
+                    params['cols'].append({"label": k.strip(), "type": "string", "value": v.strip()})
+                    if k <> v:kwargs[k.strip()] = Count(v.strip())
 
                 report_list = report_list.annotate(**kwargs)
 
+            if sum_values not in [None,'']:
+                kwargs = {}
+                for i in sum_values.split('|'):
+                    k,v = i.split('%')
+                    params['cols'].append({"label": k.strip(), "type": "string", "value": v.strip()})
+                    if k <> v:kwargs[k.strip()] = Sum(v.strip())
+
+                report_list = report_list.annotate(**kwargs)
+
+	    
+            if last_balance not in [None,'']:
+                kwargs = {}
+                for i in last_balance.split('|'):
+                    k,v = i.split('%')
+                    params['cols'].append({"label": k.strip(), "type": "string", "value": v.strip()})
+                    #if k <> v:kwargs[k.strip()] = ( (( (Sum('balance_bf')*2) + Sum('amount') ) + Sum('charge'))*2  )/2
+                    if k <> v:kwargs[k.strip()] = (Sum('balance_bf')+((( Sum('amount')- Sum('charge'))/2)+Sum('charge')))
+
+                report_list = report_list.annotate(**kwargs)
+	    
+
+	    if or_filters not in [None,'']:
+                # for a in filters.split("&"):
+                for f in or_filters.split("|"):
+                    lgr.info('F: %s' % f)
+		    count = 0
+		    for i in params['cols']:
+			if i['value'] == f.strip():
+				i['search_filters'] = True
+			params['cols'][count] = i
+			count += 1
+
+	    if and_filters not in [None,'']:
+                for f in and_filters.split("|"):
+                    lgr.info('F: %s' % f)
+		    count = 0
+		    for i in params['cols']:
+			if i['value'] == f.strip():
+				i['search_filters'] = True
+			params['cols'][count] = i
+			count += 1
+
+	    if data.query.list_filters not in [None,'']:
+	            for list_data in data.query.list_filters.split('|'):
+			count = 0
+			for i in params['cols']:
+				if i['value'] == list_data.strip():
+					list_filters_data = report_list.values(list_data.strip()).annotate(Count(list_data.strip())).order_by(list_data.strip())
+					i['list_filters']= []
+					for j in list_filters_data:
+						i['list_filters'].append(j[list_data.strip()])
+				params['cols'][count] = i
+				count += 1
+
+	    if data.query.links not in [None,'']:
+		    href = {"label": "Actions", "type": "href", "links": {}}
+
+	            for i in data.query.links.split('|'):
+			link_data = i.split('%')
+			name, service, icon = None,None,None
+			if len(link_data) == 2:
+				name,service = link_data
+			elif len(link_data) == 3:
+				name,service,icon = link_data
+
+                	href['links'][name] = { "url":"/"+service+"/", "service": service, "params": data.query.link_params,"icon":icon}
+                	#href['links'] = {"label": name, "type": "href","url":"/"+service+"/", "service": service, "params": data.query.link_params,"icon":icon}
+
+			if data.query.link_params not in [None,'']:
+	            		for i in data.query.link_params.split('|'):
+					k,v = i.split('%')
+					href['links'][name]['params'] = {k:v}
+		    params['cols'].append(href)
+
             ct = report_list.count()
 
-            if 'max_id' in payload.keys() and payload['max_id'] > 0:
-                report_list = report_list.filter(id__lt=payload['max_id'])
-            if 'min_id' in payload.keys() and payload['min_id'] > 0:
-                report_list = report_list.filter(id__gt=payload['min_id'])
+            #if 'max_id' in payload.keys() and payload['max_id'] > 0:
+            #    report_list = report_list.filter(id__lt=payload['max_id'])
+            #if 'min_id' in payload.keys() and payload['min_id'] > 0:
+            #    report_list = report_list.filter(id__gt=payload['min_id'])
 
-            report_list = report_list[:50]
 
-            trans = report_list.aggregate(max_id=Max('id'), min_id=Min('id'))
-            max_id = trans.get('max_id')
-            min_id = trans.get('min_id')
+            if 'order_by' in payload.keys():
+		order_by = payload['order_by'].split(',')
+                report_list = report_list.order_by(*order_by)
+            #
+            # report_list = report_list[:]
+            #
+            # trans = report_list.aggregate(max_id=Max('id'), min_id=Min('id'))
+            # max_id = trans.get('max_id')
+            # min_id = trans.get('min_id')
 
-            #Set Data
-            params['rows'] = report_list
+
+            paginator = Paginator(report_list, payload.get('limit',50))
+
+            try:
+                page = int(payload.get('page', '1'))
+            except ValueError:
+                page = 1
+
+            try:
+                results = paginator.page(page)
+            except (EmptyPage, InvalidPage):
+                results = paginator.page(paginator.num_pages)
+
+
+            report_list = results.object_list
+
+
+
+	    if data.data_response:
+		#Set Data
+		params['data'] = report_list
+	    else:
+		#IF values_list is used
+		report_list = np.asarray(report_list).tolist()
+		#Set Data
+		params['rows'] = report_list
+
 
         except Exception, e:
             lgr.info('Error on report: %s' % e)
         return params,max_id,min_id,ct
+
 
     def balance(self, payload, gateway_profile, profile_tz, data):
         params = {}
@@ -859,6 +1040,7 @@ class System(Wrappers):
                             params = func(payload, gateway_profile, profile_tz, d)
 			    cols = params['cols'] if 'cols' in params.keys() else []
 			    rowsParams = params['rows'] if 'rows' in params.keys() else []
+                            dataParams = params['data'] if 'data' in params.keys() else []
                             for item in rowsParams:
                                 if d.group is not None:
                                     if d.group.name not in collection.keys():
@@ -867,6 +1049,15 @@ class System(Wrappers):
                                         collection[d.group.name].append(item)
                                 else:
                                     rows.append(item)
+
+                            for item in dataParams:
+                                if d.group is not None:
+                                    if d.group.name not in collection.keys():
+                                        collection[d.group.name] = [item]
+                                    else:
+                                        collection[d.group.name].append(item)
+                                else:
+                                    data.append(item)
                         except Exception, e:
                             lgr.info('Error on Data List Function: %s' % e)
 
@@ -876,6 +1067,7 @@ class System(Wrappers):
                             params,max_id,min_id,t_count = self.report(payload, gateway_profile, profile_tz, d)
                             cols = params['cols'] if 'cols' in params.keys() else []
                             rowsParams = params['rows'] if 'rows' in params.keys() else []
+                            dataParams = params['data'] if 'data' in params.keys() else []
                             for item in rowsParams:
                                 if d.group is not None:
                                     if d.group.name not in collection.keys():
@@ -884,6 +1076,15 @@ class System(Wrappers):
                                         collection[d.group.name].append(item)
                                 else:
                                     rows.append(item)
+
+                            for item in dataParams:
+                                if d.group is not None:
+                                    if d.group.name not in collection.keys():
+                                        collection[d.group.name] = [item]
+                                    else:
+                                        collection[d.group.name].append(item)
+                                else:
+                                    data.append(item)
                         except Exception, e:
                             lgr.info('Error on Data List Query: %s' % e)
                     else:
@@ -1396,6 +1597,11 @@ class System(Wrappers):
                     for c in countries:
                         rows.append([c.iso2, c.name])
 
+                elif data_name == 'gender':
+                    genders = Gender.objects.all()
+                    for c in genders:
+                        rows.append([c.id, c.name])
+
                 elif data_name == 'currency':
                     payment_method = PaymentMethod.objects.filter(name='CARD')
                     for p in payment_method:
@@ -1828,21 +2034,22 @@ class System(Wrappers):
                     collection = []
 
                     # query filters
-                    if "q" in payload.keys() and payload['q'] not in ["", None]:
-                        bid_documents_list = bid_documents_list.filter(name__icontains=payload['q'].strip())
+                    #if "q" in payload.keys() and payload['q'] not in ["", None]:
+                    #    bid_documents_list = bid_documents_list.filter(name__icontains=payload['q'].strip())
 
                     # filter last_id
-                    if 'max_id' in payload.keys() and payload['max_id'] > 0:
-                        bid_documents_list = bid_documents_list.filter(id__lt=payload['max_id'])
-                    if 'min_id' in payload.keys() and payload['min_id'] > 0:
-                        bid_documents_list = bid_documents_list.filter(id__gt=payload['min_id'])
+                    #if 'max_id' in payload.keys() and payload['max_id'] > 0:
+                    #    bid_documents_list = bid_documents_list.filter(id__lt=payload['max_id'])
+                    #if 'min_id' in payload.keys() and payload['min_id'] > 0:
+                    #    bid_documents_list = bid_documents_list.filter(id__gt=payload['min_id'])
 
                     # get last_id
-                    trans = bid_documents_list.aggregate(max_id=Max('id'), min_id=Min('id'))
-                    max_id = trans.get('max_id')
-                    min_id = trans.get('min_id')
+                    #trans = bid_documents_list.aggregate(max_id=Max('id'), min_id=Min('id'))
+                    #max_id = trans.get('max_id')
+                    #min_id = trans.get('min_id')
+                    #lgr.info(bid_documents_list.count())
+                    #bid_documents_list = bid_documents_list.order_by('-date_created')[:50]
 
-                    bid_documents_list = bid_documents_list.order_by('-date_created')[:50]
 
                     for i in bid_documents_list:
 
@@ -2076,6 +2283,33 @@ class System(Wrappers):
                                 "description": desc + 'Amount: ' + amount + ' Charge: ' + charge + ' Balance: ' + balance,
                                 "date_time": profile_tz.normalize(f.date_created.astimezone(profile_tz)).strftime(
                                         "%d %b %Y %I:%M:%S %p %Z %z")}
+
+                        rows.append([item])
+
+                    groups = sorted(collection)
+                    data = rows
+
+                elif data_name == 'account_manager_list':
+                    float_manager_list = AccountManager.objects.filter(source_account_id=payload['account_id'])
+
+                    collection = []
+                    float_manager_list = float_manager_list.order_by('-date_created')[:50]
+
+                    for f in float_manager_list:
+                        ftype = f.credit_time
+                        name = 'Debit' if f.credit else 'Credit'
+                        desc = 'ext: %s | ' % f.dest_account
+                        amount = '{0:,.2f}'.format(f.amount)
+                        charge = '{0:,.2f}'.format(f.charge)
+                        balance = '{0:,.2f}'.format(f.balance_bf)
+
+                        item = {
+                            "index": f.id,
+                            "name": name,
+                            "type": ftype,
+                            "description":'Dest Account: '+ desc + 'Amount: ' + amount + ' Charge: ' + charge + ' Balance: ' + balance,
+                            "date_time": profile_tz.normalize(f.date_created.astimezone(profile_tz)).strftime("%d %b %Y %I:%M:%S %p %Z %z")
+                        }
 
                         rows.append([item])
 

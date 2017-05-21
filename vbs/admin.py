@@ -46,7 +46,7 @@ class AccountManagerAdmin(admin.ModelAdmin):
 			'amount','charge','balance_bf','credit_paid','credit_time',\
 			'credit_due_date','credit_overdue_list',)
 	list_filter = ('credit','source_account__gateway_profile__gateway','dest_account__gateway_profile__gateway',\
-			'source_account__account_type','dest_account__account_type','credit_paid',)
+			'source_account__account_type','dest_account__account_type','credit_paid','credit_overdue',)
         search_fields = ('id','transaction_reference','source_account__gateway_profile__msisdn__phone_number',\
 			'dest_account__gateway_profile__msisdn__phone_number',\
 			'source_account__gateway_profile__user__last_name',\

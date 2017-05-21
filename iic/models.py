@@ -60,7 +60,8 @@ class Page(models.Model):
 	description = models.CharField(max_length=100)
 	icon = models.CharField(max_length=45, null=True, blank=True)
 	item_level = models.IntegerField()
-	access_level = models.ManyToManyField(AccessLevel)
+	access_level = models.ManyToManyField(AccessLevel, blank=True)
+	profile_status = models.ManyToManyField(ProfileStatus, blank=True)
 	page_group = models.ForeignKey(PageGroup)
 	gateway = models.ManyToManyField(Gateway, blank=True)	
 	service = models.ManyToManyField(Service, blank=True)	
@@ -68,6 +69,8 @@ class Page(models.Model):
 		return u'%s %s %s %s' % (self.id, self.name, self.service_list(), self.access_level_list())
 	def access_level_list(self):
 		return "\n".join([a.name for a in self.access_level.all()])
+	def profile_status_list(self):
+		return "\n".join([a.name for a in self.profile_status.all()])
 	def gateway_list(self):
 		return "\n".join([a.name for a in self.gateway.all()])
 	def service_list(self):
@@ -115,7 +118,8 @@ class PageInput(models.Model):
 	section_size = models.CharField(max_length=45, null=True, blank=True)
 	item_level = models.CharField(max_length=4)
 	trigger = models.ManyToManyField(Trigger, blank=True)
-	access_level = models.ManyToManyField(AccessLevel)
+	access_level = models.ManyToManyField(AccessLevel, blank=True)
+	profile_status = models.ManyToManyField(ProfileStatus, blank=True)
 	institution = models.ManyToManyField(Institution, blank=True)
 	input_variable = models.ForeignKey(InputVariable)
 	page_input_group = models.ForeignKey(PageInputGroup)
@@ -131,6 +135,8 @@ class PageInput(models.Model):
 		return "\n".join([a.name for a in self.trigger.all()])
 	def access_level_list(self):
 		return "\n".join([a.name for a in self.access_level.all()])
+	def profile_status_list(self):
+		return "\n".join([a.name for a in self.profile_status.all()])
 	def institution_list(self):
 		return "\n".join([a.name for a in self.institution.all()])
 	def gateway_list(self):

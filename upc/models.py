@@ -19,8 +19,6 @@ class MSISDN(models.Model):
 	phone_regex = RegexValidator(regex=r'^\+\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
 	phone_number = models.CharField(validators=[phone_regex], max_length=15, unique=True) # validators should be a list
 	is_active = models.NullBooleanField(default=False)
-	activation_code = models.CharField(max_length=45, blank=True, null=True)
-	device_id = models.CharField(max_length=200, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s' % (self.phone_number)
 
@@ -39,7 +37,7 @@ class Institution(models.Model):
 	industries = models.ManyToManyField(IndustryClass,related_name='industries')
 	default_color = models.CharField(max_length=100)
 	website = models.CharField(max_length=200, blank=True, null=True)
-	physical_addr = models.CharField(max_length=200, blank=True, null=True) #HQ
+	physical_address = models.CharField(max_length=200, blank=True, null=True) #HQ
 	gateway = models.ManyToManyField(Gateway)
 	currency = models.ManyToManyField(Currency, blank=True) #Allowed Currencies
 	country = models.ForeignKey(Country)
@@ -76,13 +74,13 @@ class Profile(models.Model):
 	country = models.ForeignKey(Country, null=True, blank=True)
 	dob = models.DateField(null=True, blank=True)
 	gender = models.ForeignKey(Gender, null=True, blank=True)
-	physical_addr = models.CharField(max_length=200, blank=True, null=True, help_text="Physical Address/Street/Location")
+	physical_address = models.CharField(max_length=200, blank=True, null=True, help_text="Physical Address/Street/Location")
 	photo = models.ImageField(upload_to='upc_profile_photo/', max_length=200, blank=True, null=True)
 	user = 	models.OneToOneField(User)
 	national_id = models.CharField(max_length=45, blank=True, null=True)
 	city = models.CharField(max_length=200, blank=True, null=True, help_text="City/Town")
 	region = models.CharField(max_length=200, blank=True, null=True, help_text="Region/State/County")
-	address = models.CharField(max_length=200, blank=True, null=True)
+	address = models.CharField(max_length=200, blank=True, null=True, help_text="Address 2/Postal Address")
 	postal_code = models.CharField(max_length=200, blank=True, null=True)
 	passport_number = models.CharField(max_length=45, blank=True, null=True)
 	def __unicode__(self):
@@ -99,7 +97,11 @@ class GatewayProfile(models.Model):#Enforce one gateway profile per gateway per 
 	access_level = models.ForeignKey(AccessLevel, null=True, blank=True)
 	institution = models.ForeignKey(Institution, blank=True, null=True) #(enforce one profile institution only per gateway)
 	pin_retries = models.SmallIntegerField(default=0, help_text="Max PIN retries=3 then locks profile")
+	activation_code = models.CharField(max_length=45, blank=True, null=True)
+	device_id = models.CharField(max_length=200, blank=True, null=True)
+	activation_device_id = models.CharField(max_length=200, blank=True, null=True)
         allowed_host = models.ManyToManyField(Host, blank=True)
+	email_activation_code = models.CharField(max_length=45, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s %s %s %s %s %s' % (self.id, self.user.first_name, self.user.last_name, self.msisdn,self.gateway, self.access_level)
 	def allowed_host_list(self):
@@ -157,7 +159,7 @@ class InstitutionTill(models.Model):
 	description = models.CharField(max_length=100)	
 	qr_code = models.CharField(max_length=200, blank=True, null=True)
 	city = models.CharField(max_length=200, blank=True, null=True, help_text="City/Town")
-	physical_addr = models.CharField(max_length=200, blank=True, null=True)
+	physical_address = models.CharField(max_length=200, blank=True, null=True)
 	is_default = models.BooleanField(default=False)
 	geometry = models.PointField(srid=4326)
 	details = models.CharField(max_length=1200, null=True, blank=True)

@@ -154,6 +154,46 @@ class System:
 			lgr.info("Error on awards registration: %s" % e)
 		return payload
 
+	def get_details(self, payload, node_info):
+		try:
+			enrollment = Enrollment.objects.get(id=payload['id'])
+			gateway_profile = enrollment.gateway_profile
+
+			pks = payload.keys()
+
+			if 'first_name' in pks \
+					and 'middle_name' in pks \
+					and 'last_name' in pks \
+					and 'gender' in pks \
+					and 'id_number' in pks:
+
+				gateway_profile.user.first_name = payload['first_name']
+				gateway_profile.user.last_name = payload['last_name']
+				gateway_profile.user.save()
+
+				gateway_profile.user.profile.middle_name = payload['middle_name']
+				gateway_profile.user.profile.gender_id = int(payload['gender'])
+				gateway_profile.user.profile.national_id = payload['id_number']
+				gateway_profile.user.profile.save()
+
+			
+			payload['first_name'] = gateway_profile.user.first_name
+			m_n = gateway_profile.user.profile.middle_name
+			payload['middle_name'] = m_n if m_n else ''
+			payload['last_name'] = gateway_profile.user.last_name
+			gnd = gateway_profile.user.profile.gender
+			payload['gender'] = gnd if gnd else 'Not Set'
+			payload['id_number'] = gateway_profile.user.profile.national_id
+			payload['phone_number'] = gateway_profile.msisdn.phone_number
+			payload['registration_date'] = enrollment.enrollment_date
+
+			payload['response'] = 'Details Captured'
+			payload['response_status'] = '00'
+		except Exception, e:
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+			lgr.info("Error on getting Profile Details: %s" % e)
+		return payload
 
 	def create_enrollment(self, payload, node_info):
 		try:

@@ -24,7 +24,7 @@ class PageGroupAdmin(admin.ModelAdmin):
 admin.site.register(PageGroup, PageGroupAdmin)
 
 class PageAdmin(admin.ModelAdmin):
-		list_display = ('id', 'name','description','icon','item_level','access_level_list','page_group',\
+		list_display = ('id', 'name','description','icon','item_level','access_level_list','profile_status_list','page_group',\
 		'gateway_list','service_list',)
 	        search_fields = ('name',)
 	        list_filter = ('service','page_group','access_level')
@@ -49,9 +49,9 @@ admin.site.register(Trigger, TriggerAdmin)
 
 class PageInputAdmin(admin.ModelAdmin):
 		list_display = ('id','page_input','icon','section_size','item_level','trigger_list',\
-				'access_level_list',\
-		'institution_list','input_variable','page_input_group', 'page_input_status','page',\
-		'gateway_list','channel_list','payment_method_list',)
+				'access_level_list','profile_status_list',\
+				'institution_list','input_variable','page_input_group', 'page_input_status','page',\
+				'gateway_list','channel_list','payment_method_list',)
 	        list_filter = ('page_input_group','page','channel','institution','gateway','payment_method')
 	        search_fields = ('id','page_input','input_variable__name')
 

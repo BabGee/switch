@@ -405,6 +405,8 @@ class System(Wrappers):
 								payload['response_status'] = params['response_status']
 								if 'response' in params.keys() and remittance_product[0].show_message:
 									payload['response'] = params['response']
+								else:
+									payload['response'] = 'Remittance Submitted'
 						else:
 							outgoing.state = OutgoingState.objects.get(name='FAILED')
 							outgoing.response_status = ResponseStatus.objects.get(response='06')

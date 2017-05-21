@@ -11,7 +11,7 @@ class InstitutionStatusAdmin(admin.ModelAdmin):
 admin.site.register(InstitutionStatus, InstitutionStatusAdmin)
 
 class MSISDNAdmin(admin.ModelAdmin):
-		list_display = ('id','phone_number','is_active','activation_code','device_id',)
+		list_display = ('id','phone_number','is_active',)
 		search_fields = ('phone_number',)
 admin.site.register(MSISDN, MSISDNAdmin)
 
@@ -19,7 +19,7 @@ class InstitutionAdmin(admin.OSMGeoAdmin):
 		list_display = ('id','name','business_number',\
 		'background_image','description',\
 		'status','tagline','logo',\
-		'default_color','website','physical_addr',\
+		'default_color','website','physical_address',\
 		'gateway_list','currency_list','country','geometry','theme',\
 		'primary_color','secondary_color','accent_color',)
 		search_fields = ('name','business_number',)
@@ -31,14 +31,14 @@ admin.site.register(ProfileStatus, ProfileStatusAdmin)
 
 class ProfileAdmin(admin.OSMGeoAdmin):
 	list_display = ('id','middle_name','api_key','timezone','language','geometry', 'country', 'dob',\
-			'gender','physical_addr','photo','user','national_id', 'city', 'region',\
+			'gender','physical_address','photo','user','national_id', 'city', 'region',\
 			'address','postal_code','passport_number',)
-	search_fields = ('user__username','user__first_name','user__last_name',)
+	search_fields = ('user__username','user__first_name','user__last_name','national_id','city','physical_address','address',)
 admin.site.register(Profile, ProfileAdmin)
 
 class GatewayProfileAdmin(admin.ModelAdmin):
 		list_display = ('id','user','gateway','pin','msisdn','status','access_level','institution',\
-				'pin_retries','allowed_host_list')
+				'pin_retries','allowed_host_list','activation_code','device_id','activation_device_id','email_activation_code',)
 		search_fields = ('id','msisdn__phone_number','user__username','user__first_name','user__last_name','user__email',)
 		list_filter = ('gateway','status','access_level','institution','allowed_host',)
 admin.site.register(GatewayProfile, GatewayProfileAdmin)
@@ -61,7 +61,7 @@ admin.site.register(TillType, TillTypeAdmin)
 
 class InstitutionTillAdmin(admin.OSMGeoAdmin):
 		list_display = ('id','name','institution','image','till_type','till_number','till_currency',\
-				'description','qr_code','city','physical_addr','is_default','geometry','details',)
+				'description','qr_code','city','physical_address','is_default','geometry','details',)
 		list_filter = ('till_type',)
 admin.site.register(InstitutionTill, InstitutionTillAdmin)
 

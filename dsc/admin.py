@@ -12,12 +12,14 @@ admin.site.register(DataListGroup, DataListGroupAdmin)
 
 class DataListQueryAdmin(admin.ModelAdmin):
 	list_display = ('name', 'description', 'model_name', 'values', 'or_filters','and_filters','module_name',\
-			'institution_filters','gateway_filters','order','count','filters',)
+			'institution_filters','gateway_filters','order','count_values','sum_values','filters',\
+			'not_filters','date_values',\
+			'date_time_values','links','link_params','list_filters','data_response','last_balance',)
 admin.site.register(DataListQuery, DataListQueryAdmin)
 
 class DataListAdmin(admin.ModelAdmin):
 	list_display = ('data_name','url','content','status','is_report','group','level','function',\
-			'title','query','access_level_list','institution_list','channel_list','gateway_list')
+			'title','query','data_response','access_level_list','institution_list','channel_list','gateway_list')
 admin.site.register(DataList, DataListAdmin)
 
 class FileUploadAdmin(admin.ModelAdmin):

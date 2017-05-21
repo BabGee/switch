@@ -53,7 +53,7 @@ class Service(models.Model):
 	product = models.ForeignKey(Product)
 	description = models.CharField(max_length=100)
 	status = models.ForeignKey(ServiceStatus) # Whether Poller or Other
-	access_level = models.ManyToManyField(AccessLevel)
+	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)	
  	def __unicode__(self):

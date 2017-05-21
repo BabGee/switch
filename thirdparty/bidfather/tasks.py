@@ -92,15 +92,15 @@ class System(Wrappers):
             bid = Bid.objects.get(id=payload['bid_id'])
 
             if bid.open():
-                payload['trigger'] = 'opened'
+                payload['trigger'] = 'opened%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
             else:
-                payload['trigger'] = 'closed'
+                payload['trigger'] = 'closed%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
             bid_app = BidApplication.objects.get(bid=bid, institution=institution)
             if bid_app.current_total_price:
-                payload['trigger'] = '%s,%s' % ('unit_prices_set', payload['trigger'])
+                payload['trigger'] = 'unit_prices_set%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
             else:
-                payload['trigger'] = '%s,%s' % ('unit_prices_not_set', payload['trigger'])
+                payload['trigger'] = 'unit_prices_not_set%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
             payload['institution_id'] = str(institution.id)
             payload['institution'] = institution.name
@@ -136,9 +136,9 @@ class System(Wrappers):
             bid = Bid.objects.get(id=payload['bid_id'])
 
             if bid.open():
-                payload['trigger'] = 'opened'
+                payload['trigger'] = 'opened%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
             else:
-                payload['trigger'] = 'closed'
+                payload['trigger'] = 'closed%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
             payload['institution_id'] = str(institution.id)
             payload['bid_name'] = bid.name
@@ -379,9 +379,9 @@ class System(Wrappers):
             payload['bid_image'] = bid.image.url if bid.image else ''
 
             if bid.open():
-                payload['trigger'] = 'opened'
+                payload['trigger'] = 'opened%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
             else:
-                payload['trigger'] = 'closed'
+                payload['trigger'] = 'closed%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
             payload['response'] = 'Bid Details Updated'
             payload['response_status'] = '00'
@@ -403,7 +403,7 @@ class System(Wrappers):
             except ObjectDoesNotExist:
                 bid_application = BidApplication(bid=bid, institution=institution)
                 bid_application.status = created_bid_app_status
-                if not bid.biddocument_set.count():
+                if not bid.biddocument_set.count():# todo remove dup
                     bid_application.completed = True
                 bid_application.save()
 
@@ -427,15 +427,15 @@ class System(Wrappers):
                     bid_document_application.save()
                 #######################
 
-                if bid.application_complete_from(institution):
-                    bid_application.completed = True
-                    bid_application.save()
+            if bid.application_complete_from(institution):
+                bid_application.completed = True
+                bid_application.save()
 
             if bid_application.completed:
-                payload['trigger'] = 'application_completed'
+                payload['trigger'] = 'application_completed%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
                 payload['application_status'] = 'Application Created, Waiting for Approval from ' + bid.institution.name
             else:
-                payload['trigger'] = 'application_not_completed'
+                payload['trigger'] = 'application_not_completed%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
             payload['response'] = 'Bid Application Details'
             payload['response_status'] = '00'

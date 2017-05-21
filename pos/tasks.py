@@ -89,7 +89,11 @@ class System(Wrappers):
 				#An order will ALWAYS have an initial bill manager, hence
 
 				bill_manager_list = BillManager.objects.filter(order__reference=payload['reference'],order__status__name='UNPAID').order_by("-date_created")
-				if len(bill_manager_list)>0:
+				if bill_manager_list.exists():
+					cart_items = bill_manager_list[0].order.cart_item.all()
+					if cart_items.exists():
+						product_institution = cart_items.values('product_item__institution__id').annotate(Count('product_item__institution__id')).order_by('-product_item__institution__id__count')
+						payload['institution_id'] = product_institution[0]['product_item__institution__id']
 					payload['amount'] = str(bill_manager_list[0].balance_bf)
                                         payload['currency'] = bill_manager_list[0].order.currency.code
 					payload['purchase_order_id'] = bill_manager_list[0].order.id

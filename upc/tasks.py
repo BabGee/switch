@@ -38,6 +38,40 @@ class Wrappers:
                 except ValidationError:
                         return False
 
+
+	def get_msisdn(self, payload):
+		lng = payload['lng'] if 'lng' in payload.keys() else 0.0
+		lat = payload['lat'] if 'lat' in payload.keys() else 0.0
+               	trans_point = Point(float(lng), float(lat))
+		g = GeoIP()
+
+		msisdn = None
+		if "msisdn" in payload.keys():
+			msisdn = str(payload['msisdn'])
+			msisdn = msisdn.strip()
+			if len(msisdn) >= 9 and msisdn[:1] == '+':
+				msisdn = str(msisdn)
+			elif len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
+				country_list = Country.objects.filter(mpoly__intersects=trans_point)
+				ip_point = g.geos(str(payload['ip_address']))
+				if country_list.exists() and country_list[0].ccode:
+					msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
+				elif ip_point:
+					country_list = Country.objects.filter(mpoly__intersects=ip_point)
+					if country_list.exists() and country_list[0].ccode:
+						msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
+					else:
+						msisdn = None
+				else:
+					msisdn = '+254%s' % msisdn[1:]
+			elif len(msisdn) >=10  and msisdn[:1] <> '0' and msisdn[:1] <> '+':
+				msisdn = '+%s' % msisdn #clean msisdn for lookup
+			else:
+				msisdn = None
+
+		lgr.info('MSISDN: %s' % msisdn)
+		return msisdn
+
 	@app.task(filter=task_method, ignore_result=True)
 	def saveImage(self, filename, image_obj):
 
@@ -59,40 +93,198 @@ class Wrappers:
 
 
 class System(Wrappers):
+	def registration_check(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+
+			def avs_triggers(session_gateway_profile, payload):
+				if session_gateway_profile.user.first_name in [None,'']:
+					payload['trigger'] = 'no_first_name%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				if session_gateway_profile.user.last_name in [None,'']:
+					payload['trigger'] = 'no_last_name%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				if session_gateway_profile.user.profile.physical_address in [None,'']:
+					payload['trigger'] = 'no_address%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				if session_gateway_profile.user.profile.city in [None,'']:
+					payload['trigger'] = 'no_city%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				if session_gateway_profile.user.profile.postal_code in [None,'']:
+					payload['trigger'] = 'no_postal_code%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				if session_gateway_profile.user.profile.country in [None,'']:
+					payload['trigger'] = 'no_country%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
+				return payload
+
+			if 'email_msisdn' in payload.keys() and self.validateEmail(payload["email_msisdn"]):
+				gateway_profile_list = GatewayProfile.objects.filter(user__email=payload['email_msisdn'], gateway=gateway_profile.gateway)
+
+				if gateway_profile_list.exists() and gateway_profile_list[0].msisdn not in [None,'']:
+					payload['msisdn'] = gateway_profile_list[0].msisdn.phone_number
+				elif gateway_profile_list.exists():
+					#check postal code, address, country
+					lgr.info('Profile With Email: %s' % gateway_profile_list[0])
+					payload = avs_triggers(gateway_profile_list[0],payload)
+				else:
+
+					lgr.info('No Profile With Email: %s' % gateway_profile_list[0])
+					payload['trigger'] = 'not_registered%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
+				payload['email'] = payload['email_msisdn']
+				payload['response'] = 'Email Captured'
+				payload['response_status'] = '00'
+			else:
+				msisdn = None
+				if "email_msisdn" in payload.keys():
+		 			payload['msisdn'] = str(payload['email_msisdn'])
+					msisdn = self.get_msisdn(payload)
+				lgr.info('MSISDN: %s' % msisdn)
+				if msisdn is not None:
+					gateway_profile_list = GatewayProfile.objects.filter(msisdn__phone_number=msisdn, gateway=gateway_profile.gateway)
+
+					if gateway_profile_list.exists() and self.validateEmail(gateway_profile_list[0].user.email):
+						lgr.info('Profile With Email: %s' % gateway_profile_list[0])
+						payload['email'] = gateway_profile_list[0].user.email
+						payload = avs_triggers(gateway_profile_list[0],payload)
+					elif gateway_profile_list.exists():
+						lgr.info('Profile With No Email: %s' % gateway_profile_list[0])
+						payload['trigger'] = 'no_email%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+						payload = avs_triggers(gateway_profile_list[0],payload)
+					else:
+
+						lgr.info('No Profile With No Email: %s' % gateway_profile_list[0])
+						payload['trigger'] = 'no_email,not_registered%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
+					payload['msisdn'] = msisdn
+					payload['response'] = 'Phone Number Captured'
+					payload['response_status'] = '00'
+				else:
+					payload['response'] = 'MSISDN or Email Not Found'
+					payload['response_status'] = '25'
+		except Exception, e:
+			lgr.info('Error on registration check: %s' % e)
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+		return payload
+
+	def device_verification(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			msisdn = self.get_msisdn(payload)
+			lgr.info('MSISDN: %s' % msisdn)
+			if msisdn is not None:
+
+				gateway_profile_list = GatewayProfile.objects.filter(msisdn__phone_number=msisdn, \
+						gateway=gateway_profile.gateway, activation_device_id = payload['fingerprint'])
+
+				if gateway_profile_list.exists():
+					session_gateway_profile = gateway_profile_list[0]
+					hash_pin = crypt.crypt(str(payload['code']), str(session_gateway_profile.id))
+					if hash_pin == session_gateway_profile.activation_code:
+						session_gateway_profile.device_id = payload['fingerprint']
+						session_gateway_profile.save()
+						payload['response'] = 'Device Verified'
+						payload['response_status'] = '00'
+					else:
+						payload['response_status'] = '55'
+				else:
+					payload['response'] = 'MSISDN Not Found'
+					payload['response_status'] = '25'
+			else:
+				payload['response'] = 'MSISDN Not Found'
+				payload['response_status'] = '25'
+
+		except Exception, e:
+			lgr.info('Error on device verification: %s' % e)
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+		return payload
+
+
+	def device_activation(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			msisdn = self.get_msisdn(payload)
+			lgr.info('MSISDN: %s' % msisdn)
+			if msisdn is not None:
+				gateway_profile_list = GatewayProfile.objects.filter(msisdn__phone_number=msisdn, \
+						gateway=gateway_profile.gateway)
+
+				if gateway_profile_list.exists():
+					session_gateway_profile = gateway_profile_list[0]
+
+					chars = string.digits
+					rnd = random.SystemRandom()
+					pin = ''.join(rnd.choice(chars) for i in range(0,4))
+					hash_pin = crypt.crypt(str(pin), str(session_gateway_profile.id))
+
+					session_gateway_profile.activation_code = hash_pin
+					session_gateway_profile.activation_device_id = payload['fingerprint']
+
+					session_gateway_profile.save()
+
+					payload['activation_code'] = pin
+
+					payload['response'] = 'Device Activation Request'
+					payload['response_status'] = '00'
+				else:
+					payload['response'] = 'MSISDN Not Found'
+					payload['response_status'] = '25'
+			else:
+				payload['response'] = 'MSISDN Not Found'
+				payload['response_status'] = '25'
+
+		except Exception, e:
+			lgr.info('Error on device activation: %s' % e)
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+		return payload
+
+
+	def device_validation(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			msisdn = self.get_msisdn(payload)
+			lgr.info('MSISDN: %s' % msisdn)
+			if msisdn is not None:
+				gateway_profile_list = GatewayProfile.objects.filter(msisdn__phone_number=msisdn, \
+						gateway=gateway_profile.gateway)
+
+				gateway_profile_device = gateway_profile_list.filter(device_id=payload['fingerprint'])
+
+				if gateway_profile_list.exists() and gateway_profile_device.exists() and gateway_profile_device[0].status.name=='ONE TIME PIN':
+					payload['trigger'] = 'one_time_pin%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					payload['response'] = 'Device Validation'
+					payload['response_status'] = '00'
+				elif gateway_profile_list.exists() and gateway_profile_device.exists():
+					payload['trigger'] = 'device_valid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					payload['response'] = 'Device Validation'
+					payload['response_status'] = '00'
+				elif gateway_profile_list.exists():
+					payload['trigger'] = 'device_not_valid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					payload['response'] = 'Device Validation'
+					payload['response_status'] = '00'
+				else:
+					payload['response'] = 'MSISDN Not Found'
+					payload['response_status'] = '25'
+			else:
+				payload['response'] = 'MSISDN Not Found'
+				payload['response_status'] = '25'
+
+		except Exception, e:
+			lgr.info('Error on validating institution: %s' % e)
+			payload['response_status'] = '96'
+		return payload
+
+
 	def verify_msisdn(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			#Ensure session Gateway Profile is not used as it would use a profile of an existing account with MSISDN
 
-			lng = payload['lng'] if 'lng' in payload.keys() else 0.0
-			lat = payload['lat'] if 'lat' in payload.keys() else 0.0
-	                trans_point = Point(float(lng), float(lat))
-			g = GeoIP()
-
-			msisdn = None
-			if "msisdn" in payload.keys():
-	 			msisdn = str(payload['msisdn'])
-				msisdn = msisdn.strip()
-				if len(msisdn) >= 9 and msisdn[:1] == '+':
-					msisdn = str(msisdn)
-				elif len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
-					country_list = Country.objects.filter(mpoly__intersects=trans_point)
-					ip_point = g.geos(str(payload['ip_address']))
-					if country_list.exists() and country_list[0].ccode:
-						msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
-					elif ip_point:
-						country_list = Country.objects.filter(mpoly__intersects=ip_point)
-						if country_list.exists() and country_list[0].ccode:
-							msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
-						else:
-							msisdn = None
-					else:
-						msisdn = '+254%s' % msisdn[1:]
-				elif len(msisdn) >=10  and msisdn[:1] <> '0' and msisdn[:1] <> '+':
-					msisdn = '+%s' % msisdn #clean msisdn for lookup
-				else:
-					msisdn = None
+			msisdn = self.get_msisdn(payload)
 			lgr.info('MSISDN: %s' % msisdn)
 			if msisdn is not None:
 				try:msisdn = MSISDN.objects.get(phone_number=msisdn)
@@ -140,34 +332,7 @@ class System(Wrappers):
 
 			#Ensure session Gateway Profile is not used as it would use a profile of an existing account with MSISDN
 
-			lng = payload['lng'] if 'lng' in payload.keys() else 0.0
-			lat = payload['lat'] if 'lat' in payload.keys() else 0.0
-	                trans_point = Point(float(lng), float(lat))
-			g = GeoIP()
-
-			msisdn = None
-			if "msisdn" in payload.keys():
-	 			msisdn = str(payload['msisdn'])
-				msisdn = msisdn.strip()
-				if len(msisdn) >= 9 and msisdn[:1] == '+':
-					msisdn = str(msisdn)
-				elif len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
-					country_list = Country.objects.filter(mpoly__intersects=trans_point)
-					ip_point = g.geos(str(payload['ip_address']))
-					if country_list.exists() and country_list[0].ccode:
-						msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
-					elif ip_point:
-						country_list = Country.objects.filter(mpoly__intersects=ip_point)
-						if country_list.exists() and country_list[0].ccode:
-							msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
-						else:
-							msisdn = None
-					else:
-						msisdn = '+254%s' % msisdn[1:]
-				elif len(msisdn) >=10  and msisdn[:1] <> '0' and msisdn[:1] <> '+':
-					msisdn = '+%s' % msisdn #clean msisdn for lookup
-				else:
-					msisdn = None
+			msisdn = self.get_msisdn(payload)
 			lgr.info('MSISDN: %s' % msisdn)
 			if msisdn is not None:
 				try:msisdn = MSISDN.objects.get(phone_number=msisdn)
@@ -483,7 +648,7 @@ class System(Wrappers):
 			lgr.info("Finished Genrating Items")
 
 			till = InstitutionTill(name=payload["till_name"],institution=gateway_profile.institution,till_type=till_type, till_number=till_number,\
-						till_currency=till_currency,description=description,physical_addr=payload["till_location"],\
+						till_currency=till_currency,description=description,physical_address=payload["till_location"],\
 						is_default=is_default,geometry=trans_point,details=details)
  
 			till.save()
@@ -572,8 +737,8 @@ class System(Wrappers):
 				payload['response'] = 'System User'
 			else:
        	                        payload['profile_photo'] = gateway_profile.user.profile.photo.name
-       	                        payload['first_name'] = gateway_profile.user.first_name
-       	                       	payload['last_name'] = gateway_profile.user.last_name
+       	                        payload['first_name'] = gateway_profile.user.first_name if 'first_name' not in payload.keys() else payload['first_name']
+       	                       	payload['last_name'] = gateway_profile.user.last_name if 'last_name' not in payload.keys() else payload['last_name']
        	                       	payload['access_level'] = gateway_profile.access_level.name
 				if gateway_profile.institution:
 					payload['institution_id'] = gateway_profile.institution.id
@@ -595,26 +760,74 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			host = Host.objects.get(host=payload['gateway_host'], status__name='ENABLED')
 
-
+			profile_error = None
 
 			if ('email' in payload.keys() and self.validateEmail(payload["email"]) ) and \
-			('msisdn' in payload.keys() and len(payload["msisdn"])>=9 and len(payload["msisdn"])<=15):
-				existing_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=payload["msisdn"]),Q(gateway=gateway_profile.gateway))
-				if existing_gateway_profile.exists():
-					pass
+			('msisdn' in payload.keys() and self.get_msisdn(payload)):
+
+				msisdn_existing_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.get_msisdn(payload)),Q(gateway=gateway_profile.gateway))
+				email_existing_gateway_profile = GatewayProfile.objects.filter(Q(user__email=payload["email"]),Q(gateway=gateway_profile.gateway))
+
+				if msisdn_existing_gateway_profile.exists() and email_existing_gateway_profile.exists():
+					if msisdn_existing_gateway_profile[0] == email_existing_gateway_profile[0]:
+						existing_gateway_profile = msisdn_existing_gateway_profile
+					else:
+						profile_error = email_existing_gateway_profile[0]
+						existing_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
+				elif msisdn_existing_gateway_profile.exists():
+					existing_gateway_profile = msisdn_existing_gateway_profile
+				elif email_existing_gateway_profile.exists():
+					existing_gateway_profile = email_existing_gateway_profile
 				else:
-					existing_gateway_profile = GatewayProfile.objects.filter(Q(user__email=payload["email"]),Q(gateway=gateway_profile.gateway))
+					existing_gateway_profile = msisdn_existing_gateway_profile
+
+
 			elif 'email' in payload.keys() and self.validateEmail(payload["email"]):
-				existing_gateway_profile = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,user__email=payload["email"])
-			elif 'msisdn' in payload.keys() and len(payload["msisdn"])>=9 and len(payload["msisdn"])<=15:
-				existing_gateway_profile = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,msisdn__phone_number=payload["msisdn"])
+				existing_gateway_profile = GatewayProfile.objects.filter(user__email=payload["email"],\
+						 gateway=gateway_profile.gateway)
+			elif 'msisdn' in payload.keys() and self.get_msisdn(payload):
+				existing_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=self.get_msisdn(payload),\
+						 gateway=gateway_profile.gateway)
 			elif 'session_gateway_profile_id' in payload.keys():
 				existing_gateway_profile = GatewayProfile.objects.filter(id=payload['session_gateway_profile_id'])
 			else:
 				existing_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 
+			def create_gateway_profile_details(create_gateway_profile, payload):
+				if "msisdn" in payload.keys() and self.get_msisdn(payload):
+					msisdn = self.get_msisdn(payload)
+					try:msisdn = MSISDN.objects.get(phone_number=msisdn)
+					except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
+					if create_gateway_profile.msisdn in [None,'']:
+						create_gateway_profile.msisdn = msisdn
 
-			if existing_gateway_profile.exists():
+				if "access_level_id" in payload.keys() and create_gateway_profile.institution in [None,'']:
+					access_level = AccessLevel.objects.get(id=payload["access_level_id"])
+					if 'institution_id' in payload.keys():
+						create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
+					elif gateway_profile.institution not in [None, '']:
+						create_gateway_profile.institution = gateway_profile.institution
+
+				else:
+					access_level = AccessLevel.objects.get(name="CUSTOMER")
+
+				if create_gateway_profile.access_level in [None,''] or (create_gateway_profile.access_level not in \
+				 [None,''] and create_gateway_profile.access_level.hierarchy>access_level.hierarchy):
+					create_gateway_profile.access_level = access_level
+				#if create_gateway_profile.created_by in [None,'']:create_gateway_profile.created_by = gateway_profile.user.profile 
+				create_gateway_profile.save()
+				payload["profile_id"] = create_gateway_profile.user.profile.id
+				payload['response'] = 'User Profile Created'
+				payload['response_status'] = '00'
+				payload['session_gateway_profile_id'] = create_gateway_profile.id
+
+				return payload
+
+			if profile_error:
+				payload['response'] = 'Profile Error: Email/Phone Number Exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+				create_gateway_profile = None
+			elif existing_gateway_profile.exists():
 				user = existing_gateway_profile[0].user
 
 				if 'full_names' in payload.keys():
@@ -631,12 +844,14 @@ class System(Wrappers):
 				if 'last_name' in payload.keys() and user.last_name in [None,""]: user.last_name = payload['last_name']
 				user.save()
 
-				profile = Profile.objects.get(user=user) #User is a OneToOne field
+				profile = user.profile #User is a OneToOne field
 				if 'middle_name' in payload.keys() and profile.middle_name in [None,""]: profile.middle_name = payload['middle_name']
 				if 'national_id' in payload.keys() and profile.national_id in [None,""]: profile.national_id = payload['national_id']
-				if 'physical_addr' in payload.keys() and profile.physical_addr in [None,""]: profile.physical_addr = payload['physical_addr']
+				if 'physical_address' in payload.keys() and profile.physical_address in [None,""]: profile.physical_address = payload['physical_address']
 				if 'city' in payload.keys() and profile.city in [None,""]: profile.city = payload['city']
 				if 'region' in payload.keys() and profile.region in [None,""]: profile.region = payload['region']
+				if 'postal_code' in payload.keys() and profile.postal_code in [None,""]: profile.postal_code = payload['postal_code']
+				if 'country' in payload.keys() and profile.country in [None,""]: profile.country = Country.objects.get(iso2=payload['country'])
 				if 'address' in payload.keys() and profile.address in [None,""]: profile.address = payload['address']
 				if 'gender' in payload.keys() and profile.gender in [None,""]:
 					try: gender = Gender.objects.get(name=payload['gender']); profile.gender = gender
@@ -649,6 +864,8 @@ class System(Wrappers):
 				profile.save()
 
 				create_gateway_profile = existing_gateway_profile[0]
+
+				payload = create_gateway_profile_details(create_gateway_profile, payload)
 			else:
 				def createUsername(original):
 					u = User.objects.filter(username=original)
@@ -704,9 +921,11 @@ class System(Wrappers):
 				profile.status = profile_status
 				if 'middle_name' in payload.keys() and profile.middle_name in [None,""]: profile.middle_name = payload['middle_name']
 				if 'national_id' in payload.keys() and profile.national_id in [None,""]: profile.national_id = payload['national_id']
-				if 'physical_addr' in payload.keys() and profile.physical_addr in [None,""]: profile.physical_addr = payload['physical_addr']
+				if 'physical_address' in payload.keys() and profile.physical_address in [None,""]: profile.physical_address = payload['physical_address']
 				if 'city' in payload.keys() and profile.city in [None,""]: profile.city = payload['city']
 				if 'region' in payload.keys() and profile.region in [None,""]: profile.region = payload['region']
+				if 'postal_code' in payload.keys() and profile.postal_code in [None,""]: profile.postal_code = payload['postal_code']
+				if 'country' in payload.keys() and profile.country in [None,""]: profile.country = Country.objects.get(iso2=payload['country'])
 				if 'address' in payload.keys() and profile.address in [None,""]: profile.address = payload['address']
 				if 'gender' in payload.keys() and profile.gender in [None,""]:
 					try: gender = Gender.objects.get(name=payload['gender']); profile.gender = gender
@@ -720,64 +939,7 @@ class System(Wrappers):
 				lgr.info('Saved Profile')
 				create_gateway_profile = GatewayProfile(user=user, gateway=gateway_profile.gateway, status=profile_status)
 
-			###################################################################################################################################
-			#Create Gateway Profile Attributes to be added
-
-			lng = payload['lng'] if 'lng' in payload.keys() else 0.0
-			lat = payload['lat'] if 'lat' in payload.keys() else 0.0
-	                trans_point = Point(float(lng), float(lat))
-			g = GeoIP()
-
-			msisdn = None
-			if "msisdn" in payload.keys():
-	 			msisdn = str(payload['msisdn'])
-				msisdn = msisdn.strip()
-				if len(msisdn) >= 9 and msisdn[:1] == '+':
-					msisdn = str(msisdn)
-				elif len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
-					country_list = Country.objects.filter(mpoly__intersects=trans_point)
-					ip_point = g.geos(str(payload['ip_address']))
-					if country_list.exists() and country_list[0].ccode:
-						msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
-					elif ip_point:
-						country_list = Country.objects.filter(mpoly__intersects=ip_point)
-						if country_list.exists() and country_list[0].ccode:
-							msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
-						else:
-							msisdn = None
-					else:
-						msisdn = '+254%s' % msisdn[1:]
-				elif len(msisdn) >=10  and msisdn[:1] <> '0' and msisdn[:1] <> '+':
-					msisdn = '+%s' % msisdn #clean msisdn for lookup
-				else:
-					msisdn = None
-
-
-				if msisdn is not None:
-					try:msisdn = MSISDN.objects.get(phone_number=msisdn)
-					except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
-					if create_gateway_profile.msisdn in [None,'']:
-						create_gateway_profile.msisdn = msisdn
-
-			if "access_level_id" in payload.keys() and create_gateway_profile.institution in [None,'']:
-				access_level = AccessLevel.objects.get(id=payload["access_level_id"])
-				if 'institution_id' in payload.keys():
-					create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
-				elif gateway_profile.institution not in [None, '']:
-					create_gateway_profile.institution = gateway_profile.institution
-
-			else:
-				access_level = AccessLevel.objects.get(name="CUSTOMER")
-
-			if create_gateway_profile.access_level in [None,''] or (create_gateway_profile.access_level not in \
-			 [None,''] and create_gateway_profile.access_level.hierarchy>access_level.hierarchy):
-				create_gateway_profile.access_level = access_level
-			#if create_gateway_profile.created_by in [None,'']:create_gateway_profile.created_by = gateway_profile.user.profile 
-			create_gateway_profile.save()
-			payload["profile_id"] = create_gateway_profile.user.profile.id
-			payload['response'] = 'User Profile Created'
-			payload['response_status'] = '00'
-			payload['session_gateway_profile_id'] = create_gateway_profile.id
+				payload = create_gateway_profile_details(create_gateway_profile, payload)
 
 		except Exception, e:
 			payload['response'] = str(e)
@@ -789,21 +951,32 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
+			profile_error = None
 			if ('email' in payload.keys() and self.validateEmail(payload["email"]) ) and \
-			('msisdn' in payload.keys() and len(payload["msisdn"])>=9 and len(payload["msisdn"])<=15):
-				payload["msisdn"] = '+%s' % payload["msisdn"] if '+' not in payload["msisdn"] else payload["msisdn"]
-				session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=payload["msisdn"]),Q(gateway=gateway_profile.gateway))
-				if session_gateway_profile.exists():
-					pass
+			('msisdn' in payload.keys() and self.get_msisdn(payload)):
+
+				msisdn_session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.get_msisdn(payload)),Q(gateway=gateway_profile.gateway))
+				email_session_gateway_profile = GatewayProfile.objects.filter(Q(user__email=payload["email"]),Q(gateway=gateway_profile.gateway))
+
+				if msisdn_session_gateway_profile.exists() and email_session_gateway_profile.exists():
+					if msisdn_session_gateway_profile[0] == email_session_gateway_profile[0]:
+						session_gateway_profile = msisdn_session_gateway_profile
+					else:
+						profile_error = email_session_gateway_profile[0]
+						session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
+				elif msisdn_session_gateway_profile.exists():
+					session_gateway_profile = msisdn_session_gateway_profile
+				elif email_session_gateway_profile.exists():
+					session_gateway_profile = email_session_gateway_profile
 				else:
-					session_gateway_profile = GatewayProfile.objects.filter(Q(user__email=payload["email"]),Q(gateway=gateway_profile.gateway))
+					session_gateway_profile = msisdn_session_gateway_profile
+
+
 			elif 'email' in payload.keys() and self.validateEmail(payload["email"]):
 				session_gateway_profile = GatewayProfile.objects.filter(user__email=payload["email"],\
 						 gateway=gateway_profile.gateway)
-			elif 'msisdn' in payload.keys() and len(payload["msisdn"])>=9 and len(payload["msisdn"])<=15:
-				payload["msisdn"] = '+%s' % payload["msisdn"] if '+' not in payload["msisdn"] else payload["msisdn"]
-
-				session_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=payload["msisdn"],\
+			elif 'msisdn' in payload.keys() and self.get_msisdn(payload):
+				session_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=self.get_msisdn(payload),\
 						 gateway=gateway_profile.gateway)
 			elif 'session_gateway_profile_id' in payload.keys():
 				session_gateway_profile = GatewayProfile.objects.filter(id=payload['session_gateway_profile_id'])
@@ -811,7 +984,10 @@ class System(Wrappers):
 				session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 
 
-			if session_gateway_profile.exists() and session_gateway_profile[0].access_level.name == 'SYSTEM':
+			if profile_error:
+				payload['response'] = 'Profile Error: Email exists. Please contact us'
+				payload['response_status'] = '63'
+			elif session_gateway_profile.exists() and session_gateway_profile[0].access_level.name == 'SYSTEM':
 				payload['response'] = 'System User Not Allowed'
 				payload['response_status'] = '63'
 			elif session_gateway_profile.exists():
@@ -836,9 +1012,11 @@ class System(Wrappers):
 					profile = Profile.objects.get(user=user) #User is a OneToOne field
 					if 'middle_name' in payload.keys() and profile.middle_name in [None,""]: profile.middle_name = payload['middle_name']
 					if 'national_id' in payload.keys() and profile.national_id in [None,""]: profile.national_id = payload['national_id']
-					if 'physical_addr' in payload.keys() and profile.physical_addr in [None,""]: profile.physical_addr = payload['physical_addr']
+					if 'physical_address' in payload.keys() and profile.physical_address in [None,""]: profile.physical_address = payload['physical_address']
 					if 'city' in payload.keys() and profile.city in [None,""]: profile.city = payload['city']
 					if 'region' in payload.keys() and profile.region in [None,""]: profile.region = payload['region']
+					if 'postal_code' in payload.keys() and profile.postal_code in [None,""]: profile.postal_code = payload['postal_code']
+					if 'country' in payload.keys() and profile.country in [None,""]: profile.country = Country.objects.get(iso2=payload['country'])
 					if 'address' in payload.keys() and profile.address in [None,""]: profile.address = payload['address']
 					if 'gender' in payload.keys() and profile.gender in [None,""]:
 						try: gender = Gender.objects.get(name=payload['gender']); profile.gender = gender
@@ -852,8 +1030,8 @@ class System(Wrappers):
 
 
 				payload['username'] = user.username 
-				payload['first_name'] = payload['first_name'] if user.first_name in ['',None] and 'first_name' in payload.keys() and payload['first_name'] not in ['',None] else user.first_name
-				payload['last_name'] = payload['last_name'] if user.last_name in ['',None] and 'last_name' in payload.keys() and payload['last_name'] not in ['',None] else user.last_name
+				payload['first_name'] = payload['first_name'] if 'first_name' in payload.keys() and payload['first_name'] not in ['',None] else user.first_name
+				payload['last_name'] = payload['last_name'] if 'last_name' in payload.keys() and payload['last_name'] not in ['',None] else user.last_name
 
 				profile = Profile.objects.get(user=user) #User is a OneToOne field
 				payload['national_id'] = profile.national_id
@@ -898,6 +1076,30 @@ class System(Wrappers):
 				if len(session) > 0:
 					authorized_gateway_profile = session[0].gateway_profile
 					#payload['trigger'] = "SET PASSWORD"
+
+			elif 'msisdn' in payload.keys() and 'fingerprint' in payload.keys() and 'pin' in payload.keys():
+
+				msisdn = self.get_msisdn(payload)
+				lgr.info('MSISDN: %s' % msisdn)
+				if msisdn is not None:
+					gateway_profile_list = GatewayProfile.objects.filter(msisdn__phone_number=msisdn, \
+							gateway=gateway_profile.gateway, device_id = payload['fingerprint'])
+
+					if gateway_profile_list.exists():
+						session_gateway_profile = gateway_profile_list[0]
+						hash_pin = crypt.crypt(str(payload['pin']), str(session_gateway_profile.id))
+						if hash_pin == session_gateway_profile.pin:
+							session_gateway_profile.pin_retries = 0
+							session_gateway_profile.save()
+							authorized_gateway_profile = session_gateway_profile
+
+						else:
+							if session_gateway_profile.pin_retries >= 3:
+								session_gateway_profile.status = ProfileStatus.objects.get(name='LOCKED')
+							session_gateway_profile.pin_retries = session_gateway_profile.pin_retries+1
+							session_gateway_profile.save()
+
+
 			if authorized_gateway_profile is not None and authorized_gateway_profile.status.name in ['ACTIVATED','ONE TIME PIN']:
                        	        details['api_key'] = authorized_gateway_profile.user.profile.api_key
                                 details['status'] = authorized_gateway_profile.status.name

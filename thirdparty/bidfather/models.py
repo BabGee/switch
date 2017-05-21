@@ -36,7 +36,7 @@ class Bid(models.Model):
     show_leading = models.BooleanField(default=False)
     industry_section = models.ForeignKey(IndustrySection)
 
-    def requirements(self, gateway_profile):
+    def requirements(self, gateway_profile,institution):
         profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
         bid_requirement_list = BidRequirement.objects.filter(bid__id=self.id)
 
@@ -78,7 +78,7 @@ class Bid(models.Model):
 
             try:
                 current_application = BidRequirementApplication.objects.get(
-                    bid_application__institution=gateway_profile.institution,
+                    bid_application__institution=institution,
                     bid_requirement=i
                 )
                 item['amount'] = current_application.unit_price
@@ -111,7 +111,8 @@ class Bid(models.Model):
         doc_apps = BidDocumentApplication.objects.filter(
             bid_application=BidApplication.objects.get(institution=institution,bid=self)
         ).count()
-        return docs == doc_apps
+        lgr.info('is bid app completed? {} docs, {} doc_apps'.format(docs,doc_apps))
+        return docs <= doc_apps
 
     def application_started_by(self, institution):
         return BidApplication.objects.filter(bid=self, institution=institution).count()
@@ -232,7 +233,7 @@ class Bid(models.Model):
                         "position": i.cost_rank if self.open() else "Not Ranked",
                         "name": name,
                         "type": itype,
-                        "requirements": self.requirements(gateway_profile)
+                        "requirements": self.requirements(gateway_profile,institution)
                     }
 
                     rows.append([item])
@@ -249,7 +250,7 @@ class Bid(models.Model):
                     "position": "Not Ranked",
                     "name": name,
                     "type": itype,
-                    "requirements": self.requirements(gateway_profile)
+                    "requirements": self.requirements(gateway_profile,institution)
                 }
 
                 rows.append([item])

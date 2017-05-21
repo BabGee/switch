@@ -167,7 +167,7 @@ class Interface(Authorize, ServiceCall):
 				if gateway_profile_list.exists():
 					lgr.info('Got Gateway Profile')
 					service = Service.objects.filter(name=SERVICE).prefetch_related('access_level')
-					service = service.filter(access_level__in=[gateway_profile.access_level for gateway_profile in gateway_profile_list])
+					service = service.filter(Q(access_level__in=[gateway_profile.access_level for gateway_profile in gateway_profile_list])|Q(access_level=None))
 					if service.exists():
 						payload_check = service_call(request)
 						if payload_check.status_code == 403:

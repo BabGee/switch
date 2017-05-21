@@ -55,6 +55,24 @@ class Wrappers:
 
 
 class System(Wrappers):
+	def get_account_details(self, payload, node_info):
+		try:
+			account = Account.objects.get(id=payload['account_id'])
+
+			payload['full_names'] = '%s %s %s' % (account.gateway_profile.user.first_name, account.gateway_profile.user.profile.middle_name, account.gateway_profile.user.last_name)
+			payload['msisdn'] = '%s' % account.gateway_profile.msisdn
+			payload['loan_limit'] = account.credit_limit
+			payload['account_type'] = account.account_type.name
+			payload['national_id'] = account.gateway_profile.user.profile.national_id
+
+			payload['response_status'] = '00'
+			payload['response'] = 'Details Captured'
+
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on get account details: %s" % e)
+		return payload
+
 	def account_option(self, payload, node_info):
 		try:
 			from upc.tasks import System as UPCSystem
@@ -856,7 +874,7 @@ def process_overdue_credit():
 				payload['session_gateway_profile_id'] = a.dest_account.gateway_profile.id
 				payload['transaction_reference'] = a.transaction_reference
 				payload['account_manager_id'] = a.id
-				payload['account_type_id'] = a.account_type.id
+				payload['account_type_id'] = a.dest_account.account_type.id
 				payload['chid'] = 2
 				payload['ip_address'] = '127.0.0.1'
 				payload['gateway_host'] = '127.0.0.1'

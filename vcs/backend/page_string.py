@@ -1115,16 +1115,16 @@ class PageString(ServiceCall):
 					enrollment_list = Enrollment.objects.filter(gateway_profile__gateway=code[0].gateway, gateway_profile__msisdn__phone_number=payload['msisdn'])
 
 					if variable_val not in ['',None]:
-						enrollment_list = enrollment_list.filter(Q(product_item__product_type__name=variable_val)|Q(product_item__product_type__name='Membership Plan'))
+						enrollment_list = enrollment_list.filter(Q(enrollment_type__product_item__product_type__name=variable_val)|Q(enrollment_type__product_item__product_type__name='Membership Plan'))
 					elif 'product_type' in params.keys():
-						enrollment_list = enrollment_list.filter(product_item__product_type__name=params['product_type'])
+						enrollment_list = enrollment_list.filter(enrollment_type__product_item__product_type__name=params['product_type'])
 					else:
-						enrollment_list = enrollment_list.filter(product_item__product_type__name='Membership Plan')
+						enrollment_list = enrollment_list.filter(enrollment_type__product_item__product_type__name='Membership Plan')
 
 					if code[0].institution:
 						product_item = ProductItem.objects.filter(institution__id=code[0].institution.id, status__name='ACTIVE').order_by('id')
 					else:
-						product_item = ProductItem.objects.filter(institution__gateway=code[0].gateway, institution__in=[e.institution for e in enrollment_list], status__name='ACTIVE').order_by('id')
+						product_item = ProductItem.objects.filter(institution__gateway=code[0].gateway, institution__in=[e.enrollment_type.institution for e in enrollment_list], status__name='ACTIVE').order_by('id')
 
 
 					if variable_val not in ['',None]:
