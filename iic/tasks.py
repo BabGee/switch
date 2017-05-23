@@ -21,7 +21,7 @@ class Generator:
 			if 'trigger' in payload.keys():
 				lgr.info('Trigger: %s' % payload['trigger'])
 				trigger_list = str(payload['trigger'].strip()).split(',')
-				this_page_inputs = this_page_inputs.filter(Q(trigger__name__in=trigger_list))
+				this_page_inputs = this_page_inputs.filter(Q(trigger__name__in=trigger_list)|Q(trigger=None))
 			else:
 				this_page_inputs = this_page_inputs.filter(Q(trigger=None))
 

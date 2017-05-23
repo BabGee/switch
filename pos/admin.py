@@ -31,7 +31,7 @@ admin.site.register(OrderStatus, OrderStatusAdmin)
 class PurchaseOrderAdmin(admin.ModelAdmin):
 		list_display = ('id','cart_item_list','reference','amount', 'currency',\
 				 'description','status','expiry','cart_processed',\
-				 'gateway_profile',)
+				 'gateway_profile','date_created')
 		list_filter = ('status__name','currency','cart_item__product_item__institution','cart_processed','gateway_profile__gateway','cart_item__product_item__product_type',)
 		search_fields = ('gateway_profile__msisdn__phone_number','cart_item__product_item__name','reference',)
 admin.site.register(PurchaseOrder, PurchaseOrderAdmin)

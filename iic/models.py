@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from crm.models import *
 from django.contrib.gis.db import models
-
+from bridge.models import Trigger
 #interactive interface controller
 
 class VariableType(models.Model):
@@ -101,7 +101,7 @@ class PageInputGroup(models.Model):
 		return u'%s %s %s' % (self.id, self.name, self.input_variable)
 	def gateway_list(self):
 		return "\n".join([a.name for a in self.gateway.all()])
-
+'''
 class Trigger(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
@@ -109,7 +109,7 @@ class Trigger(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)
-
+'''
 class PageInput(models.Model):
         date_modified  = models.DateTimeField(auto_now=True)
         date_created = models.DateTimeField(auto_now_add=True)

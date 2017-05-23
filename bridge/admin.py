@@ -29,6 +29,13 @@ class ServiceAdmin(admin.ModelAdmin):
 		list_filter = ('product','access_level',)
 admin.site.register(Service, ServiceAdmin)
 
+class TriggerAdmin(admin.ModelAdmin):
+		list_display = ('name','description','date_modified','date_created',)
+	        search_fields = ('name','description')
+
+admin.site.register(Trigger, TriggerAdmin)
+
+
 class CommandStatusAdmin(admin.ModelAdmin):
 		list_display = ('name','description','date_modified','date_created')
 admin.site.register(CommandStatus, CommandStatusAdmin)
@@ -36,7 +43,7 @@ admin.site.register(CommandStatus, CommandStatusAdmin)
 class ServiceCommandAdmin(admin.ModelAdmin):
 		list_display = ('id','command_function','level','service','node_system', 'status',\
 		 'reverse_function','description', 'service_account', 'access_level_list', 'channel_list',\
-		 'payment_method_list','gateway_list',)
+		 'payment_method_list','trigger_list','gateway_list',)
 	        list_filter = ('service','node_system','gateway','access_level','channel','payment_method',)
 		search_fields = ('command_function','service__name','reverse_function',)
 admin.site.register(ServiceCommand, ServiceCommandAdmin)

@@ -61,6 +61,15 @@ class Service(models.Model):
 	def access_level_list(self):
 		return "\n".join([a.name for a in self.access_level.all()])
 
+class Trigger(models.Model):
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
+
 #This explains the state of a command. Whether to call API, pass or process locally
 class CommandStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
@@ -84,6 +93,7 @@ class ServiceCommand(models.Model):
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	channel = models.ManyToManyField(Channel, blank=True)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
+	trigger = models.ManyToManyField(Trigger, blank=True)
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	def access_level_list(self):
 		return "\n".join([a.name for a in self.access_level.all()])
@@ -91,10 +101,12 @@ class ServiceCommand(models.Model):
 		return "\n".join([a.name for a in self.channel.all()])
 	def payment_method_list(self):
 		return "\n".join([a.name for a in self.payment_method.all()])
-	def __unicode__(self):
-		return u'%s %s %s' % (self.command_function, self.status.name, self.access_level_list())
+	def trigger_list(self):
+		return "\n".join([a.name for a in self.trigger.all()])
 	def gateway_list(self):
 		return "\n".join([a.name for a in self.gateway.all()])
+	def __unicode__(self):
+		return u'%s %s %s' % (self.command_function, self.status.name, self.access_level_list())
 
 #This expalains the state of a transaction. Whether Processed or pending
 class TransactionStatus(models.Model):

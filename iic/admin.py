@@ -40,16 +40,16 @@ class PageInputGroupAdmin(admin.ModelAdmin):
 				'section_height','auto_submit','gateway_list',)
 	        search_fields = ('name',)
 admin.site.register(PageInputGroup, PageInputGroupAdmin)
-
+'''
 class TriggerAdmin(admin.ModelAdmin):
 		list_display = ('name','description','date_modified','date_created',)
 	        search_fields = ('name','description')
 
 admin.site.register(Trigger, TriggerAdmin)
-
+'''
 class PageInputAdmin(admin.ModelAdmin):
-		list_display = ('id','page_input','icon','section_size','item_level','trigger_list',\
-				'access_level_list','profile_status_list',\
+		list_display = ('id','page_input','icon','section_size','item_level',\
+				'trigger_list','access_level_list','profile_status_list',\
 				'institution_list','input_variable','page_input_group', 'page_input_status','page',\
 				'gateway_list','channel_list','payment_method_list',)
 	        list_filter = ('page_input_group','page','channel','institution','gateway','payment_method')
