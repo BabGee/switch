@@ -29,6 +29,44 @@ class SaleContact(models.Model):
 	def __unicode__(self):
 		return u'%s' % (self.name)
 
+class SaleChargeType(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	product_item = models.ForeignKey(ProductItem) #ProductItem Institution can be different from the institution exerting the charge
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
+
+class SaleCharge(models.Model):
+        date_modified = models.DateTimeField(auto_now=True)
+        date_created = models.DateTimeField(auto_now_add=True)
+	sale_charge_type = models.ForeignKey(SaleChargeType)
+	credit = models.BooleanField(default=False) #Dr | Cr (add charge if Dr, sub charge if Cr)
+	expiry = models.DateTimeField(null=True, blank=True)
+	min_amount = models.IntegerField()
+	max_amount = models.IntegerField()
+	charge_value = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	is_percentage = models.BooleanField(default=False)
+	description = models.CharField(max_length=200, null=True, blank=True)
+	per_item = models.BooleanField(default=False)
+	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
+	product_type = models.ManyToManyField(ProductType, blank=True)
+	institution = models.ManyToManyField(Institution, blank=True)
+	gateway = models.ManyToManyField(Gateway, blank=True)
+        def __unicode__(self):
+                return u'%s %s %s' % (self.id, self.sale_charge_type, self.charge_value)
+	def payment_method_list(self):
+		return "\n".join([a.name for a in self.payment_method.all()])
+	def product_type_list(self):
+		return "\n".join([a.name for a in self.product_type.all()])
+	def institution_list(self):
+		return "\n".join([a.name for a in self.institution.all()])
+	def gateway_list(self):
+		return "\n".join([a.name for a in self.gateway.all()])
+
+
 class CartStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
@@ -57,6 +95,8 @@ class CartItem(models.Model):
 	till = models.ForeignKey(InstitutionTill)
 	token = models.CharField(max_length=200, null=True, blank=True)
 	channel = models.ForeignKey(Channel)
+	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
+	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
 	def __unicode__(self):
 		return u'%s %s %s' % (self.product_item, self.gateway_profile, self.quantity)
 
@@ -96,6 +136,8 @@ class BillManager(models.Model):
 	amount = models.DecimalField(max_digits=19, decimal_places=2)
 	balance_bf = models.DecimalField(max_digits=19, decimal_places=2)
 	payment_method = models.ForeignKey(PaymentMethod, null=True, blank=True)
+	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
+	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.credit)
      

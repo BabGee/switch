@@ -312,7 +312,7 @@ class System(Wrappers):
 
 
 			#Ensure Branch does not conflict to give more than one result
-			gl_account_type = AccountType.objects.filter(product_item__institution_till=session_account.account_branch,\
+			gl_account_type = AccountType.objects.filter(product_item__product_type__institution_till=session_account.account_branch,\
 						product_item__currency__code=payload['currency'],product_item__product_type__name='Ledger Account',\
 						gateway=session_account.account_type.gateway)
 			if 'institution_id' in payload.keys():
@@ -413,7 +413,7 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			#Ensure Branch does not conflict to give more than one result
-			gl_account_type = AccountType.objects.filter(product_item__institution_till=session_account.account_branch,\
+			gl_account_type = AccountType.objects.filter(product_item__product_type__institution_till=session_account.account_branch,\
 						product_item__currency__code=payload['currency'],product_item__product_type__name='Ledger Account',\
 						gateway=session_account.account_type.gateway)
 			if 'institution_id' in payload.keys():
@@ -567,17 +567,6 @@ class System(Wrappers):
 				else:
 					currency = Currency.objects.get(code='KES')
 
-				if 'reference' in payload.keys() and len(payload['reference'].split("-"))==2:
-					reference = payload['reference'].split("-")
-					till = InstitutionTill.objects.get(id=reference[0])
-				elif 'till_id' in payload.keys():
-					till = InstitutionTill.objects.get(id=payload['till_id'])
-				else:
-					if 'currency' in payload.keys():
-						till = InstitutionTill.objects.get(till_currency__code=payload['currency'], institution__id=1)
-					else:
-						till = InstitutionTill.objects.get(till_currency__code='KES', institution__id=1)
-
 				status = AccountStatus.objects.get(name='ACTIVE')
 
 				account_type = AccountType.objects.filter(Q(product_item__currency=currency),\
@@ -595,7 +584,13 @@ class System(Wrappers):
 
 				if account_type.exists():
 					session_account = Account(gateway_profile=session_gateway_profile,\
-							account_branch=till,account_status=status, account_type=account_type[0])
+							account_branch=account_type[0].product_item.product_type.institution_till,\
+							account_status=status, account_type=account_type[0])
+
+					#Check if profile account is first then default
+					if Account.objects.filter(gateway_profile=session_gateway_profile,\
+					 account_type__gateway=session_gateway_profile.gateway, account_type__deposit_taking=True).exists() == False and account_type[0].deposit_taking:
+						session_account.is_default = True
 
 					session_account.save()
 					payload['session_account_id'] = session_account.id
@@ -614,12 +609,28 @@ class Trade(System):
 	pass
 
 class Payments(System):
+	def send_money_details(self, payload, node_info):
+		try:
+			account = Account.objects.get(id=payload['session_account_id'])
+			product_item = account.account_type.product_item
+			payload['product_item_id'] = product_item.id
+			payload['till_number'] = product_item.product_type.institution_till.till_number
+			payload['currency'] = product_item.currency.code
+			payload['float_amount'] = payload['amount']
+			payload['response'] = 'Captured'
+			payload['response_status'] = '00'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on funds transfer item details: %s" % e)
+		return payload
+
+
 	def funds_transfer_item_details(self, payload, node_info):
 		try:
 			account_type = AccountType.objects.get(id=payload['account_type_id'])
 			product_item = account_type.product_item
 			payload['product_item_id'] = product_item.id
-			payload['institution_till_id'] = product_item.institution_till.all()[0].id #Filter to ONLINE only in the future
+			payload['till_number'] = product_item.product_type.institution_till.till_number
 			payload['currency'] = product_item.currency.code
 			payload['float_amount'] = payload['amount']
 			payload['response'] = 'Captured'
@@ -744,7 +755,7 @@ class Payments(System):
 				product_item = account_type.product_item
 				payload['institution_id'] = product_item.institution.id
 				payload['product_item_id'] = product_item.id
-				payload['institution_till_id'] = product_item.institution_till.all()[0].id #Filter to ONLINE only in the future
+				payload['till_number'] = product_item.product_type.institution_till.till_number
 				payload['currency'] = product_item.currency.code
 
 				payload['response'] = 'Captured'
@@ -795,7 +806,7 @@ class Payments(System):
 						product_item = account_type.product_item
 						payload['institution_id'] = product_item.institution.id
 						payload['product_item_id'] = product_item.id
-						payload['institution_till_id'] = product_item.institution_till.all()[0].id #Filter to ONLINE only in the future
+						payload['till_number'] = product_item.product_type.institution_till.till_number
 						payload['currency'] = product_item.currency.code
 						
 						credit_type = account_type.credit_type.filter(min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
@@ -867,7 +878,7 @@ def process_overdue_credit():
 				if c.product_item:
 					payload['product_item_id'] = c.product_item.id
 					payload['institution_id'] = c.product_item.institution.id
-					payload['institution_till_id'] = c.product_item.institution_till.all()[0].id #Filter to ONLINE only in the future
+					payload['till_number'] = c.product_item.product_type.institution_till.till_number
 					payload['currency'] = c.product_item.currency.code
 
 				payload['session_account_id'] = a.dest_account.id

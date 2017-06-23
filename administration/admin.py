@@ -47,7 +47,7 @@ class HostStatusAdmin(admin.ModelAdmin):
 admin.site.register(HostStatus, HostStatusAdmin)
 
 class HostAdmin(admin.ModelAdmin):
-	list_display = ('host', 'status', 'description', 'date_modified', 'date_created')
+	list_display = ('id', 'host', 'status', 'description', 'date_modified', 'date_created')
 	search_fields = ('host',)
 admin.site.register(Host, HostAdmin)
 
@@ -100,4 +100,7 @@ class MNOPrefixAdmin(admin.ModelAdmin):
 	list_display = ('mno','prefix','description','date_modified','date_created',)
 admin.site.register(MNOPrefix, MNOPrefixAdmin)
 
+class ForexAdmin(admin.ModelAdmin):
+	list_display = ('base_currency','quote_currency','exchange_rate','trading_date','description',)
+admin.site.register(Forex, ForexAdmin)
 

@@ -19,9 +19,18 @@ class CardType(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
 	status = models.ForeignKey(CardTypeStatus)
-	code = models.CharField(max_length=5, blank=True, null=True)
+	code = models.CharField(max_length=5, unique=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)
+
+class CardVerificationAmount(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	currency = models.OneToOneField(Currency)
+	min_amount = models.DecimalField(max_digits=19, decimal_places=2)
+	max_amount = models.DecimalField(max_digits=19, decimal_places=2)
+	def __unicode__(self):
+		return u'%s %s %s' % (self.currency, self.min_amount, self.max_amount)
 
 class CardRecordStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
@@ -41,16 +50,13 @@ class CardRecord(models.Model):
 	token = models.CharField(max_length=256, blank=True, null=True)#=4305769863115000001514,
 	gateway_profile = models.ForeignKey(GatewayProfile)
 	pan = models.CharField(max_length=512, default='411111xxxxxx1111')
+	activation_currency = models.ForeignKey(Currency)
+	activation_amount = models.DecimalField(max_digits=19, decimal_places=2)
+	activation_pin = models.CharField(max_length=200, null=True, blank=True)
+	pin_retries = models.SmallIntegerField(default=0, help_text="Max PIN retries=3 then locks record")
+	is_default = models.NullBooleanField(default=False)
 	def __unicode__(self):
 		return u'%s' % (self.card_number)
-
-class CardRecordActivityStatus(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	def __unicode__(self):
-		return u'%s' % (self.name)
 
 class CardRecordActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -67,6 +73,7 @@ class CardRecordActivity(models.Model):
 	transaction_status = models.ForeignKey(TransactionStatus)
 	response_status = models.ForeignKey(ResponseStatus)
 	institution = models.ForeignKey(Institution, null=True, blank=True)
+	scheduled_send = models.DateTimeField(blank=True, null=True)
+	sends = models.IntegerField()
 	def __unicode__(self):
  		return '%s' % (self.request)
-

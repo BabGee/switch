@@ -61,7 +61,9 @@ CELERY_QUEUES = (
 
 #BROKER_URL = "amqp://Super%40User:%40wys1WYG@localhost:5672//"
 #BROKER_URL = "librabbitmq://Super%40User:%40wys1WYG@localhost:5672//"
+
 BROKER_URL = "librabbitmq://guest:guest@localhost:5672//"
+#BROKER_URL = "librabbitmq://guest:guest@zabbix:56720//"
 
 #TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
@@ -204,7 +206,7 @@ INSTALLED_APPS = (
     'thirdparty.amkagroup_co_ke',
     'thirdparty.bidfather',
     'thirdparty.sortika',
-
+    'products.nikobizz',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -587,6 +589,11 @@ LOGGING = {
         },       
 
          'sortika': {
+            'handlers': ['default_rotating_file'],
+            'level': 'INFO',
+        },       
+
+         'nikobizz': {
             'handlers': ['default_rotating_file'],
             'level': 'INFO',
         },       

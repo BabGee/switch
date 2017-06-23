@@ -1,5 +1,7 @@
 from django.contrib.gis.db import models
 from django.contrib.auth.models import User
+from datetime import date
+from django.utils import timezone
 
 #User._meta.get_field('email')._unique = False
 User._meta.get_field("username").max_length = 100
@@ -216,4 +218,14 @@ class MNOPrefix(models.Model):
 	def __unicode__(self):
 		return u'%s %s' % (self.mno, self.prefix)
 
+class Forex(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	base_currency = models.ForeignKey(Currency, related_name='from_currency')
+	quote_currency = models.ForeignKey(Currency, related_name='to_currency')
+	exchange_rate = models.DecimalField(max_digits=19, decimal_places=2)
+	trading_date = models.DateField(default=date.today)
+	description = models.CharField(max_length=200, null=True, blank=True)
+	def __unicode__(self):
+		return u'%s %s %s %s' % (self.base_currency.code, self.quote_currency.code, self.exchange_rate, self.trading_date)
 

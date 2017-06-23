@@ -106,6 +106,14 @@ class ProductDiscount(models.Model):
 	def till_list(self):
 		return "\n".join([a.name for a in self.till.all()])
 
+class ProductDisplay(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
 class ProductItem(models.Model):
         date_modified = models.DateTimeField(auto_now=True)
         date_created = models.DateTimeField(auto_now_add=True)
@@ -129,6 +137,9 @@ class ProductItem(models.Model):
 	institution_username = models.CharField(max_length=320, null=True, blank=True, help_text='Optional')
 	institution_password = models.CharField(max_length=320, null=True, blank=True, help_text='Optional')
 	image_path = models.FileField(upload_to='crm_productitem_imagepath/', max_length=200, null=True,blank=True)
+	product_display = models.ForeignKey(ProductDisplay)
+	uneditable = models.BooleanField(default=False)
+	kind = models.CharField(max_length=100, null=True, blank=True)
         def __unicode__(self):
                 return u'%s %s' % (self.id, self.name)
 	def institution_till_list(self):
@@ -164,8 +175,7 @@ class EnrollmentType(models.Model):
         date_created = models.DateTimeField(auto_now_add=True)
         name = models.CharField(max_length=45, unique=True)
         description = models.CharField(max_length=100)
-	institution = models.ForeignKey(Institution)
-	product_item = models.ForeignKey(ProductItem, null=True, blank=True)
+	product_item = models.ForeignKey(ProductItem)
         def __unicode__(self):
                 return u'%s' % (self.name)
 
@@ -177,9 +187,29 @@ class Enrollment(models.Model):
 	status = models.ForeignKey(EnrollmentStatus)
 	enrollment_date = models.DateField(null=True, blank=True)
 	gateway_profile = models.ForeignKey(GatewayProfile, null=True, blank=True)
-	enrollment_type = models.ForeignKey(EnrollmentType, null=True, blank=True)
+	enrollment_type = models.ForeignKey(EnrollmentType)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.gateway_profile, self.record, self.alias)
+
+class PaymentOptionStatus(models.Model):
+        name = models.CharField(max_length=45, unique=True)
+        description = models.CharField(max_length=100)
+        date_modified  = models.DateTimeField(auto_now=True)
+        date_created = models.DateTimeField(auto_now_add=True)
+        def __unicode__(self):
+                return u'%s' % (self.name)
+
+class PaymentOption(models.Model):
+	date_modified = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	gateway_profile = models.ForeignKey(GatewayProfile)
+	account_alias = models.CharField(max_length=200, null=True, blank=True)
+	account_record = models.CharField(max_length=50)
+	status = models.ForeignKey(PaymentOptionStatus)
+	payment_method = models.ForeignKey(PaymentMethod)
+	def __unicode__(self):
+		return u'%s %s' % (self.gateway_profile, self.account_alias)
+
 
 class NominationStatus(models.Model):
         name = models.CharField(max_length=45, unique=True)

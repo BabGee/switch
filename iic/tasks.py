@@ -2,11 +2,31 @@ from django.shortcuts import render
 from iic.models import *
 from iic.backend.wrappers import *
 from django.db.models import Q
+import operator
+from django.core.validators import validate_email, URLValidator
+from django.core.exceptions import ValidationError
 
 import logging
 lgr = logging.getLogger('iic')
 
 class Generator:
+        def validateEmail(self, email):
+                try:
+                        validate_email(str(email))
+                        return True
+                except ValidationError:
+                        return False
+
+        def validateURL(self, url):
+		validate = URLValidator() 
+                try:
+                        validate(str(url))
+                        return True
+                except ValidationError:
+                        return False
+
+
+
 	def section_generator(self, payload, this_page_inputs):
 		this_page = {}
 		menu_page_group = None
@@ -17,13 +37,6 @@ class Generator:
 
 			if 'payment_method' in payload.keys():
 				this_page_inputs = this_page_inputs.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
-			#Check if trigger Exists
-			if 'trigger' in payload.keys():
-				lgr.info('Trigger: %s' % payload['trigger'])
-				trigger_list = str(payload['trigger'].strip()).split(',')
-				this_page_inputs = this_page_inputs.filter(Q(trigger__name__in=trigger_list)|Q(trigger=None))
-			else:
-				this_page_inputs = this_page_inputs.filter(Q(trigger=None))
 
 			lgr.info('This Page Inputs: %s' % this_page_inputs)
 			#Add Interface for an Institution
@@ -35,10 +48,31 @@ class Generator:
 				this_page_inputs = this_page_inputs.filter(institution=None)
 
 			#Add Interface for a product_type
-			if 'product_type_id' in payload.keys() and payload['product_type_id'] not in ["",None,'None']:
+			if 'product_item_id' in payload.keys() and payload['product_item_id'] not in ["",None,'None']:
+				product_item = ProductItem.objects.get(id=payload['product_item_id'])
+				this_page_inputs = this_page_inputs.filter(Q(product_type=None)|Q(product_type=product_item.product_type))
+			elif 'product_type_id' in payload.keys() and payload['product_type_id'] not in ["",None,'None']:
 				this_page_inputs = this_page_inputs.filter(Q(product_type=None)|Q(product_type__id=payload['product_type_id']))
 			else:
 				this_page_inputs = this_page_inputs.filter(product_type=None)
+			lgr.info('This Page Inputs: %s' % this_page_inputs)
+
+
+			#Check if trigger Exists
+			if 'trigger' in payload.keys():
+				triggers = str(payload['trigger'].strip()).split(',')
+				lgr.info('Triggers: %s' % triggers)
+				trigger_list = Trigger.objects.filter(name__in=triggers)
+				this_page_inputs = this_page_inputs.filter(Q(trigger__in=trigger_list)|Q(trigger=None))
+				#Eliminate none matching trigger list
+				for i in this_page_inputs:
+					if i.trigger.all().exists():
+						if False in [trigger_list.filter(id=t.id).exists() for t in i.trigger.all()]:
+							this_page_inputs = this_page_inputs.filter(~Q(id=i.id))
+
+			else:
+				this_page_inputs = this_page_inputs.filter(Q(trigger=None))
+				
 			lgr.info('This Page Inputs: %s' % this_page_inputs)
 
 			for input in this_page_inputs:
@@ -109,8 +143,14 @@ class Generator:
 class System(Generator):
         def redirect(self, payload, node_info):
                 try:
-
-                        if payload['SERVICE'] == 'LOGIN':
+			if 'redirect' in payload.keys():
+				if self.validateURL(payload['redirect']):
+					log.info('A valid URL not allowed: %s' % payload['redirect'])
+					payload['response'] = '/'
+				else:
+					payload['response'] = payload['redirect']
+			
+                        elif 'redirect' not in payload.keys() and payload['SERVICE'] == 'LOGIN':
                                 payload['response'] = '/index/'
                         payload['response_status'] = '00'
                 except Exception, e:

@@ -33,13 +33,19 @@ class ProductDiscountAdmin(admin.ModelAdmin):
 				'charge_value','is_percentage','description','for_float')
 admin.site.register(ProductDiscount, ProductDiscountAdmin)
 
+class ProductDisplayAdmin(admin.ModelAdmin):
+		list_display = ('id','name','description')
+admin.site.register(ProductDisplay, ProductDisplayAdmin)
+
+
 class ProductItemAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description','status','product_type',\
 				'institution_till_list','unit_limit_min',\
 				'unit_limit_max','unit_cost','variable_unit','float_limit_min',\
 				'float_limit_max','float_cost','institution','currency',\
 				'vat','discount','institution_url','institution_username',\
-				'institution_password','image_path')
+				'institution_password','image_path','product_display','uneditable',\
+				'kind')
 		search_fields = ("id","name","description")
 	        list_filter = ('institution_till','institution','product_type','product_type__product_category')
 
@@ -53,7 +59,7 @@ class ItemExtraAdmin(admin.ModelAdmin):
 admin.site.register(ItemExtra, ItemExtraAdmin)
 
 class EnrollmentTypeAdmin(admin.ModelAdmin):
-		list_display = ('name', 'description','institution','product_item')
+		list_display = ('id', 'name', 'description','product_item')
 admin.site.register(EnrollmentType, EnrollmentTypeAdmin)
 
 
@@ -66,8 +72,18 @@ class EnrollmentAdmin(admin.ModelAdmin):
 		search_fields = ("alias",'record','gateway_profile__user__username',\
 				'gateway_profile__user__first_name','gateway_profile__user__last_name',\
 				'gateway_profile__msisdn__phone_number',)
-		list_filter = ('enrollment_type__institution',)
+		list_filter = ('enrollment_type',)
 admin.site.register(Enrollment, EnrollmentAdmin)
+
+class PaymentOptionStatusAdmin(admin.ModelAdmin):
+		list_display = ('name', 'description','date_modified','date_created')
+admin.site.register(PaymentOptionStatus, PaymentOptionStatusAdmin)
+
+class PaymentOptionAdmin(admin.ModelAdmin):
+		list_display = ('id','gateway_profile', 'account_alias', 'account_record',\
+				'status','payment_method',)
+admin.site.register(PaymentOption, PaymentOptionAdmin)
+
 
 class NominationStatusAdmin(admin.ModelAdmin):
 		list_display = ('name', 'description','date_modified','date_created')

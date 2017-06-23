@@ -23,7 +23,7 @@ class DataListQuery(models.Model):
 	name = models.CharField(max_length=50, unique=True)	
 	description = models.CharField(max_length=200)
 	model_name = models.CharField(max_length=100) 
-	values = models.CharField(max_length=1024) 
+	values = models.CharField(max_length=512, blank=True, null=True) 
 	or_filters = models.CharField(max_length=512, blank=True, null=True)
 	and_filters = models.CharField(max_length=512, blank=True, null=True)
 	module_name = models.CharField(max_length=100) 
@@ -41,6 +41,12 @@ class DataListQuery(models.Model):
 	sum_values = models.CharField(max_length=512, blank=True, null=True) 
 	not_filters = models.CharField(max_length=512, blank=True, null=True)
 	last_balance = models.CharField(max_length=512, blank=True, null=True)
+	gateway_profile_filters = models.CharField(max_length=512, blank=True, null=True)
+	month_year_values = models.CharField(max_length=512, blank=True, null=True)
+	avg_values = models.CharField(max_length=512, blank=True, null=True) 
+	date_filters = models.CharField(max_length=512, blank=True, null=True)
+	time_filters = models.CharField(max_length=512, blank=True, null=True)
+	token_filter = models.CharField(max_length=512, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)  
 
@@ -62,6 +68,8 @@ class DataList(models.Model):
 	institution = models.ManyToManyField(Institution, blank=True)
 	channel = models.ManyToManyField(Channel, blank=True)
 	gateway = models.ManyToManyField(Gateway, blank=True)
+	pn_data = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
+	pn_id_field = models.CharField('Push Notification ID Field', max_length=50, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s' % (self.data_name)
 	def institution_list(self):
@@ -116,3 +124,33 @@ class FileUploadActivity(models.Model):
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.name)
 
+class ImageListType(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
+class ImageList(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=100, blank=True, null=True)
+	image = models.ImageField(upload_to='dsc_imagelist_image/', max_length=200)
+	description = models.CharField(max_length=512, blank=True, null=True)
+	image_list_type = models.ForeignKey(ImageListType)
+	level = models.IntegerField(default=0)
+	access_level = models.ManyToManyField(AccessLevel, blank=True)
+	institution = models.ManyToManyField(Institution, blank=True)
+	channel = models.ManyToManyField(Channel, blank=True)
+	gateway = models.ManyToManyField(Gateway, blank=True)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+	def institution_list(self):
+		return "\n".join([a.name for a in self.institution.all()])
+	def gateway_list(self):
+		return "\n".join([a.name for a in self.gateway.all()])
+	def access_level_list(self):
+		return "\n".join([a.name for a in self.access_level.all()])
+	def channel_list(self):
+		return "\n".join([a.name for a in self.channel.all()])

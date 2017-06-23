@@ -44,7 +44,7 @@ admin.site.register(CreditOverdue, CreditOverdueAdmin)
 class AccountManagerAdmin(admin.ModelAdmin):
 	list_display = ('id','credit','transaction_reference','is_reversal','source_account','dest_account',\
 			'amount','charge','balance_bf','credit_paid','credit_time',\
-			'credit_due_date','credit_overdue_list',)
+			'credit_due_date','credit_overdue_list','date_created',)
 	list_filter = ('credit','source_account__gateway_profile__gateway','dest_account__gateway_profile__gateway',\
 			'source_account__account_type','dest_account__account_type','credit_paid','credit_overdue',)
         search_fields = ('id','transaction_reference','source_account__gateway_profile__msisdn__phone_number',\

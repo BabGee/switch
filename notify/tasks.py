@@ -237,6 +237,32 @@ class Wrappers:
 
 
 class System(Wrappers):
+	def update_notification_template(self, payload, node_info):
+		try:
+
+			if 'notification_product_id' not in payload.keys():
+				payload['response'] = "Notification not found"
+				payload['response_status']= '25'
+			else:
+				gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+				notification_template = NotificationTemplate.objects.filter(product__id=payload['notification_product_id'],\
+							service__name='TEMPLATE SMS', status__name='ACTIVE')
+
+				if notification_template.exists() and 'message' in payload.keys() and payload['message'] not in ['',None]:
+					template = notification_template[0]
+					template.template_message = payload['message']
+					template.save()
+
+					payload['response'] = 'Template Updated'
+					payload['response_status'] = '00'
+				else:
+					payload['response'] = 'No Template to Update'
+					payload['response_status'] = '25'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Updating Notification Template: %s" % e)
+		return payload
+
 	def add_notification_contact(self, payload, node_info):
 		try:
 		

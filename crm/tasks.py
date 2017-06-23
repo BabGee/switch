@@ -54,8 +54,10 @@ class System:
 
 			if product_item.exists():
 				payload['product_item_id'] = product_item[0].id
+				payload['product_item_name'] = product_item[0].name
+				payload['product_item_image'] = product_item[0].image_path if product_item[0].image_path else ''
 				payload['institution_id'] = product_item[0].institution.id
-				payload['institution_till_id'] = product_item[0].institution_till.all()[0].id #Filter to ONLINE only in the future
+				#payload['till_number'] = product_item[0].product_type.institution_till.till_number
 				payload['currency'] = product_item[0].currency.code
 				if  product_item[0].variable_unit and 'quantity' in payload.keys():
 					lgr.info('Variable Unit with Quantity')
@@ -106,7 +108,7 @@ class System:
 			if product_item.exists():
 				payload['product_item_id'] = product_item[0].id
 				payload['institution_id'] = product_item[0].institution.id
-				payload['institution_till_id'] = product_item[0].institution_till.all()[0].id
+				#payload['till_number'] = product_item[0].product_type.institution_till.till_number
 				payload['currency'] = product_item[0].currency.code
 				payload['amount'] = product_item[0].unit_cost
 				payload['response'] = 'Successful'
@@ -142,7 +144,7 @@ class System:
 				else:
 					payload['product_item_id'] = product_item[0].id
 					payload['institution_id'] = product_item[0].institution.id
-					payload['institution_till_id'] = product_item[0].institution_till.all()[0].id
+					#payload['till_number'] = product_item[0].product_type.institution_till.till_number
 					payload['currency'] = product_item[0].currency.code
 					payload['amount'] = product_item[0].unit_cost
 					payload['response'] = 'Successful'
@@ -310,7 +312,7 @@ class System:
                 	                if 'alias' in payload.keys():
                         	                enrollment.alias = payload['alias']
                                 	else:
-						alias = institution.name
+						alias = institution.name if institution else ''
 						if 'full_names' in payload.keys():
 							alias = payload['full_names']
 						elif 'first_name' in payload.keys() or 'last_name' in payload.keys() or 'middle_name' in payload.keys():
@@ -341,7 +343,7 @@ class System:
 					payload['response'] = 'Enrollment Captured'
 
 				else:
-					payload['response_status'] = '25'
+					payload['response_status'] = '00'
 					payload['response'] = 'Enrollment Type Does Not Exist'
 
 		except Exception, e:
@@ -376,7 +378,7 @@ def add_enrollment_type():
 
 	for i in e:
 		if i.enrollment_type == None:
-			enrollment_type = EnrollmentType.objects.get(institution=i.institution,product_item=i.product_item)
+			enrollment_type = EnrollmentType.objects.get(product_item__institution=i.institution,product_item=i.product_item)
 			i.enrollment_type = enrollment_type
 			i.save()
 

@@ -9,7 +9,8 @@ class PaymentMethodStatusAdmin(admin.ModelAdmin):
 admin.site.register(PaymentMethodStatus, PaymentMethodStatusAdmin)
 
 class PaymentMethodAdmin(admin.ModelAdmin):
-		list_display = ('id','name','description','status','send','receive','gateway_list','country_list','currency_list','channel_list',)
+		list_display = ('id','name','description','status','send','receive','default_currency','min_amount',\
+				'max_amount','gateway_list','country_list','currency_list','channel_list',)
 admin.site.register(PaymentMethod, PaymentMethodAdmin)
 
 class ProductAdmin(admin.ModelAdmin):
@@ -42,10 +43,10 @@ admin.site.register(CommandStatus, CommandStatusAdmin)
 
 class ServiceCommandAdmin(admin.ModelAdmin):
 		list_display = ('id','command_function','level','service','node_system', 'status',\
-		 'reverse_function','description', 'service_account', 'access_level_list', 'channel_list',\
+		 'reverse_function','description', 'service_account', 'access_level_list','profile_status_list', 'channel_list',\
 		 'payment_method_list','trigger_list','gateway_list',)
 	        list_filter = ('service','node_system','gateway','access_level','channel','payment_method',)
-		search_fields = ('command_function','service__name','reverse_function',)
+		search_fields = ('command_function','service__name','reverse_function','trigger__name',)
 admin.site.register(ServiceCommand, ServiceCommandAdmin)
 
 class TransactionStatusAdmin(admin.ModelAdmin):
@@ -57,7 +58,7 @@ class TransactionAdmin(admin.OSMGeoAdmin):
 		 'request','currency','amount',\
 		  'charges','raise_charges','response','ip_address','transaction_status','response_status',\
 		    'geometry','current_command','next_command','msisdn','overall_status','institution',\
-			'fingerprint','date_modified','date_created')
+			'fingerprint','csrf_token','date_modified','date_created')
 	        search_fields = ('id','gateway_profile__user__first_name','gateway_profile__user__last_name',\
 				'gateway_profile__user__username','gateway_profile__msisdn__phone_number',
 				'request','response',)

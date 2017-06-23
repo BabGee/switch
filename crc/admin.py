@@ -11,6 +11,10 @@ class CardTypeAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description','status','code',)
 admin.site.register(CardType, CardTypeAdmin)
 
+class CardVerificationAmountAdmin(admin.ModelAdmin):
+		list_display = ('id','currency','min_amount','max_amount')
+admin.site.register(CardVerificationAmount, CardVerificationAmountAdmin)
+
 class CardRecordStatusAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description')
 admin.site.register(CardRecordStatus, CardRecordStatusAdmin)
@@ -18,17 +22,13 @@ admin.site.register(CardRecordStatus, CardRecordStatusAdmin)
 class CardRecordAdmin(admin.ModelAdmin):
 		list_display = ('id','status',\
 		'card_number','card_type','card_expiry_date','token',\
-		'gateway_profile','pan',)
+		'gateway_profile','pan','activation_currency','activation_amount',\
+		'activation_pin','pin_retries','is_default',)
 admin.site.register(CardRecord, CardRecordAdmin)
-
-class CardRecordActivityStatusAdmin(admin.ModelAdmin):
-		list_display = ('id','name','description')
-admin.site.register(CardRecordActivityStatus, CardRecordActivityStatusAdmin)
 
 class CardRecordActivityAdmin(admin.ModelAdmin):
 		list_display = ('id','card_record','transaction_reference','order','request','currency','amount',\
-				'charges','raise_charges','response','transaction_status','response_status','institution')
+				'charges','raise_charges','response','transaction_status','response_status','institution',\
+				'scheduled_send','sends',)
 admin.site.register(CardRecordActivity, CardRecordActivityAdmin)
-
-
 

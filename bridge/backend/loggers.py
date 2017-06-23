@@ -99,6 +99,11 @@ class Loggers:
 			if 'fingerprint' in payload.keys():
 				transaction.fingerprint = payload['fingerprint']
 
+			if 'csrf_token' in payload.keys():
+				transaction.csrf_token = payload['csrf_token']
+			elif 'csrfmiddlewaretoken' in payload.keys():
+				transaction.csrf_token = payload['csrfmiddlewaretoken']
+
 			transaction.save()
 
 			self.response_params['response_status'] = '00'

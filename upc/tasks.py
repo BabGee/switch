@@ -54,9 +54,9 @@ class Wrappers:
 			elif len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
 				country_list = Country.objects.filter(mpoly__intersects=trans_point)
 				ip_point = g.geos(str(payload['ip_address']))
-				if country_list.exists() and country_list[0].ccode:
+				if country_list.exists() and country_list[0].ccode and int(payload['chid']) in [1,3,7,8,9,10]:
 					msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
-				elif ip_point:
+				elif ip_point and int(payload['chid']) in [1,3,7,8,9,10]:
 					country_list = Country.objects.filter(mpoly__intersects=ip_point)
 					if country_list.exists() and country_list[0].ccode:
 						msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
@@ -69,7 +69,6 @@ class Wrappers:
 			else:
 				msisdn = None
 
-		lgr.info('MSISDN: %s' % msisdn)
 		return msisdn
 
 	@app.task(filter=task_method, ignore_result=True)
@@ -93,6 +92,80 @@ class Wrappers:
 
 
 class System(Wrappers):
+	def get_profile_details(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			user = gateway_profile.user
+			profile = user.profile
+
+			payload["email"] = user.email
+			payload['first_name'] = user.first_name
+			payload['last_name'] = user.last_name
+			payload['middle_name'] = profile.middle_name
+			payload['national_id'] = profile.national_id
+			payload['physical_address'] = profile.physical_address
+			payload['city'] = profile.city
+			payload['region'] = profile.region
+			payload['postal_code'] = profile.postal_code
+			payload['country'] = profile.country.iso2
+			payload['address'] = profile.address
+
+			payload['response'] = 'Profile Details Captured'
+			payload['response_status'] = '00'
+		except Exception, e:
+			lgr.info('Error on get profile details: %s' % e)
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+		return payload
+
+
+	def avs_check(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			def avs_triggers(session_gateway_profile, payload):
+
+				detail_missing = False
+				if session_gateway_profile.user.email in [None,''] or self.validateEmail(session_gateway_profile.user.email) == False:
+					payload['trigger'] = 'no_email%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					detail_missing = True
+				if session_gateway_profile.msisdn in [None,'']:
+					payload['trigger'] = 'no_msisdn%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					detail_missing = True
+				if session_gateway_profile.user.first_name in [None,'']:
+					payload['trigger'] = 'no_first_name%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					detail_missing = True
+				if session_gateway_profile.user.last_name in [None,'']:
+					payload['trigger'] = 'no_last_name%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					detail_missing = True
+				if session_gateway_profile.user.profile.physical_address in [None,'']:
+					payload['trigger'] = 'no_address%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					detail_missing = True
+				if session_gateway_profile.user.profile.city in [None,'']:
+					payload['trigger'] = 'no_city%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					detail_missing = True
+				if session_gateway_profile.user.profile.postal_code in [None,'']:
+					payload['trigger'] = 'no_postal_code%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					detail_missing = True
+				if session_gateway_profile.user.profile.country in [None,'']:
+					payload['trigger'] = 'no_country%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					detail_missing = True
+				if detail_missing:
+					payload['trigger'] = 'detail_missing%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
+				return payload
+
+			payload = avs_triggers(gateway_profile, payload)
+
+			payload['response'] = 'AVS Details Captured'
+			payload['response_status'] = '00'
+		except Exception, e:
+			lgr.info('Error on avs check: %s' % e)
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+		return payload
+
+
 	def registration_check(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
@@ -115,48 +188,59 @@ class System(Wrappers):
 				return payload
 
 			if 'email_msisdn' in payload.keys() and self.validateEmail(payload["email_msisdn"]):
+				lgr.info('With Email')
 				gateway_profile_list = GatewayProfile.objects.filter(user__email=payload['email_msisdn'], gateway=gateway_profile.gateway)
 
 				if gateway_profile_list.exists() and gateway_profile_list[0].msisdn not in [None,'']:
 					payload['msisdn'] = gateway_profile_list[0].msisdn.phone_number
+					payload['trigger'] = 'with_email,is_registered,%s%s' % (gateway_profile_list[0].status.name,','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				elif gateway_profile_list.exists():
 					#check postal code, address, country
 					lgr.info('Profile With Email: %s' % gateway_profile_list[0])
+					payload['trigger'] = 'with_email,is_registered,%s%s' % (gateway_profile_list[0].status.name,','+payload['trigger'] if 'trigger' in payload.keys() else '')
 					payload = avs_triggers(gateway_profile_list[0],payload)
+
 				else:
 
-					lgr.info('No Profile With Email: %s' % gateway_profile_list[0])
-					payload['trigger'] = 'not_registered%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					lgr.info('No Profile With Email')
+					payload['trigger'] = 'with_email,not_registered%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
 				payload['email'] = payload['email_msisdn']
 				payload['response'] = 'Email Captured'
 				payload['response_status'] = '00'
 			else:
+
+
+				lgr.info('Without Email')
 				msisdn = None
 				if "email_msisdn" in payload.keys():
 		 			payload['msisdn'] = str(payload['email_msisdn'])
 					msisdn = self.get_msisdn(payload)
 				lgr.info('MSISDN: %s' % msisdn)
 				if msisdn is not None:
+					lgr.info('With MSISDN')
 					gateway_profile_list = GatewayProfile.objects.filter(msisdn__phone_number=msisdn, gateway=gateway_profile.gateway)
 
+					lgr.info('With MSISDN Profile: %s' % gateway_profile_list)
 					if gateway_profile_list.exists() and self.validateEmail(gateway_profile_list[0].user.email):
 						lgr.info('Profile With Email: %s' % gateway_profile_list[0])
 						payload['email'] = gateway_profile_list[0].user.email
+						payload['trigger'] = 'with_email,with_msisdn,is_registered,%s%s' % (gateway_profile_list[0].status.name,','+payload['trigger'] if 'trigger' in payload.keys() else '')
 						payload = avs_triggers(gateway_profile_list[0],payload)
 					elif gateway_profile_list.exists():
 						lgr.info('Profile With No Email: %s' % gateway_profile_list[0])
-						payload['trigger'] = 'no_email%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+						payload['trigger'] = 'no_email,with_msisdn,is_registered,%s%s' % (gateway_profile_list[0].status.name,','+payload['trigger'] if 'trigger' in payload.keys() else '')
 						payload = avs_triggers(gateway_profile_list[0],payload)
 					else:
-
-						lgr.info('No Profile With No Email: %s' % gateway_profile_list[0])
-						payload['trigger'] = 'no_email,not_registered%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+						lgr.info('No Profile With No Email')
+						payload['trigger'] = 'no_email,with_msisdn,not_registered%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
 					payload['msisdn'] = msisdn
 					payload['response'] = 'Phone Number Captured'
 					payload['response_status'] = '00'
 				else:
+
+					if 'msisdn' in payload.keys(): del payload['msisdn']
 					payload['response'] = 'MSISDN or Email Not Found'
 					payload['response_status'] = '25'
 		except Exception, e:
@@ -517,6 +601,28 @@ class System(Wrappers):
 			payload['response_status'] = '96'
 		return payload
 
+	def one_time_password(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+			chars = string.ascii_letters + string.punctuation + string.digits
+			rnd = random.SystemRandom()
+			password = ''.join(rnd.choice(chars) for i in range(8))
+
+			session_gateway_profile.user.set_password(password)
+			session_gateway_profile.status = ProfileStatus.objects.get(name='ONE TIME PASSWORD')
+			session_gateway_profile.save()
+
+			payload['one_time_password'] = password
+			payload['response'] = 'One Time Password Set'
+			payload['response_status'] = '00'
+		except Exception, e:
+			lgr.info('Error on One Time Password: %s' % e)
+			payload['response_status'] = '96'
+		return payload
+
+
 	def one_time_pin(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
@@ -728,35 +834,8 @@ class System(Wrappers):
 
 		return payload
 
-	def event_status(self, payload, node_info):
-		try:
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			lgr.info('Gateway Profile in Event Status: %s' % gateway_profile)
-			if gateway_profile.access_level.name in ['SYSTEM']:
-				lgr.info('User is System User')
-				payload['response'] = 'System User'
-			else:
-       	                        payload['profile_photo'] = gateway_profile.user.profile.photo.name
-       	                        payload['first_name'] = gateway_profile.user.first_name if 'first_name' not in payload.keys() else payload['first_name']
-       	                       	payload['last_name'] = gateway_profile.user.last_name if 'last_name' not in payload.keys() else payload['last_name']
-       	                       	payload['access_level'] = gateway_profile.access_level.name
-				if gateway_profile.institution:
-					payload['institution_id'] = gateway_profile.institution.id
-				payload['response'] = 'Gateway Profile Exists'
-			
-			payload['response_status'] = '00'
-		except Exception, e:
-			lgr.info('Error on Event Status: %s' % e)
-			payload['response_status'] = '96'
-
-		return payload
-
 	def create_user_profile(self, payload, node_info):
 		try:
-			#Clean MSISDN for lookup
-			if 'msisdn' in payload.keys():
-				payload["msisdn"] = '+%s' % payload["msisdn"] if '+' not in payload["msisdn"] else payload["msisdn"]
-
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			host = Host.objects.get(host=payload['gateway_host'], status__name='ENABLED')
 
@@ -805,9 +884,6 @@ class System(Wrappers):
 					access_level = AccessLevel.objects.get(id=payload["access_level_id"])
 					if 'institution_id' in payload.keys():
 						create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
-					elif gateway_profile.institution not in [None, '']:
-						create_gateway_profile.institution = gateway_profile.institution
-
 				else:
 					access_level = AccessLevel.objects.get(name="CUSTOMER")
 
@@ -825,6 +901,10 @@ class System(Wrappers):
 
 			if profile_error:
 				payload['response'] = 'Profile Error: Email/Phone Number Exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+				create_gateway_profile = None
+			elif existing_gateway_profile.exists() and existing_gateway_profile[0].access_level.name == 'SYSTEM':
+				payload['response'] = 'System User Not Allowed'
 				payload['response_status'] = '63'
 				create_gateway_profile = None
 			elif existing_gateway_profile.exists():
@@ -882,9 +962,9 @@ class System(Wrappers):
 				username = ''
 				if 'email' in payload.keys() and self.validateEmail(payload["email"]):
 					username = createUsername(payload["email"].split('@')[0])
-				elif 'msisdn' in payload.keys() and len(payload["msisdn"])>=9 and len(payload["msisdn"])<=15:
+				elif 'msisdn' in payload.keys() and self.get_msisdn(payload):
 					#username = '%s' % (time.time()*1000)
-					username = '%s' % payload["msisdn"]
+					username = '%s' % self.get_msisdn(payload)
 					username = createUsername(username)
 
 				payload['username'] = username
@@ -1055,11 +1135,23 @@ class System(Wrappers):
                         #Check if LOGIN or SIGN UP
 			authorized_gateway_profile = None
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			if 'username' in payload.keys() and 'password' in payload.keys():
+			if ('username' in payload.keys() or ('email' in payload.keys() and self.validateEmail(payload['email']))) and 'password' in payload.keys():
 				lgr.info("Returning User")
 				#CHECK CREDENTIALS and 
-				gateway_login_profile = GatewayProfile.objects.filter(Q(gateway=gateway_profile.gateway),Q(user__username=payload['username'].strip())|\
-							Q(user__email=payload['username'].strip()))
+				if 'email' in payload.keys() and self.validateEmail(payload['email']):
+					lgr.info('Login with Valid Email')
+					gateway_login_profile = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,user__email=payload['email'].strip())
+
+				elif 'username' in payload.keys() and self.validateEmail(payload['username']):
+					lgr.info('Login with Username as Valid Email')
+					gateway_login_profile = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,user__email=payload['username'].strip())
+				elif 'username' in payload.keys():
+					lgr.info('Login with Username')
+					gateway_login_profile = GatewayProfile.objects.filter(Q(gateway=gateway_profile.gateway),Q(user__username=payload['username'].strip())|\
+								Q(user__email=payload['username'].strip()))
+				else:
+					lgr.info('Login Details not found')
+					gateway_login_profile = GatewayProfile.objects.none()
 
 				for p in gateway_login_profile: #Loop through all profils matching username
 					if p.user.is_active and p.user.check_password(payload['password']):
@@ -1073,7 +1165,7 @@ class System(Wrappers):
 						gateway_profile__gateway=gateway_profile.gateway,\
 						date_created__gte=timezone.localtime(timezone.now())-timezone.timedelta(hours=12))
 				lgr.info('Fectch Existing session: %s' % session)
-				if len(session) > 0:
+				if session.exists():
 					authorized_gateway_profile = session[0].gateway_profile
 					#payload['trigger'] = "SET PASSWORD"
 
@@ -1100,7 +1192,7 @@ class System(Wrappers):
 							session_gateway_profile.save()
 
 
-			if authorized_gateway_profile is not None and authorized_gateway_profile.status.name in ['ACTIVATED','ONE TIME PIN']:
+			if authorized_gateway_profile is not None and authorized_gateway_profile.status.name in ['ACTIVATED','ONE TIME PIN','ONE TIME PASSWORD']:
                        	        details['api_key'] = authorized_gateway_profile.user.profile.api_key
                                 details['status'] = authorized_gateway_profile.status.name
 				details['access_level'] = authorized_gateway_profile.access_level.name

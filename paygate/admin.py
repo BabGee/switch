@@ -17,7 +17,8 @@ admin.site.register(FloatCharge, FloatChargeAdmin)
 class FloatManagerAdmin(admin.ModelAdmin):
 	list_display = ('id','date_modified','date_created','ext_outbound_id','credit','float_amount',\
 			'charge','balance_bf','expiry','float_type','gateway','institution')
-	list_filter = ('float_type','gateway','institution',)
+	list_filter = ('float_type','gateway','institution','credit',)
+	search_fields = ('ext_outbound_id','id',)
 admin.site.register(FloatManager, FloatManagerAdmin)
  
 class EndpointAdmin(admin.ModelAdmin):

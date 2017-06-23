@@ -1,7 +1,7 @@
 from notify.models import *
 from django.utils import timezone
 
-contact = Contact.objects.get(id=12422)
+contact = Contact.objects.get(id=623310)
 print contact
 #<Contact: 10   +254717103598 MAMTAG ADMINISTRATOR 73 TEST Bulk SMS Account 0.00 TEST Bulk SMS Account TEST>
 state=OutBoundState.objects.get(name='CREATED')

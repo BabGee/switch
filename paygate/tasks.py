@@ -105,7 +105,7 @@ class Wrappers:
 			else: payload['response'] = 'Remit Submitted'
 			if 'response_status' in params.keys() and params['response_status'] not in [None,""]:
 				try:i.response_status = ResponseStatus.objects.get(response=str(params['response_status']))
-				except:i.response_status = ResponseStatus.objects.get(response='06')
+				except:params['response_status'] = '06'; i.response_status = ResponseStatus.objects.get(response='06')
 				if params['response_status'] == '00':
 					i.state = OutgoingState.objects.get(name='DELIVERED')
 					payload['response_status'] = '00'
@@ -189,10 +189,9 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			reference = payload['reference'].strip() if 'reference' in payload.keys() else ""
 			reference_list = reference.split("-")
-			institution_incoming_service, till, institution = None, None, None
+			institution_incoming_service, till_number, institution = None, None, None
 			if len(reference_list)==3:
-				till_id = reference_list[0]
-				till = InstitutionTill.objects.get(id=till_id)
+				till_number = reference_list[0]
 
 				#order, institution does not need a service as purchase order items have services
 				business_number = reference_list[1] #is unique in UPC
@@ -209,23 +208,33 @@ class System(Wrappers):
 			remittance_product = RemittanceProduct.objects.filter(Q(service__name=payload['SERVICE']),\
 						Q(remittance__gateway=gateway_profile.gateway)|Q(remittance__gateway=None))
 
-			if till is not None:
-				remittance_product = remittance_product.filter(remittance__institution_till=till)
+			lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
+
+			'''
+			if till_number is not None:
+				remittance_product = remittance_product.filter(remittance__institution_till__till_number=till_number)
+			lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
+			'''
 
 			if 'currency' in payload.keys() and payload['currency'] not in ["",None]:
 				remittance_product = remittance_product.filter(currency__code=payload['currency'])
 
+			lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
+
 			if 'payment_method' in payload.keys() and payload['payment_method'] not in ["",None]:
 				remittance_product = remittance_product.filter(payment_method__name=payload['payment_method'])
+
+			lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
 
 			if 'ext_service_id' in payload.keys():
 				remittance_product = remittance_product.filter(remittance__ext_service_id=payload['ext_service_id'])
 
+			lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
+
 			if 'ext_product_id' in payload.keys():
 				remittance_product = remittance_product.filter(ext_product_id=payload['ext_product_id'])
 
-			lgr.info('Remit: remittance_product: %s' % remittance_product)
-			if len(remittance_product)>0:
+			if remittance_product.exists():
 				#log paygate incoming
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
 				state = IncomingState.objects.get(name="CREATED")
@@ -254,6 +263,9 @@ class System(Wrappers):
 
 					payload['response_status'] = '00'
 					payload['response'] = 'Payment Received'
+			else:
+					payload['response_status'] = '00'
+					payload['response'] = 'Remittance Product Not Found'
                 except Exception, e:
                         payload['response_status'] = '96'
                         lgr.info("Error on Payment Notification: %s" % e)
@@ -301,27 +313,45 @@ class System(Wrappers):
 							Q(remittance__gateway=gateway_profile.gateway)|Q(remittance__gateway=None))
 
 				if 'currency' in payload.keys():
-					remittance_product = remittance_product.filter(currency__code=payload['currency'])
+					remittance_product = remittance_product.filter(Q(currency__code=payload['currency'])|Q(currency=None))
 
 				if 'payment_method' in payload.keys():
-					remittance_product = remittance_product.filter(payment_method__name=payload['payment_method'])
+					remittance_product = remittance_product.filter(Q(payment_method__name=payload['payment_method'])\
+								|Q(payment_method=None))
 
 				if 'ext_service_id' in payload.keys():
 					remittance_product = remittance_product.filter(remittance__ext_service_id=payload['ext_service_id'])
 
 				if 'product_type_id' in payload.keys():
-					remittance_product = remittance_product.filter(product_type__id=payload['product_type_id'],\
-								remittance__institution_till__in=product_item.institution_till.all())
+					remittance_product = remittance_product.filter(Q(product_type__id=payload['product_type_id'])\
+								|Q(product_type=None))
 
 				if 'product_item_id' in payload.keys():
 					product_item = ProductItem.objects.get(id=payload['product_item_id'])
-					remittance_product = remittance_product.filter(product_type=product_item.product_type,\
-								remittance__institution_till__in=product_item.institution_till.all())
+					remittance_product = remittance_product.filter(Q(product_type=product_item.product_type)\
+								|Q(product_type=None))
 
 				if 'ext_product_id' in payload.keys():
 					remittance_product = remittance_product.filter(ext_product_id=payload['ext_product_id'])
 
 				if remittance_product.exists():
+					#Forex Currency
+					if 'currency' in payload.keys() and payload['currency'] not in ["",None]:
+						currency = Currency.objects.get(code=payload['currency'])
+						if currency <> remittance_product[0].remittance.institution_till.till_currency:
+							till_currency = remittance_product[0].remittance.institution_till.till_currency
+							payload['currency'] = till_currency.code
+							forex = Forex.objects.filter(base_currency=currency, quote_currency=till_currency)
+							if forex.exists():
+								if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
+									amount = Decimal(payload['amount'])*forex[0].exchange_rate
+									payload['amount'] = amount.quantize(Decimal('.01'), rounding=ROUND_UP) 
+								else:
+									payload['amount'] = Decimal(0)
+							else:
+								payload['amount'] = Decimal(0)
+							lgr.info('Forex Calculate amount to %s|from: %s| %s' % (currency, till_currency, payload['amount']) )
+
 					#log outgoing
 					response_status = ResponseStatus.objects.get(response='DEFAULT')
 					state = OutgoingState.objects.get(name="CREATED")
@@ -345,12 +375,6 @@ class System(Wrappers):
 					if institution is not None:
 						outgoing.institution = institution
 
-					if 'currency' in payload.keys() and payload['currency'] not in ["",None]:
-						outgoing.currency = Currency.objects.get(code=payload['currency'])
-					if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
-						outgoing.amount = Decimal(payload['amount'])
-					if 'charge' in payload.keys() and payload['charge'] not in ["",None]:
-						outgoing.charge = Decimal(payload['charge'])
 					if 'scheduled_send' in payload.keys() and payload['scheduled_send'] not in ["",None]:
 						try:date_obj = datetime.strptime(payload["scheduled_send"], '%d/%m/%Y %I:%M %p')
 						except: date_obj = None
@@ -370,7 +394,15 @@ class System(Wrappers):
 					elif 'bridge__transaction_id' in payload.keys():
 						outgoing.ext_outbound_id = payload['bridge__transaction_id']
 
+					if 'currency' in payload.keys() and payload['currency'] not in ["",None]:
+						outgoing.currency = Currency.objects.get(code=payload['currency'])
+					if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
+						outgoing.amount = Decimal(payload['amount'])
+					if 'charge' in payload.keys() and payload['charge'] not in ["",None]:
+						outgoing.charge = Decimal(payload['charge'])
+
 					outgoing.save()
+
 					if remittance_product[0].realtime and remittance_product[0].remittance.status.name == 'ACTIVE': #Process realtime & Active remittance 
 						lgr.info("Active Realtime Remit")
 						params = payload.copy()
@@ -393,20 +425,22 @@ class System(Wrappers):
 						if 'response' in params.keys(): outgoing.message = str(params['response'])[:1919]
 						if 'response_status' in params.keys() and params['response_status'] not in [None,""]:
 							try:outgoing.response_status = ResponseStatus.objects.get(response=str(params['response_status']))
-							except:outgoing.response_status = ResponseStatus.objects.get(response='06')
+							except:params['response_status']='06';outgoing.response_status = ResponseStatus.objects.get(response='06')
 							if params['response_status'] == '00':
 								outgoing.state = OutgoingState.objects.get(name='DELIVERED')	
 								if remittance_product[0].show_message:
 									payload['response'] = params['response']
 								else:
 									payload['response'] = 'Remittance Submitted'
+
+								payload['remit_response'] = params['response']
 							else:
 								outgoing.state = OutgoingState.objects.get(name='SENT')
 								payload['response_status'] = params['response_status']
 								if 'response' in params.keys() and remittance_product[0].show_message:
 									payload['response'] = params['response']
 								else:
-									payload['response'] = 'Remittance Submitted'
+									payload['response'] = 'Remittance Failed'
 						else:
 							outgoing.state = OutgoingState.objects.get(name='FAILED')
 							outgoing.response_status = ResponseStatus.objects.get(response='06')
@@ -458,9 +492,9 @@ class System(Wrappers):
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
 				float_balance = FloatManager.objects.filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
+
 				if 'institution_id' in payload.keys():
-					institution = Institution.objects.get(id=payload['institution_id'])
-					float_balance = float_balance.filter(institution=institution)
+					float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
 				else:
 					float_balance = float_balance.filter(institution=None)
 
@@ -561,8 +595,7 @@ class System(Wrappers):
 				float_balance = FloatManager.objects.filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
 				if 'institution_id' in payload.keys():
-					institution = Institution.objects.get(id=payload['institution_id'])
-					float_balance = float_balance.filter(institution=institution)
+					float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
 				else:
 					float_balance = float_balance.filter(institution=None)
 

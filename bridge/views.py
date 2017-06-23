@@ -16,7 +16,7 @@ class ServiceProcessor:
 	def action_reverse(self, commands, gateway_profile, payload, transaction, reverse_response_tree, level):
 		response = 'No Response'
 
-		commands = commands.filter(~Q(reverse_function__isnull=True),~Q(reverse_function__iexact=''), level__lt=level,\
+		commands = commands.filter(~Q(reverse_function__isnull=True),~Q(reverse_function__iexact=''), level__lte=level,\
 				 status__name='ENABLED').order_by('-level')
 		lgr.info('Got Reversal Commands:%s' % commands)
 
@@ -102,7 +102,7 @@ class ServiceProcessor:
 					response_status = Wrappers().process_responsestatus(payload['response_status'], payload)
 					response = response_status['response']
 					lgr.info('Failed response status. check if to reverse: %s' % response_status['reverse'])						
-					if response_status['reverse']:
+					if response_status['reverse'] and item.reverse_function not in ['no_reverse']:
 						lgr.info('This definitely has to be reversed surely: %s' % item.level)
 						reverse=True
 						level=item.level

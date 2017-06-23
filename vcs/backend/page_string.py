@@ -12,8 +12,44 @@ from decimal import Decimal
 
 import logging
 lgr = logging.getLogger('vcs')
+class Wrappers:
+	def sale_charge_bill(self, balance_bf, product_item, gateway):
+		from pos.models import SaleCharge
+		#Sale Charge Item Bill entry
+		sale_charge = SaleCharge.objects.filter(Q(min_amount__lt=balance_bf,max_amount__gt=balance_bf,credit=False),\
+						Q(Q(product_type=product_item.product_type)|Q(product_type=None)),\
+						Q(Q(institution=product_item.institution)|Q(institution=None)),\
+						Q(Q(gateway=gateway)|Q(gateway=None)))
 
-class PageString(ServiceCall):
+		def get_balance(balance_bf, item, product_item):
+			if item.currency <> product_item.currency:
+				forex = Forex.objects.filter(base_currency=product_item.currency, quote_currency=item.currency)
+				total = Decimal(0)
+				if forex.exists():
+					total = balance_bf/forex[0].exchange_rate
+
+				balance_bf = balance_bf + total
+				lgr.info('Forex Calculate balance_bf to %s|from: %s| %s' % (product_item.currency, item.currency, balance_bf) )
+
+			return balance_bf
+
+
+		for sc in sale_charge:
+			item = sc.sale_charge_type.product_item
+			charge = Decimal(0)
+			if sc.is_percentage:
+				charge = charge + ((sc.charge_value/100)*Decimal(balance_bf))
+			else:
+				charge_value = get_balance(sc.charge_value, item, product_item)
+				charge = charge+charge_value
+
+			balance_bf = balance_bf + charge
+
+		return balance_bf
+
+
+
+class PageString(ServiceCall, Wrappers):
 	def get_nav(self, navigator, attrs={}):
 		navigator_list = Navigator.objects.filter(Q(session=navigator.session), Q(nav_step=navigator.nav_step),\
 			~Q(input_select__in=['']) ).order_by('-date_created','-menu__level')
@@ -526,7 +562,7 @@ class PageString(ServiceCall):
 						#cart_item_list = bill_manager_list[0].order.cart_item.filter(Q(product_item__product_type__payment_method__channel__id=payload['chid'])|Q(product_item__product_type__payment_method__channel=None))
 						lgr.info('Cart Item List: %s' % cart_item_list)
 						cart_item_payment_method = cart_item_list.filter(Q(product_item__product_type__payment_method__channel__id=payload['chid'])|Q(product_item__product_type__payment_method__channel=None)).\
-										values('product_item__product_type__payment_method__name').\
+										values('product_item__product_type__payment_method__name','product_item__currency__code').\
 										annotate(num_payments=Count('product_item__product_type__payment_method__name'))
 						#cart_item_payment_method = cart_item_list.values('product_item__product_type__payment_method__name').\
 						#			annotate(num_payments=Count('product_item__product_type__payment_method__name'))
@@ -540,7 +576,8 @@ class PageString(ServiceCall):
 								if i['product_item__product_type__payment_method__name'] == 'MIPAY':
 									session_account_manager = AccountManager.objects.filter(dest_account__account_status__name='ACTIVE',\
 											dest_account__gateway_profile__msisdn__phone_number=payload['msisdn'],\
-											dest_account__gateway_profile__gateway__name='MIPAY').\
+											dest_account__gateway_profile__gateway__name='MIPAY',\
+											dest_account__account_type__product_item__currency__code=i['product_item__currency__code']).\
 											order_by('-date_created')
 
 									if session_account_manager.exists():
@@ -593,7 +630,8 @@ class PageString(ServiceCall):
 							if i.name == 'MIPAY':
 								session_account_manager = AccountManager.objects.filter(dest_account__account_status__name='ACTIVE',\
 										dest_account__gateway_profile__msisdn__phone_number=payload['msisdn'],\
-										dest_account__gateway_profile__gateway__name='MIPAY').\
+										dest_account__gateway_profile__gateway__name='MIPAY',\
+										dest_account__account_type__product_item__currency=music[0].product_item.currency).\
 										order_by('-date_created')
 
 								if session_account_manager.exists():
@@ -698,14 +736,15 @@ class PageString(ServiceCall):
 					item = ''
 					item_list = []
 					count = 1
-					if len(product_item)>0:
+					if product_item.exists():
 						payment_method = product_item[0].product_type.payment_method.filter(Q(channel__id=payload['chid'])|Q(channel=None))
 						for i in payment_method:
 							account_balance = None
 							if i.name == 'MIPAY':
 								session_account_manager = AccountManager.objects.filter(dest_account__account_status__name='ACTIVE',\
 										dest_account__gateway_profile__msisdn__phone_number=payload['msisdn'],\
-										dest_account__gateway_profile__gateway__name='MIPAY').\
+										dest_account__gateway_profile__gateway__name='MIPAY',\
+										dest_account__account_type__product_item__currency=product_item[0].currency).\
 										order_by('-date_created')
 
 								if session_account_manager.exists():
@@ -928,13 +967,14 @@ class PageString(ServiceCall):
 						product_item = product_item.filter(Q(product_type__name=variable_val)|Q(product_type__product_category__name=variable_val))
 
 					item = ''
-					if len(product_item)>0:
+					if product_item.exists():
 						unit_cost = product_item[0].unit_cost
 						if  product_item[0].variable_unit and 'quantity' in params.keys():
 							unit_cost = unit_cost*Decimal(params['quantity'])
 						elif product_item[0].variable_unit and 'amount' in params.keys():
 							unit_cost = Decimal(params['amount'])	
 
+						unit_cost = self.sale_charge_bill(unit_cost, product_item[0], code[0].gateway)
 		                                cost = '{0:,.2f}'.format(unit_cost) if unit_cost > 0 else None
 						item = '%s@%s %s' % (product_item[0].name,\
 									product_item[0].currency.code,\
@@ -1124,7 +1164,7 @@ class PageString(ServiceCall):
 					if code[0].institution:
 						product_item = ProductItem.objects.filter(institution__id=code[0].institution.id, status__name='ACTIVE').order_by('id')
 					else:
-						product_item = ProductItem.objects.filter(institution__gateway=code[0].gateway, institution__in=[e.enrollment_type.institution for e in enrollment_list], status__name='ACTIVE').order_by('id')
+						product_item = ProductItem.objects.filter(institution__gateway=code[0].gateway, institution__in=[e.enrollment_type.product_item.institution for e in enrollment_list], status__name='ACTIVE').order_by('id')
 
 
 					if variable_val not in ['',None]:

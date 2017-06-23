@@ -17,6 +17,9 @@ class PaymentMethod(models.Model):
 	status = models.ForeignKey(PaymentMethodStatus)
 	send = models.BooleanField(default=False)
 	receive = models.BooleanField(default=True)
+	default_currency = models.ForeignKey(Currency, related_name='default_currency')
+	min_amount = models.DecimalField(max_digits=19, decimal_places=2)
+	max_amount = models.DecimalField(max_digits=19, decimal_places=2)
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	country = models.ManyToManyField(Country, blank=True)
 	currency = models.ManyToManyField(Currency, blank=True)
@@ -91,12 +94,15 @@ class ServiceCommand(models.Model):
 	description = models.CharField(max_length=100)
 	service_account = models.CharField(max_length=45, null=True, blank=True)
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
+	profile_status = models.ManyToManyField(ProfileStatus, blank=True)
 	channel = models.ManyToManyField(Channel, blank=True)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	trigger = models.ManyToManyField(Trigger, blank=True)
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	def access_level_list(self):
 		return "\n".join([a.name for a in self.access_level.all()])
+	def profile_status_list(self):
+		return "\n".join([a.name for a in self.profile_status.all()])
 	def channel_list(self):
 		return "\n".join([a.name for a in self.channel.all()])
 	def payment_method_list(self):
@@ -142,6 +148,7 @@ class Transaction(models.Model):
 	overall_status = models.ForeignKey(ResponseStatus, null=True, blank=True, related_name="bridge__transaction__overall_status")
 	institution = models.ForeignKey(Institution, null=True, blank=True)
 	fingerprint = models.CharField(max_length=1024, editable=False, null=True, blank=True)
+	csrf_token = models.CharField(max_length=1024, editable=False, null=True, blank=True)
 	def __unicode__(self):
 		#return '%s %s %s' % (self.request, self.geometry.x, self.geometry.y)
  		return '%s' % (self.request)
