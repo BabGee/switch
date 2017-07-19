@@ -29,19 +29,19 @@ from django.db.models import Count, Sum, Max, Min, Avg
 
 import operator, string
 from django.core.mail import EmailMultiAlternatives
-
+from upc.tasks import Wrappers as UPCWrappers
 
 import logging
 lgr = logging.getLogger('notify')
 
 from celery import shared_task
-from celery.contrib.methods import task_method
-from celery.contrib.methods import task
+#from celery.contrib.methods import task_method
+from celery import task
 from switch.celery import app
 from switch.celery import single_instance_task
 
 class Wrappers:
-	@app.task(filter=task_method, ignore_result=True)
+	@app.task(ignore_result=True)
 	def service_call(self, service, gateway_profile, payload):
 		from celery.utils.log import get_task_logger
 		lgr = get_task_logger(__name__)
@@ -104,7 +104,7 @@ class Wrappers:
 
 		return payload
 
-	@app.task(filter=task_method, ignore_result=True)
+	@app.task(ignore_result=True)
 	def outbound_bulk_logger(self, payload, contact_list, scheduled_send):
 		from celery.utils.log import get_task_logger
 		lgr = get_task_logger(__name__)
@@ -125,7 +125,7 @@ class Wrappers:
 			lgr.info("Error on Outbound Bulk Logger: %s" % e)
 
 
-	@app.task(filter=task_method, ignore_result=True)
+	@app.task(ignore_result=True)
 	def send_outbound(self, payload, node):
 		from celery.utils.log import get_task_logger
 		lgr = get_task_logger(__name__)
@@ -151,7 +151,7 @@ class Wrappers:
 		except Exception, e:
 			lgr.info("Error on Sending Outbound: %s" % e)
 
-	@app.task(filter=task_method, ignore_result=True)
+	@app.task(ignore_result=True)
 	def send_contact_subscription(self, i, payload, node):
 		from celery.utils.log import get_task_logger
 		lgr = get_task_logger(__name__)
@@ -187,7 +187,7 @@ class Wrappers:
 		except Exception, e:
 			lgr.info("Error on Sending Contact Subscription: %s" % e)
 
-	@app.task(filter=task_method, ignore_result=True)
+	@app.task(ignore_result=True)
 	def send_contact_unsubscription(self, i, payload, node):
 		from celery.utils.log import get_task_logger
 		lgr = get_task_logger(__name__)
@@ -216,7 +216,7 @@ class Wrappers:
 			lgr.info("Error on Sending Contact: %s" % e)
 
 
-	@app.task(filter=task_method, ignore_result=True)
+	@app.task(ignore_result=True)
 	def notify_institution(self, payload, node_info):
 		from celery.utils.log import get_task_logger
 		lgr = get_task_logger(__name__)
@@ -274,6 +274,7 @@ class System(Wrappers):
 						 service__name=payload['SERVICE'])
 
 
+			'''
 			lng = payload['lng'] if 'lng' in payload.keys() else 0.0
 			lat = payload['lat'] if 'lat' in payload.keys() else 0.0
 	                trans_point = Point(float(lng), float(lat))
@@ -302,6 +303,8 @@ class System(Wrappers):
 					msisdn = '+%s' % msisdn #clean msisdn for lookup
 				else:
 					msisdn = None
+			'''
+			msisdn = UPCWrappers().get_msisdn(payload)
 
 			if msisdn is not None:
 				#Get/Filter MNO
@@ -406,7 +409,9 @@ class System(Wrappers):
 		try:
 			lgr.info("Get Payload: %s" % payload)
 
-			contact = Contact.objects.filter(gateway_profile__msisdn__phone_number=payload['msisdn'],\
+			msisdn = UPCWrappers().get_msisdn(payload)
+
+			contact = Contact.objects.filter(gateway_profile__msisdn__phone_number=msisdn,\
 				product__notification__code__institution__id=payload['institution_id'],\
 				product__subscribable=True,status__name='ACTIVE', subscribed=True)
 			if 'notification_product' in payload.keys():
@@ -445,8 +450,10 @@ class System(Wrappers):
 
 				if 'msisdn' in payload.keys():
 					payload['sender'] = payload['msisdn']
-		 		msisdn = str(payload['recipient'])
+		 		payload['msisdn'] = str(payload['recipient'])
+				msisdn = UPCWrappers().get_msisdn(payload)
 
+				'''
 				msisdn = msisdn.strip()
 				if len(msisdn) >= 9 and msisdn[:1] == '+':
 					msisdn = str(msisdn)
@@ -467,19 +474,21 @@ class System(Wrappers):
 					msisdn = '+%s' % msisdn #clean msisdn for lookup
 				else:
 					msisdn = None
-
+				'''
 				if msisdn is not None:
 					try:msisdn = MSISDN.objects.get(phone_number=msisdn)
 					except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
 				if msisdn is not None:
 					payload['msisdn'] = msisdn.phone_number
 					payload['response'] = 'MSISDN Changed to recipient'
+					payload["response_status"] = "00"
 				else:
+					payload['response_status'] = '25'
 					payload['response'] = 'No Recipient Found'
 
 			else:
+				payload['response_status'] = '25'
 				payload['response'] = 'No Recipient Found'
-			payload["response_status"] = "00"
 		except Exception, e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Get Notification: %s" % e)
@@ -495,7 +504,7 @@ class System(Wrappers):
 						 Q(service__name=payload['SERVICE'])).\
 						prefetch_related('notification__code','product_type')
 
-
+			'''
 			lng = payload['lng'] if 'lng' in payload.keys() else 0.0
 			lat = payload['lat'] if 'lat' in payload.keys() else 0.0
 	                trans_point = Point(float(lng), float(lat))
@@ -524,7 +533,8 @@ class System(Wrappers):
 					msisdn = '+%s' % msisdn #clean msisdn for lookup
 				else:
 					msisdn = None
-
+			'''
+			msisdn = UPCWrappers().get_msisdn(payload)
 			if msisdn is not None:
 				#Get/Filter MNO
 				code1=(len(msisdn) -7)
@@ -673,7 +683,7 @@ class System(Wrappers):
 				session_gateway_profile = None
 				#A get_profile function must have been called in order to create gateway_profile for an EMAIL or MSISDN prior to sending out notifications
 				if 'msisdn' in payload.keys() and len(payload['msisdn'])>=7 and len(payload['msisdn'])<=15:
-
+					'''
 					lng = payload['lng'] if 'lng' in payload.keys() else 0.0
 					lat = payload['lat'] if 'lat' in payload.keys() else 0.0
 		                	trans_point = Point(float(lng), float(lat))
@@ -700,18 +710,19 @@ class System(Wrappers):
 						msisdn = '+%s' % msisdn #clean msisdn for lookup
 					else:
 						msisdn = None
+					'''
+					msisdn = UPCWrappers().get_msisdn(payload)
+					if msisdn is not None:
+						try:msisdn = MSISDN.objects.get(phone_number=msisdn)
+						except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
 
-
-					try:msisdn = MSISDN.objects.get(phone_number=msisdn)
-					except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
-
-					session_gateway_profile_list = GatewayProfile.objects.filter(msisdn=msisdn, gateway=gateway_profile.gateway)
-					if session_gateway_profile_list.exists():
-						session_gateway_profile = session_gateway_profile_list[0]
-					else:
-						change_msisdn = ChangeProfileMSISDN.objects.filter(msisdn=msisdn,gateway_profile__gateway=gateway_profile.gateway) 
-						if change_msisdn.exists():
-							session_gateway_profile = change_msisdn[0].gateway_profile
+						session_gateway_profile_list = GatewayProfile.objects.filter(msisdn=msisdn, gateway=gateway_profile.gateway)
+						if session_gateway_profile_list.exists():
+							session_gateway_profile = session_gateway_profile_list[0]
+						else:
+							change_msisdn = ChangeProfileMSISDN.objects.filter(msisdn=msisdn,gateway_profile__gateway=gateway_profile.gateway) 
+							if change_msisdn.exists():
+								session_gateway_profile = change_msisdn[0].gateway_profile
 
 				elif 'email' in payload.keys() and self.validateEmail(payload["email"]):					
 					session_gateway_profile_list = GatewayProfile.objects.filter(user__email=payload["email"], gateway=gateway_profile.gateway)
@@ -842,7 +853,8 @@ class System(Wrappers):
 				if this_outbound.contact.product.notification.institution_url not in [None, ""]:
 					node_info = {}
 					node_info['institution_url'] = this_outbound.contact.product.notification.institution_url
-					self.notify_institution.delay(payload, node_info)
+					#self.notify_institution.delay(payload, node_info)
+					self.notify_institution.apply_async((self, payload, node_info), serializer='pickle')
 
 				payload['ext_outbound_id'] = this_outbound.ext_outbound_id
 				payload['response'] = "Delivery Status Processed"
@@ -863,18 +875,20 @@ class System(Wrappers):
 
 			institution_id = payload['institution_id']
 			service = payload['SERVICE']
-			#Check if MSISDN Exists
-			msisdn = None
-			try:msisdn = MSISDN.objects.get(phone_number=payload['msisdn'])
-			except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=payload['msisdn']);msisdn.save();
 
 			notification_product = NotificationProduct.objects.filter(product_type__id=payload['product_type_id'],\
 							 notification__code__institution__id=payload['institution_id'])
-
+			session_gateway_profile = None
 			if 'session_gateway_profile_id' in payload.keys():
 				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-			else:
-				session_gateway_profile_list = GatewayProfile.objects.filter(msisdn=msisdn, gateway=gateway_profile.gateway)
+			elif 'msisdn' in payload.keys():
+				#Check if MSISDN Exists
+				msisdn = UPCWrappers().get_msisdn(payload)
+				if msisdn is not None:
+					try:msisdn = MSISDN.objects.get(phone_number=msisdn)
+					except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
+
+					session_gateway_profile = GatewayProfile.objects.filter(msisdn=msisdn, gateway=gateway_profile.gateway)
 
 			#Check if Contact exists in notification product
 			contact = Contact.objects.filter(product=notification_product[0], gateway_profile=session_gateway_profile) 
@@ -1072,7 +1086,9 @@ class System(Wrappers):
 				if 'message' in payload.keys() and len(contact_list)>0:
 					lgr.info('Message and Contact Captured')
 					#Bulk Create Outbound
-					self.outbound_bulk_logger.delay(payload, contact_list, scheduled_send)
+					#self.outbound_bulk_logger.delay(payload, contact_list, scheduled_send)
+					self.outbound_bulk_logger.apply_async((self, payload, contact_list, scheduled_send), serializer='pickle')
+
 					payload['response'] = 'Outbound Message Processed'
 					payload['response_status']= '00'
 				elif 'message' not in payload.keys() and len(contact_list)>0:
@@ -1107,7 +1123,9 @@ class System(Wrappers):
 				if 'message' in payload.keys() and len(contact_list)>0:
 					lgr.info('Message and Contact Captured')
 					#Bulk Create Outbound
-					self.outbound_bulk_logger.delay(payload, contact_list, scheduled_send)
+					#self.outbound_bulk_logger.delay(payload, contact_list, scheduled_send)
+					self.outbound_bulk_logger.apply_async((self, payload, contact_list, scheduled_send), serializer='pickle')
+
 					payload['response'] = 'Outbound Message Processed'
 					payload['response_status']= '00'
 				elif 'message' not in payload.keys() and len(contact_list)>0:
@@ -1136,7 +1154,9 @@ class System(Wrappers):
 				if inbound.contact.product.notification.institution_url not in [None, ""]:
 					node_info = {}
 					node_info['institution_url'] = inbound.contact.product.notification.institution_url
-					self.notify_institution.delay(payload, node_info)
+					#self.notify_institution.delay(payload, node_info)
+					self.notify_institution.apply_async((self, payload, node_info), serializer='pickle')
+
 			payload['response'] = 'Inbox Message Successful'
 			payload['response_status']= '00'
 		except Exception, e:
@@ -1152,15 +1172,18 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			#Get MNO from Prefix
 			#prefix = MNOPrefix.objects.filter(prefix=payload["msisdn"][4:][:3], mno__country_code__code=payload["msisdn"][1:][:3])
-			code1=(len(payload["msisdn"]) -7)
-			code2=(len(payload["msisdn"]) -6)
-			code3=(len(payload["msisdn"]) -5)
 
-			prefix = MNOPrefix.objects.filter(prefix=payload["msisdn"][:code3])
+			msisdn = UPCWrappers().get_msisdn(payload)
+
+			code1=(len(msisdn) -7)
+			code2=(len(msisdn) -6)
+			code3=(len(msisdn) -5)
+
+			prefix = MNOPrefix.objects.filter(prefix=msisdn[:code3])
 			if len(prefix)<1:
-				prefix = MNOPrefix.objects.filter(prefix=payload["msisdn"][:code2])
+				prefix = MNOPrefix.objects.filter(prefix=msisdn[:code2])
 				if len(prefix)<1:
-					prefix = MNOPrefix.objects.filter(prefix=payload["msisdn"][:code1])
+					prefix = MNOPrefix.objects.filter(prefix=msisdn[:code1])
 
 			lgr.info('MNO Prefix: %s' % prefix)
 			#Get Notification product
@@ -1176,9 +1199,8 @@ class System(Wrappers):
 				#Get Action
 				lgr.info('Action: %s' % payload['notification_action'])
 				#Check if MSISDN Exists
-				msisdn = None
-				try:msisdn = MSISDN.objects.get(phone_number=payload["msisdn"])
-				except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=payload["msisdn"]);msisdn.save();
+				try:msisdn = MSISDN.objects.get(phone_number=msisdn)
+				except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
 
 				lgr.info('MSISDN: %s' % msisdn)
 
@@ -1292,7 +1314,8 @@ def contact_unsubscription():
 			#Send SMS
 			node = i.product.unsubscription_endpoint.url
 			lgr.info('Endpoint: %s' % node)
-			Wrappers().send_contact_unsubscription(i, payload, node)
+			w = Wrappers()
+			w.send_contact_unsubscription(w, i, payload, node)
 		except Exception, e:
 			lgr.info('Error unsubscribing item: %s | %s' % (i,e))
 
@@ -1334,7 +1357,8 @@ def contact_subscription():
 				lgr.info('Endpoint: %s' % node)
 
 				#No response is required on celery use (ignore results)
-				Wrappers().send_contact_subscription(i, payload, node)
+				w = Wrappers()
+				w.send_contact_subscription.apply_async((w, i, payload, node), serializer='pickle')
 
 			elif i.product.subscription_endpoint is None and i.product.subscribable:
 				status = ContactStatus.objects.get(name='ACTIVE')
@@ -1418,7 +1442,10 @@ def send_outbound_sms_messages():
 			#Send SMS
 			node = i.contact.product.notification.endpoint.url
 			#No response is required on celery use (ignore results)
-			Wrappers().send_outbound.delay(payload, node)
+			#Wrappers().send_outbound.delay(payload, node)
+			w = Wrappers()
+			w.outbound_bulk_logger.apply_async((w, payload, node), serializer='pickle')
+
 		except Exception, e:
 			lgr.info('Error Sending item: %s | %s' % (i, e))
 
@@ -1449,11 +1476,18 @@ def send_outbound_email_messages():
 			channel = i.contact.product.notification.code.channel.name
 			endpoint = i.contact.product.notification.endpoint
 			email = i.contact.gateway_profile.user.email
-			sender = i.contact.product.notification.code.code
+			lgr.info('Before Sender')
+			sender = '<%s>' % i.contact.product.notification.code.code
+	
+			lgr.info('Sender: %s' % sender)	
+			if i.contact.product.notification.code.alias not in ['',None]:
+				sender = '%s %s' % (i.contact.product.notification.code.alias, sender)
+			lgr.info('Sender: %s' % sender)	
 			if email not in [None,''] and Wrappers().validateEmail(email):
 				try:
 					gateway = i.contact.product.notification.code.gateway
-       	        		        subject, from_email, to = gateway.name +': '+str(i.heading), sender, email
+       	        		        #subject, from_email, to = gateway.name +': '+str(i.heading), sender, email
+       	        		        subject, from_email, to = str(i.heading), sender, email
 
 		                        text_content = i.message 
 
@@ -1518,7 +1552,8 @@ def send_bulk_sms():
 			else:
 				gateway_profile = GatewayProfile.objects.get(id=223057)
 				service = Service.objects.get(name=service)
-				try:Wrappers().service_call(service, gateway_profile, payload) #No async as float deduction needs sync
+				w = Wrappers()
+				try:w.service_call(w, service, gateway_profile, payload) #No async as float deduction needs sync
 				except Exception, e: lgr.info('Error on Service Call: %s' % e)
 		except Exception, e: lgr.info('Error On Send Bulk SMS: %s' % e)
 
@@ -1582,8 +1617,15 @@ def add_bulk_contact():
 			'''
 			gateway_profile = GatewayProfile.objects.get(id=489061)
 			service = Service.objects.get(name=service)
+			'''
 			try:Wrappers().service_call.delay(service, gateway_profile, payload) #No async as float deduction needs sync
 			except Exception, e: lgr.info('Error on Service Call: %s' % e)
+			'''
+
+			w = Wrappers()
+			try:w.service_call.apply_async((w, service, gateway_profile, payload), serializer='pickle')
+			except Exception, e: lgr.info('Error on Service Call: %s' % e)
+
 		except Exception, e: lgr.info('Error On Add Notification Contact: %s' % e)
 
 

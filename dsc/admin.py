@@ -15,12 +15,17 @@ class DataListQueryAdmin(admin.ModelAdmin):
 			'not_filters','date_values','date_time_values','links','link_params','list_filters',\
 			'data_response','last_balance','gateway_profile_filters','month_year_values','avg_values',\
 			'date_filters','time_filters','token_filter',)
+	search_fields = ('name','description',)
 admin.site.register(DataListQuery, DataListQueryAdmin)
+
+class PushActionAdmin(admin.ModelAdmin):
+	list_display = ('name', 'description')
+admin.site.register(PushAction, PushActionAdmin)
 
 class DataListAdmin(admin.ModelAdmin):
 	list_display = ('data_name','url','content','status','is_report','group','level','function',\
-			'title','query','data_response','access_level_list','institution_list','channel_list',\
-			'gateway_list','pn_data','pn_id_field')
+			'title','query','data_response','pn_data','pn_id_field','pn_update_field',\
+			'access_level_list','institution_list','channel_list','gateway_list')
 	search_fields = ('data_name','group__name',)
 admin.site.register(DataList, DataListAdmin)
 

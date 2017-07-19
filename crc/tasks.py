@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from celery import shared_task
-from celery.contrib.methods import task_method
-from celery.contrib.methods import task
+#from celery.contrib.methods import task_method
+from celery import task
 from switch.celery import app
 from celery.utils.log import get_task_logger
 
@@ -123,7 +123,6 @@ class System(Wrapper):
 					currency_code = 'KES'
 				cva = CardVerificationAmount.objects.get(currency__code=currency_code)
 				amount = Decimal(random.uniform(float(cva.min_amount), float(cva.max_amount))).quantize(Decimal('.01'))
-
 
 				payload['ignore_avs_result'] = False
 				payload['ignore_cv_result'] = False

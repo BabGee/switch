@@ -181,14 +181,13 @@ class InstitutionNotification(models.Model):
 class InstitutionIncomingService(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	institution = models.ForeignKey(Institution)
 	service = models.ForeignKey(Service)
 	description = models.CharField(max_length=100)
 	keyword = models.CharField(max_length=50, unique=True)
 	product_item = models.ForeignKey(ProductItem)
 	gateway = models.ForeignKey(Gateway)
 	def __unicode__(self):
-		return u'%s %s' % (self.institution, self.service)
+		return u'%s %s' % (self.product_item.institution, self.service)
 
 class IncomingState(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)

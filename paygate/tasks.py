@@ -8,7 +8,7 @@ from django.db import IntegrityError
 import pytz, time, json, pycurl
 from django.utils.timezone import localtime
 from datetime import datetime
-from decimal import Decimal, ROUND_DOWN
+from decimal import Decimal, ROUND_DOWN, ROUND_UP
 import base64, re
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
@@ -29,25 +29,12 @@ import logging
 lgr = logging.getLogger('paygate')
 
 from celery import shared_task
-from celery.contrib.methods import task_method
-from celery.contrib.methods import task
+#from celery.contrib.methods import task_method
+from celery import task
 from switch.celery import app
 from switch.celery import single_instance_task
 
 class Wrappers:
-	@app.task(filter=task_method, ignore_result=True)
-	def service_call(self, service, gateway_profile, payload):
-		from celery.utils.log import get_task_logger
-		lgr = get_task_logger(__name__)
-		from api.views import ServiceCall
-		try:
-			payload = ServiceCall().api_service_call(service, gateway_profile, payload)
-			lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
-		except Exception, e:
-			payload['response_status'] = '96'
-			lgr.info('Unable to make service call: %s' % e)
-		return payload
-
 	def validate_url(self, url):
 		val = URLValidator()
 		try:
@@ -87,40 +74,6 @@ class Wrappers:
 
 		return payload
 
-	@app.task(filter=task_method, ignore_result=True)
-	def send_payment(self, i, payload,node):
-		from celery.utils.log import get_task_logger
-		lgr = get_task_logger(__name__)
-		try:
-
-			if i.state.name <> 'PROCESSING':
-				i.sends = i.sends+1
-				i.state = OutgoingState.objects.get(name='PROCESSING')
-				i.save()
-
-			params = self.post_request(payload, node)
-
-
-			if 'response' in params.keys(): i.message = str(params['response'])[:1919]; payload['response'] = params['response']
-			else: payload['response'] = 'Remit Submitted'
-			if 'response_status' in params.keys() and params['response_status'] not in [None,""]:
-				try:i.response_status = ResponseStatus.objects.get(response=str(params['response_status']))
-				except:params['response_status'] = '06'; i.response_status = ResponseStatus.objects.get(response='06')
-				if params['response_status'] == '00':
-					i.state = OutgoingState.objects.get(name='DELIVERED')
-					payload['response_status'] = '00'
-				else:
-					i.state = OutgoingState.objects.get(name='SENT')
-					payload['response_status'] = params['response_status']
-			else:
-				i.state = OutgoingState.objects.get(name='FAILED')
-				i.response_status = ResponseStatus.objects.get(response='06')
-				payload['response_status'] = '06'
-			i.save()
-		except Exception, e:
-			lgr.info('Error Sending Payment: %s' % e)
-
-
 	def endpoint_payload(self, payload):
 		new_payload, transaction = {}, None
 		for k, v in payload.items():
@@ -155,7 +108,7 @@ class Wrappers:
 			 'action_id' not in key and 'bridge__transaction_id' not in key and \
 			 'merchant_data' not in key and 'signedpares' not in key and \
 			 key <> 'gpid' and key <> 'sec' and \
-			 key not in ['ext_product_id','vpc_securehash','ext_inbound_id','currency','amount'] and \
+			 key not in ['ext_product_id','vpc_securehash','currency','amount'] and \
 			 'institution_id' not in key and key <> 'response' and key <> 'input'  and 'url' not in key and \
 			 'availablefund' not in key:
 				if count <= 30:
@@ -190,13 +143,11 @@ class System(Wrappers):
 			reference = payload['reference'].strip() if 'reference' in payload.keys() else ""
 			reference_list = reference.split("-")
 			institution_incoming_service, till_number, institution = None, None, None
-			if len(reference_list)==3:
-				till_number = reference_list[0]
-
+			if len(reference_list)==2:
 				#order, institution does not need a service as purchase order items have services
-				business_number = reference_list[1] #is unique in UPC
+				business_number = reference_list[0] #is unique in UPC
 				institution = Institution.objects.get(business_number__iexact=business_number)
-				invoice_id = reference_list[2] #Used in purchase order
+				invoice_id = reference_list[1] #Used in purchase order
 			else:
 				if reference not in ['', None]:
 					try:
@@ -345,7 +296,7 @@ class System(Wrappers):
 							if forex.exists():
 								if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
 									amount = Decimal(payload['amount'])*forex[0].exchange_rate
-									payload['amount'] = amount.quantize(Decimal('.01'), rounding=ROUND_UP) 
+									payload['amount'] = amount.quantize(Decimal('.01'), rounding=ROUND_DOWN) 
 								else:
 									payload['amount'] = Decimal(0)
 							else:
@@ -945,6 +896,54 @@ class Payments(System):
 class Trade(System):
 	pass
 
+@app.task(ignore_result=True)
+def send_payment(payload,node):
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	i = Outgoing.objects.get(id=payload['id'])
+	try:
+
+		if i.state.name <> 'PROCESSING':
+			i.sends = i.sends+1
+			i.state = OutgoingState.objects.get(name='PROCESSING')
+			i.save()
+
+		params = Wrappers().post_request(payload, node)
+
+
+		if 'response' in params.keys(): i.message = str(params['response'])[:1919]; payload['response'] = params['response']
+		else: payload['response'] = 'Remit Submitted'
+		if 'response_status' in params.keys() and params['response_status'] not in [None,""]:
+			try:i.response_status = ResponseStatus.objects.get(response=str(params['response_status']))
+			except:params['response_status'] = '06'; i.response_status = ResponseStatus.objects.get(response='06')
+			if params['response_status'] == '00':
+				i.state = OutgoingState.objects.get(name='DELIVERED')
+				payload['response_status'] = '00'
+			else:
+				i.state = OutgoingState.objects.get(name='SENT')
+				payload['response_status'] = params['response_status']
+		else:
+			i.state = OutgoingState.objects.get(name='FAILED')
+			i.response_status = ResponseStatus.objects.get(response='06')
+			payload['response_status'] = '06'
+		i.save()
+	except Exception, e:
+		lgr.info('Error Sending Payment: %s' % e)
+
+
+@app.task(ignore_result=True)
+def service_call(service, gateway_profile, payload):
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	from api.views import ServiceCall
+	try:
+		payload = ServiceCall().api_service_call(service, gateway_profile, payload)
+		lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
+	except Exception, e:
+		payload['response_status'] = '96'
+		lgr.info('Unable to make service call: %s' % e)
+	return payload
+
 
 @app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
@@ -994,7 +993,8 @@ def send_paygate_outgoing():
 
 
 			lgr.info('Endpoint: %s' % node)
-			Wrappers().send_payment.delay(i, params, node)
+			params['id'] = i.id
+			send_payment.delay(params, node)
 
 		except Exception, e:
 			lgr.info('Error sending paygate outgoing item: %s | %s' % (i,e))
@@ -1034,8 +1034,7 @@ def process_incoming_payments():
 				gateway_profile_list = GatewayProfile.objects.filter(gateway=c.institution_incoming_service.gateway,user__username='System@User', status__name__in=['ACTIVATED'])
 				if len(gateway_profile_list) > 0 and gateway_profile_list[0].user.is_active:
 					gateway_profile = gateway_profile_list[0]
-
-					try:Wrappers().service_call(service, gateway_profile, payload)
+					try:service_call(service, gateway_profile, payload)
 					except Exception, e: lgr.info('Error on Service Call: %s' % e)
 
 		except Exception, e:

@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from celery import shared_task
-from celery.contrib.methods import task_method
-from celery.contrib.methods import task
+#from celery.contrib.methods import task_method
+from celery import task
 from switch.celery import app
 from celery.utils.log import get_task_logger
 from switch.celery import single_instance_task
@@ -36,8 +36,11 @@ class Wrappers:
 	def bill_entry(self, item, purchase_order, balance_bf, payload):
 		purchase_order.cart_item.add(item)
 
+
+		transaction_reference = payload['bridge__transaction_id'] if 'bridge__transaction_id' in payload.keys() else None
+
 		#ADD to Bill Manager for Payment deductions
-		bill_manager = BillManager(credit=False,transaction_reference=payload['bridge__transaction_id'],\
+		bill_manager = BillManager(credit=False,transaction_reference=transaction_reference,\
 				action_reference=payload['action_id'],order=purchase_order,amount=item.total,\
 				balance_bf=balance_bf)
 
@@ -120,7 +123,7 @@ class Wrappers:
 		return balance_bf
 
 
-	@app.task(filter=task_method, ignore_result=True)
+	@app.task(ignore_result=True)
 	def service_call(self, service, gateway_profile, payload):
 		lgr = get_task_logger(__name__)
 		from api.views import ServiceCall
@@ -163,6 +166,78 @@ class Wrappers:
 
 
 class System(Wrappers):
+	def cart_item_details(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			cart_item = CartItem.objects.get(id=payload['cart_item_id'],\
+						 product_item__institution__gateway=gateway_profile.gateway)
+
+			payload['total'] = cart_item.total
+			payload['sub_total'] = cart_item.sub_total
+			payload['quantity'] = cart_item.quantity
+			payload['price'] = cart_item.price
+			payload['product_item_id'] = cart_item.product_item.id
+			payload['cat_item_status'] = cart_item.status.name
+			payload['details'] = json.loads(cart_item.details)
+
+			payload["response_status"] = "00"
+			payload["response"] = "Cart Item Details"
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Cart Items: %s" % e)
+		return payload
+
+	def update_cart_item(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			cart_item = CartItem.objects.get(id=payload['cart_item_id'],\
+						 product_item__institution__gateway=gateway_profile.gateway)
+
+			product_item = cart_item.product_item
+
+			quantity = Decimal(payload['quantity']) if 'quantity' in payload.keys() else Decimal(1)
+			sub_total = Decimal(product_item.unit_cost*quantity).quantize(Decimal('.01'), rounding=ROUND_DOWN)
+			total = sub_total
+
+			if 'quantity' not in payload.keys() and product_item.variable_unit and 'amount' in payload.keys():
+				quantity = Decimal(Decimal(payload['amount'])/product_item.unit_cost).quantize(Decimal('.01'), rounding=ROUND_DOWN)
+				sub_total = Decimal(product_item.unit_cost*quantity).quantize(Decimal('.01'), rounding=ROUND_DOWN)
+				total = sub_total
+
+			cart_item.quantity = quantity
+			cart_item.sub_total = sub_total
+			cart_item.total = total
+			cart_item.pn = False
+			cart_item.save()
+
+
+			payload["response_status"] = "00"
+			payload["response"] = "Updated Cart Item"
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Update Cart Item: %s" % e)
+		return payload
+
+	def delete_cart_item(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			cart_item = CartItem.objects.get(id=payload['cart_item_id'],\
+						 product_item__institution__gateway=gateway_profile.gateway)
+
+			cart_item.status = CartStatus.objects.get(name='DELETED')
+			cart_item.pn = False
+			cart_item.save()
+
+			payload["response_status"] = "00"
+			payload["response"] = "Deleted Cart Item"
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Delete Cart Item: %s" % e)
+		return payload
+
 	def window_event(self, payload, node_info):
 		try:
 			payload["response_status"] = "00"
@@ -221,7 +296,8 @@ class System(Wrappers):
 				order = bill_manager_list[0].order
 				balance_bf = bill_manager_list[0].amount + bill_manager_list[0].balance_bf
 
-				bill_manager = BillManager(credit=False,transaction_reference=payload['bridge__transaction_id'],\
+				transaction_reference = payload['bridge__transaction_id'] if 'bridge__transaction_id' in payload.keys() else None
+				bill_manager = BillManager(credit=False,transaction_reference=transaction_reference,\
 						action_reference=payload['action_id'],order=order,\
 						amount=balance_bf,\
 						balance_bf=balance_bf)
@@ -246,7 +322,6 @@ class System(Wrappers):
 	def pay_bill(self, payload, node_info):
 		try:
 			if 'reference' in payload.keys():
-
 				#An order will ALWAYS have an initial bill manager, hence
 
 				bill_manager_list = BillManager.objects.filter(order__reference__iexact=payload['reference'],order__status__name='UNPAID').order_by("-date_created")
@@ -264,22 +339,28 @@ class System(Wrappers):
 						lgr.info('Forex Calculate balance_bf to %s|from: %s| %s' % (order_currency, currency, balance_bf) )
 
 					if balance_bf > 0:
-						#transacting amount refers to the deduction for bill amount only
-						transacting_amount = bill_manager_list[0].balance_bf
 
 						if bill_manager_list[0].balance_bf <= balance_bf:
 							#payment balance_bf is greater than outstanding bill
 							balance_bf = 0
+							#transacting amount refers to the deduction for bill amount only
+							transacting_amount = bill_manager_list[0].balance_bf
+							#Resets query so transacting amount must have been captured
 							status = OrderStatus.objects.get(name='PAID')
 							order.status = status
 							order.save()
 							order.cart_item.all().update(status=CartStatus.objects.get(name='PAID'))
+
 						else:
+
 							#payment balance_bf is less than outstanding bill
 							balance_bf = bill_manager_list[0].balance_bf - balance_bf
 
+							#transacting amount refers to the deduction for bill amount only
+							transacting_amount = balance_bf
 
-						bill_manager = BillManager(credit=True,transaction_reference=payload['bridge__transaction_id'],\
+						transaction_reference = payload['bridge__transaction_id'] if 'bridge__transaction_id' in payload.keys() else None
+						bill_manager = BillManager(credit=True,transaction_reference=transaction_reference,\
 								action_reference=payload['action_id'],order=order,\
 								amount=transacting_amount,\
 								balance_bf=Decimal(balance_bf).quantize(Decimal('.01'), rounding=ROUND_DOWN))
@@ -326,7 +407,7 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			#Ensure cart product items tills match, and cart item is not added to any other purchase order
-			cart_items = CartItem.objects.filter(id__in=payload['cart_items'],purchaseorder=None)
+			cart_items = CartItem.objects.filter(id__in=str(payload['cart_items'].strip()).split(','),purchaseorder=None)
 
 			if cart_items.exists():
 				#get greates reference from un-expired/unpaid list (expiry after 15days)
@@ -381,14 +462,15 @@ class System(Wrappers):
 
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-
 			#Ensure cart product items tills match
-			cart_items = CartItem.objects.filter(id__in=payload['cart_items'],\
+			cart_items = CartItem.objects.filter(id__in=str(payload['cart_items'].strip()).split(','),\
 					 status=CartStatus.objects.get(name='UNPAID'))
 
-
 			if cart_items.exists():
-				#get greates reference from un-expired/unpaid list (expiry after 15days)
+
+				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+				#creates reference from un-expired&unpaid list (expiry after 15days)
 
 				def reference(pre_reference):
 					chars = string.ascii_letters 
@@ -413,7 +495,6 @@ class System(Wrappers):
 				expiry = timezone.localtime(timezone.now())+timezone.timedelta(days=45)
 				status = OrderStatus.objects.get(name='UNPAID')
 				currency = cart_items[0].currency
-				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 
 				purchase_order = PurchaseOrder(reference=reference,\
 						currency=currency,\
@@ -435,11 +516,10 @@ class System(Wrappers):
 					balance_bf = self.sale_charge_bill_entry(balance_bf, item, payload, purchase_order, gateway_profile.gateway)
 
 				payload['reference'] = purchase_order.reference
-
 				payload['purchase_order_id'] = purchase_order.id
 
-			payload["response_status"] = "00"
-			payload["response"] = "Purchase Order Created"
+				payload["response_status"] = "00"
+				payload["response"] = "Purchase Order Created"
 		except Exception, e:
 			payload['response_status'] = '96'
 			lgr.info("Error on creating purchase order: %s" % e)
@@ -464,13 +544,16 @@ class System(Wrappers):
 				total = sub_total
 
 
-			items = []
-
 			primary_item = self.cart_entry(product_item, payload, quantity, sub_total, total)
 
+			'''
+			items = []	
 			items.append(primary_item)
-
 			payload['cart_items'] = items
+			'''
+
+			payload['cart_items'] = '%s%s' % (primary_item, ','+payload['cart_items'] if 'cart_items' in payload.keys() else '')
+
 			'''
 			try:
 				# just publish to web for now
@@ -576,6 +659,9 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			sale_contact_type = SaleContactType.objects.get(id=payload["sale_contact_type"])
+
+
+			#transaction_reference = payload['bridge__transaction_id'] if 'bridge__transaction_id' in payload.keys() else None
 			transaction = Transaction.objects.get(id=payload["bridge__transaction_id"])
 
 			primary_contact_profile = Profile.objects.get(id=payload['profile_id'])

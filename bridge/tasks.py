@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from celery import shared_task
-from celery.contrib.methods import task_method
-from celery.contrib.methods import task
+#from celery.contrib.methods import task_method
+from celery import task
 from switch.celery import app
 from celery.utils.log import get_task_logger
 from switch.celery import single_instance_task
@@ -29,7 +29,7 @@ import logging
 lgr = logging.getLogger('bridge')
 
 class Wrappers:
-	@app.task(filter=task_method, ignore_result=True)
+	@app.task(ignore_result=True)
 	def service_call(self, service, gateway_profile, payload):
 		lgr = get_task_logger(__name__)
 		from api.views import ServiceCall
@@ -42,6 +42,30 @@ class Wrappers:
 		return payload
 
 class System(Wrappers):
+    def background_service(self, payload, node_info):
+        try:
+            gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+            background_service = BackgroundService.objects.filter(trigger_service__name=payload['SERVICE'])
+
+            if background_service.exists():
+                background_service_status = BackgroundServiceStatus.objects.get(name='CREATED')
+                channel = Channel.objects.get(id=payload['chid'])
+                activity = BackgroundServiceActivity(background_service=upload[0], status=background_service_status, \
+                                              gateway_profile=gateway_profile,
+                                              details=self.transaction_payload(payload), channel=channel)
+
+                activity.save()
+
+                payload['response'] = "Activity Logged. Wait to Process"
+                payload['response_status'] = '00'
+            else:
+                payload['response_status'] = '21'
+        except Exception, e:
+            payload['response_status'] = '96'
+            lgr.info("Error on Uploading File: %s" % e)
+        return payload
+
+
 	def check_transaction_auth(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
@@ -79,7 +103,7 @@ class Payments(System):
 def process_pending_transactions():
 	from celery.utils.log import get_task_logger
         lgr = get_task_logger(__name__)
-        transactions = Transaction.objects.select_for_update().filter(id__in=[318123])
+        transactions = Transaction.objects.select_for_update().filter(id__in=[''])
 
         for t in transactions:
                 try:

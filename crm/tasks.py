@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 
 from celery import shared_task
-from celery.contrib.methods import task_method
-from celery.contrib.methods import task
+#from celery.contrib.methods import task_method
+from celery import task
 from switch.celery import app
 from celery.utils.log import get_task_logger
 
@@ -55,7 +55,8 @@ class System:
 			if product_item.exists():
 				payload['product_item_id'] = product_item[0].id
 				payload['product_item_name'] = product_item[0].name
-				payload['product_item_image'] = product_item[0].image_path if product_item[0].image_path else ''
+				payload['product_item_kind'] = product_item[0].kind
+				payload['product_item_image'] = product_item[0].default_image if product_item[0].default_image else ''
 				payload['institution_id'] = product_item[0].institution.id
 				#payload['till_number'] = product_item[0].product_type.institution_till.till_number
 				payload['currency'] = product_item[0].currency.code

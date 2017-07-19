@@ -24,9 +24,12 @@ from vcs.models import *
 import logging
 lgr = logging.getLogger('upc')
 
+#from celery import shared_task
+#from celery.contrib.methods import task_method
+#from celery.contrib.methods import t
 from celery import shared_task
-from celery.contrib.methods import task_method
-from celery.contrib.methods import task
+#from celery import task_method
+from celery import task
 from switch.celery import app
 
 
@@ -48,12 +51,13 @@ class Wrappers:
 		msisdn = None
 		if "msisdn" in payload.keys():
 			msisdn = str(payload['msisdn'])
-			msisdn = msisdn.strip()
+			msisdn = msisdn.strip().replace(' ','').replace('-','')
 			if len(msisdn) >= 9 and msisdn[:1] == '+':
 				msisdn = str(msisdn)
 			elif len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
 				country_list = Country.objects.filter(mpoly__intersects=trans_point)
 				ip_point = g.geos(str(payload['ip_address']))
+				#Allow Country from web and apps
 				if country_list.exists() and country_list[0].ccode and int(payload['chid']) in [1,3,7,8,9,10]:
 					msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
 				elif ip_point and int(payload['chid']) in [1,3,7,8,9,10]:
@@ -71,7 +75,9 @@ class Wrappers:
 
 		return msisdn
 
-	@app.task(filter=task_method, ignore_result=True)
+	#@app.task(filter=task_method, ignore_result=True)
+	@app.task(ignore_result=True)
+
 	def saveImage(self, filename, image_obj):
 
 		from celery.utils.log import get_task_logger
@@ -884,6 +890,8 @@ class System(Wrappers):
 					access_level = AccessLevel.objects.get(id=payload["access_level_id"])
 					if 'institution_id' in payload.keys():
 						create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
+					elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
+						create_gateway_profile.institution = gateway_profile.institution 
 				else:
 					access_level = AccessLevel.objects.get(name="CUSTOMER")
 
@@ -956,7 +964,7 @@ class System(Wrappers):
 						new_original = original+append_char
 						return createUsername(new_original)
 					else:
-						return original
+						return original.lower()
 
 
 				username = ''
@@ -1140,15 +1148,15 @@ class System(Wrappers):
 				#CHECK CREDENTIALS and 
 				if 'email' in payload.keys() and self.validateEmail(payload['email']):
 					lgr.info('Login with Valid Email')
-					gateway_login_profile = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,user__email=payload['email'].strip())
+					gateway_login_profile = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,user__email__iexact=payload['email'].strip())
 
 				elif 'username' in payload.keys() and self.validateEmail(payload['username']):
 					lgr.info('Login with Username as Valid Email')
-					gateway_login_profile = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,user__email=payload['username'].strip())
+					gateway_login_profile = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,user__email__iexact=payload['username'].strip())
 				elif 'username' in payload.keys():
 					lgr.info('Login with Username')
-					gateway_login_profile = GatewayProfile.objects.filter(Q(gateway=gateway_profile.gateway),Q(user__username=payload['username'].strip())|\
-								Q(user__email=payload['username'].strip()))
+					gateway_login_profile = GatewayProfile.objects.filter(Q(gateway=gateway_profile.gateway),Q(user__username__iexact=payload['username'].strip())|\
+								Q(user__email__iexact=payload['username'].strip()))
 				else:
 					lgr.info('Login Details not found')
 					gateway_login_profile = GatewayProfile.objects.none()

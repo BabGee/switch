@@ -1,5 +1,6 @@
 from django.contrib.gis.db import models
 from upc.models import *
+import json
 
 class PaymentMethodStatus(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -20,6 +21,7 @@ class PaymentMethod(models.Model):
 	default_currency = models.ForeignKey(Currency, related_name='default_currency')
 	min_amount = models.DecimalField(max_digits=19, decimal_places=2)
 	max_amount = models.DecimalField(max_digits=19, decimal_places=2)
+	icon = models.CharField(max_length=45, null=True, blank=True)
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	country = models.ManyToManyField(Country, blank=True)
 	currency = models.ManyToManyField(Currency, blank=True)
@@ -142,14 +144,56 @@ class Transaction(models.Model):
 	response_status = models.ForeignKey(ResponseStatus)
 	geometry = models.PointField(srid=4326)
 	objects = models.GeoManager()
-	current_command = models.ForeignKey(ServiceCommand, null=True, blank=True, related_name="transaction__current_command")
-	next_command = models.ForeignKey(ServiceCommand, null=True, blank=True, related_name="transaction__next_command")
+	current_command = models.ForeignKey(ServiceCommand, null=True, blank=True, related_name="transaction_current_command")
+	next_command = models.ForeignKey(ServiceCommand, null=True, blank=True, related_name="transaction_next_command")
 	msisdn = models.ForeignKey(MSISDN, null=True, blank=True)
-	overall_status = models.ForeignKey(ResponseStatus, null=True, blank=True, related_name="bridge__transaction__overall_status")
+	overall_status = models.ForeignKey(ResponseStatus, null=True, blank=True, related_name="bridge_transaction_overall_status")
 	institution = models.ForeignKey(Institution, null=True, blank=True)
 	fingerprint = models.CharField(max_length=1024, editable=False, null=True, blank=True)
-	csrf_token = models.CharField(max_length=1024, editable=False, null=True, blank=True)
+	token = models.CharField(max_length=1024, editable=False, null=True, blank=True)
 	def __unicode__(self):
 		#return '%s %s %s' % (self.request, self.geometry.x, self.geometry.y)
  		return '%s' % (self.request)
+
+
+class BackgroundService(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	institution = models.ManyToManyField(Institution, blank=True)
+	gateway = models.ManyToManyField(Gateway, blank=True)
+	access_level = models.ManyToManyField(AccessLevel, blank=True)
+	trigger_service = models.ManyToManyField(Service)
+	activity_service = models.ForeignKey(Service, related_name='activity_serice')
+	details = models.CharField(max_length=1920, default=json.dumps({}))
+	def __unicode__(self):
+		return u'%s %s' % (self.id, self.activity_service)  
+	def institution_list(self):
+		return "\n".join([a.name for a in self.institution.all()])
+	def gateway_list(self):
+		return "\n".join([a.name for a in self.gateway.all()])
+	def access_level_list(self):
+		return "\n".join([a.name for a in self.access_level.all()])
+	def trigger_service_list(self):
+		return "\n".join([a.name for a in self.trigger_service.all()])
+
+class BackgroundServiceStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
+class BackgroundServiceActivity(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	background_service = models.ForeignKey(BackgroundService)
+	status = models.ForeignKey(BackgroundServiceStatus)
+	gateway_profile = models.ForeignKey(GatewayProfile)
+	request = models.CharField(max_length=1920)
+	channel = models.ForeignKey(Channel)
+	response_status = models.ForeignKey(ResponseStatus)
+	def __unicode__(self):
+		return u'%s %s' % (self.background_service, self.gateway_profile)
+
 

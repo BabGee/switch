@@ -18,7 +18,10 @@ class ProductionFrequencyAdmin(admin.ModelAdmin):
 admin.site.register(ProductionFrequency, ProductionFrequencyAdmin)
 
 class ProductTypeAdmin(admin.ModelAdmin):
-		list_display = ('id','name','product_category','metric','description', 'status','service','institution_till','payment_method_list')
+		list_display = ('id','name','product_category','metric','description',\
+				'status','service','institution_till','payment_method_list')
+		search_fields = ('name','description',)
+		list_filter = ('product_category','metric','payment_method',)
 admin.site.register(ProductType, ProductTypeAdmin)
 
 class ProductChargeAdmin(admin.ModelAdmin):
@@ -40,16 +43,21 @@ admin.site.register(ProductDisplay, ProductDisplayAdmin)
 
 class ProductItemAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description','status','product_type',\
-				'institution_till_list','unit_limit_min',\
+				'unit_limit_min',\
 				'unit_limit_max','unit_cost','variable_unit','float_limit_min',\
 				'float_limit_max','float_cost','institution','currency',\
 				'vat','discount','institution_url','institution_username',\
-				'institution_password','image_path','product_display','uneditable',\
-				'kind')
+				'institution_password','default_image','product_display','uneditable',\
+				'kind','default_product')
 		search_fields = ("id","name","description")
-	        list_filter = ('institution_till','institution','product_type','product_type__product_category')
+	        list_filter = ('institution','product_type','product_type__product_category')
 
 admin.site.register(ProductItem, ProductItemAdmin)
+
+class ProductImageAdmin(admin.ModelAdmin):
+		list_display = ('id','product_item','image','name','description','default')
+admin.site.register(ProductImage, ProductImageAdmin)
+
 
 class ItemExtraAdmin(admin.ModelAdmin):
 		list_display = ('product_item','product_source_capacity_min','product_source_capacity_max',\

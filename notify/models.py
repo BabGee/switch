@@ -76,7 +76,7 @@ class ResponseProduct(models.Model):#If response product exists, use response pr
 	date_created = models.DateTimeField(auto_now_add=True)
 	product = models.OneToOneField(NotificationProduct)
 	auto = models.BooleanField(default=False)
-	response_product = models.ForeignKey(NotificationProduct, related_name="autoresponse__auto_notification") #If None, use Default/Self Notification to respond
+	response_product = models.ForeignKey(NotificationProduct, related_name="autoresponse_auto_notification") #If None, use Default/Self Notification to respond
 	def __unicode__(self):
 		return u'%s %s' % (self.notification, self.auto)
 

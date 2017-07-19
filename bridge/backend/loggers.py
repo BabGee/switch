@@ -29,7 +29,7 @@ class Loggers:
 			 'action_id' not in key and 'bridge__transaction_id' not in key and \
 			 'merchant_data' not in key and 'signedpares' not in key and \
 			 key <> 'gpid' and key <> 'sec' and  key <> 'fingerprint' and \
-			 key not in ['ext_product_id','vpc_securehash','ext_inbound_id','currency','amount'] and \
+			 key not in ['ext_product_id','vpc_securehash','currency','amount'] and \
 			 'institution_id' not in key and key <> 'response' and key <> 'input':
 				if count <= 30:
 					new_payload[str(k)[:30] ] = str(v)[:500]
@@ -100,9 +100,11 @@ class Loggers:
 				transaction.fingerprint = payload['fingerprint']
 
 			if 'csrf_token' in payload.keys():
-				transaction.csrf_token = payload['csrf_token']
+				transaction.token = payload['csrf_token']
 			elif 'csrfmiddlewaretoken' in payload.keys():
-				transaction.csrf_token = payload['csrfmiddlewaretoken']
+				transaction.token = payload['csrfmiddlewaretoken']
+			elif 'token' in payload.keys():
+				transaction.token = payload['token']
 
 			transaction.save()
 

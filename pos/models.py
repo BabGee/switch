@@ -25,7 +25,7 @@ class SaleContact(models.Model):
 	primary_contact_profile = models.ForeignKey(Profile)
 	comment = models.CharField(max_length=256, null=True, blank = True)
 	details = models.CharField(max_length=1280)
-	created_by = models.ForeignKey(GatewayProfile, related_name="salecontact__created_by")
+	created_by = models.ForeignKey(GatewayProfile, related_name="salecontact_created_by")
 	def __unicode__(self):
 		return u'%s' % (self.name)
 
@@ -121,6 +121,8 @@ class PurchaseOrder(models.Model):
 	expiry = models.DateTimeField()
 	cart_processed = models.BooleanField(default=False)
 	gateway_profile = models.ForeignKey(GatewayProfile) #Gateway Profile to Match Cart Items for checkout
+	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
+	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
 	def __unicode__(self):
 		return u'%s %s' % (self.reference, self.status.name)
 	def cart_item_list(self):

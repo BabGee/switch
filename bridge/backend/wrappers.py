@@ -6,6 +6,7 @@ import logging
 import pytz, time, json, pycurl
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
+from upc.tasks import Wrappers as UPCWrappers
 
 lgr = logging.getLogger('bridge')
 
@@ -145,8 +146,25 @@ class Wrappers:
         def create_payload(self, item, gateway_profile, payload):
                 lgr.info('Started Creating Payload')
 		payload['SERVICE'] = item.service.name
+		payload['gateway_id'] = gateway_profile.gateway.id
 		payload['gateway_profile_id'] = gateway_profile.id
 		payload['access_level'] = gateway_profile.access_level.name
+
+
+		if 'csrf_token' in payload.keys():
+			payload['token'] = payload['csrf_token']
+		elif 'csrfmiddlewaretoken' in payload.keys():
+			payload['token'] = payload['csrfmiddlewaretoken']
+		#if token in payload, then use existing token
+	
+		if 'msisdn' in payload.keys():
+			msisdn = UPCWrappers().get_msisdn(payload)
+			if msisdn is not None:
+				payload['msisdn'] = msisdn
+			else:
+				del payload['msisdn']
+
+
                 return payload
 
 	def call_ext_api(self, item, function, payload):

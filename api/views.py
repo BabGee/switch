@@ -173,7 +173,7 @@ class Interface(Authorize, ServiceCall):
 						if payload_check.status_code == 403:
 							lgr.info('Did Not Pass Onsite Check')
 							API_KEY = gateway_profile_list[0].user.profile.api_key
-							lgr.info('Payload: %s' % payload)
+							#lgr.info('Payload: %s' % payload)
 							payload = self.check_hash(payload, API_KEY)
 							if payload['response_status'] == '00':
 								#Call Services as 
@@ -184,10 +184,10 @@ class Interface(Authorize, ServiceCall):
 							#try: del payload["session_id"]
 							#except: pass
 
-							lgr.info('Payload: %s' % payload)
+							#lgr.info('Payload: %s' % payload)
 							payload = self.return_hash(payload, API_KEY)
 
-							lgr.info('Payload: %s' % payload)
+							#lgr.info('Payload: %s' % payload)
 						elif payload_check.status_code == 200:
 							lgr.info('Onsite Check Passed')
 							payload = self.api_service_call(service[0], gateway_profile_list[0], payload)

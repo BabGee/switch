@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from celery import shared_task
-from celery.contrib.methods import task_method
-from celery.contrib.methods import task
+#from celery.contrib.methods import task_method
+from celery import task
 from switch.celery import app
 from celery.utils.log import get_task_logger
 
@@ -43,7 +43,7 @@ class Wrappers:
 		else:
 			return base
 
-	@app.task(filter=task_method, ignore_result=True)
+	@app.task(ignore_result=True)
 	def copyFile(self, file_path, shortener):
 		lgr = get_task_logger(__name__)
 		try:
@@ -71,7 +71,7 @@ class Wrappers:
 			return False
 
 
-	@app.task(filter=task_method, ignore_result=True)
+	@app.task(ignore_result=True)
 	def convertFile(self, file_path, shortener):
 		lgr = get_task_logger(__name__)
 		try:

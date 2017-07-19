@@ -50,6 +50,15 @@ class DataListQuery(models.Model):
 	def __unicode__(self):
 		return u'%s' % (self.name)  
 
+class PushAction(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
+
 class DataList(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
@@ -64,12 +73,14 @@ class DataList(models.Model):
 	title = models.CharField(max_length=200, blank=True, null=True)
 	query = models.ForeignKey(DataListQuery, blank=True, null=True)
 	data_response = models.BooleanField(default=False)
+	pn_data = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
+	pn_id_field = models.CharField('Push Notification ID Field', max_length=50, blank=True, null=True)
+	pn_update_field = models.CharField('Push Update Field', max_length=50, blank=True, null=True)
+	pn_action = models.ManyToManyField(PushAction, blank=True)
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	institution = models.ManyToManyField(Institution, blank=True)
 	channel = models.ManyToManyField(Channel, blank=True)
 	gateway = models.ManyToManyField(Gateway, blank=True)
-	pn_data = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
-	pn_id_field = models.CharField('Push Notification ID Field', max_length=50, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s' % (self.data_name)
 	def institution_list(self):
@@ -88,7 +99,7 @@ class FileUpload(models.Model):
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	trigger_service = models.ManyToManyField(Service)
-	activity_service = models.ForeignKey(Service, related_name='dsc__fileupload__activity_service')
+	activity_service = models.ForeignKey(Service, related_name='dsc_fileupload_activity_service')
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.activity_service)  
 	def institution_list(self):

@@ -34,7 +34,7 @@ class LoyaltyAccount(models.Model):
 	gateway_profile = models.ForeignKey(GatewayProfile, null=True, blank=True) #Account Owner | For institution accounts, gateway profile with institution will hold balance
 	account_status = models.ForeignKey(LoyaltyAccountStatus)	
 	account_type = models.ForeignKey(LoyaltyAccountType)
-	created_by = models.ForeignKey(GatewayProfile, related_name="loyalty_account__created_by")
+	created_by = models.ForeignKey(GatewayProfile, related_name="loyalty_account_created_by")
 	def __unicode__(self):
 		return u'%s %s %s' % (self.gateway_profile, self.is_default, self.account_type)
 

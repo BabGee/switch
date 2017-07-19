@@ -10,7 +10,7 @@ admin.site.register(PaymentMethodStatus, PaymentMethodStatusAdmin)
 
 class PaymentMethodAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description','status','send','receive','default_currency','min_amount',\
-				'max_amount','gateway_list','country_list','currency_list','channel_list',)
+				'max_amount','icon','gateway_list','country_list','currency_list','channel_list',)
 admin.site.register(PaymentMethod, PaymentMethodAdmin)
 
 class ProductAdmin(admin.ModelAdmin):
@@ -58,10 +58,25 @@ class TransactionAdmin(admin.OSMGeoAdmin):
 		 'request','currency','amount',\
 		  'charges','raise_charges','response','ip_address','transaction_status','response_status',\
 		    'geometry','current_command','next_command','msisdn','overall_status','institution',\
-			'fingerprint','csrf_token','date_modified','date_created')
+			'fingerprint','token','date_modified','date_created')
 	        search_fields = ('id','gateway_profile__user__first_name','gateway_profile__user__last_name',\
 				'gateway_profile__user__username','gateway_profile__msisdn__phone_number',
 				'request','response',)
 		list_filter = ('service','channel','gateway','transaction_status','response_status','overall_status',)
 admin.site.register(Transaction, TransactionAdmin)
+
+class BackgroundServiceAdmin(admin.ModelAdmin):
+	list_display = ('id','institution_list','gateway_list','access_level_list','trigger_service_list',\
+			'activity_service','details',)
+admin.site.register(BackgroundService, BackgroundServiceAdmin)
+
+class BackgroundServiceStatusAdmin(admin.ModelAdmin):
+	list_display = ('name', 'description')
+admin.site.register(BackgroundServiceStatus, BackgroundServiceStatusAdmin)
+
+class BackgroundServiceActivityAdmin(admin.ModelAdmin):
+	list_display = ('id','background_service','status','gateway_profile','request','channel',\
+			'response_status')
+admin.site.register(BackgroundServiceActivity, BackgroundServiceActivityAdmin)
+
 

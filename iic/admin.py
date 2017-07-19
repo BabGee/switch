@@ -36,7 +36,7 @@ class PageInputStatusAdmin(admin.ModelAdmin):
 admin.site.register(PageInputStatus, PageInputStatusAdmin)
 
 class PageInputGroupAdmin(admin.ModelAdmin):
-		list_display = ('id','name','icon','description','item_level','input_variable','section','section_size',\
+		list_display = ('id','name','icon','description','item_level','input_variable','style','section_size',\
 				'section_height','auto_submit','gateway_list',)
 	        search_fields = ('name',)
 admin.site.register(PageInputGroup, PageInputGroupAdmin)

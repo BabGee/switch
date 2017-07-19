@@ -92,7 +92,7 @@ class PageInputGroup(models.Model):
 	description = models.CharField(max_length=200)
 	item_level = models.CharField(max_length=4)
 	input_variable = models.ForeignKey(InputVariable)
-	section = models.CharField(max_length=45)
+	style = models.TextField(blank=True)
 	section_size = models.CharField(max_length=45)
 	section_height = models.IntegerField()
 	auto_submit = models.BooleanField(default=False)
@@ -128,6 +128,7 @@ class PageInput(models.Model):
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	product_type = models.ManyToManyField(ProductType, blank=True)
 	channel = models.ManyToManyField(Channel)
+	style = models.TextField(blank=True)
         payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	def __unicode__(self):
 		return u'%s' % (self.page_input)

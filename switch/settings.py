@@ -7,30 +7,33 @@ import psycopg2
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-import djcelery
-djcelery.setup_loader()
+#import djcelery
+#djcelery.setup_loader()
 
-CELERY_RESULT_BACKEND = "amqp"
+#CELERY_TASK_PROTOCOL = 1
+result_backend = 'django-db'
+#result_backend = "amqp"
 CELERY_AMQP_TASK_RESULT_EXPIRES = 1000 
-CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
-#CELERY_TASK_SERIALIZER = 'json'
-#CELERY_RESULT_SERIALIZER = 'json'
-#CELERY_ACCEPT_CONTENT = ['json','pickle']
-CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'msgpack', 'yaml']
-CELERY_TIMEZONE='Africa/Nairobi'
-CELERY_ENABLE_UTC=True
-CELERY_TASK_RESULT_EXPIRES=3600
-CELERYD_TASK_SOFT_TIME_LIMIT = 60
-CELERY_ACKS_LATE = True
-CELERYD_PREFETCH_MULTIPLIER = 64
-CELERY_DISABLE_RATE_LIMITS = True
-BROKER_POOL_LIMIT = 100
-BROKER_HEARTBEAT = 10 
-BROKER_HEARTBEAT_CHECKRATE = 2.0
-#BROKER_TRANSPORT_OPTIONS = {'confirm_publish': True}
-#BROKER_POOL_LIMIT = None
+#beat_scheduler = 'djcelery.schedulers.DatabaseScheduler'
+beat_scheduler = 'django_celery_beat.schedulers.DatabaseScheduler'
+task_serializer = 'json'
+result_serializer = 'json'
+#accept_content = ['pickle']
+accept_content = ['pickle', 'json', 'msgpack', 'yaml','application/x-python-serialize']
+timezone='Africa/Nairobi'
+CELERY_enable_utc=True
+result_expires=3600
+task_soft_time_limit = 60
+task_acks_late = True
+worker_prefetch_multiplier = 64
+worker_disable_rate_limits = True
+broker_pool_limit = 100
+broker_heartbeat = 10 
+broker_heartbeat_checkrate = 2.0
+#broker_transport_options = {'confirm_publish': True}
+#broker_pool_limit = None
 
-CELERY_ROUTES = {
+task_routes = {
 		'notify.tasks.send_bulk_sms': {'queue': 'commandline1','routing_key':'commandline1'}, 
 		'notify.tasks.send_outbound_sms_messages': {'queue': 'messages','routing_key':'messages'}, 
 		'notify.tasks.send_outbound': {'queue': 'messages1','routing_key':'messages1'}, 
@@ -46,7 +49,7 @@ CELERY_ROUTES = {
 
 from kombu import Exchange, Queue
 
-CELERY_QUEUES = (
+task_queues = (
     Queue('celery', Exchange('celery'), routing_key='celery', delivery_mode=1),
     Queue('commandline', Exchange('commandline'), routing_key='commandline', delivery_mode=1),
     Queue('commandline1', Exchange('commandline1'), routing_key='commandline1', delivery_mode=1),
@@ -59,11 +62,12 @@ CELERY_QUEUES = (
 
 )
 
-#BROKER_URL = "amqp://Super%40User:%40wys1WYG@localhost:5672//"
-#BROKER_URL = "librabbitmq://Super%40User:%40wys1WYG@localhost:5672//"
+#broker_url = "amqp://Super%40User:%40wys1WYG@localhost:5672//"
+#broker_url = "librabbitmq://Super%40User:%40wys1WYG@localhost:5672//"
 
-BROKER_URL = "librabbitmq://guest:guest@localhost:5672//"
-#BROKER_URL = "librabbitmq://guest:guest@zabbix:56720//"
+#broker_url = "librabbitmq://guest:guest@localhost:5672//"
+#broker_url = "librabbitmq://guest:guest@zabbix:56720//"
+broker_url = "librabbitmq://guest:guest@localhost:5672//"
 
 #TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
@@ -80,10 +84,12 @@ GEOIP_PATH = '/usr/share/GeoIP'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = '192.168.137.3'
-EMAIL_PORT = 25
+#EMAIL_PORT = 25
+EMAIL_PORT = 587
 EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
-EMAIL_USE_TLS = False
+EMAIL_USE_TLS = True
+#EMAIL_USE_SSL = True
 DEFAULT_FROM_EMAIL = 'InterIntel <noreply@interintel.co.ke>'
 
 GRAPH_MODELS = {
@@ -118,7 +124,7 @@ DATABASES = {
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['127.0.0.1', '192.168.137.4','192.168.137.7']
+ALLOWED_HOSTS = ['127.0.0.1', '192.168.137.4','192.168.137.7','localhost']
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -179,7 +185,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.gis',
     'django_extensions',
-    'djcelery',
+    'django_celery_results',
+    'django_celery_beat',
     'administration',
     'api',
     'vbs',

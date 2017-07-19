@@ -15,8 +15,8 @@ lgr = logging.getLogger('bridge')
 class ServiceProcessor:
 	def action_reverse(self, commands, gateway_profile, payload, transaction, reverse_response_tree, level):
 		response = 'No Response'
-
-		commands = commands.filter(~Q(reverse_function__isnull=True),~Q(reverse_function__iexact=''), level__lte=level,\
+		#Reverse any action below the command (Less Than) not (Less Than or Equal)
+		commands = commands.filter(~Q(reverse_function__isnull=True),~Q(reverse_function__iexact=''), level__lt=level,\
 				 status__name='ENABLED').order_by('-level')
 		lgr.info('Got Reversal Commands:%s' % commands)
 

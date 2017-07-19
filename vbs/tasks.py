@@ -19,19 +19,19 @@ import base64, re, operator
 from decimal import Decimal, ROUND_DOWN, ROUND_UP
 
 from vbs.models import *
-
+from upc.tasks import Wrappers as UPCWrappers
 import logging
 lgr = logging.getLogger('vbs')
 
 from celery import shared_task
-from celery.contrib.methods import task_method
-from celery.contrib.methods import task
+#from celery.contrib.methods import task_method
+from celery import task
 from switch.celery import app
 from switch.celery import single_instance_task
 
 
 class Wrappers:
-	@app.task(filter=task_method, ignore_result=True)
+	@app.task(ignore_result=True)
 	def service_call(self, service, gateway_profile, payload):
 		from celery.utils.log import get_task_logger
 		lgr = get_task_logger(__name__)
@@ -135,13 +135,56 @@ class System(Wrappers):
 			lgr.info("Error on loan status: %s" % e)
 		return payload
 
+	def mipay_account_balance(self, payload, node_info):
+		try:
+			lgr.info('Session Account ID: %s' % payload['session_account_id'])
+
+			#MIPAY is an overall gateway account for MIPAY PROFILES only tagged by MSISDN/EMAIL/PROFILE
+			if 'msisdn' in payload.keys():
+				msisdn = UPCWrappers().get_msisdn(payload)
+				account_manager = AccountManager.objects.filter(dest_account__account_status__name='ACTIVE',\
+								dest_account__gateway_profile__msisdn__phone_number=msisdn,\
+								dest_account__gateway_profile__gateway__name='MIPAY').order_by("-date_created")[:1]
+
+			elif 'email' in payload.keys() and payload['email'] not in [None,""] and self.validateEmail(payload['email']):
+				account_manager = AccountManager.objects.filter(dest_account__account_status__name='ACTIVE',\
+								dest_account__gateway_profile__user__email=payload['email'],\
+								dest_account__gateway_profile__gateway__name='MIPAY').order_by("-date_created")[:1]
+			elif gateway_profile.msisdn is not None:
+				account_manager = AccountManager.objects.filter(dest_account__account_status__name='ACTIVE',\
+								dest_account__gateway_profile__msisdn__phone_number=gateway_profile.msisdn.phone_number,\
+								dest_account__gateway_profile__gateway__name='MIPAY').order_by("-date_created")[:1]
+			elif gateway_profile.user.email not in ['', none] and self.validateEmail(gateway_profile.user.email):
+				account_manager = AccountManager.objects.filter(dest_account__account_status__name='ACTIVE',\
+								dest_account__gateway_profile__user__email=gateway_profile.user.email,\
+								dest_account__gateway_profile__gateway__name='MIPAY').order_by("-date_created")[:1]
+			else:
+				account_manager = AccountManager.objects.none()
+
+
+			if account_manager.exists():
+				manager = account_manager[0]
+				payload['balance_bf'] = manager.balance_bf
+				payload['amount'] = manager.balance_bf
+				payload['currency'] = account_manager[0].dest_account.account_type.product_item.currency.code
+				payload['response_status'] = '00'
+				payload['response'] = '%s %s' % (payload['currency'], '{0:,.2f}'.format(payload['amount']))
+			else:
+
+				payload['response'] = 'No Account Balance Record Found'
+				payload['response_status'] = '25'
+
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on get account: %s" % e)
+		return payload
 
 	def account_balance(self, payload, node_info):
 		try:
 			lgr.info('Session Account ID: %s' % payload['session_account_id'])
 			account_manager = AccountManager.objects.filter(dest_account__id=payload['session_account_id']).order_by("-date_created")[:1]
 
-			if len(account_manager)>0:
+			if account_manager.exists():
 				manager = account_manager[0]
 				payload['balance_bf'] = manager.balance_bf
 				payload['amount'] = manager.balance_bf
@@ -485,7 +528,8 @@ class System(Wrappers):
 
 			#MIPAY is an overall gateway account for MIPAY PROFILES only tagged by MSISDN/EMAIL/PROFILE
 			if 'msisdn' in payload.keys():
-				session_account = Account.objects.filter(account_status__name='ACTIVE',gateway_profile__msisdn__phone_number=payload['msisdn'],\
+				msisdn = UPCWrappers().get_msisdn(payload)
+				session_account = Account.objects.filter(account_status__name='ACTIVE',gateway_profile__msisdn__phone_number=msisdn,\
 							gateway_profile__gateway__name='MIPAY')
 			elif 'email' in payload.keys() and payload['email'] not in [None,""] and self.validateEmail(payload['email']):
 				session_account = Account.objects.filter(account_status__name='ACTIVE',gateway_profile__user__email=payload['email'],\

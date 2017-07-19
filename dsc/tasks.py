@@ -12,8 +12,8 @@ from decimal import Decimal, ROUND_DOWN
 import pytz
 import re
 from celery import shared_task
-from celery.contrib.methods import task
-from celery.contrib.methods import task_method
+from celery import task
+#from celery.contrib.methods import task_method
 from celery.utils.log import get_task_logger
 from crc.models import *
 from crm.models import *
@@ -58,7 +58,7 @@ class Wrappers:
         except ValidationError:
             return False
 
-    @app.task(filter=task_method, ignore_result=True)
+    @app.task(ignore_result=True)
     def service_call(self, service, gateway_profile, payload):
         lgr = get_task_logger(__name__)
         from api.views import ServiceCall
@@ -71,7 +71,7 @@ class Wrappers:
         return payload
 
     # Allow file to process for 72hrs| Means maximum records can process is: 432,000
-    @app.task(filter=task_method, ignore_result=True, soft_time_limit=259200)
+    @app.task(ignore_result=True, soft_time_limit=259200)
     def process_file_upload_activity(self, u):
         from celery.utils.log import get_task_logger
         lgr = get_task_logger(__name__)
@@ -252,11 +252,15 @@ class Wrappers:
 
     def report(self, payload, gateway_profile, profile_tz, data):
         params = {}
-        params['rows'] = []
         params['cols'] = []
+
+        params['rows'] = []
+        params['data'] = []
+
         max_id = 0
         min_id = 0
         ct = 0
+	mqtt = {}
 
 
         try:
@@ -282,6 +286,7 @@ class Wrappers:
             last_balance = data.query.last_balance
             avg_values = data.query.avg_values
 
+	    values_data = {}
             filter_data = {}
             date_filter_data = {}
             time_filter_data = {}
@@ -296,10 +301,24 @@ class Wrappers:
 
 	    list_filter_data = {}
 
+	    lgr.info('\n\n\n')
 	    lgr.info('Model Name: %s' % data.query.name)
             report_list = model_class.objects.all()
 
-	    lgr.info('Report List')
+	    #Gateway Filter is a default Filter
+	    #lgr.info('Gateway Filters Report List Count: %s' % report_list.count())
+            if gateway_filters not in ['', None]:
+                for f in gateway_filters.split("|"):
+                    if f not in ['',None]: gateway_filter_data[f] = gateway_profile.gateway
+                if len(gateway_filter_data):
+                    gateway_query = reduce(operator.and_, (Q(k) for k in gateway_filter_data.items()))
+		    #lgr.info('Gateway Query: %s' % gateway_query)
+                    report_list = report_list.filter(gateway_query)
+
+	    #Gateway Filter results are part of original report list
+	    original_report_list = report_list
+
+	    #lgr.info('Report List Count: %s' % report_list.count())
             if filters not in ['',None]:
                 for i in filters.split("|"):
                     k,v = i.split('%')
@@ -309,12 +328,13 @@ class Wrappers:
                 if len(filter_data):
                     query = reduce(operator.and_, (Q(k) for k in filter_data.items()))
 
-		    lgr.info('Report List: %s' % report_list.count())
-		    lgr.info('Filters Applied: %s' % query)
+		    #lgr.info('Report List: %s' % report_list.count())
+		    #lgr.info('Filters Applied: %s' % query)
                     report_list = report_list.filter(query)
-		    lgr.info('Report List: %s' % report_list.count())
+		    #lgr.info('Report List: %s' % report_list.count())
 
-	    lgr.info('Report Filters')
+
+	    #lgr.info('Report List Count: %s' % report_list.count())
             if not_filters not in ['',None]:
                 for i in not_filters.split("|"):
                     k,v = i.split('%')
@@ -324,26 +344,30 @@ class Wrappers:
                 if len(not_filter_data):
                     query = reduce(operator.and_, (~Q(k) for k in not_filter_data.items()))
 
-		    lgr.info('Report List: %s' % report_list.count())
-		    lgr.info('Not Filters Applied: %s' % query)
+		    #lgr.info('Report List: %s' % report_list.count())
+		    #lgr.info('Not Filters Applied: %s' % query)
                     report_list = report_list.filter(query)
-		    lgr.info('Report List: %s' % report_list.count())
+		    #lgr.info('Report List: %s' % report_list.count())
 
-	    lgr.info('Report Not Filters')
+	    #lgr.info('Not Filters Report List Count: %s' % report_list.count())
             if date_filters not in ['',None]:
-	        lgr.info('Date Filters')
+	        #lgr.info('Date Filters')
                 for i in date_filters.split("|"):
                     k,v = i.split('%')
-	    	    lgr.info('Date %s| %s' % (k,v))
+	    	    #lgr.info('Date %s| %s' % (k,v))
 		    try: date_filter_data[k] = (timezone.now()+timezone.timedelta(days=float(v))).date() if v not in ['',None] else None
 		    except Exception, e: lgr.info('Error on date filter: %s' % e)
                 if len(date_filter_data):
-	    	    lgr.info('Date Filter Data: %s' % date_filter_data)
+	    	    #lgr.info('Date Filter Data: %s' % date_filter_data)
+		    for k,v in date_filter_data.items(): 
+			try:lgr.info('Date Data: %s' % v.isoformat())
+			except: pass
                     query = reduce(operator.and_, (Q(k) for k in date_filter_data.items()))
-		    lgr.info('Query: %s' % query)
+		    #lgr.info('Query: %s' % query)
                     report_list = report_list.filter(query)
 
-	    lgr.info('Report Date Filters')
+
+	    #lgr.info('Date Filters Report List Count: %s' % report_list.count())
             if time_filters not in ['',None]:
                 for i in time_filters.split("|"):
                     k,v = i.split('%')
@@ -351,13 +375,17 @@ class Wrappers:
 		    except Exception, e: lgr.info('Error on time filter: %s' % e)
 
                 if len(time_filter_data):
+		    for k,v in time_filter_data.items(): 
+			try:lgr.info('Date Data: %s' % v.isoformat())
+			except: pass
                     query = reduce(operator.and_, (Q(k) for k in time_filter_data.items()))
-		    lgr.info('Query: %s' % query)
+		    #lgr.info('Query: %s' % query)
 
                     report_list = report_list.filter(query)
 
             #q_list = [Q(**{f:q}) for f in field_lookups]
-	    lgr.info('Report Token Filters')
+
+	    #lgr.info('Token Filters Report List Count: %s' % report_list.count())
             if token_filter not in ['',None]:
                 for f in token_filter.split("|"):
             	    if 'csrfmiddlewaretoken' in payload.keys() and payload['csrfmiddlewaretoken'] not in ['', None]:
@@ -369,11 +397,11 @@ class Wrappers:
 
                 if len(token_filter_data):
                     query = reduce(operator.and_, (Q(k) for k in token_filter_data.items()))
-		    lgr.info('Query: %s' % query)
+		    #lgr.info('Query: %s' % query)
 
                     report_list = report_list.filter(query)
 
-	    lgr.info('Report Time Filters')
+	    #lgr.info('Time Filters Report List Count: %s' % report_list.count())
 	    if or_filters not in [None,'']:
                 # for a in filters.split("&"):
                 for f in or_filters.split("|"):
@@ -386,7 +414,7 @@ class Wrappers:
                     or_query = reduce(operator.or_, (Q(k) for k in or_filter_data.items()))
                     report_list = report_list.filter(or_query)
 
-	    lgr.info('Report Or Filters')
+	    #lgr.info('Or Filters Report List Count: %s' % report_list.count())
 	    if and_filters not in [None,'']:
                 for f in and_filters.split("|"):
             	    if 'q' in payload.keys() and payload['q'] not in ['', None]:
@@ -399,8 +427,7 @@ class Wrappers:
                     and_query = reduce(operator.and_, (Q(k) for k in and_filter_data.items()))
                     report_list = report_list.filter(and_query)
 
-
-	    lgr.info('Report And Filters')
+	    #lgr.info('And Filters Report List Count: %s' % report_list.count())
 	    if list_filters not in [None,'']:
                 for f in list_filters.split("|"):
             	    if 'q' in payload.keys() and payload['q'] not in ['', None]:
@@ -413,33 +440,28 @@ class Wrappers:
                     report_list = report_list.filter(and_query)
 
 
-	    lgr.info('Report List Filters')
-	    institution_none_filter = {}
+	    #lgr.info('Institution Filters Report List Count: %s' % report_list.count())
 	    if institution_filters not in ['',None]:
                 for f in institution_filters.split("|"):
-                    if f not in ['',None]: institution_none_filter[f] = None
+                    #if f not in ['',None]: institution_none_filter[f] = None
             	    if 'institution_id' in payload.keys() and payload['institution_id'] not in ['', None]:
                     	if f not in ['',None]: institution_filter_data[f + '__id'] = payload['institution_id']
             	    elif gateway_profile.institution not in ['', None]:
                     	if f not in ['',None]: institution_filter_data[f] = gateway_profile.institution
 		    else:
-                    	if f not in ['',None]: institution_filter_data[f] = None
+			#MQTT doesn't filter institution for push notifications
+			if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+				pass
+			else:
+	                    	if f not in ['',None]: institution_filter_data[f] = None
 
                 if len(institution_filter_data):
                     institution_query = reduce(operator.and_, (Q(k) for k in institution_filter_data.items()))
-                    institution_none_query = reduce(operator.or_, (Q(k) for k in institution_none_filter.items()))
-                    report_list = report_list.filter(institution_query|institution_none_query)
+		    #lgr.info('Institution Query: %s' % institution_query)
+                    report_list = report_list.filter(institution_query)
 
 
-	    lgr.info('Report Institution Filters')
-            if gateway_filters not in ['', None]:
-                for f in gateway_filters.split("|"):
-                    if f not in ['',None]: gateway_filter_data[f] = gateway_profile.gateway
-                if len(gateway_filter_data):
-                    gateway_query = reduce(operator.and_, (Q(k) for k in gateway_filter_data.items()))
-                    report_list = report_list.filter(gateway_query)
-
-	    lgr.info('Report Gateway Filters')
+	    #lgr.info('Gateway Profile Filters Report List Count: %s' % report_list.count())
             if gateway_profile_filters not in ['', None]:
                 for f in gateway_profile_filters.split("|"):
                     if f not in ['',None]: gateway_profile_filter_data[f] = gateway_profile
@@ -447,7 +469,8 @@ class Wrappers:
                     gateway_profile_query = reduce(operator.and_, (Q(k) for k in gateway_profile_filter_data.items()))
                     report_list = report_list.filter(gateway_profile_query)
 
-	    lgr.info('Report Gateway Profile Filters')
+
+	    #lgr.info('Date Filters Report List Count: %s' % report_list.count())
             if 'start_date' in payload.keys():
                 try:
                     date_obj = datetime.strptime(payload["start_date"] + ' 12:00 am', '%d/%m/%Y %I:%M %p')
@@ -463,7 +486,7 @@ class Wrappers:
                     start_date = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
                 report_list = report_list.filter(date_created__gte=start_date)
 
-	    lgr.info('Report Start Date')
+	    #lgr.info('Report Start Date')
             if 'end_date' in payload.keys():
                 try:
                     date_obj = datetime.strptime(payload["end_date"] + ' 11:59 pm', '%d/%m/%Y %I:%M %p')
@@ -480,102 +503,140 @@ class Wrappers:
                 report_list = report_list.filter(date_created__lte=end_date)
 
 
-	    lgr.info('Report End Date')
+	    #lgr.info('Report End Date')
 	    ############################################VALUES BLOCK
             args = []
-            kwargs = {}
 	    if values not in [None,'']:
             	for i in values.split('|'):
                 	k,v = i.split('%')
 	                args.append(k.strip())
-        	        params['cols'].append({"label": k.strip(), "type": "string", "value": v.strip()})
-                	if k <> v:kwargs[k.strip()] = F(v.strip())
+			value_type = model_class._meta.get_field(v.split('__')[0]).get_internal_type()
+			
+			column_type = 'string'
+			if value_type == 'DateField':
+				column_type = 'date'
+			elif value_type == 'DateTimeField':
+				column_type = 'date'
+			elif value_type == 'DecimalField':
+				column_type = 'number'
+			elif value_type == 'IntegerField':
+				column_type = 'number'
+			elif value_type == 'BigIntegerField':
+				column_type = 'number'
+			elif value_type == 'PositiveIntegerField':
+				column_type = 'number'
+			elif value_type == 'PositiveSmallIntegerField':
+				column_type = 'number'
+			elif value_type == 'SmallIntegerField':
+				column_type = 'number'
+			elif value_type == 'BooleanField':
+				column_type = 'boolean'
 
-	    lgr.info('Report Values')
+        	        params['cols'].append({"label": k.strip(), "type": column_type, "value": v.strip()})
+                	if k <> v:values_data[k.strip()] = F(v.strip())
+
+	    if len(values_data.keys()):
+        	    report_list = report_list.annotate(**values_data)
+
+
+	    #lgr.info('Report Values')
 	    selected_data = {}
 	    if data.query.date_values not in [None,'']:
 	            for i in data.query.date_values.split('|'):
 			k,v = i.split('%')
 	                args.append(k.strip())
 			selected_data[k.strip()] = "to_char("+ data.query.module_name +"_"+ data.query.model_name +"."+v+", 'DD, Month, YYYY')"
-                    	params['cols'].append({"label": k.strip(), "type": "string", "value": v.strip()})
+                    	params['cols'].append({"label": k.strip(), "type": "date", "value": v.strip()})
 
-	    lgr.info('Report Date Values')
+	    #lgr.info('Report Date Values')
 	    if data.query.date_time_values not in [None,'']:
 	            for i in data.query.date_time_values.split('|'):
 			k,v = i.split('%')
 	                args.append(k.strip())
 			selected_data[k.strip()] = "to_char("+ data.query.module_name +"_"+ data.query.model_name +"."+v+", 'DD, Month, YYYY HH:MI:SS TZ')"
-                    	params['cols'].append({"label": k.strip(), "type": "string", "value": v.strip()})
+                    	params['cols'].append({"label": k.strip(), "type": "date", "value": v.strip()})
 
-	    lgr.info('Report Date Time Values')
+	    #lgr.info('Report Date Time Values')
 
 	    if data.query.month_year_values not in [None,'']:
 	            for i in data.query.month_year_values.split('|'):
 			k,v = i.split('%')
 	                args.append(k.strip())
 			selected_data[k.strip()] = "to_char("+ data.query.module_name +"_"+ data.query.model_name +"."+v+", 'Month, YYYY')"
-                    	params['cols'].append({"label": k.strip(), "type": "string", "value": k.strip()})
+                    	params['cols'].append({"label": k.strip(), "type": "date", "value": k.strip()})
 
-	    lgr.info('Report Month Year Values')
+	    #lgr.info('Report Month Year Values')
             report_list = report_list.extra(select=selected_data)
 
+	    '''
+	    if len(values_data.keys()):
+        	    report_list = report_list.annotate(**values_data)
+
+	    '''
 
 	    if data.data_response:
 		    #Values
-        	    report_list = report_list.annotate(**kwargs).values(*args)
+        	    report_list = report_list.values(*args)
 	    else:
 		    #Values List
-        	    report_list = report_list.annotate(**kwargs).values_list(*args)
-
+        	    report_list = report_list.values_list(*args)
 	    ############################################END VALUES BLOCK
 
+            #args = []
 
 	    #Count Sum MUST come after values in order to group
             if count_values not in [None,'']:
                 kwargs = {}
                 for i in count_values.split('|'):
                     k,v = i.split('%')
-                    params['cols'].append({"label": k.strip(), "type": "string", "value": k.strip()})
+		    args.append(k.strip())
+                    params['cols'].append({"label": k.strip(), "type": "number", "value": k.strip()})
                     if k <> v:kwargs[k.strip()] = Count(v.strip())
 
                 report_list = report_list.annotate(**kwargs)
 
-	    lgr.info('Report Count Values')
+	    #lgr.info('Report Count Values')
             if sum_values not in [None,'']:
                 kwargs = {}
                 for i in sum_values.split('|'):
                     k,v = i.split('%')
-                    params['cols'].append({"label": k.strip(), "type": "string", "value": k.strip()})
+		    args.append(k.strip())
+                    params['cols'].append({"label": k.strip(), "type": "number", "value": k.strip()})
                     if k <> v:kwargs[k.strip()] = Sum(v.strip())
+
+	        #lgr.info('Count Applied: %s' % kwargs)
 
                 report_list = report_list.annotate(**kwargs)
 
-	    lgr.info('Report Sum Values')
+	    #lgr.info('Report Sum Values')
             if avg_values not in [None,'']:
                 kwargs = {}
                 for i in avg_values.split('|'):
                     k,v = i.split('%')
-                    params['cols'].append({"label": k.strip(), "type": "string", "value": k.strip()})
+		    args.append(k.strip())
+                    params['cols'].append({"label": k.strip(), "type": "number", "value": k.strip()})
                     if k <> v:kwargs[k.strip()] = Avg(v.strip())
 
+	        #lgr.info('Sum Applied: %s' % kwargs)
                 report_list = report_list.annotate(**kwargs)
 
 
-	    lgr.info('Report AVG Values')
+	    #lgr.info('Report AVG Values')
 	    
             if last_balance not in [None,'']:
                 kwargs = {}
                 for i in last_balance.split('|'):
                     k,v = i.split('%')
-                    params['cols'].append({"label": k.strip(), "type": "string", "value": v.strip()})
+		    args.append(k.strip())
+                    params['cols'].append({"label": k.strip(), "type": "number", "value": v.strip()})
                     #if k <> v:kwargs[k.strip()] = ( (( (Sum('balance_bf')*2) + Sum('amount') ) + Sum('charge'))*2  )/2
                     if k <> v:kwargs[k.strip()] = (Sum('balance_bf')+((( Sum('amount')- Sum('charge'))/2)+Sum('charge')))
 
+	        #lgr.info('AVG Applied: %s' % kwargs)
                 report_list = report_list.annotate(**kwargs)
 	    
 
-	    lgr.info('Report Last Balance')
+	    #lgr.info('Report Last Balance')
 	    if or_filters not in [None,'']:
                 # for a in filters.split("&"):
                 for f in or_filters.split("|"):
@@ -629,8 +690,22 @@ class Wrappers:
 					href['links'][name]['params'] = {k:v}
 		    params['cols'].append(href)
 
-            ct = report_list.count()
 
+
+	    ###########################################################################
+
+	    if data.data_response:
+		    #Values
+        	    report_list = report_list.values(*args)
+	    else:
+		    #Values List
+        	    report_list = report_list.values_list(*args)
+
+	    ##########################################################################
+
+
+            ct = report_list.count()
+	    #lgr.info('Count: %s' % ct)
             #if 'max_id' in payload.keys() and payload['max_id'] > 0:
             #    report_list = report_list.filter(id__lt=payload['max_id'])
             #if 'min_id' in payload.keys() and payload['min_id'] > 0:
@@ -647,37 +722,100 @@ class Wrappers:
             # max_id = trans.get('max_id')
             # min_id = trans.get('min_id')
 
-
-            paginator = Paginator(report_list, payload.get('limit',50))
-
-            try:
-                page = int(payload.get('page', '1'))
-            except ValueError:
-                page = 1
-
-            try:
-                results = paginator.page(page)
-            except (EmptyPage, InvalidPage):
-                results = paginator.page(paginator.num_pages)
+	    #lgr.info('Report List: %s' % report_list)
 
 
-            report_list = results.object_list
+	    if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+		if data.pn_id_field not in ['',None] and data.pn_update_field not in ['',None]:
+			#Filter out (None|NULL). Filter to within the last 10 seconds MQTT runs every 2 seconds. 
+
+			#lgr.info('0.Report List: %s' % report_list.count())
+
+			report_list_groups = original_report_list.filter(~Q(Q(**{data.pn_id_field: None})|Q(**{data.pn_id_field: ''}))).\
+								filter(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30)).\
+								values(data.pn_id_field).annotate(Count(data.pn_id_field))
+
+			@transaction.atomic
+			def get_pn_data(report_list, channel, group):
 
 
+				params['action'] = [d.name for d in data.pn_action.all()]
 
-	    if data.data_response:
-		#Set Data
-		params['data'] = report_list
+				pn_filter= {}
+				pn_filter[data.pn_update_field] = False
+				pn_filter[data.pn_id_field] = group[data.pn_id_field]
+				query = reduce(operator.and_, (Q(k) for k in pn_filter.items()))
+				#Lock Query till Marked as sent (SELECT FOR UPDATE) & Select for trigger and Update Unfiltered List
+				original_filtered_report_list = original_report_list.filter(query).select_for_update()
+
+				if data.pn_action.filter(name='REPLACE').exists():
+					#Return full list to REPLACE existing list
+					report_list = report_list.filter(**{data.pn_id_field: group[data.pn_id_field]})
+				else:
+					#Return specific list items for APPEND|REPLACE
+					report_list = report_list.filter(query)
+
+				if original_filtered_report_list.exists():
+
+					lgr.info('Sending MQTT: %s' % channel)
+					#filtered_report_list_for_update = original_filtered_report_list
+
+					if data.data_response:
+						#Set Data
+						params['data'] = report_list
+					else:
+						#IF values_list is used
+						report_list = np.asarray(report_list).tolist()
+						#Set Data
+						params['rows']= report_list
+
+					#Update notification Sent
+					pn_update = {}
+					pn_update[data.pn_update_field] = True
+					#filtered_report_list_for_update.query.annotations.clear()
+					#filtered_report_list_for_update.filter().update(**pn_update)
+					original_filtered_report_list.query.annotations.clear()
+					original_filtered_report_list.filter().update(**pn_update)
+
+					#Update pn status
+					mqtt[channel] = params
+
+				return mqtt
+
+			for group in report_list_groups:
+				channel = "%s/%s/%s" % (gateway_profile.gateway.id, data.data_name,group[data.pn_id_field])
+
+				mqtt = get_pn_data(report_list, channel, group)
 	    else:
-		#IF values_list is used
-		report_list = np.asarray(report_list).tolist()
-		#Set Data
-		params['rows'] = report_list
+            	paginator = Paginator(report_list, payload.get('limit',50))
 
+		try:
+			page = int(payload.get('page', '1'))
+		except ValueError:
+			page = 1
+
+		try:
+			results = paginator.page(page)
+		except (EmptyPage, InvalidPage):
+			results = paginator.page(paginator.num_pages)
+
+
+		report_list = results.object_list
+
+
+
+		if data.data_response:
+			#Set Data
+			params['data'] = report_list
+		else:
+			#IF values_list is used
+			report_list = np.asarray(report_list).tolist()
+			#Set Data
+			params['rows'] = report_list
 
         except Exception, e:
             lgr.info('Error on report: %s' % e)
-        return params,max_id,min_id,ct
+        return params,max_id,min_id,ct,mqtt
 
 
     def balance(self, payload, gateway_profile, profile_tz, data):
@@ -1101,49 +1239,22 @@ class Wrappers:
             lgr.info('Error on notifications: %s' % e)
         return params
 
+    def process_data_list(self, data_list, payload, gateway_profile, profile_tz, data):
 
-class System(Wrappers):
-    def data_source(self, payload, node_info):
-        try:
-            lgr.info('DSC Data %s Payload: %s' % (('data_name' in payload.keys()), payload))
-            report = []
-            cols = []
-            rows = []
-            groups = []
-            data = []
-            min_id = 0
-            max_id = 0
-            t_count = 0
-            gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-            profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
-
-            # Get value from first = sign
-            v = payload['data_name']
-            data_name, data_name_val = None, None
-            n = v.find("=")
-            if n >= 0:
-                data_name = v[:n].lower()
-                data_name_val = v[(n + 1):].strip()
-            else:
-                data_name = v.lower()
-
-            lgr.info('Data Source: data_name: %s val: %s' % (data_name, data_name_val))
-            data_list = DataList.objects.filter(Q(data_name=data_name.strip()), Q(status__name='ACTIVE'), \
-                                                Q(Q(gateway=gateway_profile.gateway) | Q(gateway=None)), \
-                                                Q(Q(channel__id=payload['chid']) | Q(channel=None)), \
-                                                Q(Q(access_level=gateway_profile.access_level) | Q(access_level=None))).order_by('level')
-
-            if 'institution_id' in payload.keys():
-                data_list = data_list.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
-	    else:
-                data_list = data_list.filter(institution=None)
-
-            if data_list.exists():
-                lgr.info('Fetching from Data List')
+	cols = []
+	rows = []
+	groups = []
+	data = []
+	min_id = 0
+	max_id = 0
+	t_count = 0
+	mqtt = {}
+	try:
+                #lgr.info('Fetching from Data List')
                 collection = {}
                 for d in data_list:
                     if d.function not in ['', None]:
-                        lgr.info('Is a Function: ')
+                        #lgr.info('Is a Function: ')
                         try:
                             func = getattr(self, d.function.strip())
                             params = func(payload, gateway_profile, profile_tz, d)
@@ -1171,9 +1282,9 @@ class System(Wrappers):
                             lgr.info('Error on Data List Function: %s' % e)
 
                     elif d.query not in ['', None]:
-                        lgr.info('Is a Query: ')
+                        #lgr.info('Is a Query: ')
                         try:
-                            params,max_id,min_id,t_count = self.report(payload, gateway_profile, profile_tz, d)
+                            params,max_id,min_id,t_count,mqtt = self.report(payload, gateway_profile, profile_tz, d)
                             cols = params['cols'] if 'cols' in params.keys() else []
                             rowsParams = params['rows'] if 'rows' in params.keys() else []
                             dataParams = params['data'] if 'data' in params.keys() else []
@@ -1211,6 +1322,49 @@ class System(Wrappers):
                 groups = sorted(collection.keys())
                 data = [collection[k] for k in groups]
 
+        except Exception, e:
+            lgr.info('Error on process_data_list: %s' % e)
+
+	return cols,rows,groups,data,min_id,max_id,t_count, mqtt
+
+
+class System(Wrappers):
+    def data_source(self, payload, node_info):
+        try:
+            #lgr.info('DSC Data %s Payload: %s' % (('data_name' in payload.keys()), payload))
+            cols = []
+            rows = []
+            groups = []
+            data = []
+            min_id = 0
+            max_id = 0
+            t_count = 0
+            gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+            profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
+
+            # Get value from first = sign
+            v = payload['data_name']
+            data_name, data_name_val = None, None
+            n = v.find("=")
+            if n >= 0:
+                data_name = v[:n].lower()
+                data_name_val = v[(n + 1):].strip()
+            else:
+                data_name = v.lower()
+
+            #lgr.info('Data Source: data_name: %s val: %s' % (data_name, data_name_val))
+            data_list = DataList.objects.filter(Q(data_name=data_name.strip()), Q(status__name='ACTIVE'), \
+                                                Q(Q(gateway=gateway_profile.gateway) | Q(gateway=None)), \
+                                                Q(Q(channel__id=payload['chid']) | Q(channel=None)), \
+                                                Q(Q(access_level=gateway_profile.access_level) | Q(access_level=None))).order_by('level')
+
+            if 'institution_id' in payload.keys():
+                data_list = data_list.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+	    else:
+                data_list = data_list.filter(institution=None)
+
+            if data_list.exists():
+		cols, rows, groups, data, min_id, max_id, t_count, mqtt = self.process_data_list(data_list, payload, gateway_profile, profile_tz, data)
             else:
                 lgr.info('Not a Data List')
                 if 'survey' in data_name:
@@ -1302,8 +1456,8 @@ class System(Wrappers):
                             for i in m:
                                 name = i.product_item.name
                                 product_type = i.product_item.product_type.name
-                                if i.product_item.image_path:
-                                    image = i.product_item.image_path.name
+                                if i.product_item.default_image:
+                                    image = i.product_item.default_image.name
                                 else:
                                     image = "crm_productitem_imagepath/muziqbit_icon.png"
                                 description = i.artiste + ' | ' + i.album
@@ -1336,8 +1490,8 @@ class System(Wrappers):
                             for i in m:
                                 name = i.product_item.name
                                 product_type = i.product_item.product_type.name
-                                if i.product_item.image_path:
-                                    image = i.product_item.image_path.name
+                                if i.product_item.default_image:
+                                    image = i.product_item.default_image.name
                                 else:
                                     image = "crm_productitem_imagepath/muziqbit_icon.png"
                                 description = i.artiste + ' | ' + i.album
@@ -2763,8 +2917,7 @@ class Payments(System):
     pass
 
 
-@app.task(
-        ignore_result=True)  # Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
+@app.task(ignore_result=True)  # Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60 * 10)
 def process_file_upload():
@@ -2792,3 +2945,54 @@ def process_file_upload():
             u.save()
 
             lgr.info('Error processing file upload: %s | %s' % (u, e))
+
+
+@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def process_push_notification():
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+
+	from notify.mqtt import MqttServerClient
+	from django.core.serializers.json import DjangoJSONEncoder
+	from django.core import serializers
+
+	cols = []
+	rows = []
+	groups = []
+	data = []
+	min_id = 0
+	max_id = 0
+	t_count = 0
+
+	gateway_profile_list = GatewayProfile.objects.filter(access_level__name='SYSTEM',status__name='ACTIVATED',user__username='MQTTUser')
+	for gateway_profile in gateway_profile_list:
+		profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
+
+
+		data_list = DataList.objects.filter(Q(status__name='ACTIVE'),Q(pn_data=True),\
+					Q(Q(gateway=gateway_profile.gateway) | Q(gateway=None))).order_by('level')
+
+
+		if data_list.exists():
+			payload = {}
+			payload['push_notification'] = True
+			cols, rows, groups, data, min_id, max_id, t_count, mqtt = Wrappers().process_data_list(data_list, payload, gateway_profile, profile_tz, data)
+
+			for k,v in mqtt.items():
+				try:
+					msc = MqttServerClient()
+					channel = k
+					lgr.info('Channel: %s' % channel)
+					itms = json.dumps(v, cls=DjangoJSONEncoder)
+					lgr.info('Items: %s' % itms)
+	
+					msc.publish(
+						channel,
+						itms
+					)
+					msc.disconnect()
+				except Exception, e: lgr.info('MQTT update Failure '+e.message)
+
+	return True
