@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.timezone import utc
 from django.contrib.gis.geos import Point
 from django.db import IntegrityError
-import pytz, time, json, pycurl
+import pytz, time, json, pycurl, os, random, string
 from django.utils.timezone import localtime
 from datetime import datetime
 from decimal import Decimal, ROUND_DOWN, ROUND_UP
@@ -20,10 +20,11 @@ from django.db import transaction
 from xml.sax.saxutils import escape, unescape
 from django.utils.encoding import smart_str, smart_unicode
 from django.db.models import Count, Sum, Max, Min, Avg
-
 from paygate.models import *
 from notify.models import *
 from pos.models import *
+from django.core.serializers.json import DjangoJSONEncoder
+from django.core import serializers
 
 import logging
 lgr = logging.getLogger('paygate')
@@ -369,8 +370,6 @@ class System(Wrappers):
 						params = self.endpoint_payload(params)
 
 						lgr.info('Endpoint: %s' % node)
-						lgr.info('Params: %s' % params)
-
 						outgoing.sends = outgoing.sends+1
 						params = self.post_request(params, node)
 						if 'response' in params.keys(): outgoing.message = str(params['response'])[:1919]
@@ -897,12 +896,13 @@ class Trade(System):
 	pass
 
 @app.task(ignore_result=True)
+@transaction.atomic
 def send_payment(payload,node):
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
+	payload = json.loads(payload)
 	i = Outgoing.objects.get(id=payload['id'])
 	try:
-
 		if i.state.name <> 'PROCESSING':
 			i.sends = i.sends+1
 			i.state = OutgoingState.objects.get(name='PROCESSING')
@@ -932,17 +932,24 @@ def send_payment(payload,node):
 
 
 @app.task(ignore_result=True)
-def service_call(service, gateway_profile, payload):
+def service_call(payload):
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	from api.views import ServiceCall
 	try:
+		payload = json.loads(payload)
+		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
+
+		service = Service.objects.get(id=payload['service_id'])
+		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 		payload = ServiceCall().api_service_call(service, gateway_profile, payload)
 		lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
 	except Exception, e:
 		payload['response_status'] = '96'
 		lgr.info('Unable to make service call: %s' % e)
 	return payload
+
+
 
 
 @app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
@@ -994,6 +1001,8 @@ def send_paygate_outgoing():
 
 			lgr.info('Endpoint: %s' % node)
 			params['id'] = i.id
+
+	    		params = json.dumps(params, cls=DjangoJSONEncoder)
 			send_payment.delay(params, node)
 
 		except Exception, e:
@@ -1016,7 +1025,9 @@ def process_incoming_payments():
 			c.save()
 			lgr.info('Captured Incoming: %s' % c)
 			payload = json.loads(c.request)	
+
 			service = c.institution_incoming_service.service
+			payload['service_id'] = service.id
 			payload['product_item_id'] = c.institution_incoming_service.product_item.id
 			payload['institution_id'] = c.institution_incoming_service.product_item.institution.id
 			payload['currency'] = c.currency.code
@@ -1033,8 +1044,10 @@ def process_incoming_payments():
 			else:
 				gateway_profile_list = GatewayProfile.objects.filter(gateway=c.institution_incoming_service.gateway,user__username='System@User', status__name__in=['ACTIVATED'])
 				if len(gateway_profile_list) > 0 and gateway_profile_list[0].user.is_active:
-					gateway_profile = gateway_profile_list[0]
-					try:service_call(service, gateway_profile, payload)
+					payload['gateway_profile_id'] = gateway_profile_list[0].id
+
+	    				payload = json.dumps(payload, cls=DjangoJSONEncoder)
+					try:service_call(payload)
 					except Exception, e: lgr.info('Error on Service Call: %s' % e)
 
 		except Exception, e:

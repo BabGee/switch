@@ -43,6 +43,7 @@ class Authorize:
 			k = '%s=%s' % (n,new_payload[n])
 			p.append(k)
 		p1 = '&'.join(p)
+		#lgr.info('Hash: %s' % p1)
 		a = hmac.new( base64.b64decode(API_KEY), p1, hashlib.sha256)
 		return base64.b64encode(a.digest())
 
@@ -87,6 +88,11 @@ class Interface(Authorize, ServiceCall):
 					count = count+1
 				'''
 				payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value) ), un_payload.items()))
+
+				for key, value in un_payload.items():
+					#Remove any injected sensitive data
+					if 'session_gateway_profile_id' in payload.keys():
+						del payload['session_gateway_profile_id']
                         except Exception, e:
                                 payload = {}
                                 lgr.info('Error on Post%s' % e)

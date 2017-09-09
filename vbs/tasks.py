@@ -17,6 +17,8 @@ from django.db import transaction
 from django.core.files import File
 import base64, re, operator
 from decimal import Decimal, ROUND_DOWN, ROUND_UP
+from django.core.serializers.json import DjangoJSONEncoder
+from django.core import serializers
 
 from vbs.models import *
 from upc.tasks import Wrappers as UPCWrappers
@@ -31,20 +33,6 @@ from switch.celery import single_instance_task
 
 
 class Wrappers:
-	@app.task(ignore_result=True)
-	def service_call(self, service, gateway_profile, payload):
-		from celery.utils.log import get_task_logger
-		lgr = get_task_logger(__name__)
-		from api.views import ServiceCall
-		try:
-			payload = ServiceCall().api_service_call(service, gateway_profile, payload)
-			lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
-		except Exception, e:
-			payload['response_status'] = '96'
-			lgr.info('Unable to make service call: %s' % e)
-		return payload
-
-
         def validateEmail(self, email):
                 try:
                         validate_email(str(email))
@@ -137,8 +125,7 @@ class System(Wrappers):
 
 	def mipay_account_balance(self, payload, node_info):
 		try:
-			lgr.info('Session Account ID: %s' % payload['session_account_id'])
-
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			#MIPAY is an overall gateway account for MIPAY PROFILES only tagged by MSISDN/EMAIL/PROFILE
 			if 'msisdn' in payload.keys():
 				msisdn = UPCWrappers().get_msisdn(payload)
@@ -170,9 +157,11 @@ class System(Wrappers):
 				payload['response_status'] = '00'
 				payload['response'] = '%s %s' % (payload['currency'], '{0:,.2f}'.format(payload['amount']))
 			else:
-
-				payload['response'] = 'No Account Balance Record Found'
-				payload['response_status'] = '25'
+				payload['balance_bf'] = Decimal(0)
+				payload['amount'] = Decimal(0)
+				payload['currency'] = 'KES'
+				payload['response_status'] = '00'
+				payload['response'] = '%s %s' % (payload['currency'], '{0:,.2f}'.format(payload['amount']))
 
 		except Exception, e:
 			payload['response_status'] = '96'
@@ -353,7 +342,6 @@ class System(Wrappers):
 			session_account = Account.objects.get(id=payload['session_account_id'])
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-
 			#Ensure Branch does not conflict to give more than one result
 			gl_account_type = AccountType.objects.filter(product_item__product_type__institution_till=session_account.account_branch,\
 						product_item__currency__code=payload['currency'],product_item__product_type__name='Ledger Account',\
@@ -444,6 +432,7 @@ class System(Wrappers):
 
 		except Exception, e:
 			payload['response_status'] = '96'
+			payload['response'] = str(e)
 			lgr.info("Error on debit account: %s" % e)
 		return payload
 
@@ -774,7 +763,10 @@ class Payments(System):
 
 			credit_limit = account.credit_limit
 			payload['credit_limit'] = credit_limit
-			available_limit = (account.credit_limit + limit_total)
+			if account.credit_limit:
+				available_limit = (account.credit_limit + limit_total)
+			else:
+				available_limit = limit_total
 			payload['available_limit'] = available_limit
 
 			#Format for view
@@ -891,6 +883,25 @@ class Payments(System):
 
 
 
+@app.task(ignore_result=True)
+def service_call(payload):
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	from api.views import ServiceCall
+	try:
+		payload = json.loads(payload)
+		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
+
+		service = Service.objects.get(id=payload['service_id'])
+		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+		payload = ServiceCall().api_service_call(service, gateway_profile, payload)
+		lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
+	except Exception, e:
+		payload['response_status'] = '96'
+		lgr.info('Unable to make service call: %s' % e)
+	return payload
+
+
 
 
 
@@ -917,6 +928,8 @@ def process_overdue_credit():
 				gateway_profile = a.dest_account.gateway_profile
 				service = c.service
 
+				payload['service_id'] = service.id
+				payload['gateway_profile_id'] = gateway_profile.id
 				payload['credit_overdue_id'] = c.id
 
 				if c.product_item:
@@ -940,7 +953,9 @@ def process_overdue_credit():
 				if service is None:
 					lgr.info('No Service to process for product: %s' % c.product_type)
 				else:
-					try:Wrappers().service_call(service, gateway_profile, payload)
+
+	    				payload = json.dumps(payload, cls=DjangoJSONEncoder)
+					try:service_call(payload)
 					except Exception, e: lgr.info('Error on Service Call: %s' % e)
 
 		except Exception, e:

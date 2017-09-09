@@ -44,6 +44,41 @@ class Wrapper:
 
 
 class System(Wrapper):
+	def card_present_details(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			if 'currency' not in payload.keys():
+				payload['currency']= 'KES'
+			if 'amount' in payload.keys():
+				payload['amount']= Decimal(payload['amount'])
+			else:
+				payload['amount']= Decimal(0)
+
+			if payload['entry_mode'] == 'contact':
+				track_data = payload['card_track_data']
+				track_data = track_data.replace('D','=')
+				track_data = track_data.replace('F','?')
+				track_data = ';%s'% track_data
+				payload['card_track_data'] = track_data
+			
+
+			chars = string.digits
+			rnd = random.SystemRandom()
+			pin = ''.join(rnd.choice(chars) for i in range(0,4))
+
+			payload['merchant_descriptor'] = 'MIPAY*%s' % pin
+			payload['reference'] = 'REF%s' % pin
+
+			payload['response_status'] = '00'
+			payload['response'] = 'Card Present Details Captured'
+		except Exception, e:
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+			lgr.info("Error on Card Present Details: %s" % e)
+		return payload
+
+
 	def add_card_record(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])

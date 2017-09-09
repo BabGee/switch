@@ -27,30 +27,52 @@ class ServiceProcessor:
 			node_system = item.node_system
 			payload = Wrappers().create_payload(item, gateway_profile, payload)
 			try:
-				if node_system.node_status.name == 'LOCAL API':
-					payload = Wrappers().call_api(item, item.command_function, payload)
-				elif node_system.node_status.name == 'EXT API':	
-					payload_ext = Wrappers().call_ext_api(item, item.command_function, payload)
-					if 'response_status' in payload_ext.keys():
-						payload['response_status'] = str(payload_ext['response_status'])
-					if 'response' in payload_ext.keys():
-						payload['response'] = str(payload_ext['response'])
-					if 'ext_transaction_id' in payload_ext.keys():
-						payload['ext_transaction_id'] = str(payload_ext['ext_transaction_id'])
 
-				elif node_system.node_status.name == 'LOCAL':	
-					payload = Wrappers().call_local(item, item.reverse_function, payload)
-				if payload['response_status'] <> '00':
-					response_status = Wrappers().process_responsestatus(payload['response_status'],payload)
-					response = response_status['response']
-					lgr.info('Failed response status. check if to reverse: %s' % response_status['reverse'])						
-					reverse_response_tree['response'][item.reverse_function] = response
-					break
+				#Check if triggerable action
+				if item.trigger.all().exists():
+					#Check if trigger Exists
+					if 'trigger' in payload.keys():
+						triggers = str(payload['trigger'].strip()).split(',')
+						lgr.info('Triggers: %s' % triggers)
+						trigger_list = Trigger.objects.filter(name__in=triggers)
+						#Ensure matches all existing triggers for action
+						if False in [trigger_list.filter(id=t.id).exists() for t in item.trigger.all()]:
+							item = None
+						else:
+							pass #Trigger matches
+					else:
+						item = None #No trigger, so, no action for a triggerable action
 				else:
-					response = payload['response']
-				reverse_response_tree['response_status'] = payload['response_status']
-				lgr.info('Captured Response: %s' % str(response)[:100])
-				reverse_response_tree['response'][item.reverse_function] = response
+					pass #Not a triggerable action
+
+				if item:
+					if node_system.node_status.name == 'LOCAL API':
+						payload = Wrappers().call_api(item, item.command_function, payload)
+					elif node_system.node_status.name == 'EXT API':	
+						payload_ext = Wrappers().call_ext_api(item, item.command_function, payload)
+						if 'response_status' in payload_ext.keys():
+							payload['response_status'] = str(payload_ext['response_status'])
+						if 'response' in payload_ext.keys():
+							payload['response'] = str(payload_ext['response'])
+						if 'ext_transaction_id' in payload_ext.keys():
+							payload['ext_transaction_id'] = str(payload_ext['ext_transaction_id'])
+
+					elif node_system.node_status.name == 'LOCAL':	
+						payload = Wrappers().call_local(item, item.reverse_function, payload)
+					if payload['response_status'] <> '00':
+						response_status = Wrappers().process_responsestatus(payload['response_status'],payload)
+						response = response_status['response']
+						lgr.info('Failed response status. check if to reverse: %s' % response_status['reverse'])						
+						reverse_response_tree['response'][item.reverse_function] = response
+						break
+					else:
+						response = payload['response']
+					reverse_response_tree['response_status'] = payload['response_status']
+					lgr.info('Captured Response: %s' % str(response)[:100])
+					reverse_response_tree['response'][item.reverse_function] = response
+				else:
+					#No action
+					continue
 			except Exception, e:
 				reverse_response_tree['response_status'] = '96'
 				lgr.info("Error: %s" % e)
@@ -85,40 +107,63 @@ class ServiceProcessor:
 			node_system = item.node_system
 			payload = Wrappers().create_payload(item, gateway_profile, payload)
 			try:
-				if node_system.node_status.name == 'LOCAL API':
-					payload = Wrappers().call_api(item, item.command_function, payload)
-				elif node_system.node_status.name == 'EXT API':	
-					payload_ext = Wrappers().call_ext_api(item, item.command_function, payload)
-					if 'response_status' in payload_ext.keys():
-						payload['response_status'] = str(payload_ext['response_status'])
-					if 'response' in payload_ext.keys():
-						payload['response'] = str(payload_ext['response'])
-					if 'ext_transaction_id' in payload_ext.keys():
-						payload['ext_transaction_id'] = str(payload_ext['ext_transaction_id'])
 
-				elif node_system.node_status.name == 'LOCAL':	
-					payload = Wrappers().call_local(item, item.command_function, payload)
-				if payload['response_status'] <> '00':
-					response_status = Wrappers().process_responsestatus(payload['response_status'], payload)
-					response = response_status['response']
-					lgr.info('Failed response status. check if to reverse: %s' % response_status['reverse'])						
-					if response_status['reverse'] and item.reverse_function not in ['no_reverse']:
-						lgr.info('This definitely has to be reversed surely: %s' % item.level)
-						reverse=True
-						level=item.level
-					response_tree['response'][item.command_function] = response
-					break
-				else:
-					#Log command to transaction
-					if transaction is not None:
-						transaction.current_command = item
-						all_commands = all_commands.filter(level__gt=item.level)
-						if len(all_commands)>0:
-							transaction.next_command = all_commands[0]
+				#Check if triggerable action
+				if item.trigger.all().exists():
+					#Check if trigger Exists
+					if 'trigger' in payload.keys():
+						triggers = str(payload['trigger'].strip()).split(',')
+						lgr.info('Triggers: %s' % triggers)
+						trigger_list = Trigger.objects.filter(name__in=triggers)
+						#Ensure matches all existing triggers for action
+						if False in [trigger_list.filter(id=t.id).exists() for t in item.trigger.all()]:
+							item = None
 						else:
-							transaction.next_command = None
-					response = payload['response']
-				response_tree['response'][item.command_function] = response
+							pass #Trigger matches
+					else:
+						item = None #No trigger, so, no action for a triggerable action
+				else:
+					pass #Not a triggerable action
+
+				if item:
+					#process action
+					if node_system.node_status.name == 'LOCAL API':
+						payload = Wrappers().call_api(item, item.command_function, payload)
+					elif node_system.node_status.name == 'EXT API':	
+						payload_ext = Wrappers().call_ext_api(item, item.command_function, payload)
+						if 'response_status' in payload_ext.keys():
+							payload['response_status'] = str(payload_ext['response_status'])
+						if 'response' in payload_ext.keys():
+							payload['response'] = str(payload_ext['response'])
+						if 'ext_transaction_id' in payload_ext.keys():
+							payload['ext_transaction_id'] = str(payload_ext['ext_transaction_id'])
+
+					elif node_system.node_status.name == 'LOCAL':	
+						payload = Wrappers().call_local(item, item.command_function, payload)
+					if payload['response_status'] <> '00':
+						response_status = Wrappers().process_responsestatus(payload['response_status'], payload)
+						response = response_status['response']
+						lgr.info('Failed response status. check if to reverse: %s' % response_status['reverse'])						
+						if response_status['reverse'] and item.reverse_function not in ['no_reverse']:
+							lgr.info('This definitely has to be reversed surely: %s' % item.level)
+							reverse=True
+							level=item.level
+						response_tree['response'][item.command_function] = response
+						break
+					else:
+						#Log command to transaction
+						if transaction is not None:
+							transaction.current_command = item
+							all_commands = all_commands.filter(level__gt=item.level)
+							if len(all_commands)>0:
+								transaction.next_command = all_commands[0]
+							else:
+								transaction.next_command = None
+						response = payload['response']
+					response_tree['response'][item.command_function] = response
+				else:
+					#No action
+					continue
 			except Exception, e:
 				response_tree['response_status'] = '96'
 				lgr.critical("Error: %s" % e)

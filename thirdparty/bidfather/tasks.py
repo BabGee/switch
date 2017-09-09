@@ -1108,20 +1108,24 @@ class Payments(System):
 @single_instance_task(60 * 10)
 def rankings():
     # query distinct bids with bid applications that rank_changed is True
-    changed_bids = Bid.objects.all()  # filter(bidapplication__rank_changed=True).distinct()
+    #changed_bids = Bid.objects.all()  # filter(bidapplication__rank_changed=True).distinct()
+    changed_bids = Bid.objects.filter(bidapplication__rank_changed=True,date_modified__gte=timezone.now() - timezone.timedelta(minutes=30)).distinct()
+
     # if changed_bids:
     # import paho.mqtt.client as mqtt
-    client = mqtt.Client()
-    client.username_pw_set("Super@User", "apps")
-    client.connect("127.0.0.1", 1883, 60)
-    for bid in changed_bids:
-        #   get new rankings
-        rankings = bid.app_rankings(None)
-        bid_change = {"type": "ranking", "data": rankings}
-        #   send the new rankings to each bid application creator
-        client.publish('rankings/' + str(bid.pk), json.dumps(bid_change, cls=DjangoJSONEncoder))
+    if changed_bids.exists():
+	lgr.info('Changed Bids: %s' % changed_bids)
+    	client = mqtt.Client()
+    	client.username_pw_set("Super@User", "apps")
+    	client.connect("127.0.0.1", 1883, 60)
+    	for bid in changed_bids:
+        	#   get new rankings
+        	rankings = bid.app_rankings(None)
+        	bid_change = {"type": "ranking", "data": rankings}
+        	#   send the new rankings to each bid application creator
+        	client.publish('rankings/' + str(bid.pk), json.dumps(bid_change, cls=DjangoJSONEncoder))
 
-    client.disconnect()
+    	client.disconnect()
 
 
 @app.task(ignore_result=True)

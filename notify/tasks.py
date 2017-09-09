@@ -26,10 +26,13 @@ from django.utils.encoding import smart_str, smart_unicode
 from django.db.models import Q
 from django.db.models import F
 from django.db.models import Count, Sum, Max, Min, Avg
+from django.core.serializers.json import DjangoJSONEncoder
+from django.core import serializers
 
 import operator, string
 from django.core.mail import EmailMultiAlternatives
 from upc.tasks import Wrappers as UPCWrappers
+import numpy as np
 
 import logging
 lgr = logging.getLogger('notify')
@@ -83,8 +86,8 @@ class Wrappers:
 				#payload = json.loads(jdata)
 				c = pycurl.Curl()
 				#Timeout in 10 seconds
-				c.setopt(pycurl.CONNECTTIMEOUT, 30)
-				c.setopt(pycurl.TIMEOUT, 30)
+				c.setopt(pycurl.CONNECTTIMEOUT, 5)
+				c.setopt(pycurl.TIMEOUT, 5)
 				c.setopt(pycurl.NOSIGNAL, 1)
 				c.setopt(pycurl.URL, str(node) )
 				c.setopt(pycurl.POST, 1)
@@ -103,138 +106,6 @@ class Wrappers:
                         payload['response_status'] = '96'
 
 		return payload
-
-	@app.task(ignore_result=True)
-	def outbound_bulk_logger(self, payload, contact_list, scheduled_send):
-		from celery.utils.log import get_task_logger
-		lgr = get_task_logger(__name__)
-		try:
-			state = OutBoundState.objects.get(name='CREATED')
-			#For Bulk Create, do not save each model in loop
-			outbound_list = []
-			for c in contact_list:
-				outbound = Outbound(contact=c,message=payload['message'],scheduled_send=scheduled_send,state=state, sends=0)
-				if 'notification_template_id' in payload.keys():
-					template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
-					outbound.template = template
-					outbound.heading = template.template_heading
-				outbound_list.append(outbound)
-			if len(outbound_list)>0:
-				Outbound.objects.bulk_create(outbound_list)
-		except Exception, e:
-			lgr.info("Error on Outbound Bulk Logger: %s" % e)
-
-
-	@app.task(ignore_result=True)
-	def send_outbound(self, payload, node):
-		from celery.utils.log import get_task_logger
-		lgr = get_task_logger(__name__)
-		try:
-			lgr.info("Payload: %s| Node: %s" % (payload, node) )
-			payload = self.post_request(payload, node)
-			lgr.info('Response: %s' % payload)
-
-			outbound = Outbound.objects.get(id=payload['outbound_id'])
-                        if 'response_status' in payload.keys() and payload['response_status'] == '00':
-				outbound.state = OutBoundState.objects.get(name='SENT')
-
-				lgr.info('Product Expires(On-demand): %s' % outbound.contact.product.expires)
-				if outbound.contact.product.expires == True:
-					lgr.info('Unsubscribe On-Demand Contact')
-					outbound.contact.status = ContactStatus.objects.get(name='INACTIVE')
-					outbound.contact.subscribed = False
-					outbound.contact.save()
-
-                        else:
-                                outbound.state = OutBoundState.objects.get(name='FAILED')
-                        outbound.save()
-		except Exception, e:
-			lgr.info("Error on Sending Outbound: %s" % e)
-
-	@app.task(ignore_result=True)
-	def send_contact_subscription(self, i, payload, node):
-		from celery.utils.log import get_task_logger
-		lgr = get_task_logger(__name__)
-		try:
-			lgr.info("Payload: %s| Node: %s" % (payload, node) )
-
-			if i.status.name <> 'PROCESSING':
-				i.status = ContactStatus.objects.get(name='PROCESSING')
-				i.save()
-
-			payload = self.post_request(payload, node)
-			lgr.info('Response: %s' % payload)
-
-			########
-			if 'response_status' in payload.keys() and payload['response_status'] == '00':
-				if 'response' in payload.keys() and payload['response'] == 'EXISTS':
-					status = ContactStatus.objects.get(name='ACTIVE')
-					i.status = status
-					i.subscribed = True
-					i.save()
-				elif 'response' in payload.keys() and payload['response'] == 'UNKNOWN':
-					i.state = ContactStatus.objects.get(name='PROCESSING')
-					i.save()
-	
-				else:
-					status = ContactStatus.objects.get(name='INACTIVE')
-					i.status = status
-					i.save()
-			else:
-				i.state = ContactStatus.objects.get(name='FAILED')
-				i.save()
-
-		except Exception, e:
-			lgr.info("Error on Sending Contact Subscription: %s" % e)
-
-	@app.task(ignore_result=True)
-	def send_contact_unsubscription(self, i, payload, node):
-		from celery.utils.log import get_task_logger
-		lgr = get_task_logger(__name__)
-		try:
-			lgr.info("Payload: %s| Node: %s" % (payload, node) )
-
-			if i.status.name <> 'PROCESSING':
-				i.status = ContactStatus.objects.get(name='PROCESSING')
-				i.save()
-
-			payload = self.post_request(payload, node)
-			lgr.info('Response: %s' % payload)
-
-			########If response status not a success, the contact will remain processing
-			if 'response_status' in payload.keys() and payload['response_status'] == '00':
-				i.status = ContactStatus.objects.get(name="INACTIVE")
-				i.subscribed = False
-
-			else:
-				i.status = ContactStatus.objects.get(name="PROCESSING")
-				i.subscribed = False
-
-			i.save()
-
-		except Exception, e:
-			lgr.info("Error on Sending Contact: %s" % e)
-
-
-	@app.task(ignore_result=True)
-	def notify_institution(self, payload, node_info):
-		from celery.utils.log import get_task_logger
-		lgr = get_task_logger(__name__)
-		try:
-			lgr.info("Payload: %s| Node Info: %s" % (payload, node_info) )
-			if 'institution_url' in node_info.keys():
-				node = node_info['institution_url']
-				lgr.info('Endpoint: %s' % node)
-				payload = self.post_request(payload, node)
-			lgr.info("Response||Payload: %s| Node Info: %s" % (payload, node_info) )
-
-			payload['response'] = 'Institution Notified'
-			payload['response_status']= '00'
-		except Exception, e:
-			payload['response_status'] = '96'
-			lgr.info("Error on Notifying Institution: %s" % e)
-		return payload
-
 
 class System(Wrappers):
 	def update_notification_template(self, payload, node_info):
@@ -854,7 +725,7 @@ class System(Wrappers):
 					node_info = {}
 					node_info['institution_url'] = this_outbound.contact.product.notification.institution_url
 					#self.notify_institution.delay(payload, node_info)
-					self.notify_institution.apply_async((self, payload, node_info), serializer='pickle')
+					notify_institution.delay(payload, node_info)
 
 				payload['ext_outbound_id'] = this_outbound.ext_outbound_id
 				payload['response'] = "Delivery Status Processed"
@@ -1082,12 +953,13 @@ class System(Wrappers):
 			#Get Amount
 			response = ''
 			for contact_product in contact_product_list:
-				contact_list = contact.filter(product__id=contact_product['product__id']).distinct('gateway_profile__msisdn__phone_number')
+				contact_list = contact.filter(product__id=contact_product['product__id']).values_list('id').distinct('gateway_profile__msisdn__phone_number')
 				if 'message' in payload.keys() and len(contact_list)>0:
 					lgr.info('Message and Contact Captured')
 					#Bulk Create Outbound
 					#self.outbound_bulk_logger.delay(payload, contact_list, scheduled_send)
-					self.outbound_bulk_logger.apply_async((self, payload, contact_list, scheduled_send), serializer='pickle')
+					contact_list = np.asarray(contact_list).tolist()
+					outbound_bulk_logger.apply_async((payload, contact_list, scheduled_send), serializer='json')
 
 					payload['response'] = 'Outbound Message Processed'
 					payload['response_status']= '00'
@@ -1119,12 +991,14 @@ class System(Wrappers):
 			notification_product_list = NotificationProduct.objects.filter(id__in=[a for a in payload['notification_product'].split(',') if a])
 
 			for notification_product in notification_product_list:
-				contact_list = Contact.objects.filter(product=notification_product,subscribed=True,status__name='ACTIVE')
+				contact_list = Contact.objects.filter(product=notification_product,subscribed=True,status__name='ACTIVE').values_list('id')
 				if 'message' in payload.keys() and len(contact_list)>0:
 					lgr.info('Message and Contact Captured')
 					#Bulk Create Outbound
 					#self.outbound_bulk_logger.delay(payload, contact_list, scheduled_send)
-					self.outbound_bulk_logger.apply_async((self, payload, contact_list, scheduled_send), serializer='pickle')
+
+					contact_list = np.asarray(contact_list).tolist()
+					outbound_bulk_logger.apply_async((payload, contact_list, scheduled_send), serializer='json')
 
 					payload['response'] = 'Outbound Message Processed'
 					payload['response_status']= '00'
@@ -1155,7 +1029,7 @@ class System(Wrappers):
 					node_info = {}
 					node_info['institution_url'] = inbound.contact.product.notification.institution_url
 					#self.notify_institution.delay(payload, node_info)
-					self.notify_institution.apply_async((self, payload, node_info), serializer='pickle')
+					notify_institution.delay(self, payload, node_info)
 
 			payload['response'] = 'Inbox Message Successful'
 			payload['response_status']= '00'
@@ -1281,6 +1155,96 @@ class Trade(System):
 	pass
 
 
+@app.task(ignore_result=True)
+def send_contact_subscription(payload, node):
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+		payload = json.loads(payload)
+		lgr.info("Payload: %s| Node: %s" % (payload, node) )
+
+		i = Contact.objects.get(id=payload['id'])
+		if i.status.name <> 'PROCESSING':
+			i.status = ContactStatus.objects.get(name='PROCESSING')
+			i.save()
+
+		payload = Wrappers().post_request(payload, node)
+		lgr.info('Response: %s' % payload)
+
+		########
+		if 'response_status' in payload.keys() and payload['response_status'] == '00':
+			if 'response' in payload.keys() and payload['response'] == 'EXISTS':
+				status = ContactStatus.objects.get(name='ACTIVE')
+				i.status = status
+				i.subscribed = True
+				i.save()
+			elif 'response' in payload.keys() and payload['response'] == 'UNKNOWN':
+				i.state = ContactStatus.objects.get(name='PROCESSING')
+				i.save()
+	
+			else:
+				status = ContactStatus.objects.get(name='INACTIVE')
+				i.status = status
+				i.save()
+		else:
+			i.state = ContactStatus.objects.get(name='FAILED')
+			i.save()
+
+	except Exception, e:
+		lgr.info("Error on Sending Contact Subscription: %s" % e)
+
+@app.task(ignore_result=True)
+def send_contact_unsubscription(payload, node):
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+		payload = json.loads(payload)
+		lgr.info("Payload: %s| Node: %s" % (payload, node) )
+		i = Contact.objects.get(id=payload['id'])
+		if i.status.name <> 'PROCESSING':
+			i.status = ContactStatus.objects.get(name='PROCESSING')
+			i.save()
+
+		payload = Wrappers().post_request(payload, node)
+		lgr.info('Response: %s' % payload)
+
+		########If response status not a success, the contact will remain processing
+		if 'response_status' in payload.keys() and payload['response_status'] == '00':
+			i.status = ContactStatus.objects.get(name="INACTIVE")
+			i.subscribed = False
+
+		else:
+			i.status = ContactStatus.objects.get(name="PROCESSING")
+			i.subscribed = False
+
+		i.save()
+
+	except Exception, e:
+		lgr.info("Error on Sending Contact: %s" % e)
+
+
+
+@app.task(ignore_result=True)
+def notify_institution(payload, node_info):
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+		payload = json.loads(payload)
+		lgr.info("Payload: %s| Node Info: %s" % (payload, node_info) )
+		if 'institution_url' in node_info.keys():
+			node = node_info['institution_url']
+			lgr.info('Endpoint: %s' % node)
+			payload = Wrappers().post_request(payload, node)
+		lgr.info("Response||Payload: %s| Node Info: %s" % (payload, node_info) )
+
+		payload['response'] = 'Institution Notified'
+		payload['response_status']= '00'
+	except Exception, e:
+		payload['response_status'] = '96'
+		lgr.info("Error on Notifying Institution: %s" % e)
+	return payload
+
+
 @app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
@@ -1314,10 +1278,34 @@ def contact_unsubscription():
 			#Send SMS
 			node = i.product.unsubscription_endpoint.url
 			lgr.info('Endpoint: %s' % node)
-			w = Wrappers()
-			w.send_contact_unsubscription(w, i, payload, node)
+			payload['id'] = i.id
+
+	    		payload = json.dumps(payload, cls=DjangoJSONEncoder)
+			send_contact_unsubscription.delay(payload, node)
+
 		except Exception, e:
 			lgr.info('Error unsubscribing item: %s | %s' % (i,e))
+
+
+@app.task(ignore_result=True)
+def outbound_bulk_logger(payload, contact_list, scheduled_send):
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+		state = OutBoundState.objects.get(name='CREATED')
+		#For Bulk Create, do not save each model in loop
+		outbound_list = []
+		for c in contact_list:
+			outbound = Outbound(contact=Contact.objects.get(id=c[0]),message=payload['message'],scheduled_send=scheduled_send,state=state, sends=0)
+			if 'notification_template_id' in payload.keys():
+				template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
+				outbound.template = template
+				outbound.heading = template.template_heading
+			outbound_list.append(outbound)
+		if len(outbound_list)>0:
+			Outbound.objects.bulk_create(outbound_list)
+	except Exception, e:
+		lgr.info("Error on Outbound Bulk Logger: %s" % e)
 
 
 
@@ -1357,8 +1345,10 @@ def contact_subscription():
 				lgr.info('Endpoint: %s' % node)
 
 				#No response is required on celery use (ignore results)
-				w = Wrappers()
-				w.send_contact_subscription.apply_async((w, i, payload, node), serializer='pickle')
+				payload['id'] = i.id
+
+	    			payload = json.dumps(payload, cls=DjangoJSONEncoder)
+				send_contact_subscription.delay(payload, node)
 
 			elif i.product.subscription_endpoint is None and i.product.subscribable:
 				status = ContactStatus.objects.get(name='ACTIVE')
@@ -1370,6 +1360,34 @@ def contact_subscription():
 			i.save()
 		except Exception, e:
 			lgr.info('Error subscribing item: %s | %s' % (i,e))
+
+
+@app.task(ignore_result=True)
+def send_outbound(payload, node):
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+		payload = json.loads(payload)
+		lgr.info("Payload: %s| Node: %s" % (payload, node) )
+		payload = Wrappers().post_request(payload, node)
+		lgr.info('Response: %s' % payload)
+
+		outbound = Outbound.objects.get(id=payload['outbound_id'])
+		if 'response_status' in payload.keys() and payload['response_status'] == '00':
+			outbound.state = OutBoundState.objects.get(name='SENT')
+
+			lgr.info('Product Expires(On-demand): %s' % outbound.contact.product.expires)
+			if outbound.contact.product.expires == True:
+				lgr.info('Unsubscribe On-Demand Contact')
+				outbound.contact.status = ContactStatus.objects.get(name='INACTIVE')
+				outbound.contact.subscribed = False
+				outbound.contact.save()
+
+		else:
+			outbound.state = OutBoundState.objects.get(name='FAILED')
+		outbound.save()
+	except Exception, e:
+		lgr.info("Error on Sending Outbound: %s" % e)
 
 
 @app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
@@ -1443,8 +1461,9 @@ def send_outbound_sms_messages():
 			node = i.contact.product.notification.endpoint.url
 			#No response is required on celery use (ignore results)
 			#Wrappers().send_outbound.delay(payload, node)
-			w = Wrappers()
-			w.outbound_bulk_logger.apply_async((w, payload, node), serializer='pickle')
+
+	    		payload = json.dumps(payload, cls=DjangoJSONEncoder)
+			send_outbound.delay(payload, node)
 
 		except Exception, e:
 			lgr.info('Error Sending item: %s | %s' % (i, e))
@@ -1495,7 +1514,8 @@ def send_outbound_email_messages():
 			                        html_content = loader.get_template(i.template.template_file.file_path.name) #html template with utf-8 charset
 					else:
 		                        	html_content = loader.get_template('default_send_mail.html') #html template with utf-8 charset
-		                        d = Context({'message':unescape(i.message), 'gateway':gateway})
+		                        #d = Context({'message':unescape(i.message), 'gateway':gateway})
+		                        d = {'message':unescape(i.message), 'gateway':gateway}
 		                        html_content = html_content.render(d)
 	        	                html_content = smart_str(html_content)
 	                	        msg = EmailMultiAlternatives(subject, text_content, from_email, [to.strip()], headers={'Reply-To': 'No Reply'})

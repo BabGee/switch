@@ -46,6 +46,8 @@ from thirdparty.bidfather.models import *
 from vbs.models import *
 import numpy as np
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
+from django.core.serializers.json import DjangoJSONEncoder
+from django.core import serializers
 
 lgr = logging.getLogger('dsc')
 
@@ -65,96 +67,6 @@ class Wrappers:
         try:
             payload = ServiceCall().api_service_call(service, gateway_profile, payload)
             lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
-        except Exception, e:
-            payload['response_status'] = '96'
-            lgr.info('Unable to make service call: %s' % e)
-        return payload
-
-    # Allow file to process for 72hrs| Means maximum records can process is: 432,000
-    @app.task(ignore_result=True, soft_time_limit=259200)
-    def process_file_upload_activity(self, u):
-        from celery.utils.log import get_task_logger
-        lgr = get_task_logger(__name__)
-        try:
-
-            rf = u.file_path
-
-            f = rf.path
-            extension_chunks = str(f).split('.')
-            extension = extension_chunks[len(extension_chunks) - 1]
-            w = f.replace('.' + extension, '_processed.' + extension)
-
-            with open(w, 'w+') as ff:
-                u.processed_file_path.save(rf.name, File(ff), save=False)
-            u.save()
-            ff.close()
-
-            wf = u.processed_file_path
-            payload = json.loads(u.details)
-
-            rfile_obj = default_storage.open(rf, 'r')
-            wfile_obj = default_storage.open(wf, 'w+')
-
-            r = csv.reader(rfile_obj)
-            w = csv.writer(wfile_obj)
-            lgr.info('Captured CSV Objects: %s|%s' % (r, w))
-            count = 0
-            header = []
-            for c in r:
-                if count == 0:
-                    for i in c:
-                        header.append(i)
-                else:
-                    if len(c) == len(header):
-                        for i in range(len(header)):
-                            if c[i] not in [None, ""]:
-                                key = header[i].lower().replace(" ", "_").replace("/", "_")
-                                payload[key] = c[i]
-
-                        # exec payload
-                        payload['chid'] = u.channel.id
-                        payload['ip_address'] = '127.0.0.1'
-                        payload['gateway_host'] = '127.0.0.1'
-
-                        try:
-                            valid = False
-                            if 'email' in payload.keys():
-                                if self.validateEmail(payload['email']):
-                                    valid = True
-                                else:
-                                    del payload['email']
-
-                            if 'msisdn' in payload.keys():
-                                payload["msisdn"] = '+%s' % payload["msisdn"] if '+' not in payload["msisdn"] else \
-                                    payload["msisdn"]
-                                pr = re.compile(r'^\+\d{9,15}$')
-                                if pr.match(payload['msisdn']):
-                                    valid = True
-                                else:
-                                    del payload['msisdn']
-
-                            if valid:
-                                try:
-                                    self.service_call(u.file_upload.activity_service, u.gateway_profile, payload)
-                                except Exception, e:
-                                    lgr.info('Error on Service Call: %s' % e)
-
-                                c.append('PROCESSED')
-                                w.writerow(c)
-                            else:
-                                c.append('INVALID DATA')
-                                w.writerow(c)
-                        except Exception, e:
-                            lgr.info('Error on Service Call: %s' % e)
-                            c.append('FAILED')
-                            w.writerow(c)
-
-                count += 1
-            rfile_obj.close()
-            wfile_obj.close()
-
-            payload['response'] = "File Processed"
-            payload['response_status'] = '00'
         except Exception, e:
             payload['response_status'] = '96'
             lgr.info('Unable to make service call: %s' % e)
@@ -301,8 +213,8 @@ class Wrappers:
 
 	    list_filter_data = {}
 
-	    lgr.info('\n\n\n')
-	    lgr.info('Model Name: %s' % data.query.name)
+	    #lgr.info('\n\n\n')
+	    #lgr.info('Model Name: %s' % data.query.name)
             report_list = model_class.objects.all()
 
 	    #Gateway Filter is a default Filter
@@ -392,8 +304,8 @@ class Wrappers:
                     	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['csrfmiddlewaretoken']
             	    elif 'csrf_token' in payload.keys() and payload['csrf_token'] not in ['', None]:
                     	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['csrf_token']
-            	    elif 'fingerprint' in payload.keys() and payload['fingerprint'] not in ['', None]:
-                    	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['fingerprint']
+            	    elif 'token' in payload.keys() and payload['token'] not in ['', None]:
+                    	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['token']
 
                 if len(token_filter_data):
                     query = reduce(operator.and_, (Q(k) for k in token_filter_data.items()))
@@ -829,8 +741,9 @@ class Wrappers:
 
         try:
 
+	    #manager_list = FloatManager.objects.filter(Q(Q(institution=gateway_profile.institution)|Q(institution=None)),\
 
-	    manager_list = FloatManager.objects.filter(Q(Q(institution=gateway_profile.institution)|Q(institution=None)),\
+	    manager_list = FloatManager.objects.filter(Q(institution=gateway_profile.institution),\
 							Q(gateway=gateway_profile.gateway))
 
 	    float_type_list = manager_list.values('float_type__name','float_type__id').annotate(count=Count('float_type__id'))
@@ -2916,6 +2829,98 @@ class Trade(System):
 class Payments(System):
     pass
 
+# Allow file to process for 72hrs| Means maximum records can process is: 432,000
+@app.task(ignore_result=True, soft_time_limit=259200)
+def process_file_upload_activity(payload):
+	payload = json.loads(payload)
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	u =FileUploadActivity.objects.get(id=payload['id'])
+	try:
+
+            rf = u.file_path
+
+            f = rf.path
+            extension_chunks = str(f).split('.')
+            extension = extension_chunks[len(extension_chunks) - 1]
+            w = f.replace('.' + extension, '_processed.' + extension)
+
+            with open(w, 'w+') as ff:
+                u.processed_file_path.save(rf.name, File(ff), save=False)
+            u.save()
+            ff.close()
+
+            wf = u.processed_file_path
+            payload = json.loads(u.details)
+
+            rfile_obj = default_storage.open(rf, 'r')
+            wfile_obj = default_storage.open(wf, 'w+')
+
+            r = csv.reader(rfile_obj)
+            w = csv.writer(wfile_obj)
+            lgr.info('Captured CSV Objects: %s|%s' % (r, w))
+            count = 0
+            header = []
+            for c in r:
+                if count == 0:
+                    for i in c:
+                        header.append(i)
+                else:
+                    if len(c) == len(header):
+                        for i in range(len(header)):
+                            if c[i] not in [None, ""]:
+                                key = header[i].lower().replace(" ", "_").replace("/", "_")
+                                payload[key] = c[i]
+
+                        # exec payload
+                        payload['chid'] = u.channel.id
+                        payload['ip_address'] = '127.0.0.1'
+                        payload['gateway_host'] = '127.0.0.1'
+
+                        try:
+                            valid = False
+                            if 'email' in payload.keys():
+                                if self.validateEmail(payload['email']):
+                                    valid = True
+                                else:
+                                    del payload['email']
+
+                            if 'msisdn' in payload.keys():
+                                payload["msisdn"] = '+%s' % payload["msisdn"] if '+' not in payload["msisdn"] else \
+                                    payload["msisdn"]
+                                pr = re.compile(r'^\+\d{9,15}$')
+                                if pr.match(payload['msisdn']):
+                                    valid = True
+                                else:
+                                    del payload['msisdn']
+
+                            if valid:
+                                try:
+                                    self.service_call(u.file_upload.activity_service, u.gateway_profile, payload)
+                                except Exception, e:
+                                    lgr.info('Error on Service Call: %s' % e)
+
+                                c.append('PROCESSED')
+                                w.writerow(c)
+                            else:
+                                c.append('INVALID DATA')
+                                w.writerow(c)
+                        except Exception, e:
+                            lgr.info('Error on Service Call: %s' % e)
+                            c.append('FAILED')
+                            w.writerow(c)
+
+                count += 1
+            rfile_obj.close()
+            wfile_obj.close()
+
+            payload['response'] = "File Processed"
+            payload['response_status'] = '00'
+	except Exception, e:
+            payload['response_status'] = '96'
+            lgr.info('Unable to make service call: %s' % e)
+	return payload
+
 
 @app.task(ignore_result=True)  # Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
 @transaction.atomic
@@ -2933,8 +2938,12 @@ def process_file_upload():
             u.status = FileUploadActivityStatus.objects.get(name='PROCESSING')
             u.save()
             lgr.info('Captured Upload: %s' % u)
+	    payload = {}
+	    payload['id'] = u.id
 
-            Wrappers().process_file_upload_activity.delay(u)
+
+	    payload = json.dumps(payload, cls=DjangoJSONEncoder)
+            Wrappers().process_file_upload_activity.delay(payload)
 
             u.status = FileUploadActivityStatus.objects.get(name='PROCESSED')
             u.save()
@@ -2954,9 +2963,6 @@ def process_push_notification():
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 
-	from notify.mqtt import MqttServerClient
-	from django.core.serializers.json import DjangoJSONEncoder
-	from django.core import serializers
 
 	cols = []
 	rows = []
@@ -2976,12 +2982,14 @@ def process_push_notification():
 
 
 		if data_list.exists():
+			from notify.mqtt import MqttServerClient
 			payload = {}
 			payload['push_notification'] = True
 			cols, rows, groups, data, min_id, max_id, t_count, mqtt = Wrappers().process_data_list(data_list, payload, gateway_profile, profile_tz, data)
 
 			for k,v in mqtt.items():
 				try:
+
 					msc = MqttServerClient()
 					channel = k
 					lgr.info('Channel: %s' % channel)
@@ -2995,4 +3003,3 @@ def process_push_notification():
 					msc.disconnect()
 				except Exception, e: lgr.info('MQTT update Failure '+e.message)
 
-	return True

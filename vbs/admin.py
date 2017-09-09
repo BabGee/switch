@@ -31,6 +31,7 @@ class AccountAdmin(admin.ModelAdmin):
 			'account_branch','account_status','credit_limit','credit_limit_currency','account_type',)
 	search_fields = ('gateway_profile__msisdn__phone_number','gateway_profile__user__username',\
 			'gateway_profile__user__first_name','gateway_profile__user__last_name',)
+	list_filter = ('account_branch','account_type','is_default','account_status')
 admin.site.register(Account, AccountAdmin)
   
 class CreditOverdueStatusAdmin(admin.ModelAdmin):

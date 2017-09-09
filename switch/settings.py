@@ -10,7 +10,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 #import djcelery
 #djcelery.setup_loader()
 
-#CELERY_TASK_PROTOCOL = 1
+CELERY_TASK_PROTOCOL = 1
+delivery_mode = 1
 result_backend = 'django-db'
 #result_backend = "amqp"
 CELERY_AMQP_TASK_RESULT_EXPIRES = 1000 
@@ -32,41 +33,12 @@ broker_heartbeat = 10
 broker_heartbeat_checkrate = 2.0
 #broker_transport_options = {'confirm_publish': True}
 #broker_pool_limit = None
-
-task_routes = {
-		'notify.tasks.send_bulk_sms': {'queue': 'commandline1','routing_key':'commandline1'}, 
-		'notify.tasks.send_outbound_sms_messages': {'queue': 'messages','routing_key':'messages'}, 
-		'notify.tasks.send_outbound': {'queue': 'messages1','routing_key':'messages1'}, 
-		'notify.tasks.send_outbound_email_messages': {'queue': 'messages2','routing_key':'messages2'}, 
-		'dsc.tasks.process_file_upload_activity': {'queue': 'files','routing_key':'files'},
-		'notify.tasks.add_bulk_contact': {'queue': 'commandline','routing_key':'commandline'},
-		'notify.tasks.add_gateway_bulk_contact': {'queue': 'commandline1','routing_key':'commandline1'},
-		'paygate.tasks.send_paygate_outgoing': {'queue': 'payments','routing_key':'payments'},
-		'paygate.tasks.process_incoming_payments': {'queue': 'payments','routing_key':'payments'},
-		'dsc.tasks.process_file_upload': {'queue': 'files','routing_key':'files'},
-		'notify.tasks.service_call': {'queue': 'services','routing_key':'services'},
-		}
-
-from kombu import Exchange, Queue
-
-task_queues = (
-    Queue('celery', Exchange('celery'), routing_key='celery', delivery_mode=1),
-    Queue('commandline', Exchange('commandline'), routing_key='commandline', delivery_mode=1),
-    Queue('commandline1', Exchange('commandline1'), routing_key='commandline1', delivery_mode=1),
-    Queue('messages', Exchange('messages'), routing_key='messages', delivery_mode=1),
-    Queue('messages1', Exchange('messages1'), routing_key='messages1', delivery_mode=1),
-    Queue('messages2', Exchange('messages2'), routing_key='messages2', delivery_mode=1),
-    Queue('files', Exchange('files'), routing_key='files', delivery_mode=1),
-    Queue('payments', Exchange('payments'), routing_key='payments', delivery_mode=1),
-    Queue('services', Exchange('services'), routing_key='services', delivery_mode=1),
-
-)
-
 #broker_url = "amqp://Super%40User:%40wys1WYG@localhost:5672//"
 #broker_url = "librabbitmq://Super%40User:%40wys1WYG@localhost:5672//"
 
 #broker_url = "librabbitmq://guest:guest@localhost:5672//"
 #broker_url = "librabbitmq://guest:guest@zabbix:56720//"
+#broker_url = "pyamqp://guest:guest@localhost:5672//"
 broker_url = "librabbitmq://guest:guest@localhost:5672//"
 
 #TEST_RUNNER = 'django.test.runner.DiscoverRunner'

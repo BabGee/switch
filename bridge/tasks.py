@@ -42,28 +42,28 @@ class Wrappers:
 		return payload
 
 class System(Wrappers):
-    def background_service(self, payload, node_info):
-        try:
-            gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-            background_service = BackgroundService.objects.filter(trigger_service__name=payload['SERVICE'])
+	def background_service(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			background_service = BackgroundService.objects.filter(trigger_service__name=payload['SERVICE'])
 
-            if background_service.exists():
-                background_service_status = BackgroundServiceStatus.objects.get(name='CREATED')
-                channel = Channel.objects.get(id=payload['chid'])
-                activity = BackgroundServiceActivity(background_service=upload[0], status=background_service_status, \
+			if background_service.exists():
+				background_service_status = BackgroundServiceStatus.objects.get(name='CREATED')
+				channel = Channel.objects.get(id=payload['chid'])
+				activity = BackgroundServiceActivity(background_service=upload[0], status=background_service_status, \
                                               gateway_profile=gateway_profile,
                                               details=self.transaction_payload(payload), channel=channel)
 
-                activity.save()
+				activity.save()
 
-                payload['response'] = "Activity Logged. Wait to Process"
-                payload['response_status'] = '00'
-            else:
-                payload['response_status'] = '21'
-        except Exception, e:
-            payload['response_status'] = '96'
-            lgr.info("Error on Uploading File: %s" % e)
-        return payload
+				payload['response'] = "Activity Logged. Wait to Process"
+				payload['response_status'] = '00'
+			else:
+				payload['response_status'] = '21'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Uploading File: %s" % e)
+		return payload
 
 
 	def check_transaction_auth(self, payload, node_info):
@@ -91,19 +91,17 @@ class System(Wrappers):
 
 class Trade(System):
 	pass
-
 class Payments(System):
 	pass
 
-
-
+'''
 @app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
 def process_pending_transactions():
 	from celery.utils.log import get_task_logger
         lgr = get_task_logger(__name__)
-        transactions = Transaction.objects.select_for_update().filter(id__in=[''])
+        transactions = Transaction.objects.select_for_update().filter(id__in=[123])
 
         for t in transactions:
                 try:
@@ -120,4 +118,4 @@ def process_pending_transactions():
 			t.save()
 
                         lgr.info('Error processing file upload: %s | %s' % (u,e))
-
+'''

@@ -875,6 +875,19 @@ class System(Wrappers):
 						 gateway=gateway_profile.gateway)
 			elif 'session_gateway_profile_id' in payload.keys():
 				existing_gateway_profile = GatewayProfile.objects.filter(id=payload['session_gateway_profile_id'])
+			elif 'reference' in payload.keys():
+				if 'reference' in payload.keys() and self.validateEmail(payload["reference"]):
+					existing_gateway_profile = GatewayProfile.objects.filter(user__email=payload["reference"],\
+							 gateway=gateway_profile.gateway)
+				else:
+					payload['msisdn'] = payload['reference']
+					msisdn = self.get_msisdn(payload)
+					if msisdn:
+						existing_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=msisdn,\
+								 gateway=gateway_profile.gateway)
+					else:
+						del payload['msisdn']
+						existing_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 			else:
 				existing_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 
@@ -906,13 +919,15 @@ class System(Wrappers):
 				payload['session_gateway_profile_id'] = create_gateway_profile.id
 
 				return payload
+			'''
+			elif existing_gateway_profile.exists() and existing_gateway_profile[0].access_level.name == 'SYSTEM':
+				payload['response'] = 'System User Not Allowed'
+				payload['response_status'] = '63'
+				create_gateway_profile = None
+			'''
 
 			if profile_error:
 				payload['response'] = 'Profile Error: Email/Phone Number Exists in another profile. Please contact us'
-				payload['response_status'] = '63'
-				create_gateway_profile = None
-			elif existing_gateway_profile.exists() and existing_gateway_profile[0].access_level.name == 'SYSTEM':
-				payload['response'] = 'System User Not Allowed'
 				payload['response_status'] = '63'
 				create_gateway_profile = None
 			elif existing_gateway_profile.exists():
@@ -1068,15 +1083,30 @@ class System(Wrappers):
 						 gateway=gateway_profile.gateway)
 			elif 'session_gateway_profile_id' in payload.keys():
 				session_gateway_profile = GatewayProfile.objects.filter(id=payload['session_gateway_profile_id'])
+			elif 'reference' in payload.keys():
+				if 'reference' in payload.keys() and self.validateEmail(payload["reference"]):
+					session_gateway_profile = GatewayProfile.objects.filter(user__email=payload["reference"],\
+							 gateway=gateway_profile.gateway)
+				else:
+					payload['msisdn'] = payload['reference']
+					msisdn = self.get_msisdn(payload)
+					if msisdn:
+						session_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=msisdn,\
+								 gateway=gateway_profile.gateway)
+					else:
+						del payload['msisdn']
+						session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 			else:
 				session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 
+			'''
+			elif session_gateway_profile.exists() and session_gateway_profile[0].access_level.name == 'SYSTEM':
+				payload['response'] = 'System User Not Allowed'
+				payload['response_status'] = '63'
+			'''
 
 			if profile_error:
 				payload['response'] = 'Profile Error: Email exists. Please contact us'
-				payload['response_status'] = '63'
-			elif session_gateway_profile.exists() and session_gateway_profile[0].access_level.name == 'SYSTEM':
-				payload['response'] = 'System User Not Allowed'
 				payload['response_status'] = '63'
 			elif session_gateway_profile.exists():
 				payload['session_gateway_profile_id'] = session_gateway_profile[0].id

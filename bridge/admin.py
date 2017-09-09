@@ -61,7 +61,7 @@ class TransactionAdmin(admin.OSMGeoAdmin):
 			'fingerprint','token','date_modified','date_created')
 	        search_fields = ('id','gateway_profile__user__first_name','gateway_profile__user__last_name',\
 				'gateway_profile__user__username','gateway_profile__msisdn__phone_number',
-				'request','response',)
+				'request','response','ip_address',)
 		list_filter = ('service','channel','gateway','transaction_status','response_status','overall_status',)
 admin.site.register(Transaction, TransactionAdmin)
 
