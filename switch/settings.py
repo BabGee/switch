@@ -25,8 +25,9 @@ timezone='Africa/Nairobi'
 CELERY_enable_utc=True
 result_expires=3600
 task_soft_time_limit = 60
-task_acks_late = True
-worker_prefetch_multiplier = 64
+#task_acks_late = True
+task_acks_late = False
+worker_prefetch_multiplier = 128
 worker_disable_rate_limits = True
 broker_pool_limit = 100
 broker_heartbeat = 10 
@@ -39,6 +40,7 @@ broker_heartbeat_checkrate = 2.0
 #broker_url = "librabbitmq://guest:guest@localhost:5672//"
 #broker_url = "librabbitmq://guest:guest@zabbix:56720//"
 #broker_url = "pyamqp://guest:guest@localhost:5672//"
+#broker_url = ["librabbitmq://guest:guest@localhost:5672//","librabbitmq://guest:guest@zabbix:56720//"]
 broker_url = "librabbitmq://guest:guest@localhost:5672//"
 
 #TEST_RUNNER = 'django.test.runner.DiscoverRunner'
@@ -146,6 +148,7 @@ ROOT_URLCONF = 'switch.urls'
 
 WSGI_APPLICATION = 'switch.wsgi.application'
 
+'''
 INSTALLED_APPS = (
     'suit',
     'django.contrib.admin',
@@ -159,34 +162,54 @@ INSTALLED_APPS = (
     'django_extensions',
     'django_celery_results',
     'django_celery_beat',
-    'administration',
-    'api',
-    'vbs',
-    'upc',
-    'bridge',
-    'crc',
-    'crb',
-    'crm',
-    'vcs',
-    'paygate',
-    'ads',
-    'iic',
-    'dsc',
-    'notify',
-    'loyalty',
-    'doc',
+    'primary.core.administration',
+    'primary.core.api',
+    'primary.core.upc',
+    'primary.core.bridge',
+)
+'''
+INSTALLED_APPS = (
+    'suit',
+    'django.contrib.admin',
+    'django.contrib.admindocs',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django.contrib.gis',
+    'django_extensions',
+    'django_celery_results',
+    'django_celery_beat',
+    'primary.core.administration',
+    'primary.core.api',
+    'primary.core.upc',
+    'primary.core.bridge',
+    'secondary.channels.vcs',
+    'secondary.channels.iic',
+    'secondary.channels.dsc',
+    'secondary.channels.notify',
+    'secondary.erp.pos',
+    'secondary.erp.ads',
+    'secondary.erp.crm',
+    'secondary.erp.survey',
+    'secondary.erp.loyalty',
+    'secondary.finance.vbs',
+    'secondary.finance.crc',
+    'secondary.finance.crb',
+    'secondary.finance.paygate',
+    'products.nikobizz',
+    'products.gus',
+    'products.muziqbit',
     'thirdparty.regix',
-    'muziqbit',
     'thirdparty.roadroute',
-    'pos',
-    'survey',
-    'gus',
     'thirdparty.mcsk',
     'thirdparty.amkagroup_co_ke',
-    'thirdparty.bidfather',
     'thirdparty.sortika',
-    'products.nikobizz',
+    'thirdparty.wahi',
+    'thirdparty.bidfather',
 )
+
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -563,6 +586,11 @@ LOGGING = {
         },       
 
          'amkagroup_co_ke': {
+            'handlers': ['default_rotating_file'],
+            'level': 'INFO',
+        },       
+
+         'wahi': {
             'handlers': ['default_rotating_file'],
             'level': 'INFO',
         },       

@@ -4,7 +4,7 @@ import logging
 import pytz
 from django.utils import timezone
 import json
-from crm.models import *
+from secondary.erp.crm.models import *
 
 lgr = logging.getLogger('nikobizz')
 

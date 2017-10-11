@@ -6,7 +6,6 @@ from switch.celery import app
 from celery.utils.log import get_task_logger
 
 from django.shortcuts import render
-from thirdparty.roadroute.models import *
 from django.utils import timezone
 from django.utils.timezone import utc
 from django.contrib.gis.geos import Point
@@ -19,6 +18,7 @@ import base64, re
 from django.core.files import File
 
 
+from .models import *
 import logging
 lgr = logging.getLogger('roadroute')
 

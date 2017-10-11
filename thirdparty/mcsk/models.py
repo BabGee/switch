@@ -1,5 +1,5 @@
 from django.contrib.gis.db import models
-from crm.models import *
+from secondary.erp.crm.models import *
 
 
 class Member(models.Model):

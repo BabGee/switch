@@ -6,7 +6,7 @@ from switch.celery import app
 from celery.utils.log import get_task_logger
 
 from django.shortcuts import render
-from pos.models import *
+from secondary.erp.pos.models import *
 from django.utils import timezone
 from django.utils.timezone import utc
 from django.contrib.gis.geos import Point
@@ -18,6 +18,7 @@ from decimal import Decimal, ROUND_DOWN
 import base64, re
 from django.core.files import File
 
+from .models import *
 import logging
 lgr = logging.getLogger('regix')
 

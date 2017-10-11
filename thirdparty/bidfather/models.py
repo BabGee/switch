@@ -4,8 +4,7 @@ import logging
 import pytz
 from django.utils import timezone
 import json
-from administration.models import *
-from crm.models import *
+from secondary.erp.crm.models import *
 
 lgr = logging.getLogger('bidfather')
 

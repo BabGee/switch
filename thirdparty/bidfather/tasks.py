@@ -25,13 +25,13 @@ from django.core.files import File
 import base64, re
 from decimal import Decimal, ROUND_UP, ROUND_DOWN
 from django.db.models import Max, Min, Count, Sum
-from thirdparty.bidfather.models import *
 import pytz, time, json, pycurl
 
 from django.core.serializers.json import DjangoJSONEncoder
 import paho.mqtt.client as mqtt
 from django.db.models import Sum, F
 
+from .models import *
 import logging
 
 lgr = logging.getLogger('bidfather')

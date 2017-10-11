@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from django.contrib.gis.db import models
-from vbs.models import *
+from secondary.finance.vbs.models import *
 
 class InvestmentType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)

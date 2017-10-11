@@ -21,7 +21,7 @@ from django.conf import settings
 from django.core.files import File
 import base64, re
 
-from survey.models import *
+from secondary.erp.survey.models import *
 from thirdparty.mcsk.models import *
 
 import logging
