@@ -4,10 +4,15 @@ switch/media/**
 *.sw[nop]
 switch/media.bkp/
 .idea/
+#Leave products folder, ignore contents
 products/**
+!products
 !products/__init__.py
+#Leave thirdparty folder, ignore contents
 thirdparty/**
+!thirdparty
 !thirdparty/__init__.py
+#Leave migration folders, ignore contents
 **/migrations/**
 !**/migrations
 !**/migrations/__init__.py
