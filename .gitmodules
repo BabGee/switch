@@ -8,3 +8,27 @@
 	path = products/nikobizz
 	url = https://bitbucket.org/interintel/switch.products.nikobizz.git
 
+
+[submodule "amkagroup_co_ke"]
+	path = thirdparty/amkagroup_co_ke
+	url = https://bitbucket.org/interintel/switch.thirdparty.amkagroup_co_ke.git
+[submodule "bidfather"]
+	path = thirdparty/bidfather
+	url = https://bitbucket.org/interintel/switch.thirdparty.bidfather.git
+[submodule "mcsk"]
+	path = thirdparty/mcsk
+	url = https://bitbucket.org/interintel/switch.thirdparty.mcsk.git
+[submodule "regix"]
+	path = thirdparty/regix
+	url = https://bitbucket.org/interintel/switch.thirdparty.regix.git
+[submodule "roadroute"]
+	path = thirdparty
+	url = https://bitbucket.org/interintel/switch.thirdparty.roadroute.git
+[submodule "sortika"]
+	path = thirdparty/sortika
+	url = https://bitbucket.org/interintel/switch.thirdparty.sortika.git
+[submodule "wahi"]
+	path = thirdparty/wahi
+	url = https://bitbucket.org/interintel/switch.thirdparty.wahi.git
+
+

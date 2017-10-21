@@ -4,11 +4,13 @@ switch/media/**
 *.sw[nop]
 switch/media.bkp/
 .idea/
-products/gus/
-products/muziqbit/
-products/nikobizz/
-thirdparty/
-**migrations/
+products/**
+!products/__init__.py
+thirdparty/**
+!thirdparty/__init__.py
+**/migrations/**
+!**/migrations
+!**/migrations/__init__.py
 
 
 
