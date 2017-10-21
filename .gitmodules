@@ -7,3 +7,6 @@
 [submodule "nikobizz"]
 	path = nikobizz
 	url = ./products/nikobizz/
+[submodule "products/gus"]
+	path = products/gus
+	url = https://bitbucket.org/interintel/switch.products.gus
