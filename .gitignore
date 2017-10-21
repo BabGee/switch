@@ -1,6 +1,6 @@
 #my ignore
-switch/static/
-switch/media/
+switch/static/**
+switch/media/**
 *.sw[nop]
 switch/media.bkp/
 .idea/
@@ -8,7 +8,7 @@ products/gus/
 products/muziqbit/
 products/nikobizz/
 thirdparty/
-*migrations/
+**migrations/
 
 
 
