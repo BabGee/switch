@@ -22,7 +22,7 @@
 	path = thirdparty/regix
 	url = https://bitbucket.org/interintel/switch.thirdparty.regix.git
 [submodule "roadroute"]
-	path = thirdparty
+	path = thirdparty/roadroute
 	url = https://bitbucket.org/interintel/switch.thirdparty.roadroute.git
 [submodule "sortika"]
 	path = thirdparty/sortika
@@ -30,5 +30,4 @@
 [submodule "wahi"]
 	path = thirdparty/wahi
 	url = https://bitbucket.org/interintel/switch.thirdparty.wahi.git
-
 
