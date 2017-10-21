@@ -87,6 +87,8 @@ class Menu(models.Model):
 	menu_description = models.CharField(max_length=50)
 	menu_status = models.ForeignKey(MenuStatus)
 	protected = models.BooleanField(default=False)
+	enrollment_type_included = models.ManyToManyField(EnrollmentType, blank=True)
+	enrollment_type_excluded = models.ManyToManyField(EnrollmentType, blank=True, related_name='menu_enrollment_type_excluded')
 	def __unicode__(self):
 		return u'%s %s %s' % (self.id, self.code_list(), self.page_string)
 	def access_level_list(self):
@@ -95,6 +97,10 @@ class Menu(models.Model):
 		return "\n".join([a.code for a in self.code.all()])
 	def profile_status_list(self):
 		return "\n".join([a.name for a in self.profile_status.all()])
+	def enrollment_type_included_list(self):
+		return "\n".join([a.name for a in self.enrollment_type_included.all()])
+	def enrollment_type_excluded_list(self):
+		return "\n".join([a.name for a in self.enrollment_type_excluded.all()])
 
 class MenuItem(models.Model):
         date_modified  = models.DateTimeField(auto_now=True)
@@ -105,12 +111,19 @@ class MenuItem(models.Model):
 	item_level = models.IntegerField()
 	menu = models.ForeignKey(Menu)	
 	status = models.ForeignKey(MenuStatus)
+	enrollment_type_included = models.ManyToManyField(EnrollmentType, blank=True)
+	enrollment_type_excluded = models.ManyToManyField(EnrollmentType, blank=True, related_name='menuitem_enrollment_type_excluded')
 	def __unicode__(self):
 		return u'%s' % (self.menu_item)
 	def access_level_list(self):
 		return "\n".join([a.name for a in self.access_level.all()])
 	def profile_status_list(self):
 		return "\n".join([a.name for a in self.profile_status.all()])
+	def enrollment_type_included_list(self):
+		return "\n".join([a.name for a in self.enrollment_type_included.all()])
+	def enrollment_type_excluded_list(self):
+		return "\n".join([a.name for a in self.enrollment_type_excluded.all()])
+
 
 class Navigator(models.Model):
         date_modified  = models.DateTimeField(auto_now=True)

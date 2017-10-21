@@ -194,14 +194,14 @@ class EnrollmentType(models.Model):
 class Enrollment(models.Model):
 	date_modified = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	record = models.CharField(max_length=200, null=True, blank=True)
+	record = models.CharField(max_length=200)
 	alias = models.CharField(max_length=50)
 	status = models.ForeignKey(EnrollmentStatus)
-	enrollment_date = models.DateField(null=True, blank=True)
-	gateway_profile = models.ForeignKey(GatewayProfile, null=True, blank=True)
+	enrollment_date = models.DateField()
 	enrollment_type = models.ForeignKey(EnrollmentType)
+	profile = models.ForeignKey(Profile)
 	def __unicode__(self):
-		return u'%s %s %s' % (self.gateway_profile, self.record, self.alias)
+		return u'%s %s %s' % (self.profile, self.record, self.alias)
 
 class PaymentOptionStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
@@ -214,13 +214,13 @@ class PaymentOptionStatus(models.Model):
 class PaymentOption(models.Model):
 	date_modified = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	gateway_profile = models.ForeignKey(GatewayProfile)
 	account_alias = models.CharField(max_length=200, null=True, blank=True)
 	account_record = models.CharField(max_length=50)
 	status = models.ForeignKey(PaymentOptionStatus)
 	payment_method = models.ForeignKey(PaymentMethod)
+	profile = models.ForeignKey(Profile)
 	def __unicode__(self):
-		return u'%s %s' % (self.gateway_profile, self.account_alias)
+		return u'%s %s' % (self.profile, self.account_alias)
 
 
 class NominationStatus(models.Model):

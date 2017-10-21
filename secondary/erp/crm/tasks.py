@@ -138,7 +138,8 @@ class System:
 
 
 			if product_item.exists():
-				enrollment = Enrollment.objects.filter(enrollment_type__product_item=product_item[0],gateway_profile__id=payload['session_gateway_profile_id'],status__name='ACTIVE')
+				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+				enrollment = Enrollment.objects.filter(enrollment_type__product_item=product_item[0],profile=session_gateway_profile.user.profile, status__name='ACTIVE')
 				if enrollment.exists():
 					payload['response'] = 'Record Exists'
 					payload['response_status'] = '26'
@@ -160,7 +161,7 @@ class System:
 	def get_details(self, payload, node_info):
 		try:
 			enrollment = Enrollment.objects.get(id=payload['id'])
-			gateway_profile = enrollment.gateway_profile
+			profile = enrollment.profile
 
 			pks = payload.keys()
 
@@ -170,24 +171,24 @@ class System:
 					and 'gender' in pks \
 					and 'id_number' in pks:
 
-				gateway_profile.user.first_name = payload['first_name']
-				gateway_profile.user.last_name = payload['last_name']
-				gateway_profile.user.save()
+				profile.user.first_name = payload['first_name']
+				profile.user.last_name = payload['last_name']
+				profile.user.save()
 
-				gateway_profile.user.profile.middle_name = payload['middle_name']
-				gateway_profile.user.profile.gender_id = int(payload['gender'])
-				gateway_profile.user.profile.national_id = payload['id_number']
-				gateway_profile.user.profile.save()
+				profile.middle_name = payload['middle_name']
+				profile.gender_id = int(payload['gender'])
+				profile.national_id = payload['id_number']
+				profile.save()
 
 			
-			payload['first_name'] = gateway_profile.user.first_name
-			m_n = gateway_profile.user.profile.middle_name
+			payload['first_name'] = profile.user.first_name
+			m_n = profile.middle_name
 			payload['middle_name'] = m_n if m_n else ''
-			payload['last_name'] = gateway_profile.user.last_name
-			gnd = gateway_profile.user.profile.gender
+			payload['last_name'] = profile.user.last_name
+			gnd = profile.gender
 			payload['gender'] = gnd if gnd else 'Not Set'
-			payload['id_number'] = gateway_profile.user.profile.national_id
-			payload['phone_number'] = gateway_profile.msisdn.phone_number
+			payload['id_number'] = profile.national_id
+			#payload['phone_number'] = gateway_profile.msisdn.phone_number
 			payload['registration_date'] = enrollment.enrollment_date
 
 			payload['response'] = 'Details Captured'
@@ -212,7 +213,8 @@ class System:
 				lgr.info('Record not in paylod')
 				if 'session_gateway_profile_id' in payload.keys():
 					lgr.info('Session Gateway Found')
-					all_enrollments = Enrollment.objects.filter(enrollment_type__product_item__institution=institution,gateway_profile__id=payload['session_gateway_profile_id']).\
+					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+					all_enrollments = Enrollment.objects.filter(enrollment_type__product_item__institution=institution,profile=session_gateway_profile.user.profile).\
 							extra(
 							    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
 								).\
@@ -289,12 +291,12 @@ class System:
 				enrollment = enrollment_list[0]
 				if 'session_gateway_profile_id' in payload.keys():
 					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-					enrollment_profile = enrollment_list.filter(gateway_profile=session_gateway_profile)
+					enrollment_profile = enrollment_list.filter(profile=session_gateway_profile.user.profile)
 					if enrollment_profile.exists():
 						enrollment = enrollment_profile[0]
 					else:
 						enrollment = enrollment_list[0]
-						enrollment.gateway_profile = session_gateway_profile
+						enrollment.profile = session_gateway_profile.user.profile
 						enrollment.save()
 
 				payload['record'] = enrollment.record
@@ -308,6 +310,7 @@ class System:
 
 				if enrollment_type.exists():
 	                                status = EnrollmentStatus.objects.get(name='ACTIVE')
+
         	                        enrollment = Enrollment(record=record, status=status, enrollment_type=enrollment_type[0])
 
                 	                if 'alias' in payload.keys():
@@ -333,12 +336,14 @@ class System:
 					else:
 						enrollment.enrollment_date = timezone.now().date()
 
-	                                enrollment.save()
-
 					if 'session_gateway_profile_id' in payload.keys():
 						session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-						enrollment.gateway_profile = session_gateway_profile
-						enrollment.save()
+						enrollment.profile = session_gateway_profile.user.profile
+					else:
+						enrollment.profile = gateway_profile.profile
+
+	                                enrollment.save()
+
 					payload['record'] = enrollment.record
 					payload['response_status'] = '00'
 					payload['response'] = 'Enrollment Captured'

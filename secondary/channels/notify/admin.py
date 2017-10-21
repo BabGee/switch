@@ -85,7 +85,7 @@ class OutboundAdmin(admin.ModelAdmin):
 		list_display = ('id','contact','heading','message',\
 			'template','scheduled_send','state','sends',\
 			'ext_outbound_id','inst_notified','inst_num_tries','attachment_list',\
-			'date_modified','date_created')
+			'recipient',)
 		list_filter = ('contact__product','state','contact__subscribed','contact__status',)
 		search_fields = ('id','contact__gateway_profile__msisdn__phone_number','message',)
 admin.site.register(Outbound, OutboundAdmin)

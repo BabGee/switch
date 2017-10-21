@@ -76,10 +76,9 @@ class EnrollmentStatusAdmin(admin.ModelAdmin):
 admin.site.register(EnrollmentStatus, EnrollmentStatusAdmin)
 
 class EnrollmentAdmin(admin.ModelAdmin):
-		list_display = ('id','record', 'alias','status','enrollment_date','gateway_profile','enrollment_type')
-		search_fields = ("alias",'record','gateway_profile__user__username',\
-				'gateway_profile__user__first_name','gateway_profile__user__last_name',\
-				'gateway_profile__msisdn__phone_number',)
+		list_display = ('id','record', 'alias','status','enrollment_date','enrollment_type','profile',)
+		search_fields = ("alias",'record','profile__user__username','profile__middle_name',\
+				'profile__user__first_name','profile__user__last_name',)
 		list_filter = ('enrollment_type',)
 admin.site.register(Enrollment, EnrollmentAdmin)
 
@@ -88,8 +87,8 @@ class PaymentOptionStatusAdmin(admin.ModelAdmin):
 admin.site.register(PaymentOptionStatus, PaymentOptionStatusAdmin)
 
 class PaymentOptionAdmin(admin.ModelAdmin):
-		list_display = ('id','gateway_profile', 'account_alias', 'account_record',\
-				'status','payment_method',)
+		list_display = ('id','account_alias', 'account_record',\
+				'status','payment_method','profile',)
 admin.site.register(PaymentOption, PaymentOptionAdmin)
 
 

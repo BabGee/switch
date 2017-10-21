@@ -85,6 +85,19 @@ class VAS:
 		else:
 			menuitems = menuitems.filter(access_level__name='SYSTEM')
 
+		#FIlter Enrollments
+		if self.gateway_profile.exists():
+			session_gateway_profile = self.gateway_profile[0]
+			enrollment_list = Enrollment.objects.filter(profile=session_gateway_profile.user.profile)
+
+			if enrollment_list.exists():
+				menuitems = menuitems.filter(Q(enrollment_type_included__in=[e.enrollment_type for e in enrollment_list])|Q(enrollment_type_included=None),\
+							~Q(enrollment_type_excluded__in=[e.enrollment_type for e in enrollment_list]))
+			else:
+				menuitems = menuitems.filter(enrollment_type_included=None)
+
+
+
 		def get_menu_items(menuitems):
 			if len(menuitems)>0:
 				menuitems = menuitems.order_by('item_level').values('menu_item','item_level')
@@ -287,6 +300,17 @@ class VAS:
 					self.group_select = 96 #Fail menu as list not matching
 
 			except Exception, e: lgr.info('Error: %s' % e); self.group_select = 96
+
+
+		#FIlter Enrollments
+		if self.gateway_profile.exists():
+			session_gateway_profile = self.gateway_profile[0]
+			enrollment_list = Enrollment.objects.filter(profile=session_gateway_profile.user.profile)
+			if enrollment_list.exists():
+				self.menu= self.menu.filter(Q(enrollment_type_included__in=[e.enrollment_type for e in enrollment_list])|Q(enrollment_type_included=None),\
+							~Q(enrollment_type_excluded__in=[e.enrollment_type for e in enrollment_list]))
+			else:
+				self.menu= self.menu.filter(enrollment_type_included=None)
 
 		#Filter Protected & Level
 		self.menu = self.menu.filter(protected=self.pin_auth, level=self.level)

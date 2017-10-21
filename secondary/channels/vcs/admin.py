@@ -1,5 +1,5 @@
 from django.contrib import admin
-from secondary.channels.vcs.models import *
+from .models import *
 from django.forms.widgets import TextInput, Textarea
 from django import forms
 '''
@@ -47,13 +47,13 @@ admin.site.register(InputVariable, InputVariableAdmin)
 class MenuAdmin(admin.ModelAdmin):
 	list_display = ('id','page_string', 'access_level_list', 'session_state', 'code_list','profile_status_list','service',\
 			'submit', 'level', 'group_select', 'input_variable', 'selection_preview','menu_description',\
-			'menu_status','protected',)
+			'menu_status','protected','enrollment_type_included_list','enrollment_type_excluded_list',)
 	list_filter = ('code', 'access_level', 'service', 'menu_status', 'code__institution','profile_status__name','code__gateway','protected',)
 	search_fields = ('page_string','menu_description',)
 admin.site.register(Menu, MenuAdmin)
 
 class MenuItemAdmin(admin.ModelAdmin):
-	list_display = ('menu_item', 'access_level_list', 'profile_status_list', 'item_level', 'menu', 'status',)
+	list_display = ('menu_item', 'access_level_list', 'profile_status_list', 'item_level', 'menu', 'status','enrollment_type_included_list','enrollment_type_excluded_list',)
 	list_filter = ('menu__code','menu', 'menu__service', 'status',)
 admin.site.register(MenuItem, MenuItemAdmin)
 

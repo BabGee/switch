@@ -681,6 +681,19 @@ class System(Wrappers):
 					outbound = Outbound(contact=new_contact,message=message,scheduled_send=scheduled_send,state=state, sends=0)
 					if ext_outbound_id is not None:
 						outbound.ext_outbound_id = ext_outbound_id
+
+					if new_contact.product.notification.code.channel.name == 'SMS':
+						msisdn = UPCWrappers().get_msisdn(payload)
+						if msisdn:
+							outbound.recipient = msisdn
+						else:
+							outbound.recipient = new_contact.gateway_profile.msisdn.phone_number
+					elif new_contact.product.notification.code.channel.name == 'EMAIL':
+						if 'email' in payload.keys() and self.validateEmail(payload["email"]):
+							outbound.recipient = payload['email']
+						else:
+							outbound.recipient = new_contact.gateway_profile.user.email
+
 					if 'notification_template_id' in payload.keys():
 						template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
 						outbound.template = template
@@ -837,6 +850,19 @@ class System(Wrappers):
 				#	message = message.replace('[URL]', str(payload['URL']))
 
 				outbound = Outbound(contact=new_contact, message=message, scheduled_send=timezone.now()+timezone.timedelta(seconds=5), state=state, sends=0)
+
+				if new_contact.product.notification.code.channel.name == 'SMS':
+					msisdn = UPCWrappers().get_msisdn(payload)
+					if msisdn:
+						outbound.recipient = msisdn
+					else:
+						outbound.recipient = new_contact.gateway_profile.msisdn.phone_number
+				elif new_contact.product.notification.code.channel.name == 'EMAIL':
+					if 'email' in payload.keys() and self.validateEmail(payload["email"]):
+						outbound.recipient = payload['email']
+					else:
+						outbound.recipient = new_contact.gateway_profile.user.email
+
 				if 'notification_template_id' in payload.keys():
 					notification_template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
 					outbound.template = notification_template
@@ -1323,7 +1349,14 @@ def outbound_bulk_logger(payload, contact_list, scheduled_send):
 		#For Bulk Create, do not save each model in loop
 		outbound_list = []
 		for c in contact_list:
-			outbound = Outbound(contact=Contact.objects.get(id=c[0]),message=payload['message'],scheduled_send=scheduled_send,state=state, sends=0)
+			contact = Contact.objects.get(id=c[0])
+			outbound = Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, sends=0)
+			#Notification for bulk uses contact records only for recipient
+			if contact.product.notification.code.channel.name == 'SMS':
+				outbound.recipient = contact.gateway_profile.msisdn.phone_number
+			elif contact.product.notification.code.channel.name == 'EMAIL':
+				outbound.recipient = contact.gateway_profile.user.email
+
 			if 'notification_template_id' in payload.keys():
 				template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
 				outbound.template = template

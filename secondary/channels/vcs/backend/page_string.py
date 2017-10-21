@@ -1096,7 +1096,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'amka_investment_product_item':
 					from thirdparty.amkagroup_co_ke.models import Investment, InvestmentType
 
-					investment = Investment.objects.filter(account__gateway_profile=navigator.session.gateway_profile)[:1]
+					investment = Investment.objects.filter(account__profile=navigator.session.gateway_profile.user.profile)[:1]
 
 					item = ''
 					item_list = []
@@ -1167,9 +1167,11 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'enrollment_product_item_id' or variable_key == 'enrollment_product_item_id_cost':
 					from secondary.erp.crm.models import Enrollment, ProductItem
 
-
 					params = self.get_nav(navigator)
-					enrollment_list = Enrollment.objects.filter(gateway_profile__gateway=code[0].gateway, gateway_profile__msisdn__phone_number=payload['msisdn'])
+
+					gateway_profile = GatewayProfile.objects.get(msisdn__phone_number=payload['msisdn'],gateway=code[0].gateway)
+
+					enrollment_list = Enrollment.objects.filter(profile=gateway_profile.user.profile)
 
 					if variable_val not in ['',None]:
 						enrollment_list = enrollment_list.filter(Q(enrollment_type__product_item__product_type__name=variable_val)|Q(enrollment_type__product_item__product_type__name='Membership Plan'))

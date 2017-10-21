@@ -1163,6 +1163,11 @@ class System(Wrappers):
 
 				payload['national_id'] = user.profile.national_id
 
+				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
+					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
+				if user.email and self.validateEmail(user.email):
+					payload['email'] = user.email
+
 				payload['response_status'] = '00'
 				payload['response'] = 'Session Profile Captured'
 
@@ -1197,6 +1202,11 @@ class System(Wrappers):
 				payload['last_name'] = payload['last_name'] if 'last_name' in payload.keys()  else user.last_name
 
 				payload['national_id'] = user.profile.national_id
+
+				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
+					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
+				if user.email and self.validateEmail(user.email):
+					payload['email'] = user.email
 
 				payload['response_status'] = '00'
 				payload['response'] = 'Session Profile Captured'
