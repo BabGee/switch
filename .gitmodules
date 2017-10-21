@@ -1,12 +1,9 @@
-[submodule "gus"]
-	path = gus
-	url = ./products/gus/
-[submodule "muziqbit"]
-	path = muziqbit
-	url = ./products/muziqbit/
-[submodule "nikobizz"]
-	path = nikobizz
-	url = ./products/nikobizz/
 [submodule "products/gus"]
 	path = products/gus
 	url = https://bitbucket.org/interintel/switch.products.gus
+[submodule "products/muziqbit"]
+	path = products/muziqbit
+	url = https://bitbucket.org/interintel/switch.products.muziqbit
+[submodule "products/nikobizz"]
+	path = products/nikobizz
+	url = https://bitbucket.org/interintel/switch.products.nikobizz

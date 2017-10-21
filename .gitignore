@@ -4,6 +4,9 @@ switch/media/
 *.sw[nop]
 switch/media.bkp/
 .idea/
+products/
+thirdparty/
+*migrations/
 
 
 
