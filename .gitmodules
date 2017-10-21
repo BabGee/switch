@@ -1,3 +1,9 @@
 [submodule "gus"]
 	path = gus
 	url = ./products/gus/
+[submodule "muziqbit"]
+	path = muziqbit
+	url = ./products/muziqbit/
+[submodule "nikobizz"]
+	path = nikobizz
+	url = ./products/nikobizz/
