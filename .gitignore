@@ -4,20 +4,26 @@ switch/media/**
 *.sw[nop]
 switch/media.bkp/
 .idea/
+
 #Leave products folder, ignore contents
-products/**
-!products
-!products/__init__.py
+#products/**
+#!products
+#!products/__init__.py
 #Leave thirdparty folder, ignore contents
-thirdparty/**
-!thirdparty
-!thirdparty/__init__.py
+#thirdparty/**
+#!thirdparty
+#!thirdparty/__init__.py
+
 #Leave migration folders, ignore contents
 **/migrations/**
 !**/migrations
 !**/migrations/__init__.py
 
+#Ignore test
+test
 
+#Ignore a
+a
 
 
 # Created by .ignore support plugin (hsz.mobi)
