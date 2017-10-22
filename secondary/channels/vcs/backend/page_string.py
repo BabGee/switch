@@ -492,6 +492,52 @@ class PageString(ServiceCall, Wrappers):
 					lgr.info('Your List: %s' % item)
 					page_string = page_string.replace('['+v+']',item)
 
+				elif variable_key == 'default_payment_method':
+
+					from primary.core.bridge.models import PaymentMethod
+
+					payment_method = PaymentMethod.objects.filter(Q(channel__id=payload['chid'])|Q(channel=None))
+
+					if variable_val == 'Send':
+						payment_method = payment_method.filter(send=True)
+					elif variable_val == 'Receive':
+						payment_method = payment_method.filter(receive=True)
+
+
+					item = ''
+					item_list = []
+					count = 1
+					for i in payment_method:
+						account_balance = None
+						if i.name == 'MIPAY' and variable_val <> 'Send' and mipay_gateway_profile.exists():
+							session_account_manager = AccountManager.objects.filter(dest_account__account_status__name='ACTIVE',\
+									dest_account__profile=mipay_gateway_profile[0].user.profile,\
+									dest_account__account_type__gateway__name='MIPAY').\
+									order_by('-date_created')[:1]
+
+							if session_account_manager.exists():
+								account_balance = session_account_manager[0].balance_bf
+							else: continue
+							if (account_balance is not None and account_balance>0) or variable_val=='Send': pass
+							else: continue
+						name = '%s' % (i.name)
+						if navigator.session.channel.name == 'IVR':
+							item = '%s\nFor %s, press %s.' % (item, name, count)
+						elif navigator.session.channel.name == 'USSD':
+							item = '%s\n%s:%s' % (item, count, name)
+							if account_balance is not None and account_balance>0: 
+								account_balance = '{0:,.2f}'.format(account_balance) 
+								item = '%s(%s)' % (item,account_balance)
+
+						item_list.append(name)
+						count+=1
+					navigator.item_list = json.dumps(item_list)
+					navigator.save()
+
+					lgr.info('Your List: %s' % item)
+					page_string = page_string.replace('['+v+']',item)
+
+
 				elif variable_key == 'account_payment_method':
 
 					from secondary.finance.vbs.models import AccountType,AccountManager
@@ -734,6 +780,7 @@ class PageString(ServiceCall, Wrappers):
 					from secondary.finance.vbs.models import AccountManager
 
 					mipay_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=payload['msisdn'],gateway__name='MIPAY')
+					params = self.get_nav(navigator)
 
 					if 'product_item_id' in params.keys():
 						product_item = ProductItem.objects.filter(id=params['product_item_id'])
@@ -1164,14 +1211,12 @@ class PageString(ServiceCall, Wrappers):
 					page_string = page_string.replace('['+v+']',item)
 
 
-				elif variable_key == 'enrollment_product_item_id' or variable_key == 'enrollment_product_item_id_cost':
+				elif variable_key == 'investment_product_item_id' or variable_key == 'investment_product_item_id_cost':
 					from secondary.erp.crm.models import Enrollment, ProductItem
 
 					params = self.get_nav(navigator)
 
-					gateway_profile = GatewayProfile.objects.get(msisdn__phone_number=payload['msisdn'],gateway=code[0].gateway)
-
-					enrollment_list = Enrollment.objects.filter(profile=gateway_profile.user.profile)
+					enrollment_list = Enrollment.objects.filter(profile=navigator.session.gateway_profile.user.profile)
 
 					if variable_val not in ['',None]:
 						enrollment_list = enrollment_list.filter(Q(enrollment_type__product_item__product_type__name=variable_val)|Q(enrollment_type__product_item__product_type__name='Membership Plan'))
