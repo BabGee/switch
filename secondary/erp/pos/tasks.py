@@ -599,6 +599,7 @@ class System(Wrappers):
 				payload["response_status"] = "00"
 				payload["response"] = "Purchase Order Created"
 		except Exception, e:
+			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on creating purchase order: %s" % e)
 		return payload

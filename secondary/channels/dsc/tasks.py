@@ -60,7 +60,6 @@ class Wrappers:
         except ValidationError:
             return False
 
-    @app.task(ignore_result=True)
     def service_call(self, service, gateway_profile, payload):
         lgr = get_task_logger(__name__)
         from primary.core.api.views import ServiceCall
@@ -2884,7 +2883,7 @@ def process_file_upload_activity(payload):
                         try:
                             valid = False
                             if 'email' in payload.keys():
-                                if self.validateEmail(payload['email']):
+                                if Wrappers().validateEmail(payload['email']):
                                     valid = True
                                 else:
                                     del payload['email']
@@ -2900,7 +2899,7 @@ def process_file_upload_activity(payload):
 
                             if valid:
                                 try:
-                                    self.service_call(u.file_upload.activity_service, u.gateway_profile, payload)
+                                    Wrappers().service_call(u.file_upload.activity_service, u.gateway_profile, payload)
                                 except Exception, e:
                                     lgr.info('Error on Service Call: %s' % e)
 
@@ -2947,7 +2946,7 @@ def process_file_upload():
 
 
 	    payload = json.dumps(payload, cls=DjangoJSONEncoder)
-            Wrappers().process_file_upload_activity.delay(payload)
+            process_file_upload_activity.delay(payload)
 
             u.status = FileUploadActivityStatus.objects.get(name='PROCESSED')
             u.save()

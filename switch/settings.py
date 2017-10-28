@@ -7,6 +7,34 @@ import psycopg2
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
+import ConfigParser
+
+cf = ConfigParser.ConfigParser()
+cf.read('switch/conf/switch.properties')
+
+#print cf._sections
+
+
+conf_products = cf.get('INSTALLED_APPS','products')
+products=conf_products.split(",")
+
+conf_thirdparty = cf.get('INSTALLED_APPS','thirdparty')
+thirdparty=conf_thirdparty.split(",")
+
+
+dbengine = cf.get('DATABASES','default_dbengine')
+dbname = cf.get('DATABASES','default_dbname')
+dbuser = cf.get('DATABASES','default_dbuser')
+dbpassword = cf.get('DATABASES','default_dbpassword')
+dbhost = cf.get('DATABASES','default_dbhost')
+dbport = cf.get('DATABASES','default_dbport')
+
+conf_hosts = cf.get('ALLOWED_HOSTS','hosts')
+hosts = conf_hosts.split(",")
+
+installed_apps = products+thirdparty
+
+
 #import djcelery
 #djcelery.setup_loader()
 
@@ -85,20 +113,20 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'switch',                      # Or path to database file if using sqlite3.
+        'ENGINE': dbengine, # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': dbname,                      # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
-        'USER': 'switch',
-        'PASSWORD': 'switch',
-        'HOST': '192.168.137.5',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-        'PORT': '',                      # Set to empty string for default.
+        'USER': dbuser,
+        'PASSWORD': dbpassword,
+        'HOST': dbhost,                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        'PORT': dbport,                      # Set to empty string for default.
 	#'CONN_MAX_AGE': '600',
     }
 }
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['127.0.0.1', '192.168.137.4','192.168.137.7','localhost']
+ALLOWED_HOSTS = hosts
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -198,17 +226,7 @@ INSTALLED_APPS = (
     'secondary.finance.crc',
     'secondary.finance.crb',
     'secondary.finance.paygate',
-    'products.nikobizz',
-    'products.gus',
-    'products.muziqbit',
-    'thirdparty.regix',
-    'thirdparty.roadroute',
-    'thirdparty.mcsk',
-    'thirdparty.amkagroup_co_ke',
-    'thirdparty.sortika',
-    'thirdparty.wahi',
-    'thirdparty.bidfather',
-)
+) + tuple(installed_apps)
 
 
 MIDDLEWARE_CLASSES = (

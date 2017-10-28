@@ -14,6 +14,9 @@ switch/media.bkp/
 #!thirdparty
 #!thirdparty/__init__.py
 
+#ignore local conf file
+switch/conf/switch.properties
+
 #Leave migration folders, ignore contents
 **/migrations/**
 !**/migrations

@@ -1,0 +1,12 @@
+[INSTALLED_APPS]
+products=
+thirdparty=
+[DATABASES]
+default_dbengine=django.contrib.gis.db.backends.postgis
+default_dbname=
+default_dbuser=
+default_dbpassword=
+default_dbhost=
+default_dbport=
+[ALLOWED_HOSTS]
+hosts=127.0.0.1,localhost

@@ -492,6 +492,33 @@ class PageString(ServiceCall, Wrappers):
 					lgr.info('Your List: %s' % item)
 					page_string = page_string.replace('['+v+']',item)
 
+				elif variable_key == 'loan_request':
+
+					from thirdparty.wahi.models import LoanRequest
+
+					loan_request = LoanRequest.objects.filter(status__name='CREATED')
+
+					item = ''
+					item_list = []
+					count = 1
+					for i in loan_request:
+       	                                        amount = '{0:,.2f}'.format(i.amount)
+               	                                name = '%s %s%s %s' % (i.profile.user.first_name, i.currency.code, amount, i.date_created.strftime("%d/%b/%Y"))
+
+						if navigator.session.channel.name == 'IVR':
+							item = '%s\nFor %s, press %s.' % (item, name, count)
+						elif navigator.session.channel.name == 'USSD':
+							item = '%s\n%s:%s' % (item, count, name)
+
+						item_list.append(i.id)
+						count+=1
+					navigator.item_list = json.dumps(item_list)
+					navigator.save()
+
+					lgr.info('Your List: %s' % item)
+					page_string = page_string.replace('['+v+']',item)
+
+
 				elif variable_key == 'default_payment_method':
 
 					from primary.core.bridge.models import PaymentMethod

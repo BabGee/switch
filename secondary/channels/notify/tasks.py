@@ -686,7 +686,7 @@ class System(Wrappers):
 						msisdn = UPCWrappers().get_msisdn(payload)
 						if msisdn:
 							outbound.recipient = msisdn
-						else:
+						elif new_contact.gateway_profile.msisdn:
 							outbound.recipient = new_contact.gateway_profile.msisdn.phone_number
 					elif new_contact.product.notification.code.channel.name == 'EMAIL':
 						if 'email' in payload.keys() and self.validateEmail(payload["email"]):
@@ -1352,10 +1352,12 @@ def outbound_bulk_logger(payload, contact_list, scheduled_send):
 			contact = Contact.objects.get(id=c[0])
 			outbound = Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, sends=0)
 			#Notification for bulk uses contact records only for recipient
-			if contact.product.notification.code.channel.name == 'SMS':
+			if contact.product.notification.code.channel.name == 'SMS' and contact.gateway_profile.msisdn:
 				outbound.recipient = contact.gateway_profile.msisdn.phone_number
-			elif contact.product.notification.code.channel.name == 'EMAIL':
+			elif contact.product.notification.code.channel.name == 'EMAIL' and self.validateEmail(contact.gateway_profile.user.email):
 				outbound.recipient = contact.gateway_profile.user.email
+			else:
+				lgr.info('Contact not matched to email or sms: %s' % contact)
 
 			if 'notification_template_id' in payload.keys():
 				template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
