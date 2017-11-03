@@ -38,9 +38,84 @@ class Wrappers:
                 except ValidationError:
                         return False
 
+	def transaction_payload(self, payload):
+		new_payload, transaction, count = {}, None, 1
+		for k, v in payload.items():
+			key = k.lower()
+			if 'card' not in key and 'credentials' not in key and 'new_pin' not in key and \
+			 'validate_pin' not in key and 'password' not in key and 'confirm_password' not in key and \
+			 'pin' not in key and 'access_level' not in key and \
+			 'response_status' not in key and 'sec_hash' not in key and 'ip_address' not in key and \
+			 'service' not in key and key <> 'lat' and key <> 'lng' and \
+			 key <> 'chid' and 'session' not in key and 'csrf_token' not in key and \
+			 'csrfmiddlewaretoken' not in key and 'gateway_host' not in key and \
+			 'gateway_profile' not in key and 'transaction_timestamp' not in key and \
+			 'action_id' not in key and 'bridge__transaction_id' not in key and \
+			 'merchant_data' not in key and 'signedpares' not in key and \
+			 key <> 'gpid' and key <> 'sec' and  key <> 'fingerprint' and \
+			 key not in ['ext_product_id','vpc_securehash','currency','amount'] and \
+			 'institution_id' not in key and key <> 'response' and key <> 'input':
+				if count <= 30:
+					new_payload[str(k)[:30] ] = str(v)[:500]
+				else:
+					break
+				count = count+1
+
+		return json.dumps(new_payload)
+
+
 
 
 class System(Wrappers):
+	def loan_request(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			loan_request_type_list = LoanRequestType.objects.filter(service__name=payload['SERVICE'])
+			if loan_request_type_list.exists():
+				if 'session_gateway_profile_id' in payload.keys():
+					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+				else:
+					session_gateway_profile = gateway_profile
+				payment_method = PaymentMethod.objects.get(name__iexact=payload['payment_method'])
+				loan_request = LoanRequest(profile=session_gateway_profile.user.profile,amount=payload['amount'],\
+							loan_time=payload['loan_time'],payment_method=payment_method,\
+							currency=Currency.objects.get(code='KES'),gateway=gateway_profile.gateway)
+
+				if 'security_amount'in payload.keys():
+					loan_request.security_amount = payload['security_amount']
+				if 'bridge__transaction_id' in payload.keys():
+					loan_request.transaction_reference = payload['bridge__transaction_id']
+				if 'other_loan_amounts' in payload.keys():
+					loan_request.other_loans = payload['other_loan_amounts']				
+
+				if 'institution_id' in payload.keys():
+					loan_request.institution = Institution.objects.get(id=payload['institution_id'])
+				if 'comment' in payload.keys():
+					loan_request.comment = payload['comment']
+
+				loan_request.save()
+
+				request_status = LoanRequestStatus.objects.get(name='CREATED')
+				request_type = loan_request_type_list[0]
+				response_status = ResponseStatus.objects.get(response='DEFAULT')
+				loan_request_activity = LoanRequestActivity(loan_request=loan_request,loan_request_type=request_type,\
+									status=request_status,request=self.transaction_payload(payload),\
+									response_status=response_status) 
+				loan_request_activity.save()
+
+				payload['response'] = 'Loan Request Logged'
+				payload['response_status'] = '00'
+			else:
+				payload['response'] = 'Loan Request Unknown'
+				payload['response_status'] = '25'
+
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Loan Request: %s" % e)
+		return payload
+
+
 	def get_account_details(self, payload, node_info):
 		try:
 			account = Account.objects.get(id=payload['account_id'])

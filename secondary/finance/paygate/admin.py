@@ -84,3 +84,13 @@ class OutgoingAdmin(admin.ModelAdmin):
 	list_filter = ('remittance_product','currency','response_status','state',)
 	search_fields = ('reference','request','ext_outbound_id','message',)
 admin.site.register(Outgoing, OutgoingAdmin)
+
+class FloatAlertTypeAdmin(admin.ModelAdmin):
+		list_display = ('description','min_amount','max_amount','service','float_type','credit',\
+				'institution','gateway','profile_list',)
+admin.site.register(FloatAlertType, FloatAlertTypeAdmin)
+
+class FloatAlertActivityAdmin(admin.ModelAdmin):
+		list_display = ('float_manager','float_alert_type',)
+admin.site.register(FloatAlertActivity, FloatAlertActivityAdmin)
+

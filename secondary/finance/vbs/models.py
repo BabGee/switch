@@ -176,3 +176,58 @@ class InvestmentManager(models.Model):
 	processed = models.BooleanField(default=False)
 	def __unicode__(self):
 		return '%s %s %s %s %s %s' % (self.investment_type, self.account, self.amount, self.share_value, self.balance_bf, self.processed)
+
+
+class LoanRequestType(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	service = models.ManyToManyField(Service, blank=True)
+	product_type = models.ManyToManyField(ProductType, blank=True)
+	def __unicode__(self):
+		return u'%s %s' % (self.name, self.description)
+	def product_type_list(self):
+		return "\n".join([a.name for a in self.product_type.all()])
+	def service_list(self):
+		return "\n".join([a.name for a in self.service.all()])
+
+class LoanRequestStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	service = models.ForeignKey(Service, null=True, blank=True)
+	def __unicode__(self):
+		return u'%s %s %s' % (self.name, self.description, self.service)
+
+class LoanRequest(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	profile = models.ForeignKey(Profile)
+	amount = models.DecimalField(max_digits=19, decimal_places=2)
+	security_amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	other_loans = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	payment_method = models.ForeignKey(PaymentMethod)
+	loan_time = models.IntegerField(help_text="In Days")
+	transaction_reference = models.CharField(max_length=45, null=True, blank=True) #Transaction ID
+	currency = models.ForeignKey(Currency)
+	gateway = models.ForeignKey(Gateway)
+	institution = models.ForeignKey(Institution, blank=True, null=True)
+	comment = models.CharField(max_length=256, null=True, blank=True)
+	def __unicode__(self):
+		return u'%s %s %s' % (self.profile, self.amount, self.gateway)
+
+class LoanRequestActivity(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	loan_request = models.ForeignKey(LoanRequest)
+	loan_request_type = models.ForeignKey(LoanRequestType)
+	status = models.ForeignKey(LoanRequestStatus)
+	request = models.CharField(max_length=1920)
+	response_status = models.ForeignKey(ResponseStatus)
+	comment = models.CharField(max_length=256, null=True, blank=True)
+	def __unicode__(self):
+		return u'%s %s %s' % (self.loan_request, self.loan_request_type, self.status)
+
+

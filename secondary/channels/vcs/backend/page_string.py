@@ -494,10 +494,19 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'loan_request':
 
-					from thirdparty.wahi.models import LoanRequest
+					from secondary.finance.vbs.models import LoanRequest
 
-					loan_request = LoanRequest.objects.filter(status__name='CREATED')
+					params = self.get_nav(navigator)
 
+					loan_request = LoanRequest.objects.filter(status__name='CREATED',gateway=code[0].gateway).order_by('-date_created')
+
+					if 'institution_id' in params.keys():
+						loan_request = loan_request.filter(Q(institution__id=params['institution_id'])|Q(institution=None))
+					else:
+
+						loan_request = loan_request.filter(Q(institution=code[0].institution)|Q(institution=None))
+
+					loan_request = loan_request[:10]
 					item = ''
 					item_list = []
 					count = 1

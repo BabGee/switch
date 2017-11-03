@@ -82,4 +82,23 @@ class InvestmentManagerAdmin(admin.ModelAdmin):
 	list_display = ('id','investment_type','account','amount','share_value','balance_bf','processed',)
 admin.site.register(InvestmentManager, InvestmentManagerAdmin)
 
+class LoanRequestTypeAdmin(admin.ModelAdmin):
+	list_display = ('name','description','service_list','product_type_list')
+admin.site.register(LoanRequestType, LoanRequestTypeAdmin)
+
+
+class LoanRequestStatusAdmin(admin.ModelAdmin):
+	list_display = ('name','description',)
+admin.site.register(LoanRequestStatus, LoanRequestStatusAdmin)
+
+class LoanRequestAdmin(admin.ModelAdmin):
+	list_display = ('id','profile','amount','security_amount','other_loans','payment_method',\
+			'loan_time','transaction_reference','currency',\
+			'institution','gateway','comment',)
+admin.site.register(LoanRequest, LoanRequestAdmin)
+
+class LoanRequestActivityAdmin(admin.ModelAdmin):
+	list_display = ('loan_request','loan_request_type','status','request','response_status','comment',)
+admin.site.register(LoanRequestActivity, LoanRequestActivityAdmin)
+
 

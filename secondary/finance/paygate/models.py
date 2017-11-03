@@ -249,3 +249,30 @@ class Outgoing(models.Model):
 	def __unicode__(self):
 		return u'%s %s %s' % (self.remittance_product, self.amount, self.currency)
 
+class FloatAlertType(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	description = models.CharField(max_length=100)
+	min_amount = models.IntegerField()
+	max_amount = models.IntegerField()
+	service = models.ForeignKey(Service)
+	float_type = models.ForeignKey(FloatType)
+	credit = models.BooleanField(default=False) #Dr | Cr (add charge if Dr, sub charge if Cr)
+	institution = models.ForeignKey(Institution, blank=True, null=True)
+	gateway = models.ForeignKey(Gateway)
+	profile = models.ManyToManyField(Profile)
+	def __unicode__(self):
+		return u'%s %s' % (self.float_type, self.service)
+	def profile_list(self):
+		return "\n".join([a.user.username for a in self.profile.all()])
+
+
+class FloatAlertActivity(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	float_manager = models.ForeignKey(FloatManager)
+	float_alert_type = models.ForeignKey(FloatAlertType)
+	def __unicode__(self):
+		return u'%s %s' % (self.float_manager, self.float_alert_type)
+
+
