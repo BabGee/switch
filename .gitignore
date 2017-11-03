@@ -13,13 +13,13 @@ switch/media.bkp/
 .idea/
 
 #Leave products folder, ignore contents
-#products/**
-#!products
-#!products/__init__.py
+products/**
+!products
+!products/__init__.py
 #Leave thirdparty folder, ignore contents
-#thirdparty/**
-#!thirdparty
-#!thirdparty/__init__.py
+thirdparty/**
+!thirdparty
+!thirdparty/__init__.py
 
 #ignore local conf file
 switch/conf/switch.properties
