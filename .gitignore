@@ -1,9 +1,9 @@
 #my ignore
 
-!switch/static
+!switch/static/
 switch/static/**
 
-!switch/media
+!switch/media/
 switch/media/**
 
 *.sw[nop]
