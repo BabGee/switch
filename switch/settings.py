@@ -33,7 +33,7 @@ conf_hosts = cf.get('ALLOWED_HOSTS','hosts')
 hosts = conf_hosts.split(",")
 
 installed_apps = products+thirdparty
-
+installed_apps = filter(None, installed_apps)
 
 #import djcelery
 #djcelery.setup_loader()
@@ -226,9 +226,7 @@ INSTALLED_APPS = (
     'secondary.finance.crc',
     'secondary.finance.crb',
     'secondary.finance.paygate',
-)
-if len(installed_apps):
-	INSTALLED_APPS = INSTALLED_APPS + tuple(installed_apps)
+) + tuple(installed_apps)
 
 
 MIDDLEWARE_CLASSES = (
