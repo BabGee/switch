@@ -2,10 +2,11 @@
 
 #!switch/static/
 #switch/static/**
-#.gitignore file added in the static folder
+#.gitignore file added in the static folder[^.]*
 
-!switch/media/
-switch/media/**
+#!switch/media/
+#switch/media/**
+#.gitignore file added in the media folder[^.]*
 
 *.sw[nop]
 switch/media.bkp/
