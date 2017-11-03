@@ -1,6 +1,8 @@
 #my ignore
 switch/static/**
+!switch/static
 switch/media/**
+!switch/media
 *.sw[nop]
 switch/media.bkp/
 .idea/
