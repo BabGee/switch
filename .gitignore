@@ -1,6 +1,5 @@
 #my ignore
 switch/static/**
-!switch/static/suit/
 switch/media/**
 *.sw[nop]
 switch/media.bkp/
