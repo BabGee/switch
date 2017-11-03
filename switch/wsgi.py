@@ -33,7 +33,7 @@ application = get_wsgi_application()
 # Apply WSGI middleware here.
 # from helloworld.wsgi import HelloWorldApplication
 # application = HelloWorldApplication(application)
-import djcelery
+#import djcelery
 
-djcelery.setup_loader()
+#djcelery.setup_loader()
 
