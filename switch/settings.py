@@ -226,7 +226,9 @@ INSTALLED_APPS = (
     'secondary.finance.crc',
     'secondary.finance.crb',
     'secondary.finance.paygate',
-) + tuple(installed_apps)
+)
+if len(installed_apps):
+	INSTALLED_APPS = INSTALLED_APPS + tuple(installed_apps)
 
 
 MIDDLEWARE_CLASSES = (
