@@ -1,7 +1,8 @@
 #my ignore
 
-!switch/static/
-switch/static/**
+#!switch/static/
+#switch/static/**
+#.gitignore file added in the static folder
 
 !switch/media/
 switch/media/**
