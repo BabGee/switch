@@ -216,7 +216,7 @@ class LoanRequest(models.Model):
 	institution = models.ForeignKey(Institution, blank=True, null=True)
 	comment = models.CharField(max_length=256, null=True, blank=True)
 	def __unicode__(self):
-		return u'%s %s %s' % (self.profile, self.amount, self.gateway)
+		return u'%s %s %s %s' % (self.id, self.profile, self.amount, self.gateway)
 
 class LoanRequestActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -227,6 +227,7 @@ class LoanRequestActivity(models.Model):
 	request = models.CharField(max_length=1920)
 	response_status = models.ForeignKey(ResponseStatus)
 	comment = models.CharField(max_length=256, null=True, blank=True)
+	processed = models.BooleanField(default=False)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.loan_request, self.loan_request_type, self.status)
 

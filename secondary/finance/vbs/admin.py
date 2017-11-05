@@ -98,7 +98,7 @@ class LoanRequestAdmin(admin.ModelAdmin):
 admin.site.register(LoanRequest, LoanRequestAdmin)
 
 class LoanRequestActivityAdmin(admin.ModelAdmin):
-	list_display = ('loan_request','loan_request_type','status','request','response_status','comment',)
+	list_display = ('loan_request','loan_request_type','status','request','response_status','comment','processed',)
 admin.site.register(LoanRequestActivity, LoanRequestActivityAdmin)
 
 

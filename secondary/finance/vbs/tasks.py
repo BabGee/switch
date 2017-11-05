@@ -102,6 +102,10 @@ class System(Wrappers):
 				loan_request_activity = LoanRequestActivity(loan_request=loan_request,loan_request_type=request_type,\
 									status=request_status,request=self.transaction_payload(payload),\
 									response_status=response_status) 
+				if 'comment' in payload.keys():
+					loan_request_activity.comment = payload['comment']
+
+
 				loan_request_activity.save()
 
 				payload['response'] = 'Loan Request Logged'
@@ -699,15 +703,19 @@ class System(Wrappers):
 						Q(gateway=gateway_profile.gateway),\
 						~Q(product_item__product_type__name='Ledger Account'))
 
+				lgr.info('Account Type: %s' % account_type)
 				if 'account_type' in payload.keys():
 					account_type = account_type.filter(name=payload['account_type'])
 
+				lgr.info('Account Type: %s' % account_type)
 				if 'account_type_id' in payload.keys():
 					account_type = account_type.filter(id=payload['account_type_id'])
 
+				lgr.info('Account Type: %s' % account_type)
 				if 'institution_id' in payload.keys():
 					account_type = account_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
 
+				lgr.info('Account Type: %s' % account_type)
 				if account_type.exists():
 					session_account = Account(profile=profile,\
 							account_branch=account_type[0].product_item.product_type.institution_till,\
