@@ -67,6 +67,14 @@ class SaleCharge(models.Model):
 		return "\n".join([a.name for a in self.gateway.all()])
 
 
+class CartType(models.Model):
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
 class CartStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
@@ -74,6 +82,7 @@ class CartStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)
+
 
 class CartItem(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -97,6 +106,7 @@ class CartItem(models.Model):
 	channel = models.ForeignKey(Channel)
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
+	cart_type = models.ForeignKey(CartType)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.product_item, self.gateway_profile, self.quantity)
 

@@ -21,6 +21,10 @@ class SaleChargeAdmin(admin.ModelAdmin):
 
 admin.site.register(SaleCharge, SaleChargeAdmin)
 
+class CartTypeAdmin(admin.ModelAdmin):
+		list_display = ('id','name','description','date_modified','date_created')
+admin.site.register(CartType, CartTypeAdmin)
+
 class CartStatusAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description','date_modified','date_created')
 admin.site.register(CartStatus, CartStatusAdmin)
@@ -29,7 +33,7 @@ class CartItemAdmin(admin.ModelAdmin):
 		list_display = ('id','product_item','gateway_profile',\
 				'currency','status','quantity','expiry','price',\
 				'sub_total','vat','other_tax','discount','other_relief',\
-				'total','details','till','token','channel',)
+				'total','details','till','token','channel','pn','pn_ack','cart_type',)
 		list_filter = ('product_item__institution','gateway_profile__gateway','product_item__product_type',)
 		search_fields = ('gateway_profile__msisdn__phone_number','product_item__name','details','quantity','price','sub_total','total','token')
 admin.site.register(CartItem, CartItemAdmin)

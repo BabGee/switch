@@ -3,6 +3,7 @@ from celery import shared_task
 #from celery.contrib.methods import task_method
 from celery import task
 from switch.celery import app
+from celery.utils.log import get_task_logger
 from switch.celery import single_instance_task
 
 from django.shortcuts import render
@@ -89,7 +90,16 @@ class Wrappers:
 			details=self.transaction_payload(payload), till=till, channel=channel)
 
 		if 'session_gateway_profile_id' in payload.keys():
-			cart_item.gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+		else:
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+
+		cart_item.gateway_profile = session_gateway_profile
+		if session_gateway_profile.institution == product_item.institution:
+			cart_item.cart_type = CartType.objects.get(name='POS')
+		else:
+			cart_item.cart_type = CartType.objects.get(name='SHOP')
 
 		if 'csrf_token' in payload.keys():
 			cart_item.token = payload['csrf_token']
@@ -625,51 +635,11 @@ class System(Wrappers):
 
 			primary_item = self.cart_entry(product_item, payload, quantity, sub_total, total)
 
-			'''
-			items = []	
-			items.append(primary_item)
-			payload['cart_items'] = items
-			'''
-
 			payload['cart_items'] = '%s%s' % (primary_item.id, ','+payload['cart_items'] if 'cart_items' in payload.keys() else '')
 
 			sale_charge_item = self.sale_charge_item(total, primary_item, payload, gateway_profile.gateway)
 			if sale_charge_item:
 				payload['cart_items'] = '%s%s' % (sale_charge_item.id, ','+payload['cart_items'] if 'cart_items' in payload.keys() else '')
-			'''
-			try:
-				# just publish to web for now
-				if int(payload['chid']) == 1:
-					# query items already in cart
-					cart_items = []
-					cart_items_qs = CartItem.objects.filter(id__in=items)
-
-					for cart_item in cart_items_qs:
-						c_i = {}
-						c_i['name'] = cart_item.product_item.name
-						#c_i['image'] = cart_item.product_item.image_path
-						c_i['image'] = cart_item.product_item.image_path.url if cart_item.product_item.image_path else ''
-
-						c_i['quantity'] = int(cart_item.quantity)
-						c_i['price'] = cart_item.price
-
-						cart_items.append(c_i)
-
-					msc = MqttServerClient()
-					channel = 'session/{}'.format(payload['unique_session_id'])
-					itms = json.dumps(cart_items, cls=DjangoJSONEncoder)
-
-					#lgr.info(channel)
-					#lgr.info(itms)
-
-					# publish to session specific unique channel
-					msc.publish(
-						channel,
-						itms
-					)
-					msc.disconnect()
-			except Exception, e: lgr.info('MQTT update Failure '+e.message)
-			'''
 
 			payload["response_status"] = "00"
 			payload["response"] = "Product Added to Cart"
@@ -792,8 +762,47 @@ class Payments(System):
 
 
 @app.task(ignore_result=True)
+def order_service_call(order):
+	lgr = get_task_logger(__name__)
+	from primary.core.api.views import ServiceCall
+	try:
+		o = PurchaseOrder.objects.get(id=order)
+		lgr.info('Captured Order: %s' % o)
+		cart_item = o.cart_item.all()
+		for c in cart_item:
+			lgr.info('Captured Cart Item: %s' % c)
+			product_item = c.product_item
+			payload = json.loads(c.details)	
+
+			gateway_profile = c.gateway_profile
+			service = c.product_item.product_type.service
+
+			payload['purchase_order_id'] = o.id
+			payload['product_item_id'] = c.product_item.id
+			payload['item'] = c.product_item.name
+			payload['product_type'] = c.product_item.product_type.name
+			payload['quantity'] = c.quantity
+			payload['currency'] = c.currency.code
+			payload['amount'] = c.total
+			payload['reference'] = o.reference
+			payload['institution_id'] = c.product_item.institution.id
+			payload['chid'] = c.channel.id
+			payload['ip_address'] = '127.0.0.1'
+			payload['gateway_host'] = '127.0.0.1'
+
+			payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
+
+			payload = ServiceCall().api_service_call(service, gateway_profile, payload)
+			lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
+	except Exception, e:
+		payload['response_status'] = '96'
+		lgr.info('Unable to make service call: %s' % e)
+	return payload
+
+
+
+@app.task(ignore_result=True)
 def service_call(payload):
-	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	from primary.core.api.views import ServiceCall
 	try:
@@ -814,9 +823,21 @@ def service_call(payload):
 @transaction.atomic
 @single_instance_task(60*10)
 def process_paid_order():
-	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
+	try:
+		orig_order = PurchaseOrder.objects.select_for_update().filter(Q(status__name='PAID'),Q(cart_processed=False),\
+					Q(cart_item__status__name='PAID'),~Q(cart_item__product_item__product_type__service=None),\
+					Q(date_modified__lte=timezone.now()-timezone.timedelta(seconds=1)))
+		order = list(orig_order.values_list('id',flat=True)[:500])
 
+		processing = orig_order.filter(id__in=order).update(cart_processed=True, date_modified=timezone.now())
+		for od in order:
+			order_service_call.delay(od)
+	except Exception, e: lgr.info('Error on process paid order')
+
+
+
+	'''
 	order = PurchaseOrder.objects.select_for_update().filter(status__name='PAID',cart_processed=False,\
 		 date_modified__lte=timezone.now()-timezone.timedelta(seconds=10))[:10]
 
@@ -857,3 +878,4 @@ def process_paid_order():
 					except Exception, e: lgr.info('Error on Service Call: %s' % e)
 		except Exception, e:
 			lgr.info('Error processing paid order item: %s | %s' % (o,e))
+	'''

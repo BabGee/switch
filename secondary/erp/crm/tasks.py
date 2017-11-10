@@ -122,6 +122,43 @@ class System:
 		return payload
 
 
+	def investor_enrollment(self, payload, node_info):
+		try:
+			#payload['ext_service_id'] = payload['Payment']
+
+			if 'product_item_id' in payload.keys():
+				product_item = ProductItem.objects.filter(id=payload['product_item_id'],status__name='ACTIVE').order_by('id')
+			elif 'item' in payload.keys() and 'institution_id' in payload.keys():
+				product_item = ProductItem.objects.filter(name=payload["item"],product_type__name='Investor Enrollment', institution__id=payload['institution_id'], status__name='ACTIVE').order_by('id')
+			else:
+				product_item = ProductItem.objects.none()	
+
+			if 'institution_id' in payload.keys():
+				product_item = product_item.filter(institution__id=payload['institution_id'])
+
+
+			if product_item.exists():
+				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+				enrollment = Enrollment.objects.filter(enrollment_type__product_item=product_item[0],profile=session_gateway_profile.user.profile, status__name='ACTIVE')
+				if enrollment.exists():
+					payload['response'] = 'Record Exists'
+					payload['response_status'] = '26'
+				else:
+					payload['product_item_id'] = product_item[0].id
+					payload['institution_id'] = product_item[0].institution.id
+					#payload['till_number'] = product_item[0].product_type.institution_till.till_number
+					payload['currency'] = product_item[0].currency.code
+					payload['amount'] = product_item[0].unit_cost
+					payload['response'] = 'Successful'
+					payload['response_status'] = '00'
+			else:
+				payload['response_status'] = '25'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on awards registration: %s" % e)
+		return payload
+
+
 	def member_registration(self, payload, node_info):
 		try:
 			#payload['ext_service_id'] = payload['Payment']

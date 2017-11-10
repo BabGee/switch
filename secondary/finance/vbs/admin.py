@@ -92,13 +92,13 @@ class LoanRequestStatusAdmin(admin.ModelAdmin):
 admin.site.register(LoanRequestStatus, LoanRequestStatusAdmin)
 
 class LoanRequestAdmin(admin.ModelAdmin):
-	list_display = ('id','profile','amount','security_amount','other_loans','payment_method',\
+	list_display = ('id','amount','security_amount','other_loans','payment_method',\
 			'loan_time','transaction_reference','currency',\
-			'institution','gateway','comment',)
+			'institution','gateway','comment','account',)
 admin.site.register(LoanRequest, LoanRequestAdmin)
 
 class LoanRequestActivityAdmin(admin.ModelAdmin):
-	list_display = ('loan_request','loan_request_type','status','request','response_status','comment','processed',)
+	list_display = ('loan_request','loan_request_type','status','request','response_status','comment','processed','profile',)
 admin.site.register(LoanRequestActivity, LoanRequestActivityAdmin)
 
 

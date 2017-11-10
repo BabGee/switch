@@ -204,7 +204,6 @@ class LoanRequestStatus(models.Model):
 class LoanRequest(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	profile = models.ForeignKey(Profile)
 	amount = models.DecimalField(max_digits=19, decimal_places=2)
 	security_amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	other_loans = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
@@ -215,8 +214,9 @@ class LoanRequest(models.Model):
 	gateway = models.ForeignKey(Gateway)
 	institution = models.ForeignKey(Institution, blank=True, null=True)
 	comment = models.CharField(max_length=256, null=True, blank=True)
+	account = models.ForeignKey(Account)
 	def __unicode__(self):
-		return u'%s %s %s %s' % (self.id, self.profile, self.amount, self.gateway)
+		return u'%s %s %s %s' % (self.id, self.account, self.amount, self.gateway)
 
 class LoanRequestActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -228,6 +228,7 @@ class LoanRequestActivity(models.Model):
 	response_status = models.ForeignKey(ResponseStatus)
 	comment = models.CharField(max_length=256, null=True, blank=True)
 	processed = models.BooleanField(default=False)
+	profile = models.ForeignKey(Profile)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.loan_request, self.loan_request_type, self.status)
 

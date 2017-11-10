@@ -226,8 +226,6 @@ class Wrappers:
 		    #lgr.info('Gateway Query: %s' % gateway_query)
                     report_list = report_list.filter(gateway_query)
 
-	    #Gateway Filter results are part of original report list
-	    original_report_list = report_list
 
 	    #lgr.info('Report List Count: %s' % report_list.count())
             if filters not in ['',None]:
@@ -240,7 +238,7 @@ class Wrappers:
                     query = reduce(operator.and_, (Q(k) for k in filter_data.items()))
 
 		    #lgr.info('Report List: %s' % report_list.count())
-		    #lgr.info('Filters Applied: %s' % query)
+		    #lgr.info('%s Filters Applied: %s' % (data.query.name,query))
                     report_list = report_list.filter(query)
 		    #lgr.info('Report List: %s' % report_list.count())
 
@@ -256,9 +254,10 @@ class Wrappers:
                     query = reduce(operator.and_, (~Q(k) for k in not_filter_data.items()))
 
 		    #lgr.info('Report List: %s' % report_list.count())
-		    #lgr.info('Not Filters Applied: %s' % query)
+		    #lgr.info('%s Not Filters Applied: %s' % (data.query.name,query))
                     report_list = report_list.filter(query)
 		    #lgr.info('Report List: %s' % report_list.count())
+
 
 	    #lgr.info('Not Filters Report List Count: %s' % report_list.count())
             if date_filters not in ['',None]:
@@ -296,22 +295,6 @@ class Wrappers:
 
             #q_list = [Q(**{f:q}) for f in field_lookups]
 
-	    #lgr.info('Token Filters Report List Count: %s' % report_list.count())
-            if token_filter not in ['',None]:
-                for f in token_filter.split("|"):
-            	    if 'csrfmiddlewaretoken' in payload.keys() and payload['csrfmiddlewaretoken'] not in ['', None]:
-                    	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['csrfmiddlewaretoken']
-            	    elif 'csrf_token' in payload.keys() and payload['csrf_token'] not in ['', None]:
-                    	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['csrf_token']
-            	    elif 'token' in payload.keys() and payload['token'] not in ['', None]:
-                    	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['token']
-
-                if len(token_filter_data):
-                    query = reduce(operator.and_, (Q(k) for k in token_filter_data.items()))
-		    #lgr.info('Query: %s' % query)
-
-                    report_list = report_list.filter(query)
-
 	    #lgr.info('Time Filters Report List Count: %s' % report_list.count())
 	    if or_filters not in [None,'']:
                 # for a in filters.split("&"):
@@ -337,6 +320,22 @@ class Wrappers:
                 if len(and_filter_data):
                     and_query = reduce(operator.and_, (Q(k) for k in and_filter_data.items()))
                     report_list = report_list.filter(and_query)
+
+	    #lgr.info('Token Filters Report List Count: %s' % report_list.count())
+            if token_filter not in ['',None]:
+                for f in token_filter.split("|"):
+            	    if 'csrfmiddlewaretoken' in payload.keys() and payload['csrfmiddlewaretoken'] not in ['', None]:
+                    	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['csrfmiddlewaretoken']
+            	    elif 'csrf_token' in payload.keys() and payload['csrf_token'] not in ['', None]:
+                    	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['csrf_token']
+            	    elif 'token' in payload.keys() and payload['token'] not in ['', None]:
+                    	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['token']
+
+                if len(token_filter_data):
+                    query = reduce(operator.and_, (Q(k) for k in token_filter_data.items()))
+		    #lgr.info('Query: %s' % query)
+
+                    report_list = report_list.filter(query)
 
 	    #lgr.info('And Filters Report List Count: %s' % report_list.count())
 	    if list_filters not in [None,'']:
@@ -375,11 +374,15 @@ class Wrappers:
 	    #lgr.info('Gateway Profile Filters Report List Count: %s' % report_list.count())
             if gateway_profile_filters not in ['', None]:
                 for f in gateway_profile_filters.split("|"):
-                    if f not in ['',None]: gateway_profile_filter_data[f] = gateway_profile
+		    #MQTT doesn't filter institution for push notifications
+		    if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+			pass
+		    else:
+			if f not in ['',None]: gateway_profile_filter_data[f] = gateway_profile
+
                 if len(gateway_profile_filter_data):
                     gateway_profile_query = reduce(operator.and_, (Q(k) for k in gateway_profile_filter_data.items()))
                     report_list = report_list.filter(gateway_profile_query)
-
 
 	    #lgr.info('Date Filters Report List Count: %s' % report_list.count())
             if 'start_date' in payload.keys():
@@ -640,15 +643,25 @@ class Wrappers:
 	    #lgr.info('Report List: %s' % report_list)
 
 
+	    #Gateway Filter results are part of original report list
+	    #original_report_list = report_list
+
+
 	    if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
 		if data.pn_id_field not in ['',None] and data.pn_update_field not in ['',None]:
 			#Filter out (None|NULL). Filter to within the last 10 seconds MQTT runs every 2 seconds. 
 
-			#lgr.info('0.Report List: %s' % report_list.count())
+			#lgr.info('Report List: %s | %s' % (data.data_name,report_list.count()))
 
-			report_list_groups = original_report_list.filter(~Q(Q(**{data.pn_id_field: None})|Q(**{data.pn_id_field: ''}))).\
+			#report_list_groups = original_report_list.filter(~Q(Q(**{data.pn_id_field: None})|Q(**{data.pn_id_field: ''}))).\
+			#					filter(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30)).\
+			#					values(data.pn_id_field).annotate(Count(data.pn_id_field))
+			report_list_groups = report_list.filter(~Q(Q(**{data.pn_id_field: None})|Q(**{data.pn_id_field: ''}))).\
 								filter(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30)).\
 								values(data.pn_id_field).annotate(Count(data.pn_id_field))
+
+			#lgr.info('Report List Group: %s | %s' % (data.data_name,report_list_groups))
+
 
 			@transaction.atomic
 			def get_pn_data(report_list, channel, group):
@@ -661,7 +674,8 @@ class Wrappers:
 				pn_filter[data.pn_id_field] = group[data.pn_id_field]
 				query = reduce(operator.and_, (Q(k) for k in pn_filter.items()))
 				#Lock Query till Marked as sent (SELECT FOR UPDATE) & Select for trigger and Update Unfiltered List
-				original_filtered_report_list = original_report_list.filter(query).select_for_update()
+				#original_filtered_report_list = original_report_list.filter(query).select_for_update()
+				original_filtered_report_list = report_list.filter(query).select_for_update()
 
 				if data.pn_action.filter(name='REPLACE').exists():
 					#Return full list to REPLACE existing list
@@ -672,19 +686,20 @@ class Wrappers:
 
 				if original_filtered_report_list.exists():
 
-					lgr.info('Sending MQTT: %s' % channel)
+					#lgr.info('Sending MQTT: %s' % channel)
 					#filtered_report_list_for_update = original_filtered_report_list
 
 					if data.data_response:
+						#lgr.info("#IF values_list is not used")
 						#Set Data
 						params['data'] = report_list
 					else:
-						#IF values_list is used
+						#lgr.info("#IF values_list is used")
 						report_list = np.asarray(report_list).tolist()
 						#Set Data
 						params['rows']= report_list
 
-					#Update notification Sent
+					#lgr.info("Update notification Sent")
 					pn_update = {}
 					pn_update[data.pn_update_field] = True
 					#filtered_report_list_for_update.query.annotations.clear()
@@ -694,7 +709,7 @@ class Wrappers:
 
 					#Update pn status
 					mqtt[channel] = params
-
+					#lgr.info('Return MQTT: %s' % mqtt)
 				return mqtt
 
 			for group in report_list_groups:
@@ -1156,7 +1171,7 @@ class Wrappers:
         return params
 
     def process_data_list(self, data_list, payload, gateway_profile, profile_tz, data):
-
+	#lgr.info("Wrapper process_data_list")
 	cols = []
 	rows = []
 	groups = []
@@ -1200,7 +1215,7 @@ class Wrappers:
                     elif d.query not in ['', None]:
                         #lgr.info('Is a Query: ')
                         try:
-                            params,max_id,min_id,t_count,mqtt = self.report(payload, gateway_profile, profile_tz, d)
+                            params,max_id,min_id,t_count,mqtt[d.data_name] = self.report(payload, gateway_profile, profile_tz, d)
                             cols = params['cols'] if 'cols' in params.keys() else []
                             rowsParams = params['rows'] if 'rows' in params.keys() else []
                             dataParams = params['data'] if 'data' in params.keys() else []
@@ -1247,7 +1262,7 @@ class Wrappers:
 class System(Wrappers):
     def data_source(self, payload, node_info):
         try:
-            #lgr.info('DSC Data %s Payload: %s' % (('data_name' in payload.keys()), payload))
+            lgr.info('DSC Data %s Payload: %s' % (('data_name' in payload.keys()), payload))
             cols = []
             rows = []
             groups = []
@@ -2836,7 +2851,7 @@ class Payments(System):
 @app.task(ignore_result=True, soft_time_limit=259200)
 def process_file_upload_activity(payload):
 	payload = json.loads(payload)
-	from celery.utils.log import get_task_logger
+	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	u =FileUploadActivity.objects.get(id=payload['id'])
 	try:
@@ -2929,7 +2944,7 @@ def process_file_upload_activity(payload):
 @transaction.atomic
 @single_instance_task(60 * 10)
 def process_file_upload():
-    from celery.utils.log import get_task_logger
+    #from celery.utils.log import get_task_logger
     lgr = get_task_logger(__name__)
     # One file every 10 seconds, means a total of 6 files per minute
     upload = FileUploadActivity.objects.select_for_update().filter(status__name='CREATED', \
@@ -2963,46 +2978,52 @@ def process_file_upload():
 @transaction.atomic
 @single_instance_task(60*10)
 def process_push_notification():
-	from celery.utils.log import get_task_logger
-	lgr = get_task_logger(__name__)
+	try:
+		#from celery.utils.log import get_task_logger
+		lgr = get_task_logger(__name__)
+		cols = []
+		rows = []
+		groups = []
+		data = []
+		min_id = 0
+		max_id = 0
+		t_count = 0
+
+		gateway_profile_list = GatewayProfile.objects.filter(access_level__name='SYSTEM',status__name='ACTIVATED',user__username='MQTTUser')
+		for gateway_profile in gateway_profile_list:
+			profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
 
 
-	cols = []
-	rows = []
-	groups = []
-	data = []
-	min_id = 0
-	max_id = 0
-	t_count = 0
-
-	gateway_profile_list = GatewayProfile.objects.filter(access_level__name='SYSTEM',status__name='ACTIVATED',user__username='MQTTUser')
-	for gateway_profile in gateway_profile_list:
-		profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
+			data_list = DataList.objects.filter(Q(status__name='ACTIVE'),Q(pn_data=True),\
+						Q(Q(gateway=gateway_profile.gateway) | Q(gateway=None))).order_by('level')
 
 
-		data_list = DataList.objects.filter(Q(status__name='ACTIVE'),Q(pn_data=True),\
-					Q(Q(gateway=gateway_profile.gateway) | Q(gateway=None))).order_by('level')
+			if data_list.exists():
 
+				from secondary.channels.notify.mqtt import MqttServerClient
 
-		if data_list.exists():
-			from secondary.channels.notify.mqtt import MqttServerClient
+				payload = {}
+				payload['push_notification'] = True
+				cols, rows, groups, data, min_id, max_id, t_count, mqtt = Wrappers().process_data_list(data_list, payload, gateway_profile, profile_tz, data)
 
-			payload = {}
-			payload['push_notification'] = True
-			cols, rows, groups, data, min_id, max_id, t_count, mqtt = Wrappers().process_data_list(data_list, payload, gateway_profile, profile_tz, data)
-			if len(mqtt):
-				msc = MqttServerClient()
-				for k,v in mqtt.items():
-					try:
-						channel = k
-						lgr.info('Channel: %s' % channel)
-						itms = json.dumps(v, cls=DjangoJSONEncoder)
-						lgr.info('Items: %s' % itms)
+				#lgr.info("MQTT task: %s" % mqtt)
 
-						msc.publish(
-							channel,
-							itms
-						)
-					except Exception, e: lgr.info('MQTT update Failure '+e.message)
-				#disconnect after loop
-				msc.disconnect()
+				for key,value in mqtt.items():
+					#lgr.info("%s PN: %s" % (key,value))
+					if len(value):
+						msc = MqttServerClient()
+						for k,v in value.items():
+							try:
+								channel = k
+								lgr.info('Channel: %s' % channel)
+								itms = json.dumps(v, cls=DjangoJSONEncoder)
+								lgr.info('Items: %s' % itms)
+
+								msc.publish(
+									channel,
+									itms
+								)
+							except Exception, e: lgr.info('MQTT update Failure '+e.message)
+						#disconnect after loop
+						msc.disconnect()
+	except Exception, e: lgr.info('Error on process push notification: %s' % e)

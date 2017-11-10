@@ -63,24 +63,52 @@ class Wrappers:
 
 		return json.dumps(new_payload)
 
-
-
-
 class System(Wrappers):
+	def loan_offer(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			loan_request_type_list = LoanRequestType.objects.filter(service__name=payload['SERVICE'])
+			if loan_request_type_list.exists():
+				loan_request = LoanRequest.objects.get(id=payload['loan_request_id'])
+
+				request_status = LoanRequestStatus.objects.get(name='CREATED')
+				request_type = loan_request_type_list[0]
+				response_status = ResponseStatus.objects.get(response='DEFAULT')
+				loan_request_activity = LoanRequestActivity(loan_request=loan_request,loan_request_type=request_type,\
+									status=request_status,request=self.transaction_payload(payload),\
+									response_status=response_status,profile=gateway_profile.user.profile) 
+				if 'comment' in payload.keys():
+					loan_request_activity.comment = payload['comment']
+
+				loan_request_activity.save()
+
+				payload['response'] = 'Loan Offer Logged'
+				payload['response_status'] = '00'
+			else:
+				payload['response'] = 'Loan Offer Unknown'
+				payload['response_status'] = '25'
+
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Loan Offer: %s" % e)
+		return payload
+
+
+
 	def loan_request(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			loan_request_type_list = LoanRequestType.objects.filter(service__name=payload['SERVICE'])
 			if loan_request_type_list.exists():
-				if 'session_gateway_profile_id' in payload.keys():
-					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-				else:
-					session_gateway_profile = gateway_profile
+				account = Account.objects.get(id=payload['session_account_id'])
+
 				payment_method = PaymentMethod.objects.get(name__iexact=payload['payment_method'])
-				loan_request = LoanRequest(profile=session_gateway_profile.user.profile,amount=payload['amount'],\
+				loan_request = LoanRequest(amount=payload['amount'],\
 							loan_time=payload['loan_time'],payment_method=payment_method,\
-							currency=Currency.objects.get(code='KES'),gateway=gateway_profile.gateway)
+							currency=Currency.objects.get(code='KES'),\
+							gateway=gateway_profile.gateway,account=account)
 
 				if 'security_amount'in payload.keys():
 					loan_request.security_amount = payload['security_amount']
@@ -101,7 +129,7 @@ class System(Wrappers):
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
 				loan_request_activity = LoanRequestActivity(loan_request=loan_request,loan_request_type=request_type,\
 									status=request_status,request=self.transaction_payload(payload),\
-									response_status=response_status) 
+									response_status=response_status,profile=account.profile) 
 				if 'comment' in payload.keys():
 					loan_request_activity.comment = payload['comment']
 
@@ -982,8 +1010,8 @@ class Payments(System):
 		return payload
 
 
-
-
+class Trade(System):
+	pass
 
 @app.task(ignore_result=True)
 def service_call(payload):

@@ -19,7 +19,7 @@ class NotificationAdmin(admin.ModelAdmin):
 			'ext_service_details','institution_url',\
 			'institution_username','institution_password','channel_list',\
 			'product_type','institution_till','code','service',)
-	list_filter = ('code__institution','code',)
+	list_filter = ('code__institution','code','code__gateway',)
 admin.site.register(Notification, NotificationAdmin)
 
 class ResponseProductAdmin(admin.ModelAdmin):
@@ -31,7 +31,7 @@ class NotificationProductAdmin(admin.ModelAdmin):
 			'keyword','subscribable','expires','subscription_endpoint',\
 			'product_type_list','unit_credit_charge','service_list',\
 			'unsubscription_endpoint','payment_method_list',)
-	list_filter = ('notification','notification__code','notification__code__institution','service',)
+	list_filter = ('notification','notification__code','notification__code__institution','service','notification__code__gateway',)
 admin.site.register(NotificationProduct, NotificationProductAdmin)
 
 class ContactStatusAdmin(admin.ModelAdmin):
