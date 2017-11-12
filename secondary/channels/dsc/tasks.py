@@ -990,7 +990,7 @@ class Wrappers:
 	init_cols = []
         try:
 
-	    from thirdparty.amkagroup_co_ke.models import *
+	    from thirdparty.amkagroup_co_ke.models import Investment, InvestmentType
 	    investment_list = Investment.objects.all().\
 				extra(select={'month_year': "to_char( amkagroup_co_ke_investment.date_created, 'Month, YYYY')"}).values('investment_type__product_item__product_type__name','month_year').\
 				annotate(Count('investment_type__product_item__product_type__name'))
@@ -1124,7 +1124,7 @@ class Wrappers:
 
         try:
 
-	    from thirdparty.amkagroup_co_ke.models import *
+	    from thirdparty.amkagroup_co_ke.models import Investment, InvestmentType
 	    investment = Investment.objects.values('account__id').annotate(Count('account__id'))
 
 	    investment_type = investment.values('investment_type__id','investment_type__name','investment_type__value').annotate(Count('investment_type__id'))
@@ -1339,7 +1339,7 @@ class System(Wrappers):
                 elif data_name == 'music_list' or data_name == 'music_album_list':
                     collection = {}
 
-		    from products.muziqbit.models import *
+		    from products.muziqbit.models import Music
                     # music = Music.objects.filter(,\
                     if "q" in payload.keys():
                         query0 = reduce(operator.or_,
@@ -1523,7 +1523,7 @@ class System(Wrappers):
 
                 elif data_name == 'product_item_id':
 
-	    	    from thirdparty.amkagroup_co_ke.models import *
+	    	    from thirdparty.amkagroup_co_ke.models import Investment, InvestmentType
                     product_item_list = ProductItem.objects.filter(institution__gateway=gateway_profile.gateway)
 		    if data_name_val and data_name_val == 'Remittance':
 			float_manager = FloatManager.objects.filter(Q(institution=gateway_profile.institution,gateway=gateway_profile.gateway)\
@@ -1560,7 +1560,7 @@ class System(Wrappers):
 
                 elif data_name == 'item':
 
-	    	    from thirdparty.amkagroup_co_ke.models import *
+	    	    from thirdparty.amkagroup_co_ke.models import Investment, InvestmentType
                     product_item_list = ProductItem.objects.filter(institution__gateway=gateway_profile.gateway)
 		    if data_name_val and data_name_val == 'Remittance':
 			float_manager = FloatManager.objects.filter(Q(institution=gateway_profile.institution,gateway=gateway_profile.gateway)\
@@ -1923,7 +1923,7 @@ class System(Wrappers):
 
                 elif data_name == 'created_bids':
 
-		    from thirdparty.bidfather.models import *
+		    from thirdparty.bidfather.models import Bid, BidApplication
                     bid_list = Bid.objects.filter(institution=gateway_profile.institution)
 
                     collection = []
@@ -1997,7 +1997,7 @@ class System(Wrappers):
 
                 elif data_name == 'selected_bids':
 
-		    from thirdparty.bidfather.models import *
+		    from thirdparty.bidfather.models import Bid, BidApplication
                     bid_application_list = BidApplication.objects.filter(
                         institution=gateway_profile.institution,
                         completed=True
@@ -2078,7 +2078,7 @@ class System(Wrappers):
 
                 elif data_name == 'bids':
 
-		    from thirdparty.bidfather.models import *
+		    from thirdparty.bidfather.models import Bid, BidApplication
                     bid_application_list = BidApplication.objects.filter(
                         institution=gateway_profile.institution,
                         completed=True
@@ -2135,7 +2135,7 @@ class System(Wrappers):
                     data = rows
                 elif data_name == 'bid_requirement_id':
 
-		    from thirdparty.bidfather.models import *
+		    from thirdparty.bidfather.models import Bid, BidApplication, BidRequirement
                     bid_requirement_list = BidRequirement.objects.filter(bid__id=payload['bid_id'])
 
                     collection = []
@@ -2190,7 +2190,7 @@ class System(Wrappers):
 
                 elif data_name == 'uploaded_bid_documents':
 
-		    from thirdparty.bidfather.models import *
+		    from thirdparty.bidfather.models import Bid, BidApplication, BidRequirement, BidDocumentApplication
                     bid_document_app_list = BidDocumentApplication.objects.filter(
                         bid_application__id=payload['bid_app_id']
                     )
@@ -2234,7 +2234,7 @@ class System(Wrappers):
 
                 elif data_name == 'bid_documents':
 
-		    from thirdparty.bidfather.models import *
+		    from thirdparty.bidfather.models import Bid, BidApplication, BidRequirement, BidDocumentApplication, BidDocument
                     bid_documents_list = BidDocument.objects.filter(bid__id=payload['bid_id'])
 
                     collection = []
@@ -2287,7 +2287,7 @@ class System(Wrappers):
 
                 elif data_name == 'pending_bid_documents':
 
-		    from thirdparty.bidfather.models import *
+		    from thirdparty.bidfather.models import Bid, BidApplication, BidRequirement, BidDocumentApplication, BidDocument
                     bid_documents_list = BidDocument.objects.filter(bid__id=payload['bid_id'])
 
                     collection = []
@@ -2324,7 +2324,7 @@ class System(Wrappers):
 
                 elif data_name == 'bid_invoices':
 
-		    from thirdparty.bidfather.models import *
+		    from thirdparty.bidfather.models import Bid, BidApplication, BidRequirement, BidDocumentApplication, BidDocument, BidInvoice
                     bid_invoices_list = BidInvoice.objects.filter(bid__institution=gateway_profile.institution)
 
                     collection = []
@@ -2352,7 +2352,7 @@ class System(Wrappers):
 
                 elif data_name == 'bid_requirements':
 
-		    from thirdparty.bidfather.models import *
+		    from thirdparty.bidfather.models import Bid, BidApplication, BidRequirement, BidDocumentApplication, BidDocument, BidInvoice, BidRequirementApplication
                     bid_requirement_list = BidRequirement.objects.filter(bid__id=payload['bid_id'])
 
                     collection = []
@@ -2420,7 +2420,7 @@ class System(Wrappers):
                     data = rows
                 elif data_name == 'bid_applications':
 
-		    from thirdparty.bidfather.models import *
+		    from thirdparty.bidfather.models import Bid, BidApplication, BidRequirement, BidDocumentApplication, BidDocument, BidInvoice, BidRequirementApplication
                     bid_applications_list = BidApplication.objects.filter(bid__id=payload['bid_id'])
 
                     collection = ['All', 'Approved', 'Denied']
@@ -2498,7 +2498,7 @@ class System(Wrappers):
 
                 elif data_name == 'bid_ranking':
 
-		    from thirdparty.bidfather.models import *
+		    from thirdparty.bidfather.models import Bid, BidApplication, BidRequirement, BidDocumentApplication, BidDocument, BidInvoice, BidRequirementApplication
                     #bid_application_list = BidApplication.objects.filter(bid__id=payload['bid_id'])
                     bid = Bid.objects.get(pk=payload['bid_id'])
 
