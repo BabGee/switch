@@ -479,7 +479,7 @@ class PageString(ServiceCall, Wrappers):
 					count = 1
 					occupation = occupation[10]
 					for i in occupation:
-						name = '%s' % (i.item.name)
+						name = '%s' % (i.name)
 						if navigator.session.channel.name == 'IVR':
 							item = '%s\nFor %s, press %s.' % (item, name, count)
 						elif navigator.session.channel.name == 'USSD':
