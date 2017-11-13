@@ -471,17 +471,14 @@ class PageString(ServiceCall, Wrappers):
 
 
 				elif variable_key == 'i_invest.occupation':
-					lgr.info('i_invest.occupation')
 					from thirdparty.i_invest.models import Occupation
 
-					lgr.info('i_invest.occupation')
 					occupation = Occupation.objects.filter(status__name='ENABLED').order_by('-id')
 					item = ''
 					item_list = []
 					count = 1
-					occupation = occupation[10]
+					occupation = occupation[:10]
 
-					lgr.info('i_invest.occupation')
 					for i in occupation:
 						name = '%s' % (i.name)
 						if navigator.session.channel.name == 'IVR':
@@ -490,7 +487,6 @@ class PageString(ServiceCall, Wrappers):
 							item = '%s\n%s:%s' % (item, count, name)
 						item_list.append(i.id)
 						count+=1
-						lgr.info('i_invest.occupation')
 					navigator.item_list = json.dumps(item_list)
 					navigator.save()
 
