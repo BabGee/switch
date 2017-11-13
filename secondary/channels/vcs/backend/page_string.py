@@ -473,7 +473,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'i_invest.occupation':
 					from thirdparty.i_invest.models import Occupation
 
-					occupation = Occupation.objects.filter(status__name='ACTIVE').order_by('-id')
+					occupation = Occupation.objects.filter(status__name='ENABLED').order_by('-id')
 					item = ''
 					item_list = []
 					count = 1
