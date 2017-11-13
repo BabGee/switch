@@ -469,6 +469,29 @@ class PageString(ServiceCall, Wrappers):
 					lgr.info('Your List: %s' % item)
 					page_string = page_string.replace('['+v+']',item)
 
+
+				elif variable_key == 'i_invest.occupation':
+					from thirdparty.i_invest.models import Occupation
+
+					occupation = Occupation.objects.filter(status__name='ACTIVE').order_by('-id')
+					item = ''
+					item_list = []
+					count = 1
+					occupation = occupation[10]
+					for i in occupation:
+						name = '%s' % (i.item.name)
+						if navigator.session.channel.name == 'IVR':
+							item = '%s\nFor %s, press %s.' % (item, name, count)
+						elif navigator.session.channel.name == 'USSD':
+							item = '%s\n%s:%s' % (item, count, name)
+						item_list.append(i.id)
+						count+=1
+					navigator.item_list = json.dumps(item_list)
+					navigator.save()
+
+					lgr.info('Your List: %s' % item)
+					page_string = page_string.replace('['+v+']',item)
+
 				elif variable_key == 'notification_product':
 					from secondary.channels.notify.models import Contact
 
