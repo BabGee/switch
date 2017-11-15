@@ -687,10 +687,11 @@ class System(Wrappers):
 	def process_delivery_status(self, payload, node_info):
 		try:
 			lgr.info("Process Delivery Status: %s" % payload)
-			msisdn = payload['msisdn']
+			msisdn = UPCWrappers().get_msisdn(payload)
+
 			outbound_id = payload['outbound_id']
 			delivery_status = payload['delivery_status']
-			outbound = Outbound.objects.select_related('contact').filter(id=outbound_id,contact__gateway_profile__msisdn__phone_number=msisdn)
+			outbound = Outbound.objects.select_related('contact').filter(id=outbound_id,recipient=msisdn)
 			if 'ext_service_id' in payload.keys() and payload['ext_service_id'] not in [None,'']:
 				outbound = outbound.filter(contact__product__notification__ext_service_id=payload['ext_service_id'])
 

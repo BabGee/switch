@@ -68,8 +68,8 @@ class Wrappers:
 			if self.validate_url(node):
 				jdata = json.dumps(payload)
 				c = pycurl.Curl()
-				c.setopt(pycurl.CONNECTTIMEOUT, 20)
-				c.setopt(pycurl.TIMEOUT, 20)
+				c.setopt(pycurl.CONNECTTIMEOUT, 30)
+				c.setopt(pycurl.TIMEOUT, 30)
 				c.setopt(pycurl.NOSIGNAL, 1)
 				c.setopt(pycurl.URL, str(node) )
 				c.setopt(pycurl.POST, 1)
