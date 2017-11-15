@@ -1326,6 +1326,7 @@ def contact_unsubscription():
 			payload['node_account_id'] = i.product.unsubscription_endpoint.account_id
 			payload['node_username'] = i.product.unsubscription_endpoint.username
 			payload['node_password'] = i.product.unsubscription_endpoint.password
+			payload['node_api_key'] = i.product.unsubscription_endpoint.api_key
 
 
 			#Send SMS
@@ -1400,7 +1401,7 @@ def contact_subscription():
 				payload['node_account_id'] = i.product.subscription_endpoint.account_id
 				payload['node_username'] = i.product.subscription_endpoint.username
 				payload['node_password'] = i.product.subscription_endpoint.password
-
+				payload['node_api_key'] = i.product.subscription_endpoint.api_key
 
 				#Send Subscription Request
 				node = i.product.subscription_endpoint.url
@@ -1471,6 +1472,8 @@ def send_outbound(message):
 			payload['node_account_id'] = i.contact.product.notification.endpoint.account_id
 			payload['node_username'] = i.contact.product.notification.endpoint.username
 			payload['node_password'] = i.contact.product.notification.endpoint.password
+			payload['node_api_key'] = i.contact.product.notification.endpoint.api_key
+
 			payload['contact_info'] = json.loads(i.contact.subscription_details)
 
 			#Not always available
