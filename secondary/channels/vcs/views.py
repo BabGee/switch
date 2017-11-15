@@ -274,6 +274,10 @@ class VAS:
 							if self.nav.menu.input_variable.name == 'None Select':
 								self.group_select = None
 
+					if self.nav.menu.input_variable.name == 'Initialize':
+						self.group_select = 0
+						self.level = '0'
+
 					if self.nav.menu.input_variable.name in ['Validated Pin','Validated Pin Con']:
 						#Validated Pin last as initialize create menu with input 00 changes self.nave to None
 						if self.nav.menu.input_variable.name == 'Validated Pin':
