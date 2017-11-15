@@ -11,6 +11,7 @@ class Endpoint(models.Model):
 	account_id = models.CharField(max_length=128)
 	username = models.CharField(max_length=128)
 	password = models.CharField(max_length=256)
+	api_key = models.CharField(max_length=256,blank=True, null=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)
 
