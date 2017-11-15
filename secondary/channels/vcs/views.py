@@ -274,9 +274,11 @@ class VAS:
 							if self.nav.menu.input_variable.name == 'None Select':
 								self.group_select = None
 
-					if self.nav.menu.input_variable.name == 'Validated Pin':
+					if self.nav.menu.input_variable.name in ['Validated Pin','Validated Pin Con']:
 						#Validated Pin last as initialize create menu with input 00 changes self.nave to None
-						self.group_select = 0
+						if self.nav.menu.input_variable.name == 'Validated Pin':
+							self.group_select = 0
+
 						if self.gateway_profile.exists():
 							session_gateway_profile = self.gateway_profile[0]
 							hash_pin = crypt.crypt(str(self.payload['input']), str(session_gateway_profile.id))
