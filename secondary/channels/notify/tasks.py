@@ -577,35 +577,8 @@ class System(Wrappers):
 				gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 				session_gateway_profile = None
 				#A get_profile function must have been called in order to create gateway_profile for an EMAIL or MSISDN prior to sending out notifications
+				'''
 				if 'msisdn' in payload.keys() and len(payload['msisdn'])>=7 and len(payload['msisdn'])<=15:
-					'''
-					lng = payload['lng'] if 'lng' in payload.keys() else 0.0
-					lat = payload['lat'] if 'lat' in payload.keys() else 0.0
-		                	trans_point = Point(float(lng), float(lat))
-					g = GeoIP()
-
-		 			msisdn = str(payload['msisdn'])
-					msisdn = msisdn.strip()
-					if len(msisdn) >= 9 and msisdn[:1] == '+':
-						msisdn = str(msisdn)
-					elif len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
-						country_list = Country.objects.filter(mpoly__intersects=trans_point)
-						ip_point = g.geos(str(payload['ip_address']))
-						if country_list.exists() and country_list[0].ccode:
-							msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
-						elif ip_point:
-							country_list = Country.objects.filter(mpoly__intersects=ip_point)
-							if country_list.exists() and country_list[0].ccode:
-								msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
-							else:
-								msisdn = None
-						else:
-							msisdn = '+254%s' % msisdn[1:]
-					elif len(msisdn) >=10  and msisdn[:1] <> '0' and msisdn[:1] <> '+':
-						msisdn = '+%s' % msisdn #clean msisdn for lookup
-					else:
-						msisdn = None
-					'''
 					msisdn = UPCWrappers().get_msisdn(payload)
 					if msisdn is not None:
 						try:msisdn = MSISDN.objects.get(phone_number=msisdn)
@@ -624,7 +597,7 @@ class System(Wrappers):
 					session_gateway_profile = session_gateway_profile_list[0]
 				elif 'session_gateway_profile_id' in payload.keys():
 					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-
+				'''
 
 				ext_outbound_id = None
 				if "ext_outbound_id" in payload.keys():
@@ -642,7 +615,7 @@ class System(Wrappers):
 				notification_product = NotificationProduct.objects.get(id=payload['notification_product_id'])
 
 				#Check if Contact exists in notification product
-				contact = Contact.objects.filter(product=notification_product, gateway_profile=session_gateway_profile) 
+				contact = Contact.objects.filter(product=notification_product, gateway_profile=gateway_profile) 
 
 				#Construct Message to send
 				if 'message' in payload.keys() and payload['message'] not in ['',None]:
@@ -655,7 +628,7 @@ class System(Wrappers):
 					if len(contact)<1:
 						details = json.dumps({})
 						new_contact = Contact(status=status,product=notification_product,subscription_details=details,\
-								gateway_profile=session_gateway_profile)
+								gateway_profile=gateway_profile)
 						if notification_product.subscribable:
 							new_contact.subscribed=False
 						else:
@@ -786,6 +759,8 @@ class System(Wrappers):
 
 			notification_product = NotificationProduct.objects.filter(product_type__id=payload['product_type_id'],\
 							 notification__code__institution__id=payload['institution_id'])
+
+			'''
 			session_gateway_profile = None
 			if 'session_gateway_profile_id' in payload.keys():
 				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
@@ -797,9 +772,10 @@ class System(Wrappers):
 					except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
 
 					session_gateway_profile = GatewayProfile.objects.filter(msisdn=msisdn, gateway=gateway_profile.gateway)
+			'''
 
 			#Check if Contact exists in notification product
-			contact = Contact.objects.filter(product=notification_product[0], gateway_profile=session_gateway_profile) 
+			contact = Contact.objects.filter(product=notification_product[0], gateway_profile=gateway_profile) 
 			lgr.info('Contact: %s' % contact)
 			#get notification_template using service & get/create contact
 			notification_template = NotificationTemplate.objects.filter(product=notification_product[0],service__name=payload['SERVICE'])
@@ -812,7 +788,7 @@ class System(Wrappers):
 				status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
 				if len(contact)<1:
 					new_contact = Contact(status=status,product=notification_product[0],subscription_details=details[:1920],\
-							subscribed=False, gateway_profile=session_gateway_profile)
+							subscribed=False, gateway_profile=gateway_profile)
 					new_contact.save()
 				else:
 					new_contact = contact[0]
@@ -1461,9 +1437,9 @@ def send_outbound(message):
 				i.contact.gateway_profile.changeprofilemsisdn.save()
 
 			else:
-				payload['kmp_recipients'] = [str(i.contact.gateway_profile.msisdn.phone_number)]
+				payload['kmp_recipients'] = [str(i.recipient)]
 		except ObjectDoesNotExist:
-			payload['kmp_recipients'] = [str(i.contact.gateway_profile.msisdn.phone_number)]
+			payload['kmp_recipients'] = [str(i.recipient)]
 
 		if i.contact.product.notification.endpoint:
 			payload['kmp_spid'] = i.contact.product.notification.endpoint.account_id
