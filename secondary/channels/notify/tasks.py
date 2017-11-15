@@ -1529,7 +1529,7 @@ def send_outbound_sms_messages():
 
 	#Check for created outbounds or processing and gte(last try) 4 hours ago within the last 3 days| Check for failed transactions within the last 10 minutes
 	orig_outbound = Outbound.objects.select_for_update().filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='SMS'),\
-				~Q(contact__gateway_profile__msisdn=None),\
+				~Q(recipient=None),~Q(recipient=''),\
 				Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 				|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 				|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=2),date_created__gte=timezone.now()-timezone.timedelta(hours=6)),\
