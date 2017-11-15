@@ -712,7 +712,6 @@ class System(Wrappers):
 			if payload['pin'] == payload['confirm_pin']:
 				hash_pin = crypt.crypt(str(payload['pin']), str(session_gateway_profile.id))
 				session_gateway_profile.pin = hash_pin
-				session_gateway_profile.status = ProfileStatus.objects.get(name='ACTIVATED')
 				session_gateway_profile.save()
 				payload['response'] = 'New PIN isSet'
 				payload['response_status'] = '00'
@@ -752,6 +751,38 @@ class System(Wrappers):
 		return payload
 
 
+	def set_profile_pending(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+			session_gateway_profile.status = ProfileStatus.objects.get(name='PENDING')
+			session_gateway_profile.save()
+			payload['response'] = 'Profile is Pending Activation'
+			payload['response_status'] = '00'
+
+		except Exception, e:
+			lgr.info('Error on Validating One Time Pin: %s' % e)
+			payload['response_status'] = '96'
+		return payload
+
+
+	def set_profile_activated(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+			session_gateway_profile.status = ProfileStatus.objects.get(name='ACTIVATED')
+			session_gateway_profile.save()
+			payload['response'] = 'Profile Activated'
+			payload['response_status'] = '00'
+
+		except Exception, e:
+			lgr.info('Error on Validating One Time Pin: %s' % e)
+			payload['response_status'] = '96'
+		return payload
+
+
 	def validate_one_time_pin(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
@@ -761,7 +792,6 @@ class System(Wrappers):
 
 			if hash_pin == session_gateway_profile.pin:
 				session_gateway_profile.pin_retries = 0
-				session_gateway_profile.status = ProfileStatus.objects.get(name='ACTIVATED')
 				session_gateway_profile.save()
 				payload['response'] = 'Valid One Time PIN'
 				payload['response_status'] = '00'
