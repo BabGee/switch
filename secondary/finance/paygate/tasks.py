@@ -98,7 +98,7 @@ class Wrappers:
 
 	def response_payload(self, payload):
 		try:
-		
+			payload = payload if isinstance(payload, dict)  else json.loads(payload)
 			new_payload, transaction, count = {}, None, 1
 			for k, v in dict(payload).items():
 				key = k.lower()
