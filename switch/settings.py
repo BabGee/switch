@@ -598,7 +598,12 @@ LOGGING = {
             'level': 'INFO',
         },       
 
-         'thirdpart': {
+         'products': {
+            'handlers': ['default_rotating_file'],
+            'level': 'INFO',
+        },       
+
+         'thirdparty': {
             'handlers': ['default_rotating_file'],
             'level': 'INFO',
         },       
