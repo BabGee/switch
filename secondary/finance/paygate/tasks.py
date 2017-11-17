@@ -96,6 +96,25 @@ class Wrappers:
 
 
 
+	def response_payload(self, payload):
+		try:
+		
+			new_payload, transaction, count = {}, None, 1
+			for k, v in dict(payload).items():
+				key = k.lower()
+				if 'photo' not in key and 'fingerprint' not in key and 'signature' not in key:
+					if count <= 30:
+						new_payload[str(k)[:30] ] = str(v)[:40]
+					else:
+						break
+					count = count+1
+
+			return json.dumps(new_payload)
+		except:
+			return payload
+
+
+
 	def transaction_payload(self, payload):
 		new_payload, transaction, count = {}, None, 1
 		for k, v in payload.items():
@@ -375,7 +394,7 @@ class System(Wrappers):
 						outgoing.sends = outgoing.sends+1
 						params = WebService().post_request(params, node)
 
-						if 'response' in params.keys(): outgoing.message = str(params['response'])[:3839]
+						if 'response' in params.keys(): outgoing.message = str(self.response_payload(params['response']))[:3839]
 						if 'response_status' in params.keys() and params['response_status'] not in [None,""]:
 							try:outgoing.response_status = ResponseStatus.objects.get(response=str(params['response_status']))
 							except:params['response_status']='06';outgoing.response_status = ResponseStatus.objects.get(response='06')
