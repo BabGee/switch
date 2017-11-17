@@ -24,6 +24,7 @@ class InputVariable(models.Model):
 	default_value = models.CharField(max_length=12800, null=True, blank=True)
 	variable_kind = models.CharField(max_length=45, null=True, blank=True)
 	description = models.CharField(max_length=200, null=True, blank=True)
+	service = models.ForeignKey(Service, null=True, blank=True)	
 	def __unicode__(self):
 		return u'%s %s %s' % (self.id, self.name, self.variable_type)		
 

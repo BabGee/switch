@@ -11,7 +11,7 @@ admin.site.register(VariableType, VariableTypeAdmin)
 		
 class InputVariableAdmin(admin.ModelAdmin):
 		list_display = ('id','name','variable_type','validate_min','validate_max',\
-		 'default_value','variable_kind','description')
+		 'default_value','variable_kind','description','service')
 	        list_filter = ('variable_type__variable',)
 	        search_fields = ('id','name','default_value')
 

@@ -97,7 +97,8 @@ class Generator:
 					 input.page_input_group.item_level not in this_page[menu_page_group_level][input_page.item_level][input_page.name].keys():
 	
 					group_var = input.page_input_group.input_variable
-					page_input_group_input_var = [group_var.name, group_var.variable_type.variable, group_var.validate_min, group_var.validate_max, group_var.variable_kind, group_var.default_value, input.page_input_group.style, input.page_input_group.section_size, input.page_input_group.icon,input.page_input_group.auto_submit, False, input.page_input_group.section_height]
+					group_var_service = group_var.service.name if group_var.service else None
+					page_input_group_input_var = [group_var.name, group_var.variable_type.variable, group_var.validate_min, group_var.validate_max, group_var.variable_kind, group_var.default_value, input.page_input_group.style, input.page_input_group.section_size, input.page_input_group.icon,input.page_input_group.auto_submit, False, input.page_input_group.section_height, group_var_service]
 	
 					this_page[menu_page_group_level][input_page.item_level][input_page.name][input.page_input_group.item_level] = {input.page_input_group.name: {'input_var': Wrappers().fill_input_variables(page_input_group_input_var, payload) } }
 				if menu_page_group_level in this_page.keys() and input_page.item_level in this_page[menu_page_group_level].keys() and \
@@ -105,9 +106,10 @@ class Generator:
 					input.page_input_group.item_level in this_page[menu_page_group_level][input_page.item_level][input_page.name].keys() and \
 					input.page_input_group.name in this_page[menu_page_group_level][input_page.item_level][input_page.name][input.page_input_group.item_level].keys() and \
 					input.item_level not in this_page[menu_page_group_level][input_page.item_level][input_page.name][input.page_input_group.item_level][input.page_input_group.name].keys():
-	
+
+					var_service = var.service.name if var.service else None
 					this_page[menu_page_group_level][input_page.item_level][input_page.name][input.page_input_group.item_level][input.page_input_group.name][input.item_level] = \
-					 [input.page_input, var.variable_type.variable, var.validate_min, var.validate_max, var.name, var.default_value, input.icon, input.section_size, var.variable_kind, True,input.style]
+					 [input.page_input, var.variable_type.variable, var.validate_min, var.validate_max, var.name, var.default_value, input.icon, input.section_size, var.variable_kind, True,input.style, var_service]
 	
 				try: this_page[menu_page_group_level][input_page.item_level][input_page.name][input.page_input_group.item_level][input.page_input_group.name][input.item_level] = \
 				 Wrappers().fill_input_variables(this_page[menu_page_group_level][input_page.item_level][input_page.name][input.page_input_group.item_level][input.page_input_group.name][input.item_level], payload)
