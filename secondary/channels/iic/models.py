@@ -130,6 +130,7 @@ class PageInput(models.Model):
 	product_type = models.ManyToManyField(ProductType, blank=True)
 	channel = models.ManyToManyField(Channel)
 	style = models.TextField(blank=True)
+	section_height = models.IntegerField(null=True, blank=True)
         payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	def __unicode__(self):
 		return u'%s' % (self.page_input)

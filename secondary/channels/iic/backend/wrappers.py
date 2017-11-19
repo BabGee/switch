@@ -10,25 +10,7 @@ class Wrappers:
 	def fill_input_variables(self, input_variable, payload):
 		lgr.info('Filler input: %s' % input_variable)
 
-
-		default_value4 = input_variable[4]
-		if default_value4:
-			#if input_variable[4] in payload.keys():
-			variables = re.findall("\[(.*?)\]", default_value4)
-			lgr.info("Found Variables: %s" % variables)
-			for v in variables:
-				if v in payload.keys():
-					default_value4 = default_value4.replace('['+v+']',str(payload[v]))
-
-
-			#Escape html entities
-			#default_value4 = unescape(default_value4)
-			#default_value4 = smart_str(default_value4)
-			#default_value4 = escape(default_value4)		
-
-			#new vaiable 5 value
-			input_variable[4] = default_value4
-		
+	
 
 		default_value5 = input_variable[5]
 		if default_value5:
@@ -47,6 +29,27 @@ class Wrappers:
 
 			#new vaiable 5 value
 			input_variable[5] = default_value5
+
+
+
+		default_value8 = input_variable[8]
+		if default_value8:
+			#if input_variable[8] in payload.keys():
+			variables = re.findall("\[(.*?)\]", default_value8)
+			lgr.info("Found Variables: %s" % variables)
+			for v in variables:
+				if v in payload.keys():
+					default_value8 = default_value8.replace('['+v+']',str(payload[v]))
+
+
+			#Escape html entities
+			#default_value8 = unescape(default_value8)
+			#default_value8 = smart_str(default_value8)
+			#default_value8 = escape(default_value8)		
+
+			#new vaiable 5 value
+			input_variable[8] = default_value8
+	
 		
 		return input_variable
 
