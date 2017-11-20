@@ -141,6 +141,7 @@ class ProductItem(models.Model):
 	uneditable = models.BooleanField(default=False)
 	kind = models.CharField(max_length=100, null=True, blank=True)
 	default_product = models.FileField(upload_to='crm_productitem_productpath/', max_length=200, blank=True, null=True)
+	buying_cost =  models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) 
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.name)
 	def institution_till_list(self):

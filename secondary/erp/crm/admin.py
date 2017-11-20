@@ -48,7 +48,7 @@ class ProductItemAdmin(admin.ModelAdmin):
 				'float_limit_max','float_cost','institution','currency',\
 				'vat','discount','institution_url','institution_username',\
 				'institution_password','default_image','product_display','uneditable',\
-				'kind','default_product')
+				'kind','default_product','buying_cost',)
 		search_fields = ("id","name","description")
 	        list_filter = ('institution','product_type','product_type__product_category')
 
