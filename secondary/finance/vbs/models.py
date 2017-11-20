@@ -146,11 +146,21 @@ class AccountManager(models.Model):
 	credit_due_date = models.DateTimeField(null=True, blank=True)
 	credit_overdue = models.ManyToManyField(CreditOverdue, blank=True)
 	updated = models.BooleanField(default=False, help_text="True for record that is not the last record")
+	credit_overdue_update = models.BooleanField(default=False, help_text="True for record that is not the last record")
 	def __unicode__(self):
 		return u'%s %s %s' % (self.id, self.credit, self.credit_paid)
 	def credit_overdue_list(self):
 		return "\n".join([a.description for a in self.credit_overdue.all()])
 
+class CreditOverdueActivity(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	account_manager = models.ForeignKey(AccountManager)
+	credit_overdue = models.ForeignKey(CreditOverdue)
+	response_status = models.ForeignKey(ResponseStatus)
+	processed = models.BooleanField(default=False)
+	def __unicode__(self):
+		return u'%s %s %s' % (self.account_manager, self.credit_overdue, self.status)
 
 class InvestmentAccountType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -215,6 +225,8 @@ class LoanRequest(models.Model):
 	institution = models.ForeignKey(Institution, blank=True, null=True)
 	comment = models.CharField(max_length=256, null=True, blank=True)
 	account = models.ForeignKey(Account)
+	interest_rate = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) 
+	interest_time = models.IntegerField(null=True, blank=True, help_text="In Days")
 	def __unicode__(self):
 		return u'%s %s %s %s' % (self.id, self.account, self.amount, self.gateway)
 

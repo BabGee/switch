@@ -1014,6 +1014,70 @@ class Trade(System):
 	pass
 
 @app.task(ignore_result=True)
+def overdue_credit_service_call(payload):
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	from api.views import ServiceCall
+	try:
+
+
+		lgr.info('%s|%s|%s|%s' % (a.id, (timezone.now()-a.credit_due_date).days, a.amount, a.balance_bf))
+		a.credit_overdue.add(c)
+
+		payload = json.loads(c.notification_details)	
+		profile= a.dest_account.profile
+		gateway_profile_list = GatewayProfile.objects.filter(gateway=a.account_type.gateway,user=profile.user)
+		gateway_profile = gateway_profile_list[0]
+		service = c.service
+
+		payload['service_id'] = service.id
+		payload['gateway_profile_id'] = gateway_profile.id
+		payload['credit_overdue_id'] = c.id
+
+		if c.product_item:
+			payload['product_item_id'] = c.product_item.id
+			payload['institution_id'] = c.product_item.institution.id
+			payload['till_number'] = c.product_item.product_type.institution_till.till_number
+			payload['currency'] = c.product_item.currency.code
+
+		payload['session_account_id'] = a.dest_account.id
+		payload['session_gateway_profile_id'] = gateway_profile.id
+		payload['transaction_reference'] = a.transaction_reference
+		payload['account_manager_id'] = a.id
+		payload['account_type_id'] = a.dest_account.account_type.id
+		payload['chid'] = 2
+		payload['ip_address'] = '127.0.0.1'
+		payload['gateway_host'] = '127.0.0.1'
+		payload['lat'] = '0.0'
+		payload['lng'] = '0.0'
+
+		lgr.info('Service: %s | Payload: %s' % (service, payload))
+		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
+
+		payload = ServiceCall().api_service_call(service, gateway_profile, payload)
+		lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
+	except Exception, e:
+		payload['response_status'] = '96'
+		lgr.info('Unable to make service call: %s' % e)
+	return payload
+
+@app.task(ignore_result=True, soft_time_limit=25920) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def process_overdue_credit2():
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+
+	credit_overdue_activity = CreditOverdueActivity.objects.filter(Q(credit_overdue__status__name='ENABLED'),~Q(credit__overdue__service=None),\
+					Q(account__manager__credit_due_date__lte=(timezone.now()-timezone.timedelta(days=F('credit_overdue__overdue_time')))),\
+					Q(account_manager__credit_due_date__gte=(timezone.now()-timezone.timedelta(days=(F('credit_overdue__overdue_time')+3) ))),\
+					Q(account_manager__credit_paid=False))[:10]
+
+	for a in credit_overdue_activity:
+		overdue_credit_service_call.delay(a)
+
+
+@app.task(ignore_result=True)
 def service_call(payload):
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
@@ -1030,7 +1094,6 @@ def service_call(payload):
 		payload['response_status'] = '96'
 		lgr.info('Unable to make service call: %s' % e)
 	return payload
-
 
 
 

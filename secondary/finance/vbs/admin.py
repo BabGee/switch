@@ -73,6 +73,10 @@ class AccountManagerAdmin(admin.ModelAdmin):
 			'source_account__profile__user__username',\
 			'dest_account__profile__user__username',)
 admin.site.register(AccountManager, AccountManagerAdmin)  
+ 
+class CreditOverdueActivityAdmin(admin.ModelAdmin):
+	list_display = ('account_manager','credit_overdue','response_status','processed',)
+admin.site.register(CreditOverdueActivity, CreditOverdueActivityAdmin)
 
 class InvestmentAccountTypeAdmin(admin.ModelAdmin):
 	list_display = ('id','name','description','nominal_value','investment_loan_allowed','product_item','gateway',)
@@ -94,7 +98,7 @@ admin.site.register(LoanRequestStatus, LoanRequestStatusAdmin)
 class LoanRequestAdmin(admin.ModelAdmin):
 	list_display = ('id','amount','security_amount','other_loans','payment_method',\
 			'loan_time','transaction_reference','currency',\
-			'institution','gateway','comment','account',)
+			'institution','gateway','comment','account','interest_rate','interest_time',)
 admin.site.register(LoanRequest, LoanRequestAdmin)
 
 class LoanRequestActivityAdmin(admin.ModelAdmin):

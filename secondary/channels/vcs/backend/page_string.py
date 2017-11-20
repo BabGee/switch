@@ -1125,6 +1125,17 @@ class PageString(ServiceCall, Wrappers):
 
 					page_string = page_string.replace('['+v+']',item)
 
+				elif variable_key == 'national_id':
+					from primary.core.upc.models import GatewayProfile, Profile
+
+					item = ''
+
+					if navigator.session.gateway_profile and navigator.session.gateway_profile.user.profile:
+						item = navigator.session.gateway_profile.user.profile.national_id
+
+					page_string = page_string.replace('['+v+']',item)
+
+
 				elif variable_key == 'order_item_details':
 					from secondary.erp.pos.models import BillManager
 
