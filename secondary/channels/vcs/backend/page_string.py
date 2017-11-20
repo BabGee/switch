@@ -1126,7 +1126,6 @@ class PageString(ServiceCall, Wrappers):
 					page_string = page_string.replace('['+v+']',item)
 
 				elif variable_key == 'national_id':
-					from primary.core.upc.models import GatewayProfile, Profile
 
 					item = ''
 
