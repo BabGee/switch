@@ -29,6 +29,16 @@ class ProductCategory(models.Model):
 	def __unicode__(self):
 		return u'%s %s' % (self.name, self.industry)
 
+class ShopProductCategory(models.Model):
+	date_modified = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	status = models.ForeignKey(ProductStatus)
+	icon = models.CharField(max_length=45, null=True, blank=True)
+	def __unicode__(self):
+		return u'%s %s' % (self.name, self.industry)
+
 class ProductionFrequency(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
@@ -48,11 +58,25 @@ class ProductType(models.Model):
 	status = models.ForeignKey(ProductStatus)
 	service = models.ForeignKey(Service, null=True, blank=True) #For Processing LOCAL endpoints
 	institution_till = models.ForeignKey(InstitutionTill, blank=True, null=True)
+	icon = models.CharField(max_length=45, null=True, blank=True)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)
 	def payment_method_list(self):
 		return "\n".join([a.name for a in self.payment_method.all()])
+
+class ShopProductType(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	shop_product_category = models.ForeignKey(ShopProductCategory)
+	description = models.CharField(max_length=100)
+	status = models.ForeignKey(ProductStatus)
+	icon = models.CharField(max_length=45, null=True, blank=True)
+	institution = models.ForeignKey(Institution)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
 
 class ProductCharge(models.Model):
 	date_modified = models.DateTimeField(auto_now=True)
@@ -142,6 +166,7 @@ class ProductItem(models.Model):
 	kind = models.CharField(max_length=100, null=True, blank=True)
 	default_product = models.FileField(upload_to='crm_productitem_productpath/', max_length=200, blank=True, null=True)
 	buying_cost =  models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) 
+	shop_product_type = models.ForeignKey(ShopProductType, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.name)
 	def institution_till_list(self):

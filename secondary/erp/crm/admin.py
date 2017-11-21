@@ -13,6 +13,10 @@ class ProductCategoryAdmin(admin.ModelAdmin):
 		list_display = ('id','name','industry','description','status','icon',)
 admin.site.register(ProductCategory, ProductCategoryAdmin)
 
+class ShopProductCategoryAdmin(admin.ModelAdmin):
+		list_display = ('id','name','description','status','icon',)
+admin.site.register(ShopProductCategory, ShopProductCategoryAdmin)
+
 class ProductionFrequencyAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description','status','date_modified','date_created')
 admin.site.register(ProductionFrequency, ProductionFrequencyAdmin)
@@ -23,6 +27,13 @@ class ProductTypeAdmin(admin.ModelAdmin):
 		search_fields = ('name','description',)
 		list_filter = ('product_category','metric','payment_method',)
 admin.site.register(ProductType, ProductTypeAdmin)
+
+class ShopProductTypeAdmin(admin.ModelAdmin):
+		list_display = ('id','name','shop_product_category','description',\
+				'status','icon','institution',)
+		search_fields = ('name','description',)
+		list_filter = ('shop_product_category',)
+admin.site.register(ShopProductType, ShopProductTypeAdmin)
 
 class ProductChargeAdmin(admin.ModelAdmin):
 		list_display = ('id','institution_list','product_type_list',\
@@ -48,7 +59,7 @@ class ProductItemAdmin(admin.ModelAdmin):
 				'float_limit_max','float_cost','institution','currency',\
 				'vat','discount','institution_url','institution_username',\
 				'institution_password','default_image','product_display','uneditable',\
-				'kind','default_product','buying_cost',)
+				'kind','default_product','buying_cost','shop_product_type',)
 		search_fields = ("id","name","description")
 	        list_filter = ('institution','product_type','product_type__product_category')
 

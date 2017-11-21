@@ -12,7 +12,7 @@ admin.site.register(VariableType, VariableTypeAdmin)
 class InputVariableAdmin(admin.ModelAdmin):
 		list_display = ('id','name','variable_type','validate_min','validate_max',\
 		 'default_value','variable_kind','description','service')
-	        list_filter = ('variable_type__variable',)
+	        list_filter = ('variable_type__variable','service',)
 	        search_fields = ('id','name','default_value')
 
 admin.site.register(InputVariable, InputVariableAdmin)
@@ -38,7 +38,8 @@ admin.site.register(PageInputStatus, PageInputStatusAdmin)
 class PageInputGroupAdmin(admin.ModelAdmin):
 		list_display = ('id','name','icon','description','item_level','input_variable','style','section_size',\
 				'section_height','auto_submit','gateway_list',)
-	        search_fields = ('name',)
+	        search_fields = ('name','input_variable__name',)
+		list_filter = ('input_variable__service',)
 admin.site.register(PageInputGroup, PageInputGroupAdmin)
 '''
 class TriggerAdmin(admin.ModelAdmin):

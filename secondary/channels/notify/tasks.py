@@ -397,36 +397,7 @@ class System(Wrappers):
 						 Q(service__name=payload['SERVICE'])).\
 						prefetch_related('notification__code','product_type')
 
-			'''
-			lng = payload['lng'] if 'lng' in payload.keys() else 0.0
-			lat = payload['lat'] if 'lat' in payload.keys() else 0.0
-	                trans_point = Point(float(lng), float(lat))
-			g = GeoIP()
 
-			msisdn = None
-			if "msisdn" in payload.keys():
-	 			msisdn = str(payload['msisdn'])
-				msisdn = msisdn.strip()
-				if len(msisdn) >= 9 and msisdn[:1] == '+':
-					msisdn = str(msisdn)
-				elif len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
-					country_list = Country.objects.filter(mpoly__intersects=trans_point)
-					ip_point = g.geos(str(payload['ip_address']))
-					if country_list.exists() and country_list[0].ccode:
-						msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
-					elif ip_point:
-						country_list = Country.objects.filter(mpoly__intersects=ip_point)
-						if country_list.exists() and country_list[0].ccode:
-							msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
-						else:
-							msisdn = None
-					else:
-						msisdn = '+254%s' % msisdn[1:]
-				elif len(msisdn) >=10  and msisdn[:1] <> '0' and msisdn[:1] <> '+':
-					msisdn = '+%s' % msisdn #clean msisdn for lookup
-				else:
-					msisdn = None
-			'''
 			msisdn = UPCWrappers().get_msisdn(payload)
 			if msisdn is not None:
 				#Get/Filter MNO

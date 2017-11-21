@@ -163,7 +163,10 @@ class Wrappers:
 				payload['msisdn'] = msisdn
 			else:
 				del payload['msisdn']
-
+		try: 
+			details = json.loads(item.details)
+			if isinstance(details,dict): payload.update(details)
+		except: pass
 
                 return payload
 

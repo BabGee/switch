@@ -43,7 +43,7 @@ admin.site.register(CommandStatus, CommandStatusAdmin)
 
 class ServiceCommandAdmin(admin.ModelAdmin):
 		list_display = ('id','command_function','level','service','node_system', 'status',\
-		 'reverse_function','description', 'service_account', 'access_level_list','profile_status_list', 'channel_list',\
+		 'reverse_function','description', 'details', 'access_level_list','profile_status_list', 'channel_list',\
 		 'payment_method_list','trigger_list','gateway_list',)
 	        list_filter = ('service','node_system','gateway','access_level','channel','payment_method',)
 		search_fields = ('command_function','service__name','reverse_function','trigger__name',)

@@ -94,7 +94,7 @@ class ServiceCommand(models.Model):
 	status = models.ForeignKey(CommandStatus)
 	reverse_function = models.CharField(max_length=50, null=True, blank=True)
 	description = models.CharField(max_length=100)
-	service_account = models.CharField(max_length=45, null=True, blank=True)
+	details = models.CharField(max_length=512, default=json.dumps({}))
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	profile_status = models.ManyToManyField(ProfileStatus, blank=True)
 	channel = models.ManyToManyField(Channel, blank=True)
