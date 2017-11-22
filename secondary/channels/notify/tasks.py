@@ -1397,6 +1397,8 @@ def send_outbound(message):
 
 		#USE A CHANGE PROFILE MSISDN
 		try:
+			payload['kmp_recipients'] = [str(i.recipient)]
+			'''
 			if i.contact.gateway_profile.changeprofilemsisdn and i.contact.gateway_profile.changeprofilemsisdn.status.name == 'ACTIVE' and i.contact.gateway_profile.changeprofilemsisdn.expiry >= timezone.now():
 				payload['kmp_recipients'] = [str(i.contact.gateway_profile.changeprofilemsisdn.msisdn.phone_number)]
 
@@ -1410,6 +1412,7 @@ def send_outbound(message):
 
 			else:
 				payload['kmp_recipients'] = [str(i.recipient)]
+			'''
 		except ObjectDoesNotExist:
 			payload['kmp_recipients'] = [str(i.recipient)]
 

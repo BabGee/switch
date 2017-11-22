@@ -241,6 +241,11 @@ class VAS:
 					if self.nav.menu.input_variable.name in ['Select','Strict Select']:
 						self.group_select = self.payload['input']
 
+					if self.nav.menu.input_variable.name == 'EMAIL or 1 Entry':
+						email = self.payload['input']
+        		                        if  (email not in [None,""] and self.validateEmail(email)) or str(email) == "1":pass
+						else: self.group_select = 96
+
 					if self.nav.menu.input_variable.name == 'EMAIL Entry':
 						email = self.payload['input']
         		                        if  email not in [None,""] and self.validateEmail(email):pass

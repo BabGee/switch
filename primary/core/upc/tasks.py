@@ -941,6 +941,58 @@ class System(Wrappers):
 
 		return payload
 
+	def create_institution(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			lgr.info('Gateway Profile : %s|%s' % (gateway_profile, payload))
+
+			#logo, if exists
+			#Create co-ordinates if dont exist
+			lng = payload['lng'] if 'lng' in payload.keys() else 0.0
+			lat = payload['lat'] if 'lat' in payload.keys() else 0.0
+	                trans_point = Point(float(lng), float(lat))
+
+			try:
+				institution = Institution.objects.get(business_number = payload['institution_reg_number'])
+			except Institution.DoesNotExist:
+				institution = Institution()
+				institution.name = payload['institution_name']
+				institution.business_number = payload['institution_reg_number']
+				institution.description = payload['institution_description']
+				institution.status = InstitutionStatus.objects.get(name=payload['institution_status'])
+				institution.tagline = payload['institution_tagline']
+
+				try:
+					filename = payload['institution_logo']
+					fromdir_name = settings.MEDIA_ROOT + '/tmp/uploads/'
+					from_file = fromdir_name + str(filename)
+					with open(from_file, 'r') as f:
+						myfile = File(f)
+						institution.logo.save(filename, myfile, save=False)
+				except Exception, e:
+					lgr.info('Error on saving Institution Logo: %s' % e)
+
+				institution.default_color = payload['institution_default_color']
+
+				institution.country = Country.objects.get(name=payload['institution_country'])
+				institution.theme = Theme.objects.get(name=payload['institution_theme'])
+				institution.geometry = trans_point
+
+				institution.save()
+				institution.gateway.add(gateway_profile.gateway)
+				institution.currency.add(Currency.objects.get(code=payload['institution_currency']))
+
+			payload['institution_id'] = institution.id
+
+			payload['response'] = 'Institution Created'
+			payload['response_status'] = '00'
+		except Exception, e:
+			lgr.info('Error on Creating Institution: %s' % e)
+			payload['response_status'] = '96'
+
+		return payload
+
+
 	def create_institution_till(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
