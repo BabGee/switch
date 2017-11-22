@@ -92,6 +92,13 @@ class PageString(ServiceCall, Wrappers):
 			#Get Menu Payload items
 			if code[0].institution:payload['institution_id'] = code[0].institution.id
 			payload.update(self.get_nav(navigator))
+
+			#update static details
+			try: 
+				details = json.loads(navigator.menu.details)
+				if isinstance(details,dict): payload.update(details)
+			except: pass
+
 			gateway_profile = navigator.session.gateway_profile
 			if gateway_profile is None: #If profile is unexistent
 				gateway_profile_list = GatewayProfile.objects.filter(gateway =code[0].gateway,user__username='System@User', status__name__in=['ACTIVATED'])

@@ -87,6 +87,7 @@ class Menu(models.Model):
 	menu_description = models.CharField(max_length=50)
 	menu_status = models.ForeignKey(MenuStatus)
 	protected = models.BooleanField(default=False)
+	details = models.CharField(max_length=512, default=json.dumps({}))
 	enrollment_type_included = models.ManyToManyField(EnrollmentType, blank=True)
 	enrollment_type_excluded = models.ManyToManyField(EnrollmentType, blank=True, related_name='menu_enrollment_type_excluded')
 	def __unicode__(self):
