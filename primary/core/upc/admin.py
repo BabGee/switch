@@ -21,7 +21,7 @@ class InstitutionAdmin(admin.OSMGeoAdmin):
 		'status','tagline','logo',\
 		'default_color','website','physical_address',\
 		'gateway_list','currency_list','country','geometry','theme',\
-		'primary_color','secondary_color','accent_color',)
+		'primary_color','secondary_color','accent_color','registration_number',)
 		search_fields = ('name','business_number',)
 admin.site.register(Institution, InstitutionAdmin)
 

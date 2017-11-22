@@ -26,7 +26,7 @@ class Institution(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=200)
-	business_number = models.CharField(max_length=8, unique=True)
+	business_number = models.CharField(max_length=8, unique=True, help_text="This is a business uniqe identifier within the switch, not a business registration number")
 	background_image = models.CharField(max_length=200)
 	description = models.CharField(max_length=100)	
 	status = models.ForeignKey(InstitutionStatus)
@@ -47,6 +47,7 @@ class Institution(models.Model):
 	primary_color = models.CharField(max_length=100, blank=True, null=True)
 	secondary_color = models.CharField(max_length=100, blank=True, null=True)
 	accent_color = models.CharField(max_length=100, blank=True, null=True)
+	registration_number = models.CharField(max_length=200, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.name)
 	def gateway_list(self):
