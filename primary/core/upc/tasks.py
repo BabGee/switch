@@ -162,6 +162,9 @@ class Wrappers:
 				else:
 					del payload['msisdn']
 					session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
+		elif 'national_id' in payload.keys() and payload['national_id'] not in ["",None,"None"]:
+			session_gateway_profile = GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'],\
+					 gateway=gateway_profile.gateway)
 		else:
 			session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 
@@ -799,6 +802,23 @@ class System(Wrappers):
 			payload['response_status'] = '96'
 		return payload
 
+	def update_profile_institution(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+			if 'institution_id' in payload.keys():
+				session_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
+				session_gateway_profile.save()
+
+			payload['response'] = 'Valid One Time PIN'
+			payload['response_status'] = '00'
+		except Exception, e:
+			lgr.info('Error on Validating One Time Pin: %s' % e)
+			payload['response_status'] = '96'
+		return payload
+
+
 
 	def validate_one_time_pin(self, payload, node_info):
 		try:
@@ -952,35 +972,57 @@ class System(Wrappers):
 			lat = payload['lat'] if 'lat' in payload.keys() else 0.0
 	                trans_point = Point(float(lng), float(lat))
 
+			institution = Institution()
+			institution.name = payload['institution_name']
+
+
+			def createBusinessNumber(original):
+				i = Institution.objects.filter(business_number__iexact=original)
+				if i.exists():
+					chars = str(payload['institution_name'].replace(' ',''))
+					rnd = random.SystemRandom()
+					append_char = ''.join(rnd.choice(chars) for i in range(1,4))
+					new_original = original+append_char
+					return createBusinessNumber(new_original)
+				else:
+					return original.upper()
+
+
+			institution.business_number = createBusinessNumber(str(payload['institution_name'].replace(' ','')[:4]))
+
+			if 'institution_reg_number' in payload.keys(): institution.registration_number = payload['institution_reg_number']
+
+			if 'institution_description' in payload.keys(): institution.description = payload['institution_description']
+			else: institution.description = payload['institution_name']
+
+			if 'institution_status' in payload.keys(): institution.status = InstitutionStatus.objects.get(name=payload['institution_status'])
+			else: institution.status = InstitutionStatus.objects.get(name='ACTIVE') 
+
+			if 'institution_tagline' in payload.keys(): institution.tagline = payload['institution_tagline']
+			else: institution.tagline=payload['institution_tagline']
+
 			try:
-				institution = Institution.objects.get(business_number = payload['institution_reg_number'])
-			except Institution.DoesNotExist:
-				institution = Institution()
-				institution.name = payload['institution_name']
-				institution.business_number = payload['institution_reg_number']
-				institution.description = payload['institution_description']
-				institution.status = InstitutionStatus.objects.get(name=payload['institution_status'])
-				institution.tagline = payload['institution_tagline']
+				filename = payload['institution_logo']
+				fromdir_name = settings.MEDIA_ROOT + '/tmp/uploads/'
+				from_file = fromdir_name + str(filename)
+				with open(from_file, 'r') as f:
+					myfile = File(f)
+					institution.logo.save(filename, myfile, save=False)
+			except Exception, e:
+				lgr.info('Error on saving Institution Logo: %s' % e)
 
-				try:
-					filename = payload['institution_logo']
-					fromdir_name = settings.MEDIA_ROOT + '/tmp/uploads/'
-					from_file = fromdir_name + str(filename)
-					with open(from_file, 'r') as f:
-						myfile = File(f)
-						institution.logo.save(filename, myfile, save=False)
-				except Exception, e:
-					lgr.info('Error on saving Institution Logo: %s' % e)
+		
+			if 'institution_default_color' in payload.keys(): institution.default_color = payload['institution_default_color']
+			else: institution.default_color = '#fff'
+			if 'institution_country' in payload.keys(): institution.country = Country.objects.get(name=payload['institution_country'])
+			else: institution.country = Country.objects.get(iso2='KE')
+			if 'institution_theme' in payload.keys(): institution.theme = Theme.objects.get(name=payload['institution_theme'])
+			else: institution.theme = Theme.objects.get(name='polymer2.0')
+			institution.geometry = trans_point
 
-				institution.default_color = payload['institution_default_color']
-
-				institution.country = Country.objects.get(name=payload['institution_country'])
-				institution.theme = Theme.objects.get(name=payload['institution_theme'])
-				institution.geometry = trans_point
-
-				institution.save()
-				institution.gateway.add(gateway_profile.gateway)
-				institution.currency.add(Currency.objects.get(code=payload['institution_currency']))
+			institution.save()
+			institution.gateway.add(gateway_profile.gateway)
+			institution.currency.add(Currency.objects.get(code=payload['institution_currency']))
 
 			payload['institution_id'] = institution.id
 
@@ -1146,8 +1188,8 @@ class System(Wrappers):
 
 			else:
 				def createUsername(original):
-					u = User.objects.filter(username=original)
-					if len(u)>0:
+					u = User.objects.filter(username__iexact=original)
+					if u.exists():
 						chars = string.ascii_letters + string.digits
 						rnd = random.SystemRandom()
 						append_char = ''.join(rnd.choice(chars) for i in range(1,6))
@@ -1214,11 +1256,16 @@ class System(Wrappers):
 				else:
 					access_level = AccessLevel.objects.get(name="CUSTOMER")
 
+				'''
 				if create_gateway_profile.access_level in [None,''] or (create_gateway_profile.access_level not in \
 				 [None,''] and create_gateway_profile.access_level.hierarchy>access_level.hierarchy):
 					create_gateway_profile.access_level = access_level
+				'''
+
+				create_gateway_profile.access_level = access_level
 				#if create_gateway_profile.created_by in [None,'']:create_gateway_profile.created_by = gateway_profile.user.profile 
 				create_gateway_profile.save()
+
 				payload["profile_id"] = create_gateway_profile.user.profile.id
 				payload['response'] = 'User Profile Created'
 				payload['response_status'] = '00'
@@ -1237,17 +1284,9 @@ class System(Wrappers):
 			profile_error = None
 			session_gateway_profile, payload, profile_error = self.profile_capture(gateway_profile, payload, profile_error)
 
+			
 			if profile_error:
 				payload['response'] = 'Profile Error: Email exists. Please contact us'
-				payload['response_status'] = '63'
-
-			elif session_gateway_profile.exists() and 'national_id' in payload.keys() and\
-			 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].strip(),\
-			 gateway=gateway_profile.gateway).exists() and session_gateway_profile[0].user.profile.national_id in [None,''] and\
-			 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].strip(),\
-			 gateway=gateway_profile.gateway)[0].user <> session_gateway_profile[0].user:
-				#check update national_id profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
-				payload['response'] = 'Profile Error: National ID exists in another profile. Please contact us'
 				payload['response_status'] = '63'
 
 			elif session_gateway_profile.exists():

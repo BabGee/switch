@@ -148,8 +148,6 @@ class Wrappers:
 		payload['SERVICE'] = item.service.name
 		payload['gateway_id'] = gateway_profile.gateway.id
 		payload['gateway_profile_id'] = gateway_profile.id
-		payload['access_level'] = gateway_profile.access_level.name
-
 
 		if 'csrf_token' in payload.keys():
 			payload['token'] = payload['csrf_token']

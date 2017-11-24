@@ -445,14 +445,14 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			#Ensure Branch does not conflict to give more than one result
-			gl_account_type = AccountType.objects.filter(product_item__product_type__institution_till=session_account.account_branch,\
-						product_item__currency__code=payload['currency'],product_item__product_type__name='Ledger Account',\
+			gl_account_type = AccountType.objects.filter(product_item__currency__code=payload['currency'],\
+						product_item__product_type__name='Ledger Account',\
 						gateway=session_account.account_type.gateway)
 			if 'institution_id' in payload.keys():
 				gl_account_type = gl_account_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
 
 
-			gl_acccount = Account.objects.filter(account_branch=session_account.account_branch,account_status__name='ACTIVE',account_type=gl_account_type[0])
+			gl_acccount = Account.objects.filter(account_status__name='ACTIVE',account_type=gl_account_type[0])
 
 
 
@@ -556,13 +556,13 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			#Ensure Branch does not conflict to give more than one result
-			gl_account_type = AccountType.objects.filter(product_item__product_type__institution_till=session_account.account_branch,\
-						product_item__currency__code=payload['currency'],product_item__product_type__name='Ledger Account',\
+			gl_account_type = AccountType.objects.filter(product_item__currency__code=payload['currency'],\
+						product_item__product_type__name='Ledger Account',\
 						gateway=session_account.account_type.gateway)
 			if 'institution_id' in payload.keys():
 				gl_account_type = gl_account_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
 
-			gl_acccount = Account.objects.filter(account_branch=session_account.account_branch,account_status__name='ACTIVE',account_type=gl_account_type[0])
+			gl_acccount = Account.objects.filter(account_status__name='ACTIVE',account_type=gl_account_type[0])
 
 			session_account_manager = AccountManager.objects.select_for_update(nowait=True).filter(dest_account = session_account, dest_account__account_type=session_account.account_type).order_by('-date_created')
 			gl_account_manager = AccountManager.objects.filter(dest_account = gl_acccount[0], dest_account__account_type=gl_account_type[0]).order_by('-date_created')
@@ -746,7 +746,6 @@ class System(Wrappers):
 				lgr.info('Account Type: %s' % account_type)
 				if account_type.exists():
 					session_account = Account(profile=profile,\
-							account_branch=account_type[0].product_item.product_type.institution_till,\
 							account_status=status, account_type=account_type[0])
 
 					#Check if profile account is first then default

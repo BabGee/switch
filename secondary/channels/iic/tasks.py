@@ -36,7 +36,8 @@ class Generator:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			if 'payment_method' in payload.keys():
-				this_page_inputs = this_page_inputs.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
+				payment_method_list = payload['payment_method'].split(',')
+				this_page_inputs = this_page_inputs.filter(Q(payment_method__name__in=payment_method_list)|Q(payment_method=None))
 
 			lgr.info('This Page Inputs: %s' % this_page_inputs)
 			#Add Interface for an Institution

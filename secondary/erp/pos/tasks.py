@@ -81,13 +81,11 @@ class Wrappers:
 		session_gateway_profile = None
 		status = CartStatus.objects.get(name='UNPAID')
 
-		till = product_item.product_type.institution_till
-
 		channel = Channel.objects.get(id=payload['chid'])
 
 		cart_item = CartItem(product_item=product_item,currency=product_item.currency,\
 			status=status,quantity=quantity,price=product_item.unit_cost,sub_total=sub_total,total=total,\
-			details=self.transaction_payload(payload), till=till, channel=channel)
+			details=self.transaction_payload(payload), channel=channel)
 
 		if 'session_gateway_profile_id' in payload.keys():
 			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])

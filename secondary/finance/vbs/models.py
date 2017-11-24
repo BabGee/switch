@@ -70,7 +70,6 @@ class InstitutionAccount(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	institution = models.ForeignKey(Institution, null=True, blank=True) #Account Owner
 	is_default = models.NullBooleanField(default=False)
-	account_branch = models.ForeignKey(InstitutionTill)
 	account_status = models.ForeignKey(AccountStatus)	
 	credit_limit = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	credit_limit_currency = models.ForeignKey(Currency, null=True, blank=True)
@@ -83,7 +82,6 @@ class Account(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	is_default = models.NullBooleanField(default=False)
-	account_branch = models.ForeignKey(InstitutionTill)
 	account_status = models.ForeignKey(AccountStatus)	
 	credit_limit = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	credit_limit_currency = models.ForeignKey(Currency, null=True, blank=True)
@@ -236,6 +234,63 @@ class LoanRequestActivity(models.Model):
 	loan_request = models.ForeignKey(LoanRequest)
 	loan_request_type = models.ForeignKey(LoanRequestType)
 	status = models.ForeignKey(LoanRequestStatus)
+	request = models.CharField(max_length=1920)
+	response_status = models.ForeignKey(ResponseStatus)
+	comment = models.CharField(max_length=256, null=True, blank=True)
+	processed = models.BooleanField(default=False)
+	profile = models.ForeignKey(Profile)
+	def __unicode__(self):
+		return u'%s %s %s' % (self.loan_request, self.loan_request_type, self.status)
+
+
+class LoanType(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	service = models.ManyToManyField(Service, blank=True)
+	product_type = models.ManyToManyField(ProductType, blank=True)
+	def __unicode__(self):
+		return u'%s %s' % (self.name, self.description)
+	def product_type_list(self):
+		return "\n".join([a.name for a in self.product_type.all()])
+	def service_list(self):
+		return "\n".join([a.name for a in self.service.all()])
+
+class LoanStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	service = models.ForeignKey(Service, null=True, blank=True)
+	def __unicode__(self):
+		return u'%s %s %s' % (self.name, self.description, self.service)
+
+class Loan(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	amount = models.DecimalField(max_digits=19, decimal_places=2)
+	security_amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	other_loans = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	payment_method = models.ForeignKey(PaymentMethod)
+	loan_time = models.IntegerField(help_text="In Days")
+	transaction_reference = models.CharField(max_length=45, null=True, blank=True) #Transaction ID
+	currency = models.ForeignKey(Currency)
+	gateway = models.ForeignKey(Gateway)
+	institution = models.ForeignKey(Institution, blank=True, null=True)
+	comment = models.CharField(max_length=256, null=True, blank=True)
+	account = models.ForeignKey(Account)
+	interest_rate = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) 
+	interest_time = models.IntegerField(null=True, blank=True, help_text="In Days")
+	def __unicode__(self):
+		return u'%s %s %s %s' % (self.id, self.account, self.amount, self.gateway)
+
+class LoanActivity(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	loan_request = models.ForeignKey(Loan)
+	loan_request_type = models.ForeignKey(LoanType)
+	status = models.ForeignKey(LoanStatus)
 	request = models.CharField(max_length=1920)
 	response_status = models.ForeignKey(ResponseStatus)
 	comment = models.CharField(max_length=256, null=True, blank=True)

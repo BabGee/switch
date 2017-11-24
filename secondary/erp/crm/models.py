@@ -36,6 +36,7 @@ class ShopProductCategory(models.Model):
 	description = models.CharField(max_length=100)
 	status = models.ForeignKey(ProductStatus)
 	icon = models.CharField(max_length=45, null=True, blank=True)
+	industry = models.ForeignKey(IndustryClass,null=True, blank=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.name, self.industry)
 
@@ -68,7 +69,7 @@ class ProductType(models.Model):
 class ShopProductType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
+	name = models.CharField(max_length=45)
 	shop_product_category = models.ForeignKey(ShopProductCategory)
 	description = models.CharField(max_length=100)
 	status = models.ForeignKey(ProductStatus)

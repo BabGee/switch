@@ -21,6 +21,9 @@ from decimal import Decimal, ROUND_DOWN
 import base64, re, pytz
 from django.core.files import File
 
+from primary.core.administration.models import Currency
+from django.conf import settings
+
 from switch.celery import app
 from switch.celery import single_instance_task
 
@@ -402,6 +405,50 @@ class System:
 		except Exception, e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Fetching Programs: %s" % e)
+		return payload
+
+
+	def add_product(self,payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			product = ProductItem()
+			product.name = payload['product_name']
+			product.description = payload['product_description']
+			product.status =  ProductStatus.objects.get(name=payload['product_status']) # ACTIVE
+			product.shop_product_type_id = payload['shop_product_type']
+                        product.product_type_id = payload['product_type_id']
+			product.buying_cost = payload['product_buying_cost']
+			product.unit_cost = payload['product_selling_cost']
+			product.institution = gateway_profile.institution
+			product.currency = Currency.objects.get(code=payload['product_currency']) # KES
+			product.product_display = ProductDisplay.objects.get(name=payload['product_display']) # DEFAULT
+
+			product.vat = payload['product_vat']
+			product.discount = payload['product_discount']
+			product.barcode = payload['product_barcode']
+			# product.unit_limit_min = payload['product_current_stok']
+
+			product.kind = payload['product_kind']
+			try:
+				filename = payload['product_default_image']
+				fromdir_name = settings.MEDIA_ROOT + '/tmp/uploads/'
+				from_file = fromdir_name + str(filename)
+				with open(from_file, 'r') as f:
+					myfile = File(f)
+					product.default_image.save(filename, myfile, save=False)
+			except Exception, e:
+				lgr.info('Error on saving Product default Image: %s' % e)
+
+
+			product.save()
+
+
+			payload['response_status'] = '00'
+			payload['response'] = 'Product Added Succefully'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Add Product: %s" % e)
 		return payload
 
 class Trade(System):

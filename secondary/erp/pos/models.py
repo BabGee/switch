@@ -101,7 +101,6 @@ class CartItem(models.Model):
 	other_relief = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	total = models.DecimalField(max_digits=19, decimal_places=2)
 	details = models.CharField(max_length=1920)
-	till = models.ForeignKey(InstitutionTill)
 	token = models.CharField(max_length=200, null=True, blank=True)
 	channel = models.ForeignKey(Channel)
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
@@ -152,4 +151,54 @@ class BillManager(models.Model):
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.credit)
-     
+
+class DeliveryStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
+class Delivery(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	order = models.ForeignKey(PurchaseOrder)
+	status = models.ForeignKey(DeliveryStatus)
+	def __unicode__(self):
+		return u'%s %s' % (self.order, self.status)
+
+class DeliveryActivityStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+  
+class DeliveryContactStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
+class DeliveryContact(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	notification_delivery_channel = models.ForeignKey(Channel)
+	gateway_profile = models.ForeignKey(GatewayProfile)
+	status = models.ForeignKey(DeliveryContactStatus)
+	def __unicode__(self):
+		return u'%s %s' % (self.gateway_profile.institution)
+
+class DeliveryActivity(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	delivery = models.ForeignKey(Delivery)
+	contact = models.ForeignKey(DeliveryContact)
+	status = models.ForeignKey(DeliveryActivityStatus)
+	def __unicode__(self):
+		return u'%s %s' % (self.delivery, self.contact)
+
