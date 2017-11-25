@@ -382,6 +382,10 @@ class System:
 					else:
 						enrollment.profile = gateway_profile.profile
 
+					if 'expiry' in payload.keys():
+						#enrollment.expiry = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload['expiry'], '%d/%m/%Y'))
+						enrollment.expiry = datetime.strptime(payload['expiry'], '%d/%m/%Y')
+
 	                                enrollment.save()
 
 					payload['record'] = enrollment.record

@@ -6,6 +6,7 @@ from secondary.channels.vcs.backend.page_string import PageString
 import json, re, crypt
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+import base64, re, pytz
 
 import logging
 lgr = logging.getLogger('vcs')
@@ -88,7 +89,7 @@ class VAS:
 		#FIlter Enrollments
 		if self.gateway_profile.exists():
 			session_gateway_profile = self.gateway_profile[0]
-			enrollment_list = Enrollment.objects.filter(profile=session_gateway_profile.user.profile)
+			enrollment_list = Enrollment.objects.filter(profile=session_gateway_profile.user.profile, expiry__gte=timezone.now())
 
 			if enrollment_list.exists():
 				menuitems = menuitems.filter(Q(enrollment_type_included__in=[e.enrollment_type for e in enrollment_list])|Q(enrollment_type_included=None),\
@@ -316,7 +317,7 @@ class VAS:
 		#FIlter Enrollments
 		if self.gateway_profile.exists():
 			session_gateway_profile = self.gateway_profile[0]
-			enrollment_list = Enrollment.objects.filter(profile=session_gateway_profile.user.profile)
+			enrollment_list = Enrollment.objects.filter(profile=session_gateway_profile.user.profile, expiry__gte=timezone.now())
 			if enrollment_list.exists():
 				self.menu= self.menu.filter(Q(enrollment_type_included__in=[e.enrollment_type for e in enrollment_list])|Q(enrollment_type_included=None),\
 							~Q(enrollment_type_excluded__in=[e.enrollment_type for e in enrollment_list]))

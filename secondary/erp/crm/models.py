@@ -1,5 +1,6 @@
 from django.contrib.gis.db import models
 from primary.core.bridge.models import *
+from django.utils import timezone
 
 class Metric(models.Model):
 	date_modified = models.DateTimeField(auto_now=True)
@@ -227,6 +228,7 @@ class Enrollment(models.Model):
 	enrollment_date = models.DateField()
 	enrollment_type = models.ForeignKey(EnrollmentType)
 	profile = models.ForeignKey(Profile)
+	expiry = models.DateTimeField(default=timezone.now()+timezone.timedelta(days=(365*20)))
 	def __unicode__(self):
 		return u'%s %s %s' % (self.profile, self.record, self.alias)
 

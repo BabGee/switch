@@ -68,20 +68,20 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			loan_request_type_list = LoanRequestType.objects.filter(service__name=payload['SERVICE'])
-			if loan_request_type_list.exists():
-				loan_request = LoanRequest.objects.get(id=payload['loan_request_id'])
+			loan_type_list = LoanType.objects.filter(service__name=payload['SERVICE'])
+			if loan_type_list.exists():
+				loan = Loan.objects.get(id=payload['loan_id'])
 
-				request_status = LoanRequestStatus.objects.get(name='CREATED')
-				request_type = loan_request_type_list[0]
+				request_status = LoanStatus.objects.get(name='CREATED')
+				request_type = loan_type_list[0]
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
-				loan_request_activity = LoanRequestActivity(loan_request=loan_request,loan_request_type=request_type,\
+				loan_activity = LoanActivity(loan=loan,loan_type=request_type,\
 									status=request_status,request=self.transaction_payload(payload),\
 									response_status=response_status,profile=gateway_profile.user.profile) 
 				if 'comment' in payload.keys():
-					loan_request_activity.comment = payload['comment']
+					loan_activity.comment = payload['comment']
 
-				loan_request_activity.save()
+				loan_activity.save()
 
 				payload['response'] = 'Loan Offer Logged'
 				payload['response_status'] = '00'
@@ -100,41 +100,41 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			loan_request_type_list = LoanRequestType.objects.filter(service__name=payload['SERVICE'])
-			if loan_request_type_list.exists():
+			loan_type_list = LoanType.objects.filter(service__name=payload['SERVICE'])
+			if loan_type_list.exists():
 				account = Account.objects.get(id=payload['session_account_id'])
 
 				payment_method = PaymentMethod.objects.get(name__iexact=payload['payment_method'])
-				loan_request = LoanRequest(amount=payload['amount'],\
+				loan = Loan(amount=payload['amount'],\
 							loan_time=payload['loan_time'],payment_method=payment_method,\
 							currency=Currency.objects.get(code='KES'),\
 							gateway=gateway_profile.gateway,account=account)
 
 				if 'security_amount'in payload.keys():
-					loan_request.security_amount = payload['security_amount']
+					loan.security_amount = payload['security_amount']
 				if 'bridge__transaction_id' in payload.keys():
-					loan_request.transaction_reference = payload['bridge__transaction_id']
+					loan.transaction_reference = payload['bridge__transaction_id']
 				if 'other_loan_amounts' in payload.keys():
-					loan_request.other_loans = payload['other_loan_amounts']				
+					loan.other_loans = payload['other_loan_amounts']				
 
 				if 'institution_id' in payload.keys():
-					loan_request.institution = Institution.objects.get(id=payload['institution_id'])
+					loan.institution = Institution.objects.get(id=payload['institution_id'])
 				if 'comment' in payload.keys():
-					loan_request.comment = payload['comment']
+					loan.comment = payload['comment']
 
-				loan_request.save()
+				loan.save()
 
-				request_status = LoanRequestStatus.objects.get(name='CREATED')
-				request_type = loan_request_type_list[0]
+				request_status = LoanStatus.objects.get(name='CREATED')
+				request_type = loan_type_list[0]
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
-				loan_request_activity = LoanRequestActivity(loan_request=loan_request,loan_request_type=request_type,\
+				loan_activity = LoanActivity(loan=loan,loan_type=request_type,\
 									status=request_status,request=self.transaction_payload(payload),\
 									response_status=response_status,profile=account.profile) 
 				if 'comment' in payload.keys():
-					loan_request_activity.comment = payload['comment']
+					loan_activity.comment = payload['comment']
 
 
-				loan_request_activity.save()
+				loan_activity.save()
 
 				payload['response'] = 'Loan Request Logged'
 				payload['response_status'] = '00'

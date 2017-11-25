@@ -2664,7 +2664,7 @@ class System(Wrappers):
                 elif data_name == 'transaction_auth':
                     # Succesful response status not required for listing in auth: removed 19/1/2016 -  Q(overall_status__response='00'),
                     transaction_list = Transaction.objects.filter(~Q(next_command=None), Q(
-                            next_command__access_level__name=payload['access_level']), \
+                            next_command__access_level__name=gateway_profile.access_level), \
                                                                   Q(
                                                                           gateway_profile__institution=gateway_profile.institution)). \
                                            order_by('-id')[:500]

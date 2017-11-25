@@ -57,3 +57,31 @@ class BillManagerAdmin(admin.ModelAdmin):
 		list_filter = ('order__cart_item__product_item__institution','order__cart_item__product_item__product_type',)
 admin.site.register(BillManager, BillManagerAdmin)
 
+class DeliveryStatusAdmin(admin.ModelAdmin):
+		list_display = ('id','name','description')
+admin.site.register(DeliveryStatus, DeliveryStatusAdmin)
+
+class DeliveryAdmin(admin.ModelAdmin):
+		list_display = ('id','order','status')
+admin.site.register(Delivery, DeliveryAdmin)
+
+class DeliveryActivityStatusAdmin(admin.ModelAdmin):
+		list_display = ('id','name','description')
+admin.site.register(DeliveryActivityStatus, DeliveryActivityStatusAdmin)
+
+class DeliveryContactStatusAdmin(admin.ModelAdmin):
+		list_display = ('id','name','description')
+admin.site.register(DeliveryContactStatus, DeliveryContactStatusAdmin)
+
+class DeliveryContactAdmin(admin.ModelAdmin):
+		list_display = ('id','notification_delivery_channel','gateway_profile','status')
+admin.site.register(DeliveryContact, DeliveryContactAdmin)
+
+class DeliveryActivityAdmin(admin.ModelAdmin):
+		list_display = ('id','delivery','contact','status')
+admin.site.register(DeliveryActivity, DeliveryActivityAdmin)
+
+
+
+
+

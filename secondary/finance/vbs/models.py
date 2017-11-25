@@ -288,8 +288,8 @@ class Loan(models.Model):
 class LoanActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	loan_request = models.ForeignKey(Loan)
-	loan_request_type = models.ForeignKey(LoanType)
+	loan = models.ForeignKey(Loan)
+	loan_type = models.ForeignKey(LoanType)
 	status = models.ForeignKey(LoanStatus)
 	request = models.CharField(max_length=1920)
 	response_status = models.ForeignKey(ResponseStatus)
@@ -297,6 +297,6 @@ class LoanActivity(models.Model):
 	processed = models.BooleanField(default=False)
 	profile = models.ForeignKey(Profile)
 	def __unicode__(self):
-		return u'%s %s %s' % (self.loan_request, self.loan_request_type, self.status)
+		return u'%s %s %s' % (self.loan, self.loan_type, self.status)
 
 

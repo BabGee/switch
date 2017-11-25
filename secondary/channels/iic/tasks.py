@@ -5,6 +5,7 @@ from django.db.models import Q
 import operator
 from django.core.validators import validate_email, URLValidator
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 import logging
 lgr = logging.getLogger('iic')
@@ -74,6 +75,15 @@ class Generator:
 			else:
 				this_page_inputs = this_page_inputs.filter(Q(trigger=None))
 				
+
+			#FIlter Enrollments
+			enrollment_list = Enrollment.objects.filter(profile=gateway_profile.user.profile, expiry__gte=timezone.now())
+			if enrollment_list.exists():
+				this_page_inputs = this_page_inputs.filter(Q(enrollment_type_included__in=[e.enrollment_type for e in enrollment_list])|Q(enrollment_type_included=None),\
+							~Q(enrollment_type_excluded__in=[e.enrollment_type for e in enrollment_list]))
+			else:
+				this_page_inputs = this_page_inputs.filter(enrollment_type_included=None)
+
 			lgr.info('This Page Inputs: %s' % this_page_inputs)
 
 			for input in this_page_inputs:

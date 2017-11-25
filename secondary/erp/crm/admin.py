@@ -87,7 +87,7 @@ class EnrollmentStatusAdmin(admin.ModelAdmin):
 admin.site.register(EnrollmentStatus, EnrollmentStatusAdmin)
 
 class EnrollmentAdmin(admin.ModelAdmin):
-		list_display = ('id','record', 'alias','status','enrollment_date','enrollment_type','profile',)
+		list_display = ('id','record', 'alias','status','enrollment_date','enrollment_type','profile','expiry',)
 		search_fields = ("alias",'record','profile__user__username','profile__middle_name',\
 				'profile__user__first_name','profile__user__last_name',)
 		list_filter = ('enrollment_type',)
