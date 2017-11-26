@@ -103,12 +103,15 @@ class System(Wrappers):
 			loan_type_list = LoanType.objects.filter(service__name=payload['SERVICE'])
 			if loan_type_list.exists():
 				account = Account.objects.get(id=payload['session_account_id'])
+				request_status = LoanStatus.objects.get(name='CREATED')
+				request_type = loan_type_list[0]
 
 				payment_method = PaymentMethod.objects.get(name__iexact=payload['payment_method'])
 				loan = Loan(amount=payload['amount'],\
 							loan_time=payload['loan_time'],payment_method=payment_method,\
 							currency=Currency.objects.get(code='KES'),\
-							gateway=gateway_profile.gateway,account=account)
+							gateway=gateway_profile.gateway,account=account,loan_type=request_type,\
+							status=request_status)
 
 				if 'security_amount'in payload.keys():
 					loan.security_amount = payload['security_amount']
@@ -124,11 +127,8 @@ class System(Wrappers):
 
 				loan.save()
 
-				request_status = LoanStatus.objects.get(name='CREATED')
-				request_type = loan_type_list[0]
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
-				loan_activity = LoanActivity(loan=loan,loan_type=request_type,\
-									status=request_status,request=self.transaction_payload(payload),\
+				loan_activity = LoanActivity(loan=loan,status=request_status,request=self.transaction_payload(payload),\
 									response_status=response_status,profile=account.profile) 
 				if 'comment' in payload.keys():
 					loan_activity.comment = payload['comment']

@@ -233,7 +233,7 @@ class LoanActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	loan = models.ForeignKey(Loan)
-	loan_type = models.ForeignKey(Loan, null=True, blank=True, related_name='follow_on_loan')
+	follow_on_loan = models.ForeignKey(Loan, null=True, blank=True, related_name='follow_on_loan')
 	status = models.ForeignKey(LoanStatus)
 	request = models.CharField(max_length=1920)
 	response_status = models.ForeignKey(ResponseStatus)
