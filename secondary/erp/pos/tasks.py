@@ -750,6 +750,65 @@ class System(Wrappers):
 			lgr.info("Error on Creating Sale Contact: %s" % e)
 		return payload
 
+	def delivery_notification(self, payload, node_info):
+		'''
+		add model pos.DeliveryContact
+			profile (upc.Profile)
+			institution (upc.Institution)
+			status AVAILABLE DELIVERING
+		add model pos.DeliveryActivity
+			delivery (pos.Delivery)
+			contact (pos.DeliveryContact)
+			status NOTIFIED ACCEPTED REJECTED
+		'''
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			try:
+				delivery_contact = DeliveryContact.objects.get(gateway_profile = gateway_profile)
+			except:
+				delivery_contact = DeliveryContact()
+				delivery_contact.gateway_profile = gateway_profile
+				delivery_contact.save()
+
+			delivery_activity = DeliveryActivity()
+			delivery_activity.delivery_id = payload['delivery']
+			delivery_activity.contact = delivery_contact
+			delivery_activity.status = DeliveryActivityStatus.objects.get(name='NOTIFIED')
+			delivery_activity.save()
+
+			# TODO : send delivery notification
+
+
+			payload["response_status"] = "00"
+			payload["response"] = "Sale Contact Created"
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Creating Sale Contact: %s" % e)
+
+		return payload
+
+	def create_delivery(self, payload, node_info):
+		try:
+			# gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			# add model pos Delivery
+			# order PurchaseOrder
+			# status WAITTING IN_PROCESS DELIVERED
+
+			delivery = Delivery()
+			delivery.order_id = payload['purchase_order_id']
+			delivery.status = DeliveryStatus.objects.get(name='WAITTING')
+			delivery.save()
+			payload["delivery"] = delivery.pk
+
+			payload["response_status"] = "00"
+			payload["response"] = "Delivery Created"
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Creating Delivery: %s" % e)
+
+		return payload
+
 
 class Trade(System):
 	pass

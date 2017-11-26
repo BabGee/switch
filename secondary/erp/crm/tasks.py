@@ -385,6 +385,8 @@ class System:
 					if 'expiry' in payload.keys():
 						#enrollment.expiry = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload['expiry'], '%d/%m/%Y'))
 						enrollment.expiry = datetime.strptime(payload['expiry'], '%d/%m/%Y')
+					else:
+						enrollment.expiry = timezone.now()+timezone.timedelta(days=(365*20))
 
 	                                enrollment.save()
 
@@ -411,6 +413,39 @@ class System:
 			lgr.info("Error on Fetching Programs: %s" % e)
 		return payload
 
+
+	def add_product_type(self,payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			try:
+				product_type = ShopProductType.objects.get(name=payload['product_type_name'])
+			except ProductType.DoesNotExist:
+				product_type = ShopProductType()
+				product_type.name = payload['product_type_name']
+
+				try:
+					shop_product_category = ShopProductCategory.objects.get(name=payload['product_type_category'])
+				except ShopProductCategory.DoesNotExist:
+					shop_product_category = ShopProductCategory()
+					shop_product_category.name = payload['product_type_category']
+					shop_product_category.description = payload['product_type_category_description']
+					shop_product_category.status = ProductStatus.objects.get(name='ACTIVE')
+					shop_product_category.save()
+
+				product_type.product_category = shop_product_category
+				product_type.description = payload['product_type_description']
+				product_type.status = ProductStatus.objects.get(name='ACTIVE')
+				product_type.institution = gateway_profile.institution
+
+				product_type.save()
+
+			payload['response_status'] = '00'
+			payload['response'] = 'Product Type Added Succefully'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Add Product Type: %s" % e)
+		return payload
 
 	def add_product(self,payload, node_info):
 		try:

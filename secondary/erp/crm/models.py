@@ -228,7 +228,7 @@ class Enrollment(models.Model):
 	enrollment_date = models.DateField()
 	enrollment_type = models.ForeignKey(EnrollmentType)
 	profile = models.ForeignKey(Profile)
-	expiry = models.DateTimeField(default=timezone.now()+timezone.timedelta(days=(365*20)))
+	expiry = models.DateTimeField()
 	def __unicode__(self):
 		return u'%s %s %s' % (self.profile, self.record, self.alias)
 

@@ -1521,6 +1521,50 @@ class System(Wrappers):
                                 i.order.reference)
                             rows.append([i.order.reference, name])
 
+                elif data_name == 'product_item':
+
+	    	    from thirdparty.amkagroup_co_ke.models import Investment, InvestmentType
+                    product_item_list = ProductItem.objects.filter(institution__gateway=gateway_profile.gateway)
+		    if data_name_val and data_name_val == 'Remittance':
+			float_manager = FloatManager.objects.filter(Q(institution=gateway_profile.institution,gateway=gateway_profile.gateway)\
+						|Q(gateway=gateway_profile.gateway,institution=None)).\
+						distinct('float_type__id')
+			collection = {}
+			product_item_list = product_item_list.filter(product_type__in=[f.float_type.float_product_type for f in float_manager])
+
+                    elif data_name_val is not None:
+                        data = data_name_val.split("|")
+                        query = reduce(operator.or_, (Q(product_type__name=d.strip()) for d in data))
+                        product_item_list = product_item_list.filter(query)
+                        lgr.info(data)
+
+                    for a in product_item_list:
+                        name = '%s' % (a.name)
+                        rows.append([a.id, name])
+
+                elif data_name == 'product_item_cost':
+
+	    	    from thirdparty.amkagroup_co_ke.models import Investment, InvestmentType
+                    product_item_list = ProductItem.objects.filter(institution__gateway=gateway_profile.gateway)
+		    if data_name_val and data_name_val == 'Remittance':
+			float_manager = FloatManager.objects.filter(Q(institution=gateway_profile.institution,gateway=gateway_profile.gateway)\
+						|Q(gateway=gateway_profile.gateway,institution=None)).\
+						distinct('float_type__id')
+			collection = {}
+			product_item_list = product_item_list.filter(product_type__in=[f.float_type.float_product_type for f in float_manager])
+
+                    elif data_name_val is not None:
+                        data = data_name_val.split("|")
+                        query = reduce(operator.or_, (Q(product_type__name=d.strip()) for d in data))
+                        product_item_list = product_item_list.filter(query)
+                        lgr.info(data)
+
+                    for a in product_item_list:
+                        cost = '{0:,.2f}'.format(a.unit_cost) if a.unit_cost > 0 else 0
+                        name = '%s(%s %s)' % (a.name, a.currency.code, cost)
+                        rows.append([a.id, name])
+
+
                 elif data_name == 'product_item_id':
 
 	    	    from thirdparty.amkagroup_co_ke.models import Investment, InvestmentType
