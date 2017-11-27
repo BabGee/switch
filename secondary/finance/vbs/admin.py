@@ -87,7 +87,7 @@ class InvestmentManagerAdmin(admin.ModelAdmin):
 admin.site.register(InvestmentManager, InvestmentManagerAdmin)
 
 class LoanTypeAdmin(admin.ModelAdmin):
-	list_display = ('name','description','service_list','product_type_list')
+	list_display = ('name','description','interest_rate','interest_time','activity_service','service_list','product_type_list')
 admin.site.register(LoanType, LoanTypeAdmin)
 
 
@@ -103,7 +103,8 @@ class LoanAdmin(admin.ModelAdmin):
 admin.site.register(Loan, LoanAdmin)
 
 class LoanActivityAdmin(admin.ModelAdmin):
-	list_display = ('loan','follow_on_loan','status','request','response_status','comment','processed','profile',)
+	list_display = ('loan','request','response_status','comment','processed','profile',\
+			'status','follow_on_loan',)
 admin.site.register(LoanActivity, LoanActivityAdmin)
 
 

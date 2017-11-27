@@ -64,20 +64,85 @@ class Wrappers:
 		return json.dumps(new_payload)
 
 class System(Wrappers):
+	def loan_approval(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			loan_activity = LoanActivity.objects.filter(loan__id=payload['loan_id'],\
+						follow_on_loan__account__profile=gateway_profile.user.profile)
+
+			if loan_activity.exists():
+				approval = {}
+				approval['Accept'] = 'APPROVED'
+				approval['Reject'] = 'REJECTED'
+				status = approval[str(payload['approval'])]
+
+				loan_status = LoanStatus.objects.get(name=status)
+
+				activity = loan_activity[0]
+				activity.status = loan_status
+				activity.save()
+
+				payload['response'] = 'Loan Approval Logged'
+				payload['response_status'] = '00'
+			else:
+				payload['response'] = 'Loan Approval Unknown'
+				payload['response_status'] = '25'
+
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Loan Offer: %s" % e)
+		return payload
+
+
 	def loan_offer(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			loan_type_list = LoanType.objects.filter(service__name=payload['SERVICE'])
 			if loan_type_list.exists():
-				loan = Loan.objects.get(id=payload['loan_id'])
-
+				account = Account.objects.get(id=payload['session_account_id'])
 				request_status = LoanStatus.objects.get(name='CREATED')
 				request_type = loan_type_list[0]
+
+				payment_method = PaymentMethod.objects.get(name__iexact=payload['payment_method'])
+				loan = Loan(amount=payload['amount'],\
+							loan_time=payload['loan_time'],payment_method=payment_method,\
+							currency=Currency.objects.get(code='KES'),\
+							gateway=gateway_profile.gateway,account=account,loan_type=request_type,\
+							status=request_status)
+
+				if 'security_amount'in payload.keys():
+					loan.security_amount = payload['security_amount']
+
+				if 'bridge__transaction_id' in payload.keys():
+					loan.transaction_reference = payload['bridge__transaction_id']
+
+				if 'other_loan_amounts' in payload.keys():
+					loan.other_loans = payload['other_loan_amounts']				
+
+				if 'institution_id' in payload.keys():
+					loan.institution = Institution.objects.get(id=payload['institution_id'])
+
+				if 'comment' in payload.keys():
+					loan.comment = payload['comment']
+
+				if 'interest_rate' in payload.keys():
+					loan.interest_rate = payload['interest_rate']
+
+				if 'interest_time' in payload.keys():
+					loan.interest_time = payload['interest_time']
+				else:
+					loan.interest_time = request_type.interest_time
+
+				loan.save()
+
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
-				loan_activity = LoanActivity(loan=loan,loan_type=request_type,\
-									status=request_status,request=self.transaction_payload(payload),\
-									response_status=response_status,profile=gateway_profile.user.profile) 
+
+				follow_on_loan = Loan.objects.get(id=payload['loan_id'])
+				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
+							response_status=response_status,profile=account.profile,\
+							status=request_status,follow_on_loan=follow_on_loan)
 				if 'comment' in payload.keys():
 					loan_activity.comment = payload['comment']
 
@@ -93,7 +158,6 @@ class System(Wrappers):
 			payload['response_status'] = '96'
 			lgr.info("Error on Loan Offer: %s" % e)
 		return payload
-
 
 
 	def loan_request(self, payload, node_info):
@@ -115,24 +179,36 @@ class System(Wrappers):
 
 				if 'security_amount'in payload.keys():
 					loan.security_amount = payload['security_amount']
+
 				if 'bridge__transaction_id' in payload.keys():
 					loan.transaction_reference = payload['bridge__transaction_id']
+
 				if 'other_loan_amounts' in payload.keys():
 					loan.other_loans = payload['other_loan_amounts']				
 
 				if 'institution_id' in payload.keys():
 					loan.institution = Institution.objects.get(id=payload['institution_id'])
+
 				if 'comment' in payload.keys():
 					loan.comment = payload['comment']
+
+				if 'interest_rate' in payload.keys():
+					loan.interest_rate = payload['interest_rate']
+
+				if 'interest_time' in payload.keys():
+					loan.interest_time = payload['interest_time']
+				else:
+					loan.interest_time = request_type.interest_time
 
 				loan.save()
 
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
-				loan_activity = LoanActivity(loan=loan,status=request_status,request=self.transaction_payload(payload),\
-									response_status=response_status,profile=account.profile) 
+				follow_on_loan = Loan.objects.get(id=payload['loan_id'])
+				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
+							response_status=response_status,profile=account.profile,\
+							status=request_status,follow_on_loan=follow_on_loan)
 				if 'comment' in payload.keys():
 					loan_activity.comment = payload['comment']
-
 
 				loan_activity.save()
 
@@ -145,6 +221,70 @@ class System(Wrappers):
 		except Exception, e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Loan Request: %s" % e)
+		return payload
+
+
+
+	def loan_entry(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			loan_type_list = LoanType.objects.filter(service__name=payload['SERVICE'])
+			if loan_type_list.exists():
+				account = Account.objects.get(id=payload['session_account_id'])
+				request_status = LoanStatus.objects.get(name='CREATED')
+				request_type = loan_type_list[0]
+
+				payment_method = PaymentMethod.objects.get(name__iexact=payload['payment_method'])
+				loan = Loan(amount=payload['amount'],\
+							loan_time=payload['loan_time'],payment_method=payment_method,\
+							currency=Currency.objects.get(code='KES'),\
+							gateway=gateway_profile.gateway,account=account,loan_type=request_type,\
+							status=request_status)
+
+				if 'security_amount'in payload.keys():
+					loan.security_amount = payload['security_amount']
+
+				if 'bridge__transaction_id' in payload.keys():
+					loan.transaction_reference = payload['bridge__transaction_id']
+
+				if 'other_loan_amounts' in payload.keys():
+					loan.other_loans = payload['other_loan_amounts']				
+
+				if 'institution_id' in payload.keys():
+					loan.institution = Institution.objects.get(id=payload['institution_id'])
+
+				if 'comment' in payload.keys():
+					loan.comment = payload['comment']
+
+				if 'interest_rate' in payload.keys():
+					loan.interest_rate = payload['interest_rate']
+
+				if 'interest_time' in payload.keys():
+					loan.interest_time = payload['interest_time']
+				else:
+					loan.interest_time = request_type.interest_time
+
+				loan.save()
+
+				response_status = ResponseStatus.objects.get(response='DEFAULT')
+				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
+							response_status=response_status,profile=account.profile,\
+							status=request_status) 
+				if 'comment' in payload.keys():
+					loan_activity.comment = payload['comment']
+
+				loan_activity.save()
+
+				payload['response'] = 'Loan Entry Logged'
+				payload['response_status'] = '00'
+			else:
+				payload['response'] = 'Loan Entry Unknown'
+				payload['response_status'] = '25'
+
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Loan Entry: %s" % e)
 		return payload
 
 

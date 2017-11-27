@@ -524,51 +524,6 @@ class PageString(ServiceCall, Wrappers):
 					lgr.info('Your List: %s' % item)
 					page_string = page_string.replace('['+v+']',item)
 
-				elif variable_key == 'p2p_loan_offer':
-
-					from secondary.finance.vbs.models import LoanActivity
-
-					params = self.get_nav(navigator)
-
-					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'),Q(processed=False),\
-										Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
-										~Q(profile=F('loan__account__profile')),\
-										Q(loan__gateway=code[0].gateway),\
-										Q(loan_type__name='P2P LOAN OFFER')).\
-										order_by('-date_created')
-
-					if 'institution_id' in params.keys():
-						loan_activity = loan_activity.filter(Q(loan__institution__id=params['institution_id'])\
-											|Q(loan__institution=None))
-					else:
-						loan_activity = loan_activity.filter(Q(loan__institution=code[0].institution)|Q(loan__institution=None))
-
-					loan_activity = loan_activity[:10]
-					item = ''
-					item_list = []
-					count = 1
-					if loan_activity.exists():
-						for i in loan_activity:
-       		                                        amount = '{0:,.2f}'.format(i.loan.amount)
-               		                                name = '%s %s%s %s' % (i.profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
-
-							if navigator.session.channel.name == 'IVR':
-								item = '%s\nFor %s, press %s.' % (item, name, count)
-							elif navigator.session.channel.name == 'USSD':
-								item = '%s\n%s:%s' % (item, count, name)
-
-							item_list.append(i.loan.id)
-							count+=1
-						navigator.item_list = json.dumps(item_list)
-						navigator.save()
-					else:
-						item = 'No Record Available'
-
-					lgr.info('Your List: %s' % item)
-					page_string = page_string.replace('['+v+']',item)
-
-
-
 				elif variable_key == 'my_loan_request':
 
 					from secondary.finance.vbs.models import LoanActivity
@@ -612,6 +567,111 @@ class PageString(ServiceCall, Wrappers):
 					page_string = page_string.replace('['+v+']',item)
 
 
+				elif variable_key == 'p2p_loan_details':
+					from secondary.finance.vbs.models import Loan
+
+					params = self.get_nav(navigator)
+
+					loan = Loan.objects.get(id=params['loan_id'])
+
+					item = ''
+					cost = '{0:,.2f}'.format(loan.amount) if loan.amount else ''
+					item = '%s@(%s%%)-%s %s' % (loan.loan_type.name, loan.interest_rate,\
+									loan.currency.code,\
+									cost)
+
+					page_string = page_string.replace('['+v+']',item)
+
+
+				elif variable_key == 'p2p_loan_approval':
+
+					from secondary.finance.vbs.models import LoanActivity
+
+					params = self.get_nav(navigator)
+
+					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'),Q(processed=False),\
+										Q(follow_on_loan__account__profile=navigator.session.gateway_profile.user.profile),\
+										Q(loan__gateway=code[0].gateway),\
+										Q(loan__loan_type__name='P2P LOAN OFFER')|Q(loan__loan_type__name='P2P LOAN REQUEST')).\
+										order_by('-date_created')
+
+					if 'institution_id' in params.keys():
+						loan_activity = loan_activity.filter(Q(loan__institution__id=params['institution_id'])\
+											|Q(loan__institution=None))
+					else:
+						loan_activity = loan_activity.filter(Q(loan__institution=code[0].institution)|Q(loan__institution=None))
+
+					loan_activity = loan_activity[:10]
+					item = ''
+					item_list = []
+					count = 1
+
+					if loan_activity.exists():
+						for i in loan_activity:
+       		                                        amount = '{0:,.2f}'.format(i.loan.amount)
+               		                                name = '%s %s%s %s' % (i.profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
+
+							if navigator.session.channel.name == 'IVR':
+								item = '%s\nFor %s, press %s.' % (item, name, count)
+							elif navigator.session.channel.name == 'USSD':
+								item = '%s\n%s:%s' % (item, count, name)
+
+							item_list.append(i.loan.id)
+							count+=1
+						navigator.item_list = json.dumps(item_list)
+						navigator.save()
+					else:
+						item = 'No Record Available'
+
+					lgr.info('Your List: %s' % item)
+					page_string = page_string.replace('['+v+']',item)
+
+
+				elif variable_key == 'p2p_loan_offer':
+
+					from secondary.finance.vbs.models import LoanActivity
+
+					params = self.get_nav(navigator)
+
+					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'),Q(processed=False),\
+										~Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
+										Q(profile=F('loan__account__profile')),\
+										Q(loan__gateway=code[0].gateway),\
+										Q(loan__loan_type__name='P2P LOAN OFFER')).\
+										order_by('-date_created')
+
+					if 'institution_id' in params.keys():
+						loan_activity = loan_activity.filter(Q(loan__institution__id=params['institution_id'])\
+											|Q(loan__institution=None))
+					else:
+						loan_activity = loan_activity.filter(Q(loan__institution=code[0].institution)|Q(loan__institution=None))
+
+					loan_activity = loan_activity[:10]
+					item = ''
+					item_list = []
+					count = 1
+
+					if loan_activity.exists():
+						for i in loan_activity:
+       		                                        amount = '{0:,.2f}'.format(i.loan.amount)
+               		                                name = '%s %s%s %s' % (i.profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
+
+							if navigator.session.channel.name == 'IVR':
+								item = '%s\nFor %s, press %s.' % (item, name, count)
+							elif navigator.session.channel.name == 'USSD':
+								item = '%s\n%s:%s' % (item, count, name)
+
+							item_list.append(i.loan.id)
+							count+=1
+						navigator.item_list = json.dumps(item_list)
+						navigator.save()
+					else:
+						item = 'No Record Available'
+
+					lgr.info('Your List: %s' % item)
+					page_string = page_string.replace('['+v+']',item)
+
+
 				elif variable_key == 'p2p_loan_request':
 
 					from secondary.finance.vbs.models import LoanActivity
@@ -622,7 +682,7 @@ class PageString(ServiceCall, Wrappers):
 										~Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
 										Q(profile=F('loan__account__profile')),\
 										Q(loan__gateway=code[0].gateway),\
-										Q(loan_type__name='P2P LOAN REQUEST')).\
+										Q(loan__loan_type__name='P2P LOAN REQUEST')).\
 										order_by('-date_created')
 
 					if 'institution_id' in params.keys():
