@@ -99,11 +99,11 @@ class LoanAdmin(admin.ModelAdmin):
 	list_display = ('id','amount','security_amount','other_loans','payment_method',\
 			'loan_time','transaction_reference','currency',\
 			'institution','gateway','comment','account','interest_rate','interest_time',\
-			'loan_type','status',)
+			'loan_type','status','gateway_profile',)
 admin.site.register(Loan, LoanAdmin)
 
 class LoanActivityAdmin(admin.ModelAdmin):
-	list_display = ('loan','request','response_status','comment','processed','profile',\
+	list_display = ('loan','request','response_status','comment','processed','gateway_profile',\
 			'status','follow_on_loan',)
 admin.site.register(LoanActivity, LoanActivityAdmin)
 

@@ -229,6 +229,7 @@ class Loan(models.Model):
 	interest_time = models.IntegerField(null=True, blank=True, help_text="In Days")
 	loan_type = models.ForeignKey(LoanType)
 	status = models.ForeignKey(LoanStatus)
+	gateway_profile = models.ForeignKey(GatewayProfile)
 	def __unicode__(self):
 		return u'%s %s %s %s' % (self.id, self.account, self.amount, self.loan_type)
 
@@ -240,10 +241,10 @@ class LoanActivity(models.Model):
 	response_status = models.ForeignKey(ResponseStatus)
 	comment = models.CharField(max_length=256, null=True, blank=True)
 	processed = models.BooleanField(default=False)
-	profile = models.ForeignKey(Profile)
+	gateway_profile = models.ForeignKey(GatewayProfile)
 	status = models.ForeignKey(LoanStatus)
 	follow_on_loan = models.ForeignKey(Loan, related_name="follow_on_loan", null=True, blank=True)
 	def __unicode__(self):
-		return u'%s %s %s' % (self.loan, self.profile, self.status)
+		return u'%s %s %s' % (self.loan, self.gateway_profile, self.status)
 
 

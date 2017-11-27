@@ -110,7 +110,7 @@ class System(Wrappers):
 							loan_time=payload['loan_time'],payment_method=payment_method,\
 							currency=Currency.objects.get(code='KES'),\
 							gateway=gateway_profile.gateway,account=account,loan_type=request_type,\
-							status=request_status)
+							status=request_status,gateway_profile=gateway_profile)
 
 				if 'security_amount'in payload.keys():
 					loan.security_amount = payload['security_amount']
@@ -141,7 +141,7 @@ class System(Wrappers):
 
 				follow_on_loan = Loan.objects.get(id=payload['loan_id'])
 				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
-							response_status=response_status,profile=account.profile,\
+							response_status=response_status,gateway_profile=gateway_profile,\
 							status=request_status,follow_on_loan=follow_on_loan)
 				if 'comment' in payload.keys():
 					loan_activity.comment = payload['comment']
@@ -175,7 +175,7 @@ class System(Wrappers):
 							loan_time=payload['loan_time'],payment_method=payment_method,\
 							currency=Currency.objects.get(code='KES'),\
 							gateway=gateway_profile.gateway,account=account,loan_type=request_type,\
-							status=request_status)
+							status=request_status, gateway_profile=gateway_profile)
 
 				if 'security_amount'in payload.keys():
 					loan.security_amount = payload['security_amount']
@@ -205,7 +205,7 @@ class System(Wrappers):
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
 				follow_on_loan = Loan.objects.get(id=payload['loan_id'])
 				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
-							response_status=response_status,profile=account.profile,\
+							response_status=response_status,gateway_profile=gateway_profile,\
 							status=request_status,follow_on_loan=follow_on_loan)
 				if 'comment' in payload.keys():
 					loan_activity.comment = payload['comment']
@@ -240,7 +240,7 @@ class System(Wrappers):
 							loan_time=payload['loan_time'],payment_method=payment_method,\
 							currency=Currency.objects.get(code='KES'),\
 							gateway=gateway_profile.gateway,account=account,loan_type=request_type,\
-							status=request_status)
+							status=request_status,gateway_profile=gateway_profile)
 
 				if 'security_amount'in payload.keys():
 					loan.security_amount = payload['security_amount']
@@ -269,7 +269,7 @@ class System(Wrappers):
 
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
 				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
-							response_status=response_status,profile=account.profile,\
+							response_status=response_status,gateway_profile=gateway_profile,\
 							status=request_status) 
 				if 'comment' in payload.keys():
 					loan_activity.comment = payload['comment']
