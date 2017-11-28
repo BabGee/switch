@@ -287,6 +287,9 @@ class VAS:
 						if self.nav.menu.input_variable.name == 'Validated Pin':
 							self.group_select = 0
 
+						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
+						else: pass
+
 						if self.gateway_profile.exists():
 							session_gateway_profile = self.gateway_profile[0]
 							hash_pin = crypt.crypt(str(self.payload['input']), str(session_gateway_profile.id))
