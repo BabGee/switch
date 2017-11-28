@@ -246,14 +246,7 @@ class VAS:
 					if self.nav.menu.input_variable.name in ['Select','Strict Select']:
 						self.group_select = self.payload['input']
 
-					'''
-					if self.nav.menu.input_variable.name == 'EMAIL or 1 Entry':
-						email = self.payload['input']
-        		                        if  (email not in [None,""] and self.validateEmail(email)) or str(email) == "1":pass
-						else: self.group_select = 96
-					'''
-
-					if self.nav.menu.input_variable.name == 'EMAIL Entry' or \
+					elif self.nav.menu.input_variable.name == 'EMAIL Entry' or \
 					 (allowed_input_list and self.payload['input'] in allowed_input_list.split(',')):
 						email = self.payload['input']
         		                        if  email not in [None,""] and self.validateEmail(email):pass
@@ -261,13 +254,13 @@ class VAS:
 						and isinstance(override_group_select, int): self.group_select = override_group_select
 						else: self.group_select = 96
 
-					if self.nav.menu.input_variable.name == 'Business Number':
+					elif self.nav.menu.input_variable.name == 'Business Number':
 						try: institution = Institution.objects.filter(business_number=str(self.payload['input'])[:6], status__name='ACTIVE')
 						except: institution = []
 						if len(institution)<1:
 							self.group_select = 96 #Fail menu as list not matching
 
-					if self.nav.menu.input_variable.name == 'EService Dynamic Select':
+					elif self.nav.menu.input_variable.name == 'EService Dynamic Select':
 						try:item_list = json.loads(self.nav.item_list)
 						except: item_list = []
 						if len(item_list)>0:
@@ -278,7 +271,7 @@ class VAS:
 								institution__status__name='ACTIVE')
 						if len(es)>0:
 							self.service = es[0].service
-					if self.nav.menu.input_variable.name in ['Select','Strict Select','Dynamic Select','EService Dynamic Select',"None Select"]: #Match Saved List to Input
+					elif self.nav.menu.input_variable.name in ['Select','Strict Select','Dynamic Select','EService Dynamic Select',"None Select"]: #Match Saved List to Input
 						try:item_list = json.loads(self.nav.item_list)
 						except:item_list = []
 						try: item_list[int(self.payload['input'])-1]; nolist=False
@@ -289,11 +282,11 @@ class VAS:
 							if self.nav.menu.input_variable.name == 'None Select':
 								self.group_select = None
 
-					if self.nav.menu.input_variable.name == 'Initialize':
+					elif self.nav.menu.input_variable.name == 'Initialize':
 						self.group_select = 0
 						self.level = '0'
 
-					if self.nav.menu.input_variable.name in ['Validated Pin','Validated Pin Con']:
+					elif self.nav.menu.input_variable.name in ['Validated Pin','Validated Pin Con']:
 						#Validated Pin last as initialize create menu with input 00 changes self.nave to None
 						if self.nav.menu.input_variable.name == 'Validated Pin':
 							self.group_select = 0
@@ -315,6 +308,14 @@ class VAS:
 									self.level = '100'
 								session_gateway_profile.pin_retries = session_gateway_profile.pin_retries+1
 								session_gateway_profile.save()
+
+					elif allowed_input_list and self.payload['input'] in allowed_input_list.split(','):
+        		                        if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
+						else: pass
+					else:
+        		                        if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
+						else: pass
+
 
 				else:
 					lgr.info('Input Validation Failed')
