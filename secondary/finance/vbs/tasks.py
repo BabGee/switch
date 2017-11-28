@@ -138,13 +138,19 @@ class System(Wrappers):
 				loan.save()
 
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
-
+	
+				channel = Channel.objects.get(id=int(payload['chid']))
 				follow_on_loan = Loan.objects.get(id=payload['loan_id'])
 				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
 							response_status=response_status,gateway_profile=gateway_profile,\
-							status=request_status,follow_on_loan=follow_on_loan)
+							status=request_status,follow_on_loan=follow_on_loan,\
+							channel=channel,gateway=gateway_profile.gateway)
+
 				if 'comment' in payload.keys():
 					loan_activity.comment = payload['comment']
+
+				if 'institution_id' in payload.keys():
+					loan_activity.institution = Institution.objects.get(id=payload['institution_id'])
 
 				loan_activity.save()
 
@@ -203,12 +209,20 @@ class System(Wrappers):
 				loan.save()
 
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
+
+				channel = Channel.objects.get(id=int(payload['chid']))
 				follow_on_loan = Loan.objects.get(id=payload['loan_id'])
 				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
 							response_status=response_status,gateway_profile=gateway_profile,\
-							status=request_status,follow_on_loan=follow_on_loan)
+							status=request_status,follow_on_loan=follow_on_loan,\
+							channel=channel,gateway=gateway_profile.gateway)
+
 				if 'comment' in payload.keys():
 					loan_activity.comment = payload['comment']
+
+				if 'institution_id' in payload.keys():
+					loan_activity.institution = Institution.objects.get(id=payload['institution_id'])
+
 
 				loan_activity.save()
 
@@ -268,11 +282,18 @@ class System(Wrappers):
 				loan.save()
 
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
+
+				channel = Channel.objects.get(id=int(payload['chid']))
 				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
 							response_status=response_status,gateway_profile=gateway_profile,\
-							status=request_status) 
+							status=request_status,\
+							channel=channel,gateway=gateway_profile.gateway)
+
 				if 'comment' in payload.keys():
 					loan_activity.comment = payload['comment']
+
+				if 'institution_id' in payload.keys():
+					loan_activity.institution = Institution.objects.get(id=payload['institution_id'])
 
 				loan_activity.save()
 
@@ -1151,6 +1172,85 @@ class Payments(System):
 
 class Trade(System):
 	pass
+
+
+@app.task(ignore_result=True)
+def approved_loan_service_call(loan_activity):
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	from primary.core.api.views import ServiceCall
+	try:
+
+		lgr.info('Approved Loan Service Call')
+		i = LoanActivity.objects.get(id=loan_activity)
+
+		payload = json.loads(i.request)
+
+		payload['chid'] = i.channel.id
+		payload['ip_address'] = '127.0.0.1'
+		payload['gateway_host'] = '127.0.0.1'
+		if i.institution:
+			payload['institution_id'] = i.institution.id
+
+
+		if i.loan.currency:
+			payload['currency'] = i.loan.currency.code
+		if i.loan.amount:
+			payload['amount'] = i.loan.amount
+
+		service = i.status.service
+
+		if i.loan.loan_type == 'P2P LOAN OFFER':
+			gateway_profile = i.follow_on_loan.gateway_profile
+			payload['account_type_id'] = i.follow_on_loan.account.account_type.id
+			payload['loan_time'] = i.follow_on_loan.account.account_type.id
+
+		else:
+			gateway_profile = i.loan.gateway_profile
+			payload['account_type_id'] = i.loan.account.account_type.id
+			payload['loan_time'] = i.loan.account.account_type.id
+
+		lgr.info('Approved Loan Service Call')
+		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
+		payload = ServiceCall().api_service_call(service, gateway_profile, payload)
+
+		lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
+
+		i.transaction_reference = payload['bridge__transaction_id'] if 'bridge__transaction_id' in payload.keys() else None
+
+		if 'response_status' in payload.keys():
+			i.status = LoanStatus.objects.get(name='PROCESSED')
+			i.response_status = ResponseStatus.objects.get(response=payload['response_status'])
+		else:
+			i.status = LoanStatus.objects.get(name='FAILED')
+			i.response_status = ResponseStatus.objects.get(response='20')
+		i.save()
+
+	except Exception, e:
+		payload['response_status'] = '96'
+		lgr.info('Unable to make service call: %s' % e)
+	return payload
+
+
+@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def process_approved_loan():
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+
+	lgr.info('Process Approved Loan')
+	orig_loan_activity = LoanActivity.objects.select_for_update().filter(status__name='APPROVED',response_status__response='DEFAULT', \
+									date_modified__lte=timezone.now()-timezone.timedelta(seconds=2))
+	loan_activity= list(orig_loan_activity.values_list('id',flat=True)[:250])
+
+	lgr.info('Process Approved Loan: %s' % orig_loan_activity)
+	processing = orig_loan_activity.filter(id__in=loan_activity).update(status=LoanStatus.objects.get(name='PROCESSING'), date_modified=timezone.now())
+	for la in loan_activity:
+		approved_loan_service_call.delay(la)
+
+		lgr.info('Process Approved Loan: %s' % la)
+
 
 @app.task(ignore_result=True)
 def overdue_credit_service_call(payload):

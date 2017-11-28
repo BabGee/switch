@@ -532,7 +532,7 @@ class PageString(ServiceCall, Wrappers):
 
 					loan_activity = LoanActivity.objects.filter(processed=False,\
 										loan__account__profile=navigator.session.gateway_profile.user.profile,\
-										profile=F('loan__account__profile'),\
+										gateway_profile__user__profile=F('loan__account__profile'),\
 										loan__gateway=code[0].gateway).\
 										order_by('-date_created')
 
@@ -609,7 +609,7 @@ class PageString(ServiceCall, Wrappers):
 					if loan_activity.exists():
 						for i in loan_activity:
        		                                        amount = '{0:,.2f}'.format(i.loan.amount)
-               		                                name = '%s %s%s %s' % (i.profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
+               		                                name = '%s %s%s %s' % (i.gateway_profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
@@ -635,7 +635,7 @@ class PageString(ServiceCall, Wrappers):
 
 					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'),Q(processed=False),\
 										~Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
-										Q(profile=F('loan__account__profile')),\
+										Q(gateway_profile__user__profile=F('loan__account__profile')),\
 										Q(loan__gateway=code[0].gateway),\
 										Q(loan__loan_type__name='P2P LOAN OFFER')).\
 										order_by('-date_created')
@@ -654,7 +654,7 @@ class PageString(ServiceCall, Wrappers):
 					if loan_activity.exists():
 						for i in loan_activity:
        		                                        amount = '{0:,.2f}'.format(i.loan.amount)
-               		                                name = '%s %s%s %s' % (i.profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
+               		                                name = '%s %s%s %s' % (i.gateway_profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
@@ -680,7 +680,7 @@ class PageString(ServiceCall, Wrappers):
 
 					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'),Q(processed=False),\
 										~Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
-										Q(profile=F('loan__account__profile')),\
+										Q(gateway_profile__user__profile=F('loan__account__profile')),\
 										Q(loan__gateway=code[0].gateway),\
 										Q(loan__loan_type__name='P2P LOAN REQUEST')).\
 										order_by('-date_created')
@@ -699,7 +699,7 @@ class PageString(ServiceCall, Wrappers):
 					if loan_activity.exists():
 						for i in loan_activity:
        		                                        amount = '{0:,.2f}'.format(i.loan.amount)
-               		                                name = '%s %s%s %s' % (i.profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
+               		                                name = '%s %s%s %s' % (i.gateway_profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)

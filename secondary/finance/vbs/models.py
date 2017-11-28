@@ -192,7 +192,6 @@ class LoanType(models.Model):
 	description = models.CharField(max_length=100)
 	interest_rate = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) 
 	interest_time = models.IntegerField(null=True, blank=True, help_text="In Days")
-	activity_service = models.ForeignKey(Service, blank=True, null=True, related_name='loan_type_activity_service')
 	service = models.ManyToManyField(Service, blank=True)
 	product_type = models.ManyToManyField(ProductType, blank=True)
 	def __unicode__(self):
@@ -244,6 +243,9 @@ class LoanActivity(models.Model):
 	gateway_profile = models.ForeignKey(GatewayProfile)
 	status = models.ForeignKey(LoanStatus)
 	follow_on_loan = models.ForeignKey(Loan, related_name="follow_on_loan", null=True, blank=True)
+	channel = models.ForeignKey(Channel)
+	gateway = models.ForeignKey(Gateway)
+	institution = models.ForeignKey(Institution, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.loan, self.gateway_profile, self.status)
 
