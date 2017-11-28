@@ -247,7 +247,8 @@ class VAS:
 					if self.nav.menu.input_variable.name == 'EMAIL Entry' or \
 					 (allowed_input_list and self.payload['input'] in allowed_input_list.split(',')):
 						email = self.payload['input']
-        		                        if  email not in [None,""] and self.validateEmail(email):pass
+        		                        if  (email not in [None,""] and self.validateEmail(email)) \
+						or (allowed_input_list and self.payload['input'] in allowed_input_list.split(',')):pass
         		                        elif  email not in [None,""] and self.validateEmail(email) and override_group_select \
 						and isinstance(override_group_select, int): self.group_select = override_group_select
 						else: self.group_select = 96
