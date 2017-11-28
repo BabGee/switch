@@ -240,8 +240,8 @@ class VAS:
 				isinstance(globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable](self.payload['input']), \
 				globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable]):
 
-					allowed_input_list = self.val.menu.input_variable.allowed_input_list
-					override_group_select = self.val.menu.input_variable.override_group_select
+					allowed_input_list = self.nav.menu.input_variable.allowed_input_list
+					override_group_select = self.nav.menu.input_variable.override_group_select
 
 
 					if self.nav.menu.input_variable.name == 'EMAIL Entry' or \
