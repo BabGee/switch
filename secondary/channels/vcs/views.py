@@ -239,9 +239,10 @@ class VAS:
 				lgr.info('Validatee 1')
 				if len(self.payload['input'])>=int(self.nav.menu.input_variable.validate_min) and \
 				len(self.payload['input'])<=int(self.nav.menu.input_variable.validate_max) and \
-				(isinstance(globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable](self.payload['input']), \
-				globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable]) or \
-				(self.nav.menu.input_variable.variable_type.variable == 'email' and self.validateEmail(self.payload['input'])) or \
+				((self.nav.menu.input_variable.variable_type.variable == 'email' and self.validateEmail(self.payload['input'])) or \
+				(self.nav.menu.input_variable.variable_type.variable not in ['email'] and \
+				isinstance(globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable](self.payload['input']), \
+				globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable])) or \
 				(self.payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','))):
 					lgr.info('Validated')
 					override_group_select = self.nav.menu.input_variable.override_group_select
