@@ -237,23 +237,14 @@ class VAS:
 			try:
 				if len(self.payload['input'])>=int(self.nav.menu.input_variable.validate_min) and \
 				len(self.payload['input'])<=int(self.nav.menu.input_variable.validate_max) and \
-				isinstance(globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable](self.payload['input']), \
-				globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable]):
+				(isinstance(globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable](self.payload['input']), \
+				globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable]) or \
+				(self.nav.menu.input_variable.variable_type.variable == 'email' and self.validateEmail(self.payload['input'])) or \
+				(self.payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','))):
 
-					allowed_input_list = self.nav.menu.input_variable.allowed_input_list
 					override_group_select = self.nav.menu.input_variable.override_group_select
 
-
-					if self.nav.menu.input_variable.name == 'EMAIL Entry' or \
-					 (allowed_input_list and self.payload['input'] in allowed_input_list.split(',')):
-						email = self.payload['input']
-        		                        if  (email not in [None,""] and self.validateEmail(email)) \
-						or (allowed_input_list and self.payload['input'] in allowed_input_list.split(',')):pass
-        		                        elif  email not in [None,""] and self.validateEmail(email) and override_group_select \
-						and isinstance(override_group_select, int): self.group_select = override_group_select
-						else: self.group_select = 96
-
-					elif self.nav.menu.input_variable.name == 'Business Number':
+					if self.nav.menu.input_variable.name == 'Business Number':
 						try: institution = Institution.objects.filter(business_number=str(self.payload['input'])[:6], status__name='ACTIVE')
 						except: institution = []
 						if len(institution)<1:
@@ -311,11 +302,8 @@ class VAS:
 								session_gateway_profile.pin_retries = session_gateway_profile.pin_retries+1
 								session_gateway_profile.save()
 
-					elif allowed_input_list and self.payload['input'] in allowed_input_list.split(','):
-        		                        if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
-						else: pass
 					else:
-        		                        if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
+						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
 						else: pass
 
 
