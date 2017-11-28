@@ -243,10 +243,8 @@ class VAS:
 					allowed_input_list = self.val.menu.input_variable.allowed_input_list
 					override_group_select = self.val.menu.input_variable.override_group_select
 
-					if self.nav.menu.input_variable.name in ['Select','Strict Select']:
-						self.group_select = self.payload['input']
 
-					elif self.nav.menu.input_variable.name == 'EMAIL Entry' or \
+					if self.nav.menu.input_variable.name == 'EMAIL Entry' or \
 					 (allowed_input_list and self.payload['input'] in allowed_input_list.split(',')):
 						email = self.payload['input']
         		                        if  email not in [None,""] and self.validateEmail(email):pass
@@ -272,6 +270,9 @@ class VAS:
 						if len(es)>0:
 							self.service = es[0].service
 					elif self.nav.menu.input_variable.name in ['Select','Strict Select','Dynamic Select','EService Dynamic Select',"None Select"]: #Match Saved List to Input
+						if self.nav.menu.input_variable.name in ['Select','Strict Select']:
+							self.group_select = self.payload['input']
+
 						try:item_list = json.loads(self.nav.item_list)
 						except:item_list = []
 						try: item_list[int(self.payload['input'])-1]; nolist=False
