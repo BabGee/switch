@@ -239,17 +239,26 @@ class VAS:
 				len(self.payload['input'])<=int(self.nav.menu.input_variable.validate_max) and \
 				isinstance(globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable](self.payload['input']), \
 				globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable]):
+
+					allowed_input_list = self.val.menu.input_variable.allowed_input_list
+					override_group_select = self.val.menu.input_variable.override_group_select
+
 					if self.nav.menu.input_variable.name in ['Select','Strict Select']:
 						self.group_select = self.payload['input']
 
+					'''
 					if self.nav.menu.input_variable.name == 'EMAIL or 1 Entry':
 						email = self.payload['input']
         		                        if  (email not in [None,""] and self.validateEmail(email)) or str(email) == "1":pass
 						else: self.group_select = 96
+					'''
 
-					if self.nav.menu.input_variable.name == 'EMAIL Entry':
+					if self.nav.menu.input_variable.name == 'EMAIL Entry' or \
+					 (allowed_input_list and self.payload['input'] in allowed_input_list.split(',')):
 						email = self.payload['input']
         		                        if  email not in [None,""] and self.validateEmail(email):pass
+        		                        elif  email not in [None,""] and self.validateEmail(email) and override_group_select \
+						and isinstance(override_group_select, int): self.group_select = override_group_select
 						else: self.group_select = 96
 
 					if self.nav.menu.input_variable.name == 'Business Number':
