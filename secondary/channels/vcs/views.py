@@ -291,7 +291,8 @@ class VAS:
 						except: 
 							if self.payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','): nolist=False; lgr.info('2')
 							else: nolist= True; lgr.info('3')
-						if len(item_list)<1 or nolist:
+						#if len(item_list)<1 or nolist:
+						if nolist:
 							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select; lgr.info('4')
 							else: self.group_select = 96 ; lgr.info('5') #Fail menu as list not matching
 						else:
