@@ -266,7 +266,7 @@ class VAS:
 						if len(institution)<1:
 							self.group_select = 96 #Fail menu as list not matching
 
-					elif self.nav.menu.input_variable.name == 'EService Dynamic Select':
+					elif self.nav.menu.input_variable.name == 'EService':
 						try:item_list = json.loads(self.nav.item_list)
 						except: item_list = []
 						if len(item_list)>0:
@@ -277,10 +277,13 @@ class VAS:
 								institution__status__name='ACTIVE')
 						if len(es)>0:
 							self.service = es[0].service
-					elif self.nav.menu.input_variable.name in ['Select','Strict Select','Dynamic Select','EService Dynamic Select',"None Select"]: #Match Saved List to Input
+
+					elif 'Select' in self.nav.menu.input_variable.name: 
+
 						if self.nav.menu.input_variable.name in ['Select','Strict Select']:
 							self.group_select = self.payload['input']
 
+						#Matches Saved List to Input
 						try:item_list = json.loads(self.nav.item_list)
 						except:item_list = []
 						try: item_list[int(self.payload['input'])-1]; nolist=False
