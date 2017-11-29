@@ -241,7 +241,7 @@ class VAS:
 				len(self.payload['input'])<=int(self.nav.menu.input_variable.validate_max) and \
 				((self.nav.menu.input_variable.variable_type.variable == 'email' and self.validateEmail(self.payload['input'])) or \
 				(self.nav.menu.input_variable.variable_type.variable == 'non_exist_national_id' and \
-				GatewayProfile.objects.filter(gateway =self.code[0].gateway,user__profile__national_id=payload['input']).exists() <> True) or \
+				GatewayProfile.objects.filter(gateway =self.code[0].gateway,user__profile__national_id=self.payload['input']).exists() <> True) or \
 				(self.nav.menu.input_variable.variable_type.variable not in ['email','non_exist_national_id'] and \
 				isinstance(globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable](self.payload['input']), \
 				globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable])) or \
