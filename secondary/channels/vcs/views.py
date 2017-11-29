@@ -288,7 +288,9 @@ class VAS:
 						try:item_list = json.loads(self.nav.item_list)
 						except:item_list = []
 						try: item_list[int(self.payload['input'])-1]; nolist=False
-						except: nolist= True
+						except: 
+							if payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','): nolist=False
+							else: nolist= True
 						if len(item_list)<1 or nolist:
 							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
 							else: self.group_select = 96 #Fail menu as list not matching
