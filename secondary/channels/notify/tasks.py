@@ -363,8 +363,10 @@ class System(Wrappers):
 					payload['original_email'] = payload['email']
 					payload['email'] = ''
 
-		 		payload['msisdn'] = str(payload['recipient'])
+		 		payload['msisdn'] = str(payload['recipient_msisdn'])
 				msisdn = UPCWrappers().get_msisdn(payload)
+				if 'recipient_national_id' in payload.keys():
+					payload['national_id'] = payload['recipient_national_id']
 
 				if msisdn is not None:
 					payload['msisdn'] = msisdn
