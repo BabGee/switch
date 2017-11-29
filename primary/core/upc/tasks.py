@@ -786,6 +786,23 @@ class System(Wrappers):
 		return payload
 
 
+	def set_profile_for_update(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+			session_gateway_profile.status = ProfileStatus.objects.get(name='FOR UPDATE')
+			session_gateway_profile.save()
+			payload['response'] = 'Profile is on For Update'
+			payload['response_status'] = '00'
+
+		except Exception, e:
+			lgr.info('Error on set profile First Access: %s' % e)
+			payload['response_status'] = '96'
+		return payload
+
+
+
 	def set_profile_first_access(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
