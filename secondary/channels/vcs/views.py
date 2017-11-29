@@ -240,7 +240,9 @@ class VAS:
 				if len(self.payload['input'])>=int(self.nav.menu.input_variable.validate_min) and \
 				len(self.payload['input'])<=int(self.nav.menu.input_variable.validate_max) and \
 				((self.nav.menu.input_variable.variable_type.variable == 'email' and self.validateEmail(self.payload['input'])) or \
-				(self.nav.menu.input_variable.variable_type.variable not in ['email'] and \
+				(self.nav.menu.input_variable.variable_type.variable == 'non_exist_national_id' and \
+				GatewayProfile.objects.filter(gateway =self.code[0].gateway,user__profile__national_id=payload['input']).exists() <> True) or \
+				(self.nav.menu.input_variable.variable_type.variable not in ['email','non_exist_national_id'] and \
 				isinstance(globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable](self.payload['input']), \
 				globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable])) or \
 				(self.payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','))):
@@ -314,8 +316,11 @@ class VAS:
 
 
 				else:
+					error_group_select = self.nav.menu.input_variable.error_group_select
+					if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
+					else: self.group_select = 96 #Fail menu as list not matching
+
 					lgr.info('Input Validation Failed')
-					self.group_select = 96 #Fail menu as list not matching
 
 			except Exception, e: lgr.info('Error: %s' % e); self.group_select = 96
 

@@ -69,6 +69,7 @@ class InputVariable(models.Model):
 	validate_max = models.CharField(max_length=45)
 	allowed_input_list = models.CharField(max_length=45, blank=True, null=True, help_text="comma delimitted inputs")
 	override_group_select = models.IntegerField(blank=True, null=True)
+	error_group_select = models.IntegerField(blank=True, null=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)		
 
