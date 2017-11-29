@@ -385,6 +385,18 @@ class System(Wrappers):
 			lgr.info("Error on Get Notification: %s" % e)
 		return payload
 
+	def init_notification(self, payload, node_info):
+		try:
+			if 'message' in payload.keys():
+				del payload['message']
+			payload['response_status'] = '00'
+			payload['response'] = 'Notification Initialized'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Init Notification: %s" % e)
+		return payload
+
+
 	def get_notification(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
