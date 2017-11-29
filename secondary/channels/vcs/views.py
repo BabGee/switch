@@ -289,7 +289,7 @@ class VAS:
 						except:item_list = []
 						try: item_list[int(self.payload['input'])-1]; nolist=False
 						except: 
-							if payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','): nolist=False
+							if self.payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','): nolist=False
 							else: nolist= True
 						if len(item_list)<1 or nolist:
 							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
