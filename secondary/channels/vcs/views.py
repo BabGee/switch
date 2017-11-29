@@ -259,6 +259,7 @@ class VAS:
 				(self.payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','))):
 					lgr.info('Validated')
 					override_group_select = self.nav.menu.input_variable.override_group_select
+					error_group_select = self.nav.menu.input_variable.error_group_select
 
 					if self.nav.menu.input_variable.name == 'Business Number':
 						try: institution = Institution.objects.filter(business_number=str(self.payload['input'])[:6], status__name='ACTIVE')
@@ -289,15 +290,12 @@ class VAS:
 						try: item_list[int(self.payload['input'])-1]; nolist=False
 						except: nolist= True
 						if len(item_list)<1 or nolist:
-							if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
+							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
 							else: self.group_select = 96 #Fail menu as list not matching
 						else:
 							if self.nav.menu.input_variable.name == 'None Select':
-								if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
+								if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
 								else: self.group_select = None
-							else:
-								if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
-								else: pass #Fail menu as list not matching
 
 
 					elif self.nav.menu.input_variable.name == 'Initialize':
@@ -336,6 +334,7 @@ class VAS:
 
 
 				else:
+					#Not for change to error_group_select as it would need a page or redirect to page on invalid input
 					self.group_select = 96 #Fail menu as list not matching
 
 					lgr.info('Input Validation Failed')
