@@ -295,6 +295,10 @@ class VAS:
 							if self.nav.menu.input_variable.name == 'None Select':
 								if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
 								else: self.group_select = None
+							else:
+								if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
+								else: pass #Fail menu as list not matching
+
 
 					elif self.nav.menu.input_variable.name == 'Initialize':
 						self.group_select = 0
