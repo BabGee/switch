@@ -346,28 +346,6 @@ class System(Wrappers):
 		 		payload['msisdn'] = str(payload['recipient'])
 				msisdn = UPCWrappers().get_msisdn(payload)
 
-				'''
-				msisdn = msisdn.strip()
-				if len(msisdn) >= 9 and msisdn[:1] == '+':
-					msisdn = str(msisdn)
-				elif len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
-					country_list = Country.objects.filter(mpoly__intersects=trans_point)
-					ip_point = g.geos(str(payload['ip_address']))
-					if country_list.exists() and country_list[0].ccode:
-						msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
-					elif ip_point:
-						country_list = Country.objects.filter(mpoly__intersects=ip_point)
-						if country_list.exists() and country_list[0].ccode:
-							msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
-						else:
-							msisdn = None
-					else:
-						msisdn = '+254%s' % msisdn[1:]
-				elif len(msisdn) >=10  and msisdn[:1] <> '0' and msisdn[:1] <> '+':
-					msisdn = '+%s' % msisdn #clean msisdn for lookup
-				else:
-					msisdn = None
-				'''
 				if msisdn is not None:
 					try:msisdn = MSISDN.objects.get(phone_number=msisdn)
 					except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
@@ -375,6 +353,7 @@ class System(Wrappers):
 					payload['msisdn'] = msisdn.phone_number
 					payload['response'] = 'MSISDN Changed to recipient'
 					payload["response_status"] = "00"
+			                payload['trigger'] = 'recipient_to_msisdn%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				else:
 					payload['response_status'] = '25'
 					payload['response'] = 'No Recipient Found'
