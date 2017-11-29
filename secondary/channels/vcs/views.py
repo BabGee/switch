@@ -239,10 +239,10 @@ class VAS:
 			try:
 				lgr.info('Validatee 1')
 				if (self.nav.menu.input_variable.name == 'Non-Existing National ID' and \
-				GatewayProfile.objects.filter(status__name__in=['ONE TIME PIN','FIRST ACCESS','ACTIVATED'],gateway=self.code[0].gateway,\
+				GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
 				user__profile__national_id=self.payload['input'].strip()).exists()) or \
 				(self.nav.menu.input_variable.name == 'Non-Existing Mobile Number' and \
-				GatewayProfile.objects.filter(status__name__in=['ONE TIME PIN','FIRST ACCESS','ACTIVATED'],gateway=self.code[0].gateway,\
+				GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
 				msisdn__phone_number=UPCWrappers().simple_get_msisdn(self.payload['input'].strip(),self.payload)).exists()):
 					#Variables with an error page
 					error_group_select = self.nav.menu.input_variable.error_group_select
