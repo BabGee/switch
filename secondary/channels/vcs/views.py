@@ -238,7 +238,7 @@ class VAS:
 			lgr.info('Validatee 0')
 			try:
 				lgr.info('Validatee 1')
-				if (self.nav.menu.input_variable.name == 'Non-Existing National ID' and \
+				if ('Non-Existing National ID' in self.nav.menu.input_variable.name and \
 				GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
 				user__profile__national_id=self.payload['input'].strip()).exists()) or \
 				(self.nav.menu.input_variable.name == 'Non-Existing Mobile Number' and \
