@@ -238,18 +238,7 @@ class VAS:
 			lgr.info('Validatee 0')
 			try:
 				lgr.info('Validatee 1')
-				if ('Non-Existing National ID' in self.nav.menu.input_variable.name and \
-				GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
-				user__profile__national_id=self.payload['input'].strip()).exists()) or \
-				(self.nav.menu.input_variable.name == 'Non-Existing Mobile Number' and \
-				GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
-				msisdn__phone_number=UPCWrappers().simple_get_msisdn(self.payload['input'].strip(),self.payload)).exists()):
-					#Variables with an error page
-					error_group_select = self.nav.menu.input_variable.error_group_select
-					if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
-					else: self.group_select = 96 #Fail menu as list not matching
-
-				elif len(self.payload['input'])>=int(self.nav.menu.input_variable.validate_min) and \
+				if len(self.payload['input'])>=int(self.nav.menu.input_variable.validate_min) and \
 				len(self.payload['input'])<=int(self.nav.menu.input_variable.validate_max) and \
 				((self.nav.menu.input_variable.variable_type.variable == 'email' and self.validateEmail(self.payload['input'])) or \
 				(self.nav.menu.input_variable.variable_type.variable == 'msisdn' and UPCWrappers.simple_get_msisdn(self.payload['input'],self.payload)) or \
@@ -261,7 +250,18 @@ class VAS:
 					override_group_select = self.nav.menu.input_variable.override_group_select
 					error_group_select = self.nav.menu.input_variable.error_group_select
 
-					if self.nav.menu.input_variable.name == 'Business Number':
+					if ('Non-Existing National ID' in self.nav.menu.input_variable.name and \
+					GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
+					user__profile__national_id=self.payload['input'].strip()).exists()) or \
+					('Non-Existing Mobile Number' in self.nav.menu.input_variable.name and \
+					GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
+					msisdn__phone_number=UPCWrappers().simple_get_msisdn(self.payload['input'].strip(),self.payload)).exists()):
+						#Variables with an error page
+						error_group_select = self.nav.menu.input_variable.error_group_select
+						if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
+						else: self.group_select = 96 #Fail menu as list not matching
+
+					elif self.nav.menu.input_variable.name == 'Business Number':
 						try: institution = Institution.objects.filter(business_number=str(self.payload['input'])[:6], status__name='ACTIVE')
 						except: institution = []
 						if len(institution)<1:
