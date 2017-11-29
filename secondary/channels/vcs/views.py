@@ -237,19 +237,17 @@ class VAS:
 			lgr.info('Validatee 0')
 			try:
 				lgr.info('Validatee 1')
-				if (self.nav.menu.input_variable.variable_type.variable == 'non_exist_national_id' and \
-				GatewayProfile.objects.filter(gateway =self.code[0].gateway,user__profile__national_id=self.payload['input']).exists() <> True):
+				if (self.nav.menu.input_variable.name == 'Non-Existing National ID' and \
+				GatewayProfile.objects.filter(gateway =self.code[0].gateway,user__profile__national_id=self.payload['input'].strip()).exists()):
+					#Variables with an error page
 					error_group_select = self.nav.menu.input_variable.error_group_select
 					if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
 					else: self.group_select = 96 #Fail menu as list not matching
 
-
 				elif len(self.payload['input'])>=int(self.nav.menu.input_variable.validate_min) and \
 				len(self.payload['input'])<=int(self.nav.menu.input_variable.validate_max) and \
 				((self.nav.menu.input_variable.variable_type.variable == 'email' and self.validateEmail(self.payload['input'])) or \
-				(self.nav.menu.input_variable.variable_type.variable == 'non_exist_national_id' and \
-				GatewayProfile.objects.filter(gateway =self.code[0].gateway,user__profile__national_id=self.payload['input']).exists() <> True) or \
-				(self.nav.menu.input_variable.variable_type.variable not in ['email','non_exist_national_id'] and \
+				(self.nav.menu.input_variable.variable_type.variable not in ['email'] and \
 				isinstance(globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable](self.payload['input']), \
 				globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable])) or \
 				(self.payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','))):
