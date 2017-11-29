@@ -289,10 +289,12 @@ class VAS:
 						try: item_list[int(self.payload['input'])-1]; nolist=False
 						except: nolist= True
 						if len(item_list)<1 or nolist:
-							self.group_select = 96 #Fail menu as list not matching
+							if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
+							else: self.group_select = 96 #Fail menu as list not matching
 						else:
 							if self.nav.menu.input_variable.name == 'None Select':
-								self.group_select = None
+								if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
+								else: self.group_select = None
 
 					elif self.nav.menu.input_variable.name == 'Initialize':
 						self.group_select = 0
