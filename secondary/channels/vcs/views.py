@@ -7,6 +7,7 @@ import json, re, crypt
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 import base64, re, pytz
+from primary.core.upc.tasks import Wrappers as UPCWrappers
 
 import logging
 lgr = logging.getLogger('vcs')
@@ -238,7 +239,10 @@ class VAS:
 			try:
 				lgr.info('Validatee 1')
 				if (self.nav.menu.input_variable.name == 'Non-Existing National ID' and \
-				GatewayProfile.objects.filter(gateway =self.code[0].gateway,user__profile__national_id=self.payload['input'].strip()).exists()):
+				GatewayProfile.objects.filter(gateway =self.code[0].gateway,user__profile__national_id=self.payload['input'].strip()).exists()) or \
+				(self.nav.menu.input_variable.name == 'Non-Existing Mobile Number' and \
+				GatewayProfile.objects.filter(gateway =self.code[0].gateway,\
+				msisdn__phone_number=UPCWrappers().simple_get_msisdn(self.payload['input'].strip(),self.payload)).exists()):
 					#Variables with an error page
 					error_group_select = self.nav.menu.input_variable.error_group_select
 					if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
@@ -247,7 +251,8 @@ class VAS:
 				elif len(self.payload['input'])>=int(self.nav.menu.input_variable.validate_min) and \
 				len(self.payload['input'])<=int(self.nav.menu.input_variable.validate_max) and \
 				((self.nav.menu.input_variable.variable_type.variable == 'email' and self.validateEmail(self.payload['input'])) or \
-				(self.nav.menu.input_variable.variable_type.variable not in ['email'] and \
+				(self.nav.menu.input_variable.variable_type.variable == 'msisdn' and UPCWrappers.simple_get_msisdn(self.payload['input'],self.payload)) or \
+				(self.nav.menu.input_variable.variable_type.variable not in ['msisdn','email'] and \
 				isinstance(globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable](self.payload['input']), \
 				globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable])) or \
 				(self.payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','))):
