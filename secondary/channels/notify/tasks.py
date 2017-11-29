@@ -342,15 +342,32 @@ class System(Wrappers):
 
 
 				if 'msisdn' in payload.keys():
-					payload['sender'] = payload['msisdn']
+					payload['original_msisdn'] = payload['msisdn']
+					payload['msisdn'] = ''
+				if 'national_id' in payload.keys():
+					payload['original_national_id'] = payload['national_id']
+					payload['national_id'] = ''
+				if 'first_name' in payload.keys():
+					payload['original_first_name'] = payload['first_name']
+					payload['first_name'] = ''
+				if 'middle_name' in payload.keys():
+					payload['original_middle_name'] = payload['middle_name']
+					payload['middle_name'] = ''
+				if 'last_name' in payload.keys():
+					payload['original_last_name'] = payload['last_name']
+					payload['last_name'] = ''
+				if 'full_names' in payload.keys():
+					payload['original_full_names'] = payload['full_names']
+					payload['full_names'] = ''
+				if 'email' in payload.keys():
+					payload['original_email'] = payload['email']
+					payload['email'] = ''
+
 		 		payload['msisdn'] = str(payload['recipient'])
 				msisdn = UPCWrappers().get_msisdn(payload)
 
 				if msisdn is not None:
-					try:msisdn = MSISDN.objects.get(phone_number=msisdn)
-					except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
-				if msisdn is not None:
-					payload['msisdn'] = msisdn.phone_number
+					payload['msisdn'] = msisdn
 					payload['response'] = 'MSISDN Changed to recipient'
 					payload["response_status"] = "00"
 			                payload['trigger'] = 'recipient_to_msisdn%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
