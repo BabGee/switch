@@ -159,9 +159,10 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'session_variable':
 					item = ''
 					params = self.get_nav(navigator)
-
-					if variable_val in params.keys():
-						item = params[variable_val]
+	
+					lgr.info('Params: %s' % params)
+					if str(variable_val) in params.keys():
+						item = params[str(variable_val)]
 
 					lgr.info('Your List: %s' % item)
 					page_string = page_string.replace('['+v+']',item)
