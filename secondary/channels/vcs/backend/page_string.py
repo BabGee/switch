@@ -162,7 +162,7 @@ class PageString(ServiceCall, Wrappers):
 	
 					lgr.info('Params: %s' % params)
 					if str(variable_val) in params.keys():
-						item = params[str(variable_val)]
+						item = str(params[str(variable_val)])
 
 					lgr.info('Your List: %s' % item)
 					page_string = page_string.replace('['+v+']',item)
