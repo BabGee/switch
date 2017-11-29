@@ -395,7 +395,6 @@ class System(Wrappers):
 						 Q(service__name=payload['SERVICE'])).\
 						prefetch_related('notification__code','product_type')
 
-			lgr.info('notification_product: %s' % notification_product)
 			msisdn = UPCWrappers().get_msisdn(payload)
 			if msisdn is not None:
 				#Get/Filter MNO
@@ -418,20 +417,17 @@ class System(Wrappers):
 					notification_product = notification_product.filter(id__in=[c.product.id for c in contact])
 
 
-			lgr.info('notification_product: %s' % notification_product)
 			if 'notification_delivery_channel' in payload.keys():
 				notification_product = notification_product.filter(notification__code__channel__name=payload['notification_delivery_channel'])
 
-			lgr.info('notification_product: %s' % notification_product)
 			if 'notification_product_id' in payload.keys():
 				notification_product = notification_product.filter(id=payload['notification_product_id'])
 
-			lgr.info('notification_product: %s' % notification_product)
 			if 'product_item_id' in payload.keys():
 				product_type = ProductItem.objects.get(id=payload['product_item_id']).product_type
 				notification_product = notification_product.filter(product_type=product_type)
 
-			lgr.info('notification_product: %s' % notification_product)
+			lgr.info('notification_product: %s | %s' % (notification_product,payload))
 			if 'product_type_id' in payload.keys():
 				notification_product = notification_product.filter(product_type__id=payload['product_type_id'])
 
