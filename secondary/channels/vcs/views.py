@@ -287,13 +287,13 @@ class VAS:
 						#Matches Saved List to Input
 						try:item_list = json.loads(self.nav.item_list)
 						except:item_list = []
-						try: item_list[int(self.payload['input'])-1]; nolist=False
+						try: item_list[int(self.payload['input'])-1]; nolist=False; lgr.info('1')
 						except: 
-							if self.payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','): nolist=False
-							else: nolist= True
+							if self.payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','): nolist=False; lgr.info('2')
+							else: nolist= True; lgr.info('3')
 						if len(item_list)<1 or nolist:
-							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
-							else: self.group_select = 96 #Fail menu as list not matching
+							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select; lgr.info('4')
+							else: self.group_select = 96 ; lgr.info('5') #Fail menu as list not matching
 						else:
 							if self.nav.menu.input_variable.name == 'None Select':
 								if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
