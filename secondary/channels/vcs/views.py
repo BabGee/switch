@@ -324,6 +324,7 @@ class VAS:
 
 			except Exception, e: lgr.info('Error: %s' % e); self.group_select = 96
 
+		lgr.info('LEVEL: %s | GROUP: %s' % (self.level, self.group_select))
 
 		#FIlter Enrollments
 		if self.gateway_profile.exists():
