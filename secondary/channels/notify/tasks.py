@@ -331,7 +331,7 @@ class System(Wrappers):
 	def recipient_to_msisdn(self, payload, node_info):
 		try:
 			lgr.info("Get Payload: %s" % payload)
-			if 'recipient' in payload.keys() and payload['recipient'] not in ["",None]:
+			if 'recipient_msisdn' in payload.keys() and payload['recipient_msisdn'] not in ["",None]:
 
 
 				lng = payload['lng'] if 'lng' in payload.keys() else 0.0
@@ -343,25 +343,25 @@ class System(Wrappers):
 
 				if 'msisdn' in payload.keys():
 					payload['original_msisdn'] = payload['msisdn']
-					payload['msisdn'] = ''
+					del payload['msisdn']
 				if 'national_id' in payload.keys():
 					payload['original_national_id'] = payload['national_id']
-					payload['national_id'] = ''
+					del payload['national_id']
 				if 'first_name' in payload.keys():
 					payload['original_first_name'] = payload['first_name']
-					payload['first_name'] = ''
+					del payload['first_name']
 				if 'middle_name' in payload.keys():
 					payload['original_middle_name'] = payload['middle_name']
-					payload['middle_name'] = ''
+					del payload['middle_name']
 				if 'last_name' in payload.keys():
 					payload['original_last_name'] = payload['last_name']
-					payload['last_name'] = ''
+					del payload['last_name']
 				if 'full_names' in payload.keys():
 					payload['original_full_names'] = payload['full_names']
-					payload['full_names'] = ''
+					del payload['full_names']
 				if 'email' in payload.keys():
 					payload['original_email'] = payload['email']
-					payload['email'] = ''
+					del payload['email']
 
 		 		payload['msisdn'] = str(payload['recipient_msisdn'])
 				msisdn = UPCWrappers().get_msisdn(payload)
