@@ -94,8 +94,8 @@ class PageString(ServiceCall, Wrappers):
 
 		for key, value in item.items():
 			if value.menu.selection_preview == True:
-				item_val = navigator_list.filter(id__gt=value.id)[-1:].id
-				item_level = item_val[0].id if len(item_val) else 0
+				item_val = navigator_list.filter(id__gt=value.id).last()
+				item_level = item_val.id if item_val else 0
 				try:item_list = json.loads(value.item_list)
 				except: item_list = []
 				if len(item_list) > 0:
