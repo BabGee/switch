@@ -284,7 +284,7 @@ class VAS:
 
 					elif 'Select' in self.nav.menu.input_variable.name: 
 
-						if self.nav.menu.input_variable.name in ['Select','Strict Select']:
+						if self.nav.menu.input_variable.name in ['Select','Strict Select'] or 'Select for' in self.nav.menu.input_variable.name:
 							self.group_select = self.payload['input']
 
 						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
