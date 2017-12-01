@@ -41,7 +41,7 @@ class VariableTypeAdmin(admin.ModelAdmin):
 admin.site.register(VariableType, VariableTypeAdmin)
 	
 class InputVariableAdmin(admin.ModelAdmin):
-	list_display = ('name', 'variable_type', 'validate_min', 'validate_max', 'allowed_input_list', 'override_group_select','error_group_select',)
+	list_display = ('name', 'variable_type', 'validate_min', 'validate_max', 'allowed_input_list', 'override_group_select','error_group_select','override_level','error_level')
 admin.site.register(InputVariable, InputVariableAdmin)
 
 class MenuAdmin(admin.ModelAdmin):
