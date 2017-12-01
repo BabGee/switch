@@ -249,6 +249,8 @@ class VAS:
 					lgr.info('Validated')
 					override_group_select = self.nav.menu.input_variable.override_group_select
 					error_group_select = self.nav.menu.input_variable.error_group_select
+					override_level = self.nav.menu.input_variable.override_level
+					error_level = self.nav.menu.input_variable.error_level
 
 					if ('Non-Existing National ID' in self.nav.menu.input_variable.name and \
 					GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
@@ -257,9 +259,10 @@ class VAS:
 					GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
 					msisdn__phone_number=UPCWrappers().simple_get_msisdn(self.payload['input'].strip(),self.payload)).exists()):
 						#Variables with an error page
-						error_group_select = self.nav.menu.input_variable.error_group_select
 						if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
 						else: self.group_select = 96 #Fail menu as list not matching
+						if error_level and isinstance(error_level, int): self.level = error_level
+						else: pass
 
 					elif self.nav.menu.input_variable.name == 'Business Number':
 						try: institution = Institution.objects.filter(business_number=str(self.payload['input'])[:6], status__name='ACTIVE')
@@ -284,21 +287,32 @@ class VAS:
 						if self.nav.menu.input_variable.name in ['Select','Strict Select']:
 							self.group_select = self.payload['input']
 
+						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
+						else: pass
+
+						if override_level and isinstance(override_level, int): self.level = override_level
+						else: pass
+
+
 						#Matches Saved List to Input
 						try:item_list = json.loads(self.nav.item_list)
 						except:item_list = []
-						try: item_list[int(self.payload['input'])-1]; nolist=False; lgr.info('1')
+						try: item_list[int(self.payload['input'])-1]; nolist=False
 						except: 
-							if self.payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','): nolist=False; lgr.info('2')
-							else: nolist= True; lgr.info('3')
+							if self.payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','): nolist=False
+							else: nolist= True
 						#if len(item_list)<1 or nolist:
 						if nolist:
-							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select; lgr.info('4')
-							else: self.group_select = 96 ; lgr.info('5') #Fail menu as list not matching
+							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
+							else: self.group_select = 96  #Fail menu as list not matching
+							if error_level and isinstance(error_level, int): self.level = error_level
+							else: pass
 						else:
 							if self.nav.menu.input_variable.name == 'None Select':
 								if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
 								else: self.group_select = None
+								if error_level and isinstance(error_level, int): self.level = error_level
+								else: pass
 
 
 					elif self.nav.menu.input_variable.name == 'Initialize':
@@ -311,6 +325,9 @@ class VAS:
 							self.group_select = 0
 
 						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
+						else: pass
+
+						if override_level and isinstance(override_level, int): self.level = override_level
 						else: pass
 
 						if self.gateway_profile.exists():
@@ -335,6 +352,8 @@ class VAS:
 						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
 						else: pass
 
+						if override_level and isinstance(override_level, int): self.level = override_level
+						else: pass
 
 				else:
 					#Not for change to error_group_select as it would need a page or redirect to page on invalid input
