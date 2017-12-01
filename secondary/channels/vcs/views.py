@@ -49,7 +49,7 @@ class VAS:
 				self.navigator = self.navigator.filter(pin_auth=True)
 			
 			if len(self.navigator) > 0 and self.payload['input']<>'00':#Not a Main Menu Request
-				if len(self.gateway_profile)>0:
+				if self.gateway_profile.exists():
 					self.navigator = self.navigator.filter(session__gateway_profile=self.gateway_profile[0])
 				self.nav = self.navigator[0]
 				self.level=int(self.nav.menu.level)+1; self.group_select=self.nav.menu.group_select
@@ -57,8 +57,8 @@ class VAS:
 				#Initiate Session
 				self.session = self.nav.session
 				if self.nav.session.gateway_profile is not None:
-					self.menu = self.menu.filter(Q(access_level =self.nav.session.gateway_profile.access_level), Q(code=self.code[0]),\
-									Q(profile_status=self.nav.session.gateway_profile.status)|Q(profile_status=None))
+					self.menu = self.menu.filter(access_level=self.nav.session.gateway_profile.access_level, code=self.code[0],\
+									profile_status=self.nav.session.gateway_profile.status)
 				else:
 					self.menu = self.menu.filter(access_level__name='SYSTEM', code=self.code[0],profile_status=None)
 
@@ -68,10 +68,10 @@ class VAS:
 				self.level = 0;self.nav = None; self.service = None
 				#Initiate Session
 				self.session = Session(session_id=self.payload['sessionid'], channel=self.channel, reference=self.payload['msisdn'],status=SessionStatus.objects.get(name='CREATED'))
-				if len(self.gateway_profile)>0:
+				if self.gateway_profile.exists():
 					self.session.gateway_profile = self.gateway_profile[0]
-					self.menu = self.menu.filter(Q(access_level = self.gateway_profile[0].access_level), Q(code=self.code[0]),\
-									Q(profile_status=self.gateway_profile[0].status)|Q(profile_status=None))
+					self.menu = self.menu.filter(access_level=self.gateway_profile[0].access_level, code=self.code[0],\
+									profile_status=self.gateway_profile[0].status)
 				else:
 					self.menu = self.menu.filter(access_level__name='SYSTEM', code=self.code[0],profile_status=None)
 
@@ -82,10 +82,10 @@ class VAS:
 		self.item_list = []
 
 		menuitems = MenuItem.objects.filter(status__name='ENABLED')
-		if len(self.gateway_profile)>0:
-			menuitems = menuitems.filter(access_level__name=self.gateway_profile[0].access_level.name)
+		if self.gateway_profile.exists():
+			menuitems = menuitems.filter(access_level=self.gateway_profile[0].access_level,profile_status=self.gateway_profile[0].status)
 		else:
-			menuitems = menuitems.filter(access_level__name='SYSTEM')
+			menuitems = menuitems.filter(access_level__name='SYSTEM',profile_status=None)
 
 		#FIlter Enrollments
 		if self.gateway_profile.exists():
