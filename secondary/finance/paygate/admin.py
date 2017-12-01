@@ -31,8 +31,7 @@ admin.site.register(RemittanceStatus, RemittanceStatusAdmin)
 
 class RemittanceAdmin(admin.ModelAdmin):
 	list_display = ('id','name','description','status','ext_service_id','ext_service_username',\
-			'ext_service_password','ext_service_details','institution_till',\
-			'institution_till_url','institution_till_username','institution_till_password',\
+			'ext_service_password','ext_service_details',\
 			'service','gateway_list',)
 admin.site.register(Remittance, RemittanceAdmin)
 

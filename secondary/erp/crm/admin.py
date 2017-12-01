@@ -23,7 +23,7 @@ admin.site.register(ProductionFrequency, ProductionFrequencyAdmin)
 
 class ProductTypeAdmin(admin.ModelAdmin):
 		list_display = ('id','name','product_category','metric','description',\
-				'status','service','institution_till','payment_method_list')
+				'status','service','payment_method_list')
 		search_fields = ('name','description',)
 		list_filter = ('product_category','metric','payment_method',)
 admin.site.register(ProductType, ProductTypeAdmin)
@@ -37,13 +37,13 @@ admin.site.register(ShopProductType, ShopProductTypeAdmin)
 
 class ProductChargeAdmin(admin.ModelAdmin):
 		list_display = ('id','institution_list','product_type_list',\
-				'credit','till_list','expiry','min_amount','max_amount','currency',\
+				'credit','expiry','min_amount','max_amount','currency',\
 				'charge_value','is_percentage','description','for_float','payment_method_list',)
 admin.site.register(ProductCharge, ProductChargeAdmin)
 
 class ProductDiscountAdmin(admin.ModelAdmin):
 		list_display = ('institution_list','coupon','product_type_list',\
-				'credit','till_list','expiry','min_amount','max_amount','currency',\
+				'credit','expiry','min_amount','max_amount','currency',\
 				'charge_value','is_percentage','description','for_float')
 admin.site.register(ProductDiscount, ProductDiscountAdmin)
 

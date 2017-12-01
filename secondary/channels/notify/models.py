@@ -39,7 +39,6 @@ class Notification(models.Model):
 	institution_password = models.CharField(max_length=320, null=True, blank=True, help_text='Optional')
 	channel = models.ManyToManyField(Channel, blank=True)
 	product_type = models.ForeignKey(ProductType)
-	institution_till = models.ForeignKey(InstitutionTill, null=True, blank=True)
 	code = models.ForeignKey(Code)#Code Required for Email & InApp notifications (Create Code named EMAIL|IN APP for institution)
 	service = models.ForeignKey(Service, blank=True, null=True) #Service for processing inbound tasks
 	def __unicode__(self):

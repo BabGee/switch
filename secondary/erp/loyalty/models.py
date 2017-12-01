@@ -7,7 +7,6 @@ class LoyaltyAccountType(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	branch = models.ForeignKey(InstitutionTill)
 	point_amount = models.DecimalField(max_digits=19, decimal_places=2)
 	def __unicode__(self):
 		return u'%s' % (self.name)

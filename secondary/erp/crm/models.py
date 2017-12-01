@@ -59,7 +59,6 @@ class ProductType(models.Model):
 	description = models.CharField(max_length=100)
 	status = models.ForeignKey(ProductStatus)
 	service = models.ForeignKey(Service, null=True, blank=True) #For Processing LOCAL endpoints
-	institution_till = models.ForeignKey(InstitutionTill, blank=True, null=True)
 	icon = models.CharField(max_length=45, null=True, blank=True)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	def __unicode__(self):
@@ -86,7 +85,6 @@ class ProductCharge(models.Model):
 	institution = models.ManyToManyField(Institution, blank=True)
 	product_type = models.ManyToManyField(ProductType, blank=True)
 	credit = models.BooleanField(default=False) #Dr | Cr (add charge if Dr, sub charge if Cr)
-	till = models.ManyToManyField(InstitutionTill, blank=True)#If blank, all tills would work with discount
 	expiry = models.DateTimeField(null=True, blank=True)
 	min_amount = models.IntegerField()
 	max_amount = models.IntegerField()
@@ -102,8 +100,6 @@ class ProductCharge(models.Model):
 		return "\n".join([a.name for a in self.institution.all()])
 	def product_type_list(self):
 		return "\n".join([a.name for a in self.product_type.all()])
-	def till_list(self):
-		return "\n".join([a.name for a in self.till.all()])
 	def payment_method_list(self):
 		return "\n".join([a.name for a in self.payment_method.all()])
 
@@ -114,7 +110,6 @@ class ProductDiscount(models.Model):
 	coupon = models.CharField(max_length=45, null=True, blank=True)
 	product_type = models.ManyToManyField(ProductType, blank=True)
 	credit = models.BooleanField(default=False) #Dr | Cr (add charge if Dr, sub charge if Cr)
-	till = models.ManyToManyField(InstitutionTill, blank=True)#If blank, all tills would work with discount
 	expiry = models.DateTimeField(null=True, blank=True)
 	min_amount = models.IntegerField()
 	max_amount = models.IntegerField()
@@ -129,8 +124,6 @@ class ProductDiscount(models.Model):
 		return "\n".join([a.name for a in self.institution.all()])
 	def product_type_list(self):
 		return "\n".join([a.name for a in self.product_type.all()])
-	def till_list(self):
-		return "\n".join([a.name for a in self.till.all()])
 
 class ProductDisplay(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -147,7 +140,6 @@ class ProductItem(models.Model):
 	description = models.CharField(max_length=200, null=True, blank=True)
 	status = models.ForeignKey(ProductStatus)
 	product_type = models.ForeignKey(ProductType)
-	#institution_till = models.ManyToManyField(InstitutionTill, blank=True)
 	unit_limit_min = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	unit_limit_max = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	unit_cost =  models.DecimalField(max_digits=19, decimal_places=2) 
@@ -171,8 +163,6 @@ class ProductItem(models.Model):
 	shop_product_type = models.ForeignKey(ShopProductType, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.name)
-	def institution_till_list(self):
-		return "\n".join([a.name for a in self.institution_till.all()])
 
 class ProductImage(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)

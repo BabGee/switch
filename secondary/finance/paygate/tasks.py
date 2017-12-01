@@ -164,7 +164,7 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			reference = payload['reference'].strip() if 'reference' in payload.keys() else ""
 			reference_list = reference.split("-")
-			institution_incoming_service, till_number, institution = None, None, None
+			institution_incoming_service, institution = None, None, None
 			if len(reference_list)==2:
 				#order, institution does not need a service as purchase order items have services
 				business_number = reference_list[0] #is unique in UPC
@@ -182,12 +182,6 @@ class System(Wrappers):
 						Q(remittance__gateway=gateway_profile.gateway)|Q(remittance__gateway=None))
 
 			lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
-
-			'''
-			if till_number is not None:
-				remittance_product = remittance_product.filter(remittance__institution_till__till_number=till_number)
-			lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
-			'''
 
 			if 'currency' in payload.keys() and payload['currency'] not in ["",None]:
 				remittance_product = remittance_product.filter(currency__code=payload['currency'])
@@ -309,6 +303,7 @@ class System(Wrappers):
 
 				if remittance_product.exists():
 					#Forex Currency
+					'''
 					if 'currency' in payload.keys() and payload['currency'] not in ["",None]:
 						currency = Currency.objects.get(code=payload['currency'])
 						if currency <> remittance_product[0].remittance.institution_till.till_currency:
@@ -324,7 +319,7 @@ class System(Wrappers):
 							else:
 								payload['amount'] = Decimal(0)
 							lgr.info('Forex Calculate amount to %s|from: %s| %s' % (currency, till_currency, payload['amount']) )
-
+					'''
 					#log outgoing
 					response_status = ResponseStatus.objects.get(response='DEFAULT')
 					state = OutgoingState.objects.get(name="CREATED")
@@ -755,7 +750,6 @@ class System(Wrappers):
 
 					#Wherever tills match, currencies match
 					float_type = FloatType.objects.filter(Q(product_type=notification_product.notification.product_type),\
-							Q(float_product_type__institution_till=notification_product.notification.institution_till),\
 							Q(service__name=payload['SERVICE'])|Q(service=None),\
 							Q(gateway=gateway_profile.gateway)|Q(gateway=None))
 
@@ -770,7 +764,6 @@ class System(Wrappers):
 						if 'institution_id' in payload.keys(): del payload['institution_id'] #User gateway Float if exists, if not, fail
 
 					payload['product_type_id'] = notification_product.notification.product_type.id
-					#payload['institution_till_id'] = notification_product.notification.institution_till.id
 					payload = self.debit_float(payload, node_info)
 					response = '%s | %s' % (response,payload['response'])
 
@@ -833,7 +826,6 @@ class System(Wrappers):
 
 				payload['float_amount'] = Decimal(contact_list_count * notification_product.unit_credit_charge * messages_count)
 				float_type = FloatType.objects.filter(Q(product_type=notification_product.notification.product_type),\
-						Q(float_product_type__institution_till=notification_product.notification.institution_till),\
 						Q(service__name=payload['SERVICE'])|Q(service=None),\
 						Q(gateway=gateway_profile.gateway)|Q(gateway=None))
 
@@ -869,7 +861,6 @@ class System(Wrappers):
 
 					#Wherever tills match, currencies match
 					float_type = FloatType.objects.filter(Q(product_type=notification_product.notification.product_type),\
-							Q(float_product_type__institution_till=notification_product.notification.institution_till),\
 							Q(service__name=payload['SERVICE'])|Q(service=None),\
 							Q(gateway=gateway_profile.gateway)|Q(gateway=None))
 
@@ -884,7 +875,6 @@ class System(Wrappers):
 						if 'institution_id' in payload.keys(): del payload['institution_id'] #User gateway Float if exists, if not, fail
 
 					payload['product_type_id'] = notification_product.notification.product_type.id
-					#payload['institution_till_id'] = notification_product.notification.institution_till.id
 					payload = self.debit_float(payload, node_info)
 					response = '%s | %s' % (response,payload['response'])
 

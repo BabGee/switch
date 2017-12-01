@@ -129,7 +129,7 @@ class ChangeProfileMSISDN(models.Model):
 	def __unicode__(self):
 		return u'%s %s %s' % (self.gateway_profile, self.msisdn, self.expiry)
 
-
+'''
 class TillTypeStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
@@ -167,6 +167,7 @@ class InstitutionTill(models.Model):
 	objects = models.GeoManager()
 	def __unicode__(self):
 		return '%s %s %s' % (self.name, self.institution, self.till_currency)
+'''
 
 class PasswordStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)

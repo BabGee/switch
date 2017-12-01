@@ -18,7 +18,7 @@ class NotificationAdmin(admin.ModelAdmin):
 			'ext_service_id','ext_service_username','ext_service_password',\
 			'ext_service_details','institution_url',\
 			'institution_username','institution_password','channel_list',\
-			'product_type','institution_till','code','service',)
+			'product_type','code','service',)
 	list_filter = ('code__institution','code','code__gateway',)
 admin.site.register(Notification, NotificationAdmin)
 

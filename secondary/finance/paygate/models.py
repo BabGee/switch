@@ -102,10 +102,6 @@ class Remittance(models.Model):
 	ext_service_username = models.CharField(max_length=320, null=True, blank=True, help_text='Optional')
 	ext_service_password = models.CharField(max_length=320, null=True, blank=True, help_text='Optional')
 	ext_service_details = models.CharField(max_length=1920, null=True, blank=True)
-	institution_till = models.ForeignKey(InstitutionTill, null=True, blank=True)
-	institution_till_url = models.CharField(max_length=640, null=True, blank=True)
-	institution_till_username = models.CharField(max_length=320, null=True, blank=True, help_text='Optional')
-	institution_till_password = models.CharField(max_length=320, null=True, blank=True, help_text='Optional')
 	service = models.ForeignKey(Service, null=True, blank=True) #Service for processing outgoing tasks
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	def __unicode__(self):

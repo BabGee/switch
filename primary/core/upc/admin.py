@@ -51,6 +51,7 @@ class ChangeProfileMSISDNAdmin(admin.ModelAdmin):
 		list_display = ('id','date_modified','date_created','gateway_profile','msisdn','expiry','change_pin','status',)
 admin.site.register(ChangeProfileMSISDN, ChangeProfileMSISDNAdmin)
 
+'''
 class TillTypeStatusAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description','date_modified','date_created')
 admin.site.register(TillTypeStatus, TillTypeStatusAdmin)
@@ -64,6 +65,7 @@ class InstitutionTillAdmin(admin.OSMGeoAdmin):
 				'description','qr_code','city','physical_address','is_default','geometry','details',)
 		list_filter = ('till_type',)
 admin.site.register(InstitutionTill, InstitutionTillAdmin)
+'''
 
 class PasswordStatusAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description','date_modified','date_created')

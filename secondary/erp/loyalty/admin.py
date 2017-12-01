@@ -5,7 +5,7 @@ from django import forms
 
 
 class LoyaltyAccountTypeAdmin(admin.ModelAdmin):
-	list_display = ('id','name','description','branch','point_amount')
+	list_display = ('id','name','description','point_amount')
 admin.site.register(LoyaltyAccountType, LoyaltyAccountTypeAdmin)
 
 class LoyaltyTransactionTypeAdmin(admin.ModelAdmin):
