@@ -142,5 +142,6 @@ class Navigator(models.Model):
 	code = models.ForeignKey(Code)
 	pin_auth = models.BooleanField(default=False)
 	session = models.ForeignKey(Session, null=True, blank=True)
+	level = models.IntegerField()
 	def __unicode__(self):
 		return u'%s %s %s' % (self.session, self.menu, self.nav_step)

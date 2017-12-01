@@ -56,6 +56,8 @@ class PageString(ServiceCall, Wrappers):
 			~Q(input_select__in=['']) ).order_by('-date_created','-menu__level')
 		item = {}
 		nav = {}
+
+		'''
 		for value in navigator_list:
 			if value.input_select in ['00'] or value.menu.level == 0: #Ensure that if menu level is 0, captures data but ends capture(level 0=main menu)
 				item[int(value.menu.level)] = value
@@ -68,6 +70,31 @@ class PageString(ServiceCall, Wrappers):
 		for key, value in item.items():
 			if value.menu.selection_preview == True:
 				item_level = value.menu.level + 1
+				try:item_list = json.loads(value.item_list)
+				except: item_list = []
+				if len(item_list) > 0:
+					lgr.info('Item List not None: %s|Item Level: %s' % (item_list,item_level) )
+					try: input_nav = item_list[int(item[item_level].input_select) - 1]
+					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
+				else:
+					lgr.info('Item List None')
+					try:input_nav = item[item_level].input_select 
+					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
+				nav[value.menu.menu_description] = input_nav
+		'''
+
+		for value in navigator_list:
+			if value.input_select in ['00'] or value.level == 0: #Ensure that if menu level is 0, captures data but ends capture(level 0=main menu)
+				item[int(value.level)] = value
+				break
+			elif value.input_select in ['0'] or int(value.level) in item.keys(): #Ensure that any input select to back is not included & Existing keys not replaced[mostly with back 0]
+				continue
+			else:
+				item[int(value.level)] = value
+
+		for key, value in item.items():
+			if value.menu.selection_preview == True:
+				item_level = value.level + 1
 				try:item_list = json.loads(value.item_list)
 				except: item_list = []
 				if len(item_list) > 0:

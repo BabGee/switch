@@ -117,7 +117,7 @@ class VAS:
 			input_type = self.menu[0].input_variable.variable_type.variable
 			input_min = self.menu[0].input_variable.validate_min
 			input_max = self.menu[0].input_variable.validate_max
-			new_navigator = Navigator(session=self.session, menu=self.menu[0], pin_auth=self.pin_auth)
+			new_navigator = Navigator(session=self.session, menu=self.menu[0], pin_auth=self.pin_auth, level=self.level)
 			new_navigator.input_select = self.payload['input']
 		elif self.nav and len(self.menu)<1:
 			menuitems = menuitems.filter(menu=self.nav.menu)
@@ -131,11 +131,11 @@ class VAS:
 			input_min = self.nav.menu.input_variable.validate_min
 			input_max = self.nav.menu.input_variable.validate_max
 
-			new_navigator = Navigator(session=self.session, menu=self.nav.menu, pin_auth=self.pin_auth)
+			new_navigator = Navigator(session=self.session, menu=self.nav.menu, pin_auth=self.pin_auth, level=self.level)
 			new_navigator.input_select = self.nav.input_select
 
 		else:
-			new_navigator = Navigator(session=self.session)
+			new_navigator = Navigator(session=self.session, level=self.level)
 			page_string = 'Sorry, no Menu Found!'
 			input_type = None
 			input_min = 0
