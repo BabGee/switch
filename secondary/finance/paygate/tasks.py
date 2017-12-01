@@ -164,7 +164,7 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			reference = payload['reference'].strip() if 'reference' in payload.keys() else ""
 			reference_list = reference.split("-")
-			institution_incoming_service, institution = None, None, None
+			institution_incoming_service, institution = None, None
 			if len(reference_list)==2:
 				#order, institution does not need a service as purchase order items have services
 				business_number = reference_list[0] #is unique in UPC
