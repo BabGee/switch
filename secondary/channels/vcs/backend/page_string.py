@@ -85,16 +85,17 @@ class PageString(ServiceCall, Wrappers):
 
 		for value in navigator_list:
 			if value.input_select in ['00'] or value.level == 0: #Ensure that if menu level is 0, captures data but ends capture(level 0=main menu)
-				item[int(value.level)] = value
+				item[value.id] = value
 				break
-			elif value.input_select in ['0'] or int(value.level) in item.keys(): #Ensure that any input select to back is not included & Existing keys not replaced[mostly with back 0]
+			elif value.input_select in ['0'] or value.id in item.keys(): #Ensure that any input select to back is not included & Existing keys not replaced[mostly with back 0]
 				continue
 			else:
-				item[int(value.level)] = value
+				item[value.id] = value
 
 		for key, value in item.items():
 			if value.menu.selection_preview == True:
-				item_level = value.level + 1
+				item_val = navigator_list.filter(id__gt=value.id)[-1:].id
+				item_level = item_val[0].id if len(item_val) else 0
 				try:item_list = json.loads(value.item_list)
 				except: item_list = []
 				if len(item_list) > 0:
