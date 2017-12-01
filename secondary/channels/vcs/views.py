@@ -235,9 +235,8 @@ class VAS:
 
 		#Filter & Validate Input
 		if self.nav and self.payload['input'] not in ['0','00']:#Validate input but dont filter Back 0 and Main 00
-			lgr.info('Validatee 0')
 			try:
-				lgr.info('Validatee 1')
+				allowed_input_list = self.nav.menu.input_variable.allowed_input_list
 				if len(self.payload['input'])>=int(self.nav.menu.input_variable.validate_min) and \
 				len(self.payload['input'])<=int(self.nav.menu.input_variable.validate_max) and \
 				((self.nav.menu.input_variable.variable_type.variable == 'email' and self.validateEmail(self.payload['input'])) or \
@@ -245,13 +244,12 @@ class VAS:
 				(self.nav.menu.input_variable.variable_type.variable not in ['msisdn','email'] and \
 				isinstance(globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable](self.payload['input']), \
 				globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable])) or \
-				(self.payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','))):
+				(allowed_input_list and self.payload['input'] in allowed_input_list.split(','))):
 					lgr.info('Validated')
 					override_group_select = self.nav.menu.input_variable.override_group_select
 					error_group_select = self.nav.menu.input_variable.error_group_select
 					override_level = self.nav.menu.input_variable.override_level
 					error_level = self.nav.menu.input_variable.error_level
-					allowed_input_list = self.nav.menu.input_variable.allowed_input_list
 
 					if ('Non-Existing National ID' in self.nav.menu.input_variable.name and \
 					GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
