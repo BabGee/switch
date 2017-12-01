@@ -251,6 +251,7 @@ class VAS:
 					error_group_select = self.nav.menu.input_variable.error_group_select
 					override_level = self.nav.menu.input_variable.override_level
 					error_level = self.nav.menu.input_variable.error_level
+					allowed_input_list = self.nav.menu.input_variable.allowed_input_list
 
 					if ('Non-Existing National ID' in self.nav.menu.input_variable.name and \
 					GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
@@ -299,7 +300,7 @@ class VAS:
 						except:item_list = []
 						try: item_list[int(self.payload['input'])-1]; nolist=False
 						except: 
-							if self.payload['input'] in self.nav.menu.input_variable.allowed_input_list.split(','): nolist=False
+							if allowed_input_list and self.payload['input'] in allowed_input_list.split(','): nolist=False
 							else: nolist= True
 						#if len(item_list)<1 or nolist:
 						if nolist:
