@@ -965,7 +965,7 @@ def send_payment(outgoing):
 
 		payload = WebService().post_request(payload, node)
 
-		if 'response' in payload.keys(): i.message = str(payload['response'])[:3839]; payload['response'] = payload['response']
+		if 'response' in payload.keys(): i.message = str(Wrappers().response_payload(params['response']))[:3839]; payload['response'] = payload['response']
 		else: payload['response'] = 'Remit Submitted'
 		if 'response_status' in payload.keys() and payload['response_status'] not in [None,""]:
 			try:i.response_status = ResponseStatus.objects.get(response=str(payload['response_status']))
