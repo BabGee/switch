@@ -519,10 +519,34 @@ class PageString(ServiceCall, Wrappers):
 					page_string = page_string.replace('['+v+']',item)
 
 
+				elif variable_key == 'i_invest.investmentfund':
+					from thirdparty.i_invest.models import InvestmentFund
+
+					investmentfund = InvestmentFund.objects.filter(status__name='ENABLED').order_by('id')
+					item = ''
+					item_list = []
+					count = 1
+					investmentfund = investmentfund[:10]
+
+					for i in investmentfund:
+						name = '%s' % (i.name)
+						if navigator.session.channel.name == 'IVR':
+							item = '%s\nFor %s, press %s.' % (item, name, count)
+						elif navigator.session.channel.name == 'USSD':
+							item = '%s\n%s:%s' % (item, count, name)
+						item_list.append(i.name)
+						count+=1
+					navigator.item_list = json.dumps(item_list)
+					navigator.save()
+
+					lgr.info('Your List: %s' % item)
+					page_string = page_string.replace('['+v+']',item)
+
+
 				elif variable_key == 'i_invest.sourceoffund':
 					from thirdparty.i_invest.models import SourceOfFund
 
-					sourceoffund = SourceOfFund.objects.filter(status__name='ENABLED').order_by('-id')
+					sourceoffund = SourceOfFund.objects.filter(status__name='ENABLED').order_by('id')
 					item = ''
 					item_list = []
 					count = 1
@@ -534,7 +558,7 @@ class PageString(ServiceCall, Wrappers):
 							item = '%s\nFor %s, press %s.' % (item, name, count)
 						elif navigator.session.channel.name == 'USSD':
 							item = '%s\n%s:%s' % (item, count, name)
-						item_list.append(i.id)
+						item_list.append(i.name)
 						count+=1
 					navigator.item_list = json.dumps(item_list)
 					navigator.save()
@@ -546,7 +570,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'i_invest.occupation':
 					from thirdparty.i_invest.models import Occupation
 
-					occupation = Occupation.objects.filter(status__name='ENABLED').order_by('-id')
+					occupation = Occupation.objects.filter(status__name='ENABLED').order_by('id')
 					item = ''
 					item_list = []
 					count = 1
@@ -558,7 +582,7 @@ class PageString(ServiceCall, Wrappers):
 							item = '%s\nFor %s, press %s.' % (item, name, count)
 						elif navigator.session.channel.name == 'USSD':
 							item = '%s\n%s:%s' % (item, count, name)
-						item_list.append(i.id)
+						item_list.append(i.name)
 						count+=1
 					navigator.item_list = json.dumps(item_list)
 					navigator.save()
