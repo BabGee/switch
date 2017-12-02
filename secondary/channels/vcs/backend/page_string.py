@@ -519,6 +519,30 @@ class PageString(ServiceCall, Wrappers):
 					page_string = page_string.replace('['+v+']',item)
 
 
+				elif variable_key == 'i_invest.sourceoffund':
+					from thirdparty.i_invest.models import SourceOfFund
+
+					sourceoffund = SourceOfFund.objects.filter(status__name='ENABLED').order_by('-id')
+					item = ''
+					item_list = []
+					count = 1
+					occupation = occupation[:10]
+
+					for i in sourceoffund:
+						name = '%s' % (i.name)
+						if navigator.session.channel.name == 'IVR':
+							item = '%s\nFor %s, press %s.' % (item, name, count)
+						elif navigator.session.channel.name == 'USSD':
+							item = '%s\n%s:%s' % (item, count, name)
+						item_list.append(i.id)
+						count+=1
+					navigator.item_list = json.dumps(item_list)
+					navigator.save()
+
+					lgr.info('Your List: %s' % item)
+					page_string = page_string.replace('['+v+']',item)
+
+
 				elif variable_key == 'i_invest.occupation':
 					from thirdparty.i_invest.models import Occupation
 
