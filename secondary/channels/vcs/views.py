@@ -52,7 +52,8 @@ class VAS:
 				if self.gateway_profile.exists():
 					self.navigator = self.navigator.filter(session__gateway_profile=self.gateway_profile[0])
 				self.nav = self.navigator[0]
-				self.level=int(self.nav.menu.level)+1; self.group_select=self.nav.menu.group_select
+				#self.level=int(self.nav.menu.level)+1; self.group_select=self.nav.menu.group_select
+				self.level=int(self.nav.level)+1; self.group_select=self.nav.group_select
 				self.nav_step = self.nav.nav_step; self.service = self.nav.menu.service;
 				#Initiate Session
 				self.session = self.nav.session
@@ -117,7 +118,7 @@ class VAS:
 			input_type = self.menu[0].input_variable.variable_type.variable
 			input_min = self.menu[0].input_variable.validate_min
 			input_max = self.menu[0].input_variable.validate_max
-			new_navigator = Navigator(session=self.session, menu=self.menu[0], pin_auth=self.pin_auth, level=self.level)
+			new_navigator = Navigator(session=self.session, menu=self.menu[0], pin_auth=self.pin_auth, level=self.level, group_select=self.group_select)
 			new_navigator.input_select = self.payload['input']
 		elif self.nav and len(self.menu)<1:
 			menuitems = menuitems.filter(menu=self.nav.menu)
@@ -131,11 +132,11 @@ class VAS:
 			input_min = self.nav.menu.input_variable.validate_min
 			input_max = self.nav.menu.input_variable.validate_max
 
-			new_navigator = Navigator(session=self.session, menu=self.nav.menu, pin_auth=self.pin_auth, level=self.level)
+			new_navigator = Navigator(session=self.session, menu=self.nav.menu, pin_auth=self.pin_auth, level=self.level, group_select=self.group_select)
 			new_navigator.input_select = self.nav.input_select
 
 		else:
-			new_navigator = Navigator(session=self.session, level=self.level)
+			new_navigator = Navigator(session=self.session, level=self.level, self.group_select)
 			page_string = 'Sorry, no Menu Found!'
 			input_type = None
 			input_min = 0
