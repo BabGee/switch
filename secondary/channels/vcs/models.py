@@ -143,5 +143,6 @@ class Navigator(models.Model):
 	pin_auth = models.BooleanField(default=False)
 	session = models.ForeignKey(Session, null=True, blank=True)
 	level = models.IntegerField()
+	group_select = models.IntegerField(null=True, blank=True)		
 	def __unicode__(self):
 		return u'%s %s %s' % (self.session, self.menu, self.nav_step)
