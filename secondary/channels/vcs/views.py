@@ -136,7 +136,7 @@ class VAS:
 			new_navigator.input_select = self.nav.input_select
 
 		else:
-			new_navigator = Navigator(session=self.session, level=self.level, self.group_select)
+			new_navigator = Navigator(session=self.session, level=self.level, group_select=self.group_select)
 			page_string = 'Sorry, no Menu Found!'
 			input_type = None
 			input_min = 0
