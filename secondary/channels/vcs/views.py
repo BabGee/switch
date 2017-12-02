@@ -52,8 +52,8 @@ class VAS:
 				if self.gateway_profile.exists():
 					self.navigator = self.navigator.filter(session__gateway_profile=self.gateway_profile[0])
 				self.nav = self.navigator[0]
-				#self.level=int(self.nav.menu.level)+1; self.group_select=self.nav.menu.group_select
-				self.level=int(self.nav.level)+1; self.group_select=self.nav.group_select
+				self.level=int(self.nav.menu.level)+1; self.group_select=self.nav.menu.group_select
+				#self.level=int(self.nav.level)+1; self.group_select=self.nav.group_select
 				self.nav_step = self.nav.nav_step; self.service = self.nav.menu.service;
 				#Initiate Session
 				self.session = self.nav.session
