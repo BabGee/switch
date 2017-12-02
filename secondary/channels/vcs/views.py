@@ -288,7 +288,7 @@ class VAS:
 							self.group_select = self.payload['input']
 						if 'Product of Select' in self.nav.menu.input_variable.name:
 							lgr.info('Product of Select: %s' % self.payload['input'])
-							self.group_select = int(self.payload['input'])*override_group_select if override_group_select else self.payload['input']
+							self.group_select = str(int(self.payload['input'])*int(override_group_select)) if override_group_select else self.payload['input']
 
 						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
 						else: pass
