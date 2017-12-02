@@ -526,7 +526,7 @@ class PageString(ServiceCall, Wrappers):
 					item = ''
 					item_list = []
 					count = 1
-					occupation = occupation[:10]
+					sourceoffund = sourceoffund[:10]
 
 					for i in sourceoffund:
 						name = '%s' % (i.name)
