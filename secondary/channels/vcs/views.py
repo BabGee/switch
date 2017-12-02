@@ -286,9 +286,6 @@ class VAS:
 
 						if self.nav.menu.input_variable.name in ['Select','Strict Select'] or 'Select for' in self.nav.menu.input_variable.name:
 							self.group_select = self.payload['input']
-						if 'Product of Select' in self.nav.menu.input_variable.name:
-							self.group_select = str(int(self.payload['input'])*int(override_group_select));lgr.info('1') if override_group_select and isinstance(override_group_select, int) else self.payload['input'];lgr.info('2')
-							lgr.info('Product of Select: %s | %s' % (self.payload['input'],self.group_select))
 
 						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
 						else: pass
@@ -296,6 +293,10 @@ class VAS:
 						if override_level and isinstance(override_level, int): self.level = override_level
 						else: pass
 
+						#Comes after overrides
+						if 'Product of Select' in self.nav.menu.input_variable.name:
+							self.group_select = str(int(self.payload['input'])*int(override_group_select)) if override_group_select and \
+										isinstance(override_group_select, int) else self.payload['input']
 
 						#Matches Saved List to Input
 						try:item_list = json.loads(self.nav.item_list)
