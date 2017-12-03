@@ -182,6 +182,7 @@ class InstitutionIncomingService(models.Model):
 	keyword = models.CharField(max_length=50, unique=True)
 	product_item = models.ForeignKey(ProductItem)
 	gateway = models.ForeignKey(Gateway)
+	details = models.CharField(max_length=512, default=json.dumps({}))
 	def __unicode__(self):
 		return u'%s %s' % (self.product_item.institution, self.service)
 
