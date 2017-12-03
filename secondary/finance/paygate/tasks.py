@@ -24,6 +24,7 @@ from secondary.channels.notify.models import *
 from secondary.erp.pos.models import *
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core import serializers
+from primary.core.upc.tasks import Wrappers as UPCWrappers
 
 from primary.core.administration.views import WebService
 from .models import *
@@ -165,16 +166,58 @@ class System(Wrappers):
 			reference = payload['reference'].strip() if 'reference' in payload.keys() else ""
 			reference_list = reference.split("-")
 			institution_incoming_service, institution = None, None
+			lgr.info('Payment Notification')
 			if len(reference_list)==2:
+
+				lgr.info('Payment Notification| Ref List')
 				#order, institution does not need a service as purchase order items have services
-				business_number = reference_list[0] #is unique in UPC
-				institution = Institution.objects.get(business_number__iexact=business_number)
-				invoice_id = reference_list[1] #Used in purchase order
+				keyword = reference_list[0].strip().replace('',' ')
+				enrollment_record = reference_list[1].strip().replace('',' ') #Used in enrollment
+
+				#capture institution reference from Purchase Order
+				institution_list = Institution.objects.filter(business_number__iexact=keyword)
+				if institution_list.exists():
+					institution = institution_list[0]
+
+				#Capture Incoming Service
+				institution_incoming_service_list = InstitutionIncomingService.objects.filter(keyword__iexact=keyword)
+				if institution_incoming_service_list.exists():
+					msisdn = UPCWrappers.simple_get_msisdn(enrollment_record,payload)
+					default_msisdn = UPCWrappers.get_msisdn(payload)
+					if msisdn:
+						enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
+											record=msisdn)
+					elif default_msisdn:
+						enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
+											record=default_msisdn)
+					else:
+						enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
+											record=enrollment_record)
+					if enrollment.exists():
+						institution_incoming_service = institution_incoming_service_list[0]
 			else:
+
+				lgr.info('Payment Notification | Ref')
 				if reference not in ['', None]:
-					try:
-						institution_incoming_service = InstitutionIncomingService.objects.get(keyword__iexact=reference)
-					except InstitutionIncomingService.DoesNotExist: pass
+					keyword = reference[:4].strip().replace('',' ')
+					enrollment_record = reference[4:].strip().replace('',' ') #Used in enrollment
+
+					institution_incoming_service_list = InstitutionIncomingService.objects.filter(keyword__iexact=keyword)
+
+					if institution_incoming_service_list.exists():
+						msisdn = UPCWrappers.simple_get_msisdn(enrollment_record,payload)
+						default_msisdn = UPCWrappers.get_msisdn(payload)
+						if msisdn:
+							enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
+												record=msisdn)
+						elif default_msisdn:
+							enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
+												record=default_msisdn)
+						else:
+							enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
+												record=enrollment_record)
+						if enrollment.exists():
+							institution_incoming_service = institution_incoming_service_list[0]
 
 
 			#capture remittance
@@ -222,10 +265,12 @@ class System(Wrappers):
 						incoming.amount = Decimal(payload['amount'])
 					if 'charge' in payload.keys() and payload['charge'] not in ["",None]:
 						incoming.charge = Decimal(payload['charge'])
-					if institution_incoming_service is not None:
-						incoming.institution_incoming_service = institution_incoming_service
 					if institution is not None:
 						incoming.institution = institution
+					if institution_incoming_service is not None:
+						incoming.institution_incoming_service = institution_incoming_service
+						incoming.institution = institution_incoming_service.product_item.institution
+
 					incoming.save()
 
 					payload['response_status'] = '00'
