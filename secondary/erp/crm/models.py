@@ -26,7 +26,8 @@ class ProductCategory(models.Model):
 	industry = models.ForeignKey(Industry)
 	description = models.CharField(max_length=100)
 	status = models.ForeignKey(ProductStatus)
-	icon = models.CharField(max_length=45, null=True, blank=True)
+	icon_old= models.CharField(max_length=45, null=True, blank=True)
+	icon = models.ForeignKey(Icon, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.name, self.industry)
 
@@ -36,8 +37,9 @@ class ShopProductCategory(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
 	status = models.ForeignKey(ProductStatus)
-	icon = models.CharField(max_length=45, null=True, blank=True)
+	icon_old= models.CharField(max_length=45, null=True, blank=True)
 	industry = models.ForeignKey(IndustryClass,null=True, blank=True)
+	icon = models.ForeignKey(Icon, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.name, self.industry)
 
@@ -59,7 +61,8 @@ class ProductType(models.Model):
 	description = models.CharField(max_length=100)
 	status = models.ForeignKey(ProductStatus)
 	service = models.ForeignKey(Service, null=True, blank=True) #For Processing LOCAL endpoints
-	icon = models.CharField(max_length=45, null=True, blank=True)
+	icon_old= models.CharField(max_length=45, null=True, blank=True)
+	icon = models.ForeignKey(Icon, null=True, blank=True)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)
@@ -73,8 +76,9 @@ class ShopProductType(models.Model):
 	shop_product_category = models.ForeignKey(ShopProductCategory)
 	description = models.CharField(max_length=100)
 	status = models.ForeignKey(ProductStatus)
-	icon = models.CharField(max_length=45, null=True, blank=True)
+	icon_old= models.CharField(max_length=45, null=True, blank=True)
 	institution = models.ForeignKey(Institution)
+	icon = models.ForeignKey(Icon, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)
 
