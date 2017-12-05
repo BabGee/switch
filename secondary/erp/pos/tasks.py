@@ -621,7 +621,7 @@ class System(Wrappers):
 
 
 
-			quantity = Decimal(payload['quantity']) if 'quantity' in payload.keys() else Decimal(1)
+			quantity = Decimal(payload['quantity']) if 'quantity' in payload.keys() and payload['quantity'] not in ["",None] else Decimal(1)
 			sub_total = Decimal(product_item.unit_cost*quantity).quantize(Decimal('.01'), rounding=ROUND_DOWN)
 			total = sub_total
 
@@ -685,6 +685,36 @@ class System(Wrappers):
 			lgr.info("Error on Creating Sale Order: %s" % e)
 		return payload
 
+
+
+	def bulk_sale_order(self, payload, node_info):
+		try:
+			product_item_list = payload['product_item_list']
+			purchase_order_id = None
+			for i in product_item_list:
+				payload = self.add_product_to_cart(i, node_info)
+				if 'response_status' in payload.keys() and payload['response_status'] == '00':
+					if purchase_order_id:
+						payload['purchase_order_id'] = purchase_order_id
+						payload = self.add_to_purchase_order(payload, node_info)
+
+					else:
+						payload = self.create_purchase_order(payload, node_info)
+						purchase_order_id = payload['purchase_order_id']
+
+					if 'response_status' in payload.keys() and payload['response_status'] == '00':
+						payload["response_status"] = "00"
+						if 'reference' in payload.keys():
+							payload["response"] = payload['reference']
+						else:
+							payload["response"] = "Sale Order"
+				else:
+					break
+
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Creating Sale Order: %s" % e)
+		return payload
 
 
 	def sale_order(self, payload, node_info):

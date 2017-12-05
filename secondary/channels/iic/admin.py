@@ -27,7 +27,7 @@ class PageAdmin(admin.ModelAdmin):
 		list_display = ('id', 'name','description','icon','item_level','access_level_list','profile_status_list','page_group',\
 		'gateway_list','service_list',)
 	        search_fields = ('name',)
-	        list_filter = ('service','page_group','access_level')
+	        list_filter = ('service','page_group','access_level','gateway',)
 
 admin.site.register(Page, PageAdmin)
 

@@ -27,11 +27,93 @@ from django.conf import settings
 from switch.celery import app
 from switch.celery import single_instance_task
 
-
 import logging
 lgr = logging.getLogger('crm')
 
-class System:
+class Wrappers:
+	pass
+
+class System(Wrappers):
+	def bulk_product_item_details(self, payload, node_info):
+		try:
+			product_items = payload['product_items']
+			product_items_list = product_items.split(',')
+
+			new_payload = payload.copy()
+			payload['product_item_list'] = []
+
+
+			for product in product_items_list:
+
+				lgr.info('Product: %s' % product)
+				product_list = product.split('|')
+				product = new_payload.copy()
+				lgr.info('Product List: %s' % product_list)
+				product_item_id, quantity = product_list
+
+				quantity = quantity if quantity not in ["",None] else Decimal(1)
+				product['quantity'] = str(quantity)
+
+				lgr.info('Product: %s' % product)
+				product_item = ProductItem.objects.filter(id=product_item_id,status__name='ACTIVE')
+
+				if 'product_type' in payload.keys():
+					product_item = product_item.filter(product_type__name=payload['product_type'])
+
+
+				if 'product_type_id' in payload.keys():
+					product_item = product_item.filter(product_type__id=payload['product_type_id'])
+
+				if 'institution_id' in payload.keys():
+					product_item = product_item.filter(institution__id=payload['institution_id'])
+
+				if product_item.exists():
+					product['product_item_id'] = product_item[0].id
+					product['product_item_name'] = product_item[0].name
+					product['product_item_kind'] = product_item[0].kind
+					product['product_item_image'] = product_item[0].default_image if product_item[0].default_image else ''
+					product['institution_id'] = product_item[0].institution.id
+					#product['till_number'] = product_item[0].product_type.institution_till.till_number
+					product['currency'] = product_item[0].currency.code
+					if  product_item[0].variable_unit and 'quantity' in product.keys() and product['quantity'] not in ["",None]:
+						lgr.info('Variable Unit with Quantity')
+						product['amount'] = str(product_item[0].unit_cost*Decimal(product['quantity']))
+						payload['response'] = 'Successful'
+						payload['response_status'] = '00'
+					elif product_item[0].variable_unit and 'amount' in payload.keys():
+						if product_item[0].unit_limit_min is not None and Decimal(payload['amount']) < product_item[0].unit_limit_min:
+							payload['response'] = 'Min Amount: %s' % product_item[0].unit_limit_min
+							payload['response_status'] = '13'
+							break #Stop Loop
+						elif product_item[0].unit_limit_max is not None and Decimal(payload['amount']) > product_item[0].unit_limit_max:
+							payload['response'] = 'Max Amount: %s' % product_item[0].unit_limit_max
+							payload['response_status'] = '13'
+							break #Stop Loop
+						else:
+							lgr.info('Variable Unit with Amount')
+							payload['response'] = 'Successful'
+							payload['response_status'] = '00'
+					else:
+						lgr.info('not variable unit with amount or quantity')
+						product['amount'] = str(product_item[0].unit_cost)
+						payload['response'] = 'Successful'
+						payload['response_status'] = '00'
+
+					#Append product
+					payload['product_item_list'].append(product)
+				else:
+					payload['response_status'] = '25'
+
+
+			lgr.info('Product Item Details: %s' % payload)
+		except Exception, e:
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+			lgr.info("Error on product item details: %s" % e)
+		return payload
+
+
+
 	def product_item_details(self, payload, node_info):
 		try:
 			#payload['ext_service_id'] = payload['Payment']

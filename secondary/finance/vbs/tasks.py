@@ -936,7 +936,7 @@ class Payments(System):
 			account = Account.objects.get(id=payload['session_account_id'])
 			product_item = account.account_type.product_item
 			payload['product_item_id'] = product_item.id
-			payload['till_number'] = product_item.product_type.institution_till.till_number
+			#payload['till_number'] = product_item.product_type.institution_till.till_number
 			payload['currency'] = product_item.currency.code
 			payload['float_amount'] = payload['amount']
 			payload['response'] = 'Captured'
@@ -952,7 +952,7 @@ class Payments(System):
 			account_type = AccountType.objects.get(id=payload['account_type_id'])
 			product_item = account_type.product_item
 			payload['product_item_id'] = product_item.id
-			payload['till_number'] = product_item.product_type.institution_till.till_number
+			#payload['till_number'] = product_item.product_type.institution_till.till_number
 			payload['currency'] = product_item.currency.code
 			payload['float_amount'] = payload['amount']
 			payload['response'] = 'Captured'
@@ -1080,7 +1080,7 @@ class Payments(System):
 				product_item = account_type.product_item
 				payload['institution_id'] = product_item.institution.id
 				payload['product_item_id'] = product_item.id
-				payload['till_number'] = product_item.product_type.institution_till.till_number
+				#payload['till_number'] = product_item.product_type.institution_till.till_number
 				payload['currency'] = product_item.currency.code
 
 				payload['response'] = 'Captured'
@@ -1131,7 +1131,7 @@ class Payments(System):
 						product_item = account_type.product_item
 						payload['institution_id'] = product_item.institution.id
 						payload['product_item_id'] = product_item.id
-						payload['till_number'] = product_item.product_type.institution_till.till_number
+						#payload['till_number'] = product_item.product_type.institution_till.till_number
 						payload['currency'] = product_item.currency.code
 						
 						credit_type = account_type.credit_type.filter(min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
@@ -1276,7 +1276,7 @@ def overdue_credit_service_call(payload):
 		if c.product_item:
 			payload['product_item_id'] = c.product_item.id
 			payload['institution_id'] = c.product_item.institution.id
-			payload['till_number'] = c.product_item.product_type.institution_till.till_number
+			#payload['till_number'] = c.product_item.product_type.institution_till.till_number
 			payload['currency'] = c.product_item.currency.code
 
 		payload['session_account_id'] = a.dest_account.id
@@ -1369,7 +1369,7 @@ def process_overdue_credit():
 				if c.product_item:
 					payload['product_item_id'] = c.product_item.id
 					payload['institution_id'] = c.product_item.institution.id
-					payload['till_number'] = c.product_item.product_type.institution_till.till_number
+					#payload['till_number'] = c.product_item.product_type.institution_till.till_number
 					payload['currency'] = c.product_item.currency.code
 
 				payload['session_account_id'] = a.dest_account.id
