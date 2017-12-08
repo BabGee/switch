@@ -103,10 +103,13 @@ class GatewayProfile(models.Model):#Enforce one gateway profile per gateway per 
 	activation_device_id = models.CharField(max_length=200, blank=True, null=True)
         allowed_host = models.ManyToManyField(Host, blank=True)
 	email_activation_code = models.CharField(max_length=45, blank=True, null=True)
+	channel = models.ManyToManyField(Channel, blank=True)
 	def __unicode__(self):
 		return u'%s %s %s %s %s %s' % (self.id, self.user.first_name, self.user.last_name, self.msisdn,self.gateway, self.access_level)
 	def allowed_host_list(self):
 		return "\n".join([a.host for a in self.allowed_host.all()])
+	def channel_list(self):
+		return "\n".join([a.name for a in self.channel.all()])
 
 
 class ChangeProfileMSISDNStatus(models.Model):

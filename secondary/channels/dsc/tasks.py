@@ -877,9 +877,9 @@ class Wrappers:
 	    for i in account_manager:
 		item = {}
 		item['id'] = i.id
-                item['name'] = '%s %s' % (i.dest_account.gateway_profile.user.first_name, i.dest_account.gateway_profile.user.last_name)
-                item['msisdn'] = '%s' % (i.dest_account.gateway_profile.msisdn)
-                item['email'] = '%s' % (i.dest_account.gateway_profile.user.email)
+                item['name'] = '%s %s' % (i.dest_account.profile.user.first_name, i.dest_account.profile.user.last_name)
+                #item['msisdn'] = '%s' % (i.dest_account.gateway_profile.msisdn)
+                item['email'] = '%s' % (i.dest_account.profile.user.email)
 
                 item['description'] = 'Amount: %s Charge: %s Balance BF: %s' % (i.amount,i.charge,i.balance_bf)
                 item['count'] = 'Loan Time: %s' % (i.credit_time)
@@ -1583,7 +1583,7 @@ class System(Wrappers):
                         lgr.info(data)
                         if 'Investment' in data and 'Investor Enrollment' in data:
                             lgr.info('Investment and Enrollment Exist')
-                            investment = Investment.objects.filter(account__gateway_profile=gateway_profile)[:1]
+                            investment = Investment.objects.filter(account__profile=gateway_profile.user.profile)[:1]
 
                             investment_type = InvestmentType.objects.filter(
                                     ~Q(
@@ -1620,7 +1620,7 @@ class System(Wrappers):
                         lgr.info(data)
                         if 'Investment' in data and 'Investor Enrollment' in data:
                             lgr.info('Investment and Enrollment Exist')
-                            investment = Investment.objects.filter(account__gateway_profile=gateway_profile)[:1]
+                            investment = Investment.objects.filter(account__profile=gateway_profile.user.profile)[:1]
 
                             investment_type = InvestmentType.objects.filter(
                                     ~Q(
@@ -1647,7 +1647,7 @@ class System(Wrappers):
 
                 elif data_name == 'account_type_id':
 
-                    account_list = Account.objects.filter(Q(gateway_profile=gateway_profile),
+                    account_list = Account.objects.filter(Q(profile=gateway_profile.user.profile),
                                                           Q(account_status__name='ACTIVE'), \
                                                           Q(account_type__gateway=gateway_profile.gateway) | Q(
                                                                   account_type__gateway=None)).order_by(
@@ -1782,7 +1782,7 @@ class System(Wrappers):
                             if i.name == 'MIPAY' and data_name_val <> 'Send' and gateway_profile.msisdn not in [None,'']:
                                 session_account_manager = AccountManager.objects.filter(
                                         dest_account__account_status__name='ACTIVE', \
-                                        dest_account__gateway_profile__msisdn=gateway_profile.msisdn). \
+                                        dest_account__profile=gateway_profile.user.profile). \
                                     order_by('-date_created')
 
                                 if len(session_account_manager) > 0:
@@ -1825,7 +1825,7 @@ class System(Wrappers):
                             if i.name == 'MIPAY' and data_name_val <> 'Send' and gateway_profile.msisdn not in [None,'']:
                                 session_account_manager = AccountManager.objects.filter(
                                         dest_account__account_status__name='ACTIVE', \
-                                        dest_account__gateway_profile__msisdn=gateway_profile.msisdn). \
+                                        dest_account__profile=gateway_profile.user.profile). \
                                     order_by('-date_created')
 
                                 if len(session_account_manager) > 0:

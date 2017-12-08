@@ -229,11 +229,20 @@ class Forex(models.Model):
 	def __unicode__(self):
 		return u'%s %s %s %s' % (self.base_currency.code, self.quote_currency.code, self.exchange_rate, self.trading_date)
 
+class IconGroup(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
 class Icon(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)	
 	icon = models.CharField(max_length=50, unique=True)	
 	description = models.CharField(max_length=200,null=True,blank=True)
+	group = models.ForeignKey(IconGroup, blank=True, null=True)
  	def __unicode__(self):
 		return u'%s' % (self.icon)
 

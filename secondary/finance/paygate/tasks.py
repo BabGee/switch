@@ -98,21 +98,28 @@ class Wrappers:
 
 
 	def response_payload(self, payload):
+
+		lgr.info('Response Payload: %s' % payload)
 		try:
 			payload = payload if isinstance(payload, dict)  else json.loads(payload)
 			new_payload, transaction, count = {}, None, 1
 			for k, v in dict(payload).items():
 				key = k.lower()
-				if 'photo' not in key and 'fingerprint' not in key and 'signature' not in key:
+				if 'photo' not in key and 'fingerprint' not in key and 'signature' not in key and \
+				'institution_id' not in key and 'gateway_id' not in key and 'response_status' not in key and \
+				'username' not in key and 'product_item' not in key and 'bridge__transaction_id' not in key and \
+				'currency' not in key and 'action_id' not in key:
 					if count <= 30:
 						new_payload[str(k)[:30] ] = str(v)[:40]
 					else:
 						break
 					count = count+1
 
-			return json.dumps(new_payload)
-		except:
-			return payload
+			payload = json.dumps(new_payload)
+		except Exception, e:
+
+			lgr.info('Error on Response Payload: %s' % e)
+		return payload
 
 
 
@@ -1000,7 +1007,7 @@ def send_payment(outgoing):
 
 		payload = WebService().post_request(payload, node)
 
-		if 'response' in payload.keys(): i.message = str(Wrappers().response_payload(params['response']))[:3839]; payload['response'] = payload['response']
+		if 'response' in payload.keys(): i.message = str(Wrappers().response_payload(payload['response']))[:3839]; payload['response'] = payload['response']
 		else: payload['response'] = 'Remit Submitted'
 		if 'response_status' in payload.keys() and payload['response_status'] not in [None,""]:
 			try:i.response_status = ResponseStatus.objects.get(response=str(payload['response_status']))

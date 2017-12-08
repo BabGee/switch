@@ -104,8 +104,13 @@ class ForexAdmin(admin.ModelAdmin):
 	list_display = ('base_currency','quote_currency','exchange_rate','trading_date','description',)
 admin.site.register(Forex, ForexAdmin)
 
+class IconGroupAdmin(admin.ModelAdmin):
+	list_display = ('name', 'description',)
+admin.site.register(IconGroup, IconGroupAdmin)
+
+
 class IconAdmin(admin.ModelAdmin):
-	list_display = ('icon', 'description',)
+	list_display = ('icon', 'description','group',)
 admin.site.register(Icon, IconAdmin)
 
 

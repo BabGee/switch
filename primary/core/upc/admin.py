@@ -38,7 +38,8 @@ admin.site.register(Profile, ProfileAdmin)
 
 class GatewayProfileAdmin(admin.ModelAdmin):
 		list_display = ('id','user','gateway','pin','msisdn','status','access_level','institution',\
-				'pin_retries','allowed_host_list','activation_code','device_id','activation_device_id','email_activation_code',)
+				'pin_retries','allowed_host_list','activation_code','device_id','activation_device_id',\
+				'email_activation_code','channel_list',)
 		search_fields = ('id','msisdn__phone_number','user__username','user__first_name','user__last_name','user__email',)
 		list_filter = ('gateway','status','access_level','institution','allowed_host',)
 admin.site.register(GatewayProfile, GatewayProfileAdmin)
