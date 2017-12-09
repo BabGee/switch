@@ -112,6 +112,18 @@ class PageString(ServiceCall, Wrappers):
 	def pagestring(self, navigator, page_string, payload, code):
 		#Find Variable
 		#Process Submit and input not in ['0','00']
+
+
+		payload.update(self.get_nav(navigator))
+
+		#update static details
+		try: 
+			details = json.loads(navigator.menu.details)
+			if isinstance(details,dict): payload.update(details)
+		except: pass
+
+
+
 		if navigator is not None and navigator.menu is not None and navigator.menu.submit == True:
 			#payload = {}
 			#payload['chid'] = navigator.session.channel.id
@@ -119,13 +131,6 @@ class PageString(ServiceCall, Wrappers):
 
 			#Get Menu Payload items
 			if code[0].institution:payload['institution_id'] = code[0].institution.id
-			payload.update(self.get_nav(navigator))
-
-			#update static details
-			try: 
-				details = json.loads(navigator.menu.details)
-				if isinstance(details,dict): payload.update(details)
-			except: pass
 
 			gateway_profile = navigator.session.gateway_profile
 			if gateway_profile is None: #If profile is unexistent
@@ -187,7 +192,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'session_variable':
 					item = ''
 
-					params = self.get_nav(navigator)
+					params = payload
 					new_payload = payload.copy()
 					new_payload.update(params)
 					lgr.info('New Payload: %s' % new_payload)
@@ -211,7 +216,6 @@ class PageString(ServiceCall, Wrappers):
 					page_string = page_string.replace('['+v+']',item)
 
 				elif variable_key == 'PRODUCT TYPE':
-					self.get_nav(navigator)
 					from products.regix.models import Product
 					trf = Product.objects.filter(institution_till__institution=code[0].institution).values('product_type__name').annotate()
 					item = ''
@@ -251,7 +255,7 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'TILL':
 					from products.regix.models import Product
-					trf = Product.objects.filter(institution_till__institution=code[0].institution, institution_till__city=self.get_nav(navigator)['CITY']).values('institution_till__name').annotate()#Filters to till with tiers. Otherwise, only tills in the institution
+					trf = Product.objects.filter(institution_till__institution=code[0].institution, institution_till__city=payload['CITY']).values('institution_till__name').annotate()#Filters to till with tiers. Otherwise, only tills in the institution
 					item = ''
 					item_list = []
 					count = 1
@@ -289,7 +293,7 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'ESERVICE':
 					from primary.core.bridge.models import EnrolledService
-					es = EnrolledService.objects.filter(till__institution=code[0].institution,institution__business_number=self.get_nav(navigator)['BUSINESS NUMBER'], institution__status__name='ACTIVE').values('name').annotate()
+					es = EnrolledService.objects.filter(till__institution=code[0].institution,institution__business_number=payload['BUSINESS NUMBER'], institution__status__name='ACTIVE').values('name').annotate()
 					item = ''
 					item_list = []
 					count = 1
@@ -308,7 +312,7 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'INSTITUTION_NAME':
 					from products.regix.models import EnrolledService
-					es = EnrolledService.objects.filter(till__institution=code[0].institution,institution__business_number=self.get_nav(navigator)['BUSINESS NUMBER'][:6],\
+					es = EnrolledService.objects.filter(till__institution=code[0].institution,institution__business_number=payload['BUSINESS NUMBER'][:6],\
 							institution__status__name='ACTIVE')
 					item = ''
 					if len(es)>0:
@@ -320,7 +324,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'live_bid_details':
 					from thirdparty.bidfather.models import BidRequirement, BidRequirementApplication
 
-					params = self.get_nav(navigator)
+					params = payload
 					gateway_profile_list = GatewayProfile.objects.filter(gateway=code[0].gateway, msisdn__phone_number=payload['msisdn'])
 
 					bid_requirement = BidRequirement.objects.get(id=params['bid_requirement_id'])
@@ -341,7 +345,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'bid_requirements':
 					from thirdparty.bidfather.models import BidRequirement,BidApplication
 
-					params = self.get_nav(navigator)
+					params = payload
 					bid_application = BidApplication.objects.get(id=params['bid_application_id'])
 					bid_requirement = BidRequirement.objects.filter(bid=bid_application.bid).order_by('id')
 
@@ -374,7 +378,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'selected_bids':
 					from thirdparty.bidfather.models import BidApplication
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					gateway_profile_list = GatewayProfile.objects.filter(gateway=code[0].gateway, msisdn__phone_number=payload['msisdn'])
 
@@ -417,7 +421,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'created_bids':
 					from thirdparty.bidfather.models import Bid
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					gateway_profile_list = GatewayProfile.objects.filter(gateway=code[0].gateway, msisdn__phone_number=payload['msisdn'])
 
@@ -457,7 +461,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'live_bids':
 					from thirdparty.bidfather.models import BidApplication
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					gateway_profile_list = GatewayProfile.objects.filter(gateway=code[0].gateway, msisdn__phone_number=payload['msisdn'])
 
@@ -618,7 +622,7 @@ class PageString(ServiceCall, Wrappers):
 
 					from secondary.finance.vbs.models import LoanActivity
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					loan_activity = LoanActivity.objects.filter(processed=False,\
 										loan__account__profile=navigator.session.gateway_profile.user.profile,\
@@ -660,7 +664,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'p2p_loan_details':
 					from secondary.finance.vbs.models import Loan
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					loan = Loan.objects.get(id=params['loan_id'])
 
@@ -677,7 +681,7 @@ class PageString(ServiceCall, Wrappers):
 
 					from secondary.finance.vbs.models import LoanActivity
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'),Q(processed=False),\
 										Q(follow_on_loan__account__profile=navigator.session.gateway_profile.user.profile),\
@@ -721,7 +725,7 @@ class PageString(ServiceCall, Wrappers):
 
 					from secondary.finance.vbs.models import LoanActivity
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'),Q(processed=False),\
 										~Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
@@ -766,7 +770,7 @@ class PageString(ServiceCall, Wrappers):
 
 					from secondary.finance.vbs.models import LoanActivity
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'),Q(processed=False),\
 										~Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
@@ -857,7 +861,7 @@ class PageString(ServiceCall, Wrappers):
 
 					from secondary.finance.vbs.models import AccountType,AccountManager
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					mipay_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=payload['msisdn'],gateway__name='MIPAY')
 
@@ -908,7 +912,7 @@ class PageString(ServiceCall, Wrappers):
 					from secondary.finance.vbs.models import AccountManager
 					from secondary.erp.pos.models import BillManager
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					mipay_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=payload['msisdn'],gateway__name='MIPAY')
 
@@ -974,7 +978,7 @@ class PageString(ServiceCall, Wrappers):
 
 					mipay_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=payload['msisdn'],gateway__name='MIPAY')
 
-					params = self.get_nav(navigator)
+					params = payload
 					song = params['SONG']
 					#get artiste name
 					artiste_list = re.findall("\((.*?)\)", song)
@@ -1054,7 +1058,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'account_type_id':
 					from secondary.finance.vbs.models import Account, CreditType
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					session_gateway_profile = GatewayProfile.objects.filter(gateway=code[0].gateway, msisdn__phone_number=payload['msisdn'])
 
@@ -1095,7 +1099,7 @@ class PageString(ServiceCall, Wrappers):
 					from secondary.finance.vbs.models import AccountManager
 
 					mipay_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=payload['msisdn'],gateway__name='MIPAY')
-					params = self.get_nav(navigator)
+					params = payload
 
 					if 'product_item_id' in params.keys():
 						product_item = ProductItem.objects.filter(id=params['product_item_id'])
@@ -1146,7 +1150,7 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'account_credit_limit':
 					from secondary.finance.vbs.models import Account
-					params = self.get_nav(navigator)
+					params = payload
 
 					session_gateway_profile = GatewayProfile.objects.filter(gateway=code[0].gateway, msisdn__phone_number=payload['msisdn'])
 
@@ -1176,7 +1180,7 @@ class PageString(ServiceCall, Wrappers):
 					from secondary.erp.crm.models import ProductItem
 
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					if 'product_item_id' in params.keys():
 						product_item = ProductItem.objects.filter(id=params['product_item_id'])
@@ -1207,7 +1211,7 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'account_amount_limit':
 					from secondary.finance.vbs.models import AccountType, AccountCharge
-					params = self.get_nav(navigator)
+					params = payload
 
 					account_type = AccountType.objects.get(id=params['account_type_id'])
 
@@ -1226,7 +1230,7 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'account_type_details':
 					from secondary.finance.vbs.models import AccountType, AccountCharge
-					params = self.get_nav(navigator)
+					params = payload
 
 					account_type = AccountType.objects.get(id=params['account_type_id'])
 					unit_cost = account_type.product_item.unit_cost
@@ -1295,7 +1299,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'order_item_details':
 					from secondary.erp.pos.models import BillManager
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					bill_manager_list = BillManager.objects.filter(order__gateway_profile__msisdn__phone_number=payload['msisdn'],\
 									order__reference=params['reference'],order__status__name='UNPAID').order_by("-date_created")
@@ -1317,7 +1321,7 @@ class PageString(ServiceCall, Wrappers):
 					from products.muziqbit.models import Music
 
 
-					params = self.get_nav(navigator)
+					params = payload
 					song = params['SONG']
 					#get artiste name
 					artiste_list = re.findall("\((.*?)\)", song)
@@ -1341,7 +1345,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'product_item_details':
 					from secondary.erp.crm.models import ProductItem
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					if 'product_item_id' in params.keys():
 						product_item = ProductItem.objects.filter(id=params['product_item_id'])
@@ -1400,7 +1404,7 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'purchase_order':
 					from secondary.erp.pos.models import BillManager
-					params = self.get_nav(navigator)
+					params = payload
 
 					bill = BillManager.objects.filter(order__status__name='UNPAID',order__gateway_profile__msisdn__phone_number=payload['msisdn']).\
 							distinct('order__id','order__date_created').order_by('-order__date_created')
@@ -1502,7 +1506,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'gateway_product_item' or variable_key == 'gateway_product_item_cost':
 					from secondary.erp.crm.models import ProductItem
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					product_item = ProductItem.objects.filter(institution__gateway=code[0].gateway, status__name='ACTIVE').order_by('id')
 
@@ -1539,7 +1543,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'investment_product_item_id' or variable_key == 'investment_product_item_id_cost':
 					from secondary.erp.crm.models import Enrollment, ProductItem
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					enrollment_list = Enrollment.objects.filter(profile=navigator.session.gateway_profile.user.profile)
 
@@ -1590,7 +1594,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'product_item_id' or variable_key == 'product_item_id_cost':
 					from secondary.erp.crm.models import ProductItem
 
-					params = self.get_nav(navigator)
+					params = payload
 					if code[0].institution:
 						product_item = ProductItem.objects.filter(institution__id=code[0].institution.id, status__name='ACTIVE').order_by('id')
 					else:
@@ -1630,7 +1634,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'product_item' or variable_key == 'product_item_cost':
 					from secondary.erp.crm.models import ProductItem
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					if code[0].institution:
 						product_item = ProductItem.objects.filter(institution__id=code[0].institution.id, status__name='ACTIVE').order_by('id')
@@ -1674,7 +1678,7 @@ class PageString(ServiceCall, Wrappers):
 					if variable_val not in ['',None]:
 						survey = survey.filter(Q(group__data_name=variable_val)|Q(product_item__product_type__name=variable_val)|Q(product_type__name=variable_val))
 
-					params = self.get_nav(navigator)
+					params = payload
 					if 'group' in params.keys():
 						survey = survey.filter(Q(group__data_name=params['group'])|Q(product_item__product_type__name=params['group'])|Q(product_type__name=params['group'])|Q(group__name=params['group']))
 					survey = survey[:20]
@@ -1703,7 +1707,7 @@ class PageString(ServiceCall, Wrappers):
 					if variable_val not in ['',None]:
 						survey = survey.filter(Q(group__data_name=variable_val)|Q(product_item__product_type__name=variable_val)|Q(product_type__name=variable_val))
 
-					params = self.get_nav(navigator)
+					params = payload
 					if 'group' in params.keys():
 						survey = survey.filter(Q(group__data_name=params['group'])|Q(product_item__product_type__name=params['group'])|Q(product_type__name=params['group'])|Q(group__name=params['group']))
 					survey = survey[:20]
@@ -1749,7 +1753,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'survey_details':
 					from secondary.erp.crm.models import ProductItem
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					survey = Survey.objects.filter(group__data_name=params['group'],name=params['item'],\
 							institution__id=code[0].institution.id, status__name='ACTIVE').\
@@ -1762,20 +1766,20 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'road_street':
 					from thirdparty.roadroute.models import RoadStreet
 
-					params = self.get_nav(navigator)
+					params = payload
 
 					road_street = RoadStreet.objects.all()
 					if variable_val not in ['',None]:
 						road_street = road_street.filter(town_city__name=variable_val)
 
 					if 'Search' in params.keys():
-						query0 = reduce(operator.or_, ( Q(name__icontains=s.strip()) for s in self.get_nav(navigator)['Search'].split(" ") ))
-						query1 = reduce(operator.and_, ( Q(name__icontains=s.strip()) for s in self.get_nav(navigator)['Search'].split(" ") ))
+						query0 = reduce(operator.or_, ( Q(name__icontains=s.strip()) for s in payload['Search'].split(" ") ))
+						query1 = reduce(operator.and_, ( Q(name__icontains=s.strip()) for s in payload['Search'].split(" ") ))
 
 						if len(road_street)>0:
 							road_street0 = road_street.filter(query1)
 							if len(road_street0)>0:
-								road_street1 = road_street0.filter(Q(name__icontains=self.get_nav(navigator)['Search']))
+								road_street1 = road_street0.filter(Q(name__icontains=payload['Search']))
 								if len(road_street1)>0:
 									road_street = road_street1
 								else:
@@ -1804,16 +1808,16 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'survey_item':
 					from secondary.erp.survey.models import SurveyItem
 
-					lgr.info("Search for string: %s" % self.get_nav(navigator)['Search'])
+					lgr.info("Search for string: %s" % payload['Search'])
 
-					query0 = reduce(operator.or_, ( Q(name__icontains=s.strip()) for s in self.get_nav(navigator)['Search'].split(" ") ))
-					query1 = reduce(operator.and_, ( Q(name__icontains=s.strip()) for s in self.get_nav(navigator)['Search'].split(" ") ))
+					query0 = reduce(operator.or_, ( Q(name__icontains=s.strip()) for s in payload['Search'].split(" ") ))
+					query1 = reduce(operator.and_, ( Q(name__icontains=s.strip()) for s in payload['Search'].split(" ") ))
 
 					survey_item = SurveyItem.objects.filter(query0,Q(survey__group__data_name=variable_val),Q(survey__institution__id=code[0].institution.id) )
 					if len(survey_item)>0:
 						survey_item0 = survey_item.filter(query1)
 						if len(survey_item0)>0:
-							survey_item1 = survey_item0.filter(Q(name__icontains=self.get_nav(navigator)['Search']))
+							survey_item1 = survey_item0.filter(Q(name__icontains=payload['Search']))
 							if len(survey_item1)>0:
 								survey_item = survey_item1
 							else:
@@ -1840,16 +1844,16 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'ARTISTE_SEARCH_RESULTS':
 					from secondary.erp.crm.models import Enrollment
 
-					lgr.info("Search for string: %s" % self.get_nav(navigator)['Search'])
+					lgr.info("Search for string: %s" % payload['Search'])
 
-					query0 = reduce(operator.or_, ( Q(member_alias__icontains=s.strip()) for s in self.get_nav(navigator)['Search'].split(" ") ))
-					query1 = reduce(operator.and_, ( Q(member_alias__icontains=s.strip()) for s in self.get_nav(navigator)['Search'].split(" ") ))
+					query0 = reduce(operator.or_, ( Q(member_alias__icontains=s.strip()) for s in payload['Search'].split(" ") ))
+					query1 = reduce(operator.and_, ( Q(member_alias__icontains=s.strip()) for s in payload['Search'].split(" ") ))
 
 					enrollment = Enrollment.objects.filter(query0,Q(institution__id=code[0].institution.id) )
 					if len(enrollment)>0:
 						enrollment0 = enrollment.filter(query1)
 						if len(enrollment0)>0:
-							enrollment1 = enrollment0.filter(Q(member_alias__icontains=self.get_nav(navigator)['Search']))
+							enrollment1 = enrollment0.filter(Q(member_alias__icontains=payload['Search']))
 							if len(enrollment1)>0:
 								enrollment = enrollment1
 							else:
@@ -1926,14 +1930,14 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'MUSIC_SEARCH_RESULTS':
 					from products.muziqbit.models import Music
 
-					lgr.info("Search for string: %s" % self.get_nav(navigator)['Search'])
+					lgr.info("Search for string: %s" % payload['Search'])
 
-					query0 = reduce(operator.or_, ( Q(product_item__name__icontains=s.strip()) for s in self.get_nav(navigator)['Search'].split(" ") ))
-					query1 = reduce(operator.or_, ( Q(artiste__icontains=s.strip()) for s in self.get_nav(navigator)['Search'].split(" ") ))
-					query2 = reduce(operator.and_, ( Q(product_item__name__icontains=s.strip()) for s in self.get_nav(navigator)['Search'].split(" ") ))
-					query3 = reduce(operator.and_, ( Q(artiste__icontains=s.strip()) for s in self.get_nav(navigator)['Search'].split(" ") ))
+					query0 = reduce(operator.or_, ( Q(product_item__name__icontains=s.strip()) for s in payload['Search'].split(" ") ))
+					query1 = reduce(operator.or_, ( Q(artiste__icontains=s.strip()) for s in payload['Search'].split(" ") ))
+					query2 = reduce(operator.and_, ( Q(product_item__name__icontains=s.strip()) for s in payload['Search'].split(" ") ))
+					query3 = reduce(operator.and_, ( Q(artiste__icontains=s.strip()) for s in payload['Search'].split(" ") ))
 
-					#music = Music.objects.filter(Q(query0, query1) |Q(artiste__icontains=self.get_nav(navigator)['Search'])|Q(product_item__name__icontains=self.get_nav(navigator)['Search']) | query2 |query3,\
+					#music = Music.objects.filter(Q(query0, query1) |Q(artiste__icontains=payload['Search'])|Q(product_item__name__icontains=payload['Search']) | query2 |query3,\
 					#		 Q(product_item__institution__id=code[0].institution.id) )[:10]
 
 
@@ -1944,7 +1948,7 @@ class PageString(ServiceCall, Wrappers):
 					if len(music)>1:
 						music0 = music.filter(query0|query1)
 						if len(music0)>1:
-							music1 = music0.filter(Q(product_item__name__icontains=self.get_nav(navigator)['Search']) |Q(artiste__icontains=self.get_nav(navigator)['Search']))
+							music1 = music0.filter(Q(product_item__name__icontains=payload['Search']) |Q(artiste__icontains=payload['Search']))
 							if len(music1) > 1:
 								music = music1
 							else:

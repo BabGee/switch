@@ -467,9 +467,9 @@ class System(Wrappers):
 					if 'expiry' in payload.keys():
 						#enrollment.expiry = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload['expiry'], '%d/%m/%Y'))
 						enrollment.expiry = datetime.strptime(payload['expiry'], '%d/%m/%Y')
-					elif 'expiry_days_period':
+					elif 'expiry_days_period' in payload.keys():
 						enrollment.expiry = timezone.now()+timezone.timedelta(days=(int(payload['expiry_days_period'])))
-					elif 'expiry_years_period':
+					elif 'expiry_years_period' in payload.keys():
 						enrollment.expiry = timezone.now()+timezone.timedelta(days=(365*int(payload['expiry_years_period'])))
 					else:
 						enrollment.expiry = timezone.now()+timezone.timedelta(days=(365*20))

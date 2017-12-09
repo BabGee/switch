@@ -469,21 +469,22 @@ class System(Wrappers):
 			lgr.info('MSISDN: %s' % msisdn)
 			if msisdn is not None:
 
-				gateway_profile_list = GatewayProfile.objects.filter(msisdn__phone_number=msisdn, \
-						gateway=gateway_profile.gateway, activation_device_id = payload['fingerprint'])
+				gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile__msisdn__phone_number=msisdn, \
+						gateway_profile__gateway=gateway_profile.gateway, activation_device_id = payload['fingerprint'],\
+						channel__id=payload['chid'])
 
-				if gateway_profile_list.exists():
-					session_gateway_profile = gateway_profile_list[0]
-					hash_pin = crypt.crypt(str(payload['code']), str(session_gateway_profile.id))
-					if hash_pin == session_gateway_profile.activation_code:
-						session_gateway_profile.device_id = payload['fingerprint']
-						session_gateway_profile.save()
+				if gateway_profile_device_list.exists():
+					session_gateway_profile_device = gateway_profile_device_list[0]
+					hash_pin = crypt.crypt(str(payload['code']), str(session_gateway_profile_device.gateway_profile.id))
+					if hash_pin == session_gateway_profile_device.activation_code:
+						session_gateway_profile_device.device_id = payload['fingerprint']
+						session_gateway_profile_device.save()
 						payload['response'] = 'Device Verified'
 						payload['response_status'] = '00'
 					else:
 						payload['response_status'] = '55'
 				else:
-					payload['response'] = 'MSISDN Not Found'
+					payload['response'] = 'Device Not Found'
 					payload['response_status'] = '25'
 			else:
 				payload['response'] = 'MSISDN Not Found'
@@ -495,7 +496,6 @@ class System(Wrappers):
 			payload['response_status'] = '96'
 		return payload
 
-
 	def device_activation(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
@@ -503,28 +503,28 @@ class System(Wrappers):
 			msisdn = self.get_msisdn(payload)
 			lgr.info('MSISDN: %s' % msisdn)
 			if msisdn is not None:
-				gateway_profile_list = GatewayProfile.objects.filter(msisdn__phone_number=msisdn, \
-						gateway=gateway_profile.gateway)
+				gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile__msisdn__phone_number=msisdn, \
+						gateway_profile__gateway=gateway_profile.gateway, channel__id=payload['chid'])
 
-				if gateway_profile_list.exists():
-					session_gateway_profile = gateway_profile_list[0]
+				if gateway_profile_device_list.exists():
+					session_gateway_profile_device = gateway_profile_device_list[0]
 
 					chars = string.digits
 					rnd = random.SystemRandom()
 					pin = ''.join(rnd.choice(chars) for i in range(0,4))
-					hash_pin = crypt.crypt(str(pin), str(session_gateway_profile.id))
+					hash_pin = crypt.crypt(str(pin), str(session_gateway_profile_device.gateway_profile.id))
 
-					session_gateway_profile.activation_code = hash_pin
-					session_gateway_profile.activation_device_id = payload['fingerprint']
+					session_gateway_profile_device.activation_code = hash_pin
+					session_gateway_profile_device.activation_device_id = payload['fingerprint']
 
-					session_gateway_profile.save()
+					session_gateway_profile_device.save()
 
 					payload['activation_code'] = pin
 
 					payload['response'] = 'Device Activation Request'
 					payload['response_status'] = '00'
 				else:
-					payload['response'] = 'MSISDN Not Found'
+					payload['response'] = 'Device Not Found'
 					payload['response_status'] = '25'
 			else:
 				payload['response'] = 'MSISDN Not Found'
@@ -546,21 +546,31 @@ class System(Wrappers):
 			if msisdn is not None:
 				gateway_profile_list = GatewayProfile.objects.filter(msisdn__phone_number=msisdn, \
 						gateway=gateway_profile.gateway)
+				if gateway_profile_list.exists():
+					gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile__msisdn__phone_number=msisdn, \
+							gateway_profile__gateway=gateway_profile.gateway, channel__id=payload['chid'])
 
-				gateway_profile_device = gateway_profile_list.filter(device_id=payload['fingerprint'])
+					gateway_profile_device = gateway_profile_device_list.filter(device_id=payload['fingerprint'])
 
-				if gateway_profile_list.exists() and gateway_profile_device.exists() and gateway_profile_device[0].status.name=='ONE TIME PIN':
-					payload['trigger'] = 'one_time_pin%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-					payload['response'] = 'Device Validation'
-					payload['response_status'] = '00'
-				elif gateway_profile_list.exists() and gateway_profile_device.exists():
-					payload['trigger'] = 'device_valid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-					payload['response'] = 'Device Validation'
-					payload['response_status'] = '00'
-				elif gateway_profile_list.exists():
-					payload['trigger'] = 'device_not_valid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-					payload['response'] = 'Device Validation'
-					payload['response_status'] = '00'
+					if gateway_profile_device_list.exists() and gateway_profile_device.exists() and gateway_profile_device[0].gateway_profile.status.name=='ONE TIME PIN':
+						payload['trigger'] = 'one_time_pin%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+						payload['response'] = 'Device Validation'
+						payload['response_status'] = '00'
+					elif gateway_profile_device_list.exists() and gateway_profile_device.exists():
+						payload['trigger'] = 'device_valid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+						payload['response'] = 'Device Validation'
+						payload['response_status'] = '00'
+					elif gateway_profile_device_list.exists():
+						payload['trigger'] = 'device_not_valid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+						payload['response'] = 'Device Validation'
+						payload['response_status'] = '00'
+					else:
+						payload['trigger'] = 'device_not_valid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+						gateway_profile_device = GatewayProfileDevice(channel=Channel.objects.get(id=payload['chid']),\
+												gateway_profile=gateway_profile_list[0])
+						gateway_profile_device.save()
+						payload['response'] = 'Device Validation'
+						payload['response_status'] = '00'
 				else:
 					payload['response'] = 'MSISDN Not Found'
 					payload['response_status'] = '25'
@@ -569,7 +579,7 @@ class System(Wrappers):
 				payload['response_status'] = '25'
 
 		except Exception, e:
-			lgr.info('Error on validating institution: %s' % e)
+			lgr.info('Error on validating device: %s' % e)
 			payload['response_status'] = '96'
 		return payload
 
@@ -1569,11 +1579,12 @@ class System(Wrappers):
 				msisdn = self.get_msisdn(payload)
 				lgr.info('MSISDN: %s' % msisdn)
 				if msisdn is not None:
-					gateway_profile_list = GatewayProfile.objects.filter(msisdn__phone_number=msisdn, \
-							gateway=gateway_profile.gateway, device_id = payload['fingerprint'])
-
-					if gateway_profile_list.exists():
-						session_gateway_profile = gateway_profile_list[0]
+					gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile__msisdn__phone_number=msisdn, \
+							gateway_profile__gateway=gateway_profile.gateway, device_id = payload['fingerprint'],\
+							channel__id=payload['chid'])
+					lgr.info('Gateway Profile Device: %s' % gateway_profile_device_list)
+					if gateway_profile_device_list.exists():
+						session_gateway_profile = gateway_profile_device_list[0].gateway_profile
 						hash_pin = crypt.crypt(str(payload['pin']), str(session_gateway_profile.id))
 						if hash_pin == session_gateway_profile.pin:
 							session_gateway_profile.pin_retries = 0
@@ -1587,6 +1598,7 @@ class System(Wrappers):
 							session_gateway_profile.save()
 
 
+					lgr.info('Authorized Gateway Profile: %s' % authorized_gateway_profile)
 			if authorized_gateway_profile is not None and authorized_gateway_profile.status.name in ['ACTIVATED','ONE TIME PIN','ONE TIME PASSWORD']:
 				details['api_key'] = authorized_gateway_profile.user.profile.api_key
 				details['status'] = authorized_gateway_profile.status.name

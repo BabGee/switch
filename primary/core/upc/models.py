@@ -101,16 +101,25 @@ class GatewayProfile(models.Model):#Enforce one gateway profile per gateway per 
 	activation_code = models.CharField(max_length=45, blank=True, null=True)
 	device_id = models.CharField(max_length=200, blank=True, null=True)
 	activation_device_id = models.CharField(max_length=200, blank=True, null=True)
-        allowed_host = models.ManyToManyField(Host, blank=True)
 	email_activation_code = models.CharField(max_length=45, blank=True, null=True)
-	channel = models.ManyToManyField(Channel, blank=True)
+        allowed_host = models.ManyToManyField(Host, blank=True)
 	def __unicode__(self):
 		return u'%s %s %s %s %s %s' % (self.id, self.user.first_name, self.user.last_name, self.msisdn,self.gateway, self.access_level)
 	def allowed_host_list(self):
 		return "\n".join([a.host for a in self.allowed_host.all()])
-	def channel_list(self):
-		return "\n".join([a.name for a in self.channel.all()])
 
+
+class GatewayProfileDevice(models.Model):#Enforce one gateway profile per gateway per user
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	gateway_profile = models.ForeignKey(GatewayProfile)
+	channel = models.ForeignKey(Channel)
+	activation_code = models.CharField(max_length=45, blank=True, null=True)
+	device_id = models.CharField(max_length=200, blank=True, null=True)
+	activation_device_id = models.CharField(max_length=200, blank=True, null=True)
+	email_activation_code = models.CharField(max_length=45, blank=True, null=True)
+	def __unicode__(self):
+		return u'%s %s %s %s' % (self.id, self.gateway_profile, self.channel, self.device_id)
 
 class ChangeProfileMSISDNStatus(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)

@@ -38,11 +38,20 @@ admin.site.register(Profile, ProfileAdmin)
 
 class GatewayProfileAdmin(admin.ModelAdmin):
 		list_display = ('id','user','gateway','pin','msisdn','status','access_level','institution',\
-				'pin_retries','allowed_host_list','activation_code','device_id','activation_device_id',\
-				'email_activation_code','channel_list',)
+				'pin_retries','activation_code','device_id','activation_device_id',\
+				'email_activation_code','allowed_host_list',)
 		search_fields = ('id','msisdn__phone_number','user__username','user__first_name','user__last_name','user__email',)
 		list_filter = ('gateway','status','access_level','institution','allowed_host',)
 admin.site.register(GatewayProfile, GatewayProfileAdmin)
+
+class GatewayProfileDeviceAdmin(admin.ModelAdmin):
+		list_display = ('id','gateway_profile','channel','activation_code','device_id','activation_device_id',\
+				'email_activation_code',)
+		search_fields = ('gateway_profile__msisdn__phone_number','gateway_profile__user__username',\
+				'gateway_profile__user__first_name','gateway_profile__user__last_name',\
+				'gateway_profile__user__email',)
+		list_filter = ('gateway_profile__gateway','gateway_profile__access_level','channel',)
+admin.site.register(GatewayProfileDevice, GatewayProfileDeviceAdmin)
 
 class ChangeProfileMSISDNStatusAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description')

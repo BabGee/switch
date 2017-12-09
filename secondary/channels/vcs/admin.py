@@ -58,7 +58,7 @@ class MenuItemAdmin(admin.ModelAdmin):
 admin.site.register(MenuItem, MenuItemAdmin)
 
 class NavigatorAdmin(admin.ModelAdmin):
-	list_display = ('date_created','date_modified','session_hop', 'menu', 'item_list', 'nav_step', 'input_select','code','pin_auth','session','level','group_select',)
+	list_display = ('id','session_hop', 'menu', 'item_list', 'nav_step', 'input_select','code','pin_auth','session','level','group_select',)
 	list_filter = ('menu__code','menu__code__institution','menu__code__mno','menu__code__channel','menu__code__code_type',)
 	search_fields = ('menu__code__code','menu__page_string','item_list','nav_step','input_select','session__gateway_profile__msisdn__phone_number','session__reference',)
 admin.site.register(Navigator, NavigatorAdmin)
