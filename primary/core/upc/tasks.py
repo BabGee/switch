@@ -1320,8 +1320,8 @@ class System(Wrappers):
 				 [None,''] and create_gateway_profile.access_level.hierarchy>access_level.hierarchy):
 					create_gateway_profile.access_level = access_level
 				'''
-
-				create_gateway_profile.access_level = access_level
+				if access_level.name == 'SYSTEM': create_gateway_profile.access_level = AccessLevel.objects.get(name="CUSTOMER")
+				else: create_gateway_profile.access_level = access_level
 				#if create_gateway_profile.created_by in [None,'']:create_gateway_profile.created_by = gateway_profile.user.profile 
 				create_gateway_profile.save()
 
