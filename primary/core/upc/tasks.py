@@ -1599,7 +1599,7 @@ class System(Wrappers):
 
 
 					lgr.info('Authorized Gateway Profile: %s' % authorized_gateway_profile)
-			if authorized_gateway_profile is not None and authorized_gateway_profile.status.name in ['ACTIVATED','ONE TIME PIN','ONE TIME PASSWORD']:
+			if authorized_gateway_profile is not None and authorized_gateway_profile.status.name not in ['DELETED']:
 				details['api_key'] = authorized_gateway_profile.user.profile.api_key
 				details['status'] = authorized_gateway_profile.status.name
 				details['access_level'] = authorized_gateway_profile.access_level.name
