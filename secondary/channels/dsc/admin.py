@@ -13,7 +13,7 @@ class DataListQueryAdmin(admin.ModelAdmin):
 	list_display = ('name', 'description', 'model_name', 'values', 'or_filters','and_filters','module_name',\
 			'institution_filters','gateway_filters','order','count_values','sum_values','filters',\
 			'not_filters','date_values','date_time_values','links','link_params','list_filters',\
-			'data_response','last_balance','gateway_profile_filters','month_year_values','avg_values',\
+			'last_balance','gateway_profile_filters','month_year_values','avg_values',\
 			'date_filters','time_filters','token_filter',)
 	search_fields = ('name','description','model_name','module_name',)
 admin.site.register(DataListQuery, DataListQueryAdmin)

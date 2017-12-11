@@ -37,7 +37,6 @@ class DataListQuery(models.Model):
 	links = models.CharField(max_length=512, blank=True, null=True) 
 	link_params = models.CharField(max_length=512, blank=True, null=True) 
 	list_filters = models.CharField(max_length=512, blank=True, null=True) 
-	data_response = models.BooleanField(default=False)
 	sum_values = models.CharField(max_length=512, blank=True, null=True) 
 	not_filters = models.CharField(max_length=512, blank=True, null=True)
 	last_balance = models.CharField(max_length=512, blank=True, null=True)
