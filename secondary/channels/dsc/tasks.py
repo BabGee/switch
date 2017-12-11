@@ -308,11 +308,17 @@ class Wrappers:
 	    #lgr.info('Or Filters Report List Count: %s' % report_list.count())
 	    if and_filters not in [None,'']:
                 for f in and_filters.split("|"):
-            	    if 'q' in payload.keys() and payload['q'] not in ['', None]:
-                    	if f not in ['',None]: and_filter_data[f + '__icontains'] = payload['q']
-
-            	    if f in payload.keys():
-                    	if f not in ['',None]: and_filter_data[f + '__icontains'] = payload[f]
+		    af_list = f.split('%')
+		    if len(af_list)==2:
+			if 'q' in payload.keys() and payload['q'] not in ['', None]:
+				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload['q']
+			if af_list[0] in payload.keys():
+				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload[af_list[0]]
+		    else:
+			if 'q' in payload.keys() and payload['q'] not in ['', None]:
+				if f not in ['',None]: and_filter_data[f + '__icontains'] = payload['q']
+			if f in payload.keys():
+				if f not in ['',None]: and_filter_data[f + '__icontains'] = payload[f]
 
                 if len(and_filter_data):
                     and_query = reduce(operator.and_, (Q(k) for k in and_filter_data.items()))
