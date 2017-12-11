@@ -170,7 +170,7 @@ class Wrappers:
         ct = 0
 	mqtt = {}
 
-
+	lgr.info('Payload on report: %s' % payload)
         try:
             model_class = apps.get_model(data.query.module_name, data.query.model_name)
             # model_class = globals()[data.query.model_name]
@@ -324,7 +324,7 @@ class Wrappers:
                     and_query = reduce(operator.and_, (Q(k) for k in and_filter_data.items()))
                     report_list = report_list.filter(and_query)
 
-	    #lgr.info('Token Filters Report List Count: %s' % report_list.count())
+	    lgr.info('And Filters Report List Count: %s' % report_list.count())
             if token_filter not in ['',None]:
                 for f in token_filter.split("|"):
             	    if 'csrfmiddlewaretoken' in payload.keys() and payload['csrfmiddlewaretoken'] not in ['', None]:
@@ -340,7 +340,7 @@ class Wrappers:
 
                     report_list = report_list.filter(query)
 
-	    #lgr.info('And Filters Report List Count: %s' % report_list.count())
+	    #lgr.info('Token Filters Report List Count: %s' % report_list.count())
 	    if list_filters not in [None,'']:
                 for f in list_filters.split("|"):
             	    if 'q' in payload.keys() and payload['q'] not in ['', None]:
