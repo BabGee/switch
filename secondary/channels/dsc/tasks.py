@@ -1283,6 +1283,9 @@ class System(Wrappers):
             else:
                 data_name = v.lower()
 
+	    if data_name_val and data_name not in payload.keys():
+		payload[data_name] = data_name_val
+
             #lgr.info('Data Source: data_name: %s val: %s' % (data_name, data_name_val))
             data_list = DataList.objects.filter(Q(data_name=data_name.strip()), Q(status__name='ACTIVE'), \
                                                 Q(Q(gateway=gateway_profile.gateway) | Q(gateway=None)), \
