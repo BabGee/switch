@@ -1367,8 +1367,8 @@ class System(Wrappers):
 
 				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
 					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
-				if user.email and self.validateEmail(user.email):
-					payload['email'] = user.email
+				
+				payload['email'] = user.email if user.email and self.validateEmail(user.email) else None
 
 				payload['response_status'] = '00'
 				payload['response'] = 'Session Profile Captured'
@@ -1411,8 +1411,9 @@ class System(Wrappers):
 
 				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
 					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
-				if user.email and self.validateEmail(user.email):
-					payload['email'] = user.email
+
+
+				payload['email'] = user.email if user.email and self.validateEmail(user.email) else None
 
 				payload['response_status'] = '00'
 				payload['response'] = 'Session Profile Captured'
