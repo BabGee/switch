@@ -366,39 +366,42 @@ class System(Wrappers):
 
 	def reverse_pay_bill(self, payload, node_info):
 		try:
-			purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
+			if 'purchase_order_id' in payload.keys():
+				purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 
-			#Update as unpaid in all cases
-			status = OrderStatus.objects.get(name='UNPAID')
-			cart_status = CartStatus.objects.get(name='UNPAID')
+				#Update as unpaid in all cases
+				status = OrderStatus.objects.get(name='UNPAID')
+				cart_status = CartStatus.objects.get(name='UNPAID')
 
-			purchase_order.status = status
-			purchase_order.save()
-			purchase_order.cart_item.all().update(status=cart_status)
+				purchase_order.status = status
+				purchase_order.save()
+				purchase_order.cart_item.all().update(status=cart_status)
 
-			#Reverse if a credit (Pay Bill) Exists
-			bill_manager_list = BillManager.objects.filter(order=purchase_order).order_by("-date_created")[:1]
-			if bill_manager_list.exists() and bill_manager_list[0].credit:
-				order = bill_manager_list[0].order
-				balance_bf = bill_manager_list[0].amount + bill_manager_list[0].balance_bf
+				#Reverse if a credit (Pay Bill) Exists
+				bill_manager_list = BillManager.objects.filter(order=purchase_order).order_by("-date_created")[:1]
+				if bill_manager_list.exists() and bill_manager_list[0].credit:
+					order = bill_manager_list[0].order
+					balance_bf = bill_manager_list[0].amount + bill_manager_list[0].balance_bf
 
-				transaction_reference = payload['bridge__transaction_id'] if 'bridge__transaction_id' in payload.keys() else None
-				bill_manager = BillManager(credit=False,transaction_reference=transaction_reference,\
-						action_reference=payload['action_id'],order=order,\
-						amount=balance_bf,\
-						balance_bf=balance_bf)
+					transaction_reference = payload['bridge__transaction_id'] if 'bridge__transaction_id' in payload.keys() else None
+					bill_manager = BillManager(credit=False,transaction_reference=transaction_reference,\
+							action_reference=payload['action_id'],order=order,\
+							amount=balance_bf,\
+							balance_bf=balance_bf)
 
-				bill_manager.save()
+					bill_manager.save()
 
-				payload['amount'] = bill_manager.amount
-				payload['purchase_order_id'] = order.id
-				payload["response"] = "Bill Reversed. Balance: %s" % bill_manager.balance_bf
+					payload['amount'] = bill_manager.amount
+					payload['purchase_order_id'] = order.id
+					payload["response"] = "Bill Reversed. Balance: %s" % bill_manager.balance_bf
+				else:
+					#!!IMPORTANT - Or Account would be debitted on no bill
+					payload['amount'] = Decimal(0)
+					payload["response"] = "No Bill to Reverse"
 			else:
-				#!!IMPORTANT - Or Account would be debitted on no bill
-				payload['amount'] = Decimal(0)
-				payload["response"] = "No Bill to Reverse"
+				payload['response'] = "No Order to Reverse"
+			#All are successes
 			payload["response_status"] = "00"
-
 		except Exception, e:
 			payload['response_status'] = '96'
 			lgr.info("Error on reverse pay bill: %s" % e)

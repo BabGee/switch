@@ -87,6 +87,14 @@ class PageInputStatus(models.Model):
 	def __unicode__(self):
 		return u'%s' % (self.name)
 
+class BindPosition(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
 class PageInputGroup(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
@@ -100,6 +108,7 @@ class PageInputGroup(models.Model):
 	section_height = models.IntegerField()
 	auto_submit = models.BooleanField(default=False)
 	icon = models.ForeignKey(Icon, null=True, blank=True)
+	bind_position = models.ForeignKey(BindPosition, null=True, blank=True)
 	gateway = models.ManyToManyField(Gateway, blank=True)	
 	def __unicode__(self):
 		return u'%s %s %s' % (self.id, self.name, self.input_variable)
