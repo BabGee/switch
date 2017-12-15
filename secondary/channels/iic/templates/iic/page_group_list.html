@@ -1,0 +1,16 @@
+{% extends 'iic/base.html' %}
+{% block content %}
+
+
+<ul>
+    {% for page_group in page_groups %}
+
+            <li> <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/">{{ page_group }}</a></li>
+{% empty %}
+        <li>No items</li>
+    {% endfor %}
+
+
+
+</ul>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends 'iic/base.html' %}
+{% block content %}
+
+<h4>{{ page }}</h4>
+
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">View Page Input Groups</a>
+
+{% endblock %}

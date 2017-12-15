@@ -1,0 +1,18 @@
+{% extends 'iic/base.html' %}
+{% block content %}
+
+
+<ul>
+    {% for page_input in page_inputs %}
+
+            <li>
+                <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/{{ page_input.pk }}/">{{ page_input }}</a>
+            </li>
+{% empty %}
+        <li>No items</li>
+    {% endfor %}
+
+
+
+</ul>
+{% endblock %}

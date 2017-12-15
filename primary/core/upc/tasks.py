@@ -1358,8 +1358,12 @@ class System(Wrappers):
 				payload['username'] = user.username 
 				payload['first_name'] = payload['first_name'] if 'first_name' in payload.keys()  else user.first_name
 				payload['last_name'] = payload['last_name'] if 'last_name' in payload.keys()  else user.last_name
+				payload['gender'] = user.profile.gender.code if user.profile.gender else None
 
 				payload['national_id'] = user.profile.national_id
+				payload['postal_address'] = user.profile.postal_address
+				payload['address'] = user.profile.address
+				payload['postal_code'] = user.profile.postal_code
 
 				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
 					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
@@ -1398,8 +1402,12 @@ class System(Wrappers):
 				payload['username'] = user.username 
 				payload['first_name'] = payload['first_name'] if 'first_name' in payload.keys()  else user.first_name
 				payload['last_name'] = payload['last_name'] if 'last_name' in payload.keys()  else user.last_name
+				payload['gender'] = user.profile.gender.code if user.profile.gender else None
 
 				payload['national_id'] = user.profile.national_id
+				payload['postal_address'] = user.profile.postal_address
+				payload['address'] = user.profile.address
+				payload['postal_code'] = user.profile.postal_code
 
 				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
 					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number

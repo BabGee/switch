@@ -12,7 +12,7 @@ urlpatterns = [
 	url(r'^auth/user',     notify_views.user),
 	url(r'^auth/vhost',    notify_views.vhost),
 	url(r'^auth/resource', notify_views.resource),
-	#url(r'^bidfather/', include('thirdparty.bidfather.urls'), name='bidfather'),
+	url(r'^iic_editor/', include('secondary.channels.iic.urls'), name='bidfather'),
 
 	]
 
