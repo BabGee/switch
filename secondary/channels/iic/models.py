@@ -79,6 +79,9 @@ class Page(models.Model):
 	def service_list(self):
 		return "\n".join([a.name for a in self.service.all()])
 
+# p = Page()
+# p.access_level.all()
+
 class PageInputStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)

@@ -1,0 +1,28 @@
+{% extends 'iic/base.html' %}
+{% block content %}
+<a href="/iic_editor/gateways/">Gateways</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway }}</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">PageGroups</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/">{{ page_group }}</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/">Pages</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page }}</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">Page Input Groups</a>
+
+
+<h4>{{ page_input_group.name }}</h4>
+  <p>
+    pk : <strong>{{ page_input_group.pk }}</strong> <br>
+    item_level : <strong>{{ page_input_group.item_level }}</strong> <br>
+    icon : <strong>{{ page_input_group.icon }}</strong> <br>
+  <strong>Input Variable</strong> <a href="/admin/iic/inputvariable/{{ page_input_group.input_variable.pk }}/change/">Edit</a> <br>
+
+      name : <strong>{{ page_input_group.input_variable.name }}</strong> <br>
+      variable_type : <strong>{{ page_input_group.input_variable.variable_type }}</strong> <br>
+      service : <strong>{{ page_input_group.input_variable.service }}</strong>
+      <a target="_blank" href="/admin/bridge/servicecommand/?q=&service__id__exact={{ page_input_group.input_variable.service.pk }}">Service Commands</a>
+      <br>
+    <br>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/">View Page Inputs</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/order/">Order Page Inputs</a>
+  </p>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'iic/base.html' %}
+{% block content %}
+
+    <a href="/iic_editor/gateways/">Gateways</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway }}</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">PageGroups</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/">{{ page_group }}</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/">Pages</a>
+
+
+
+<h4>{{ page.name }}</h4>
+
+    <p>
+    pk : <strong>{{ page.pk }}</strong> <br>
+    item_level : <strong>{{ page.item_level }}</strong> <br>
+    icon : <strong>{{ page.icon }}</strong> <br>
+
+        <strong>Access Levels</strong>
+    {% for access_level in page.access_level.all %}
+        {{ access_level.name }} |
+        {% empty %}
+        All AccessLevels
+    {% endfor %} <br>
+
+    <strong>Gateways</strong>
+    {% for gateway in page.gateway.all %}
+        {{ gateway.name }} |
+        {% empty %}
+        All Gateways
+    {% endfor %} <br>
+
+        <strong>Services</strong>
+    {% for service in page.service.all %}
+        {{ service.name }} |
+        {% empty %}
+        All Services
+    {% endfor %} <br>
+
+
+
+    <br>
+    <a href="/admin/iic/page/{{ page.pk }}/change/">Edit</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">View Page Input Groups</a>
+
+    </p>
+{% endblock %}

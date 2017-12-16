@@ -1,38 +1,72 @@
 from primary.core.administration.models import Gateway
+import json
+from secondary.channels.iic.models import \
+    PageGroup, \
+    Page, \
+    PageInputGroup, \
+    PageInput, \
+    InputVariable, \
+    VariableType, \
+    PageInputStatus
 
-from secondary.channels.iic.models import PageGroup, Page, PageInputGroup, PageInput
+from django.shortcuts import render, redirect
+from .forms import PageForm, PageInputForm, PageInputVariableForm,PageOrderConfigForm,PageInputOrderConfigForm
+from django.db.models import Q
+from primary.core.administration.models import Channel
 
-from django.shortcuts import render
+
+def query_page_inputs(gateway):
+    return PageInput.objects \
+        .filter(Q(page__service__name='HOME'),
+                Q(page_input_status__name='ACTIVE'),
+                # Q(Q(access_level=gateway_profile.access_level) | Q(access_level=None)),
+                # Q(Q(page__access_level=gateway_profile.access_level) | Q(page__access_level=None)),
+                # Q(Q(profile_status=gateway_profile.status) | Q(profile_status=None)),
+                # Q(Q(page__profile_status=gateway_profile.status) | Q(page__profile_status=None)), Q(channel__id=payload['chid']),
+                # ~Q(page__item_level=0),
+                Q(page__page_group__gateway=gateway) | Q(page__page_group__gateway=None),
+                Q(page_input_group__gateway=gateway) | Q(page_input_group__gateway=None),
+                Q(page__gateway=gateway) | Q(page__gateway=None),
+                Q(gateway=gateway) | Q(gateway=None)
+                ).prefetch_related('trigger', 'page', 'access_level', 'institution', 'input_variable',
+                                   'page_input_group', 'gateway', 'channel', 'payment_method')
 
 
 def gateway_list(request):
     # filter gateways
     gateways = Gateway.objects.all()
 
-    return render(request, "iic/gateway_list.html", {'gateways': gateways})
+    return render(request, "iic/gateway/list.html", {'gateways': gateways})
 
 
 def gateway_detail(request, gateway_pk):
     # filter gateway
     gateway = Gateway.objects.get(pk=gateway_pk)
 
-    return render(request, "iic/gateway_detail.html", {'gateway': gateway})
+    return render(request, "iic/gateway/detail.html", {'gateway': gateway})
 
 
 def page_group_list(request, gateway_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
-    page_groups = gateway.pagegroup_set.all()
+    # page_groups = gateway.pagegroup_set.all()
 
-    return render(request, "iic/page_group_list.html", {
+    page_inputs = query_page_inputs(gateway)
+
+    page_groups = PageGroup.objects.filter(page__pageinput__in=page_inputs).distinct()
+    return render(request, "iic/page_group/list.html", {
         'gateway': gateway,
-        'page_groups': page_groups})
+        'page_groups': page_groups
+    })
 
 
 def page_group_detail(request, gateway_pk, page_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
-    page_group = gateway.pagegroup_set.get(pk=page_group_pk)
 
-    return render(request, "iic/page_group_detail.html", {
+    page_inputs = query_page_inputs(gateway)
+    page_groups = PageGroup.objects.filter(page__pageinput__in=page_inputs).distinct()
+    page_group = page_groups.get(pk=page_group_pk)
+
+    return render(request, "iic/page_group/detail.html", {
         'gateway': gateway,
         'page_group': page_group})
 
@@ -40,12 +74,41 @@ def page_group_detail(request, gateway_pk, page_group_pk):
 def page_list(request, gateway_pk, page_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
-    pages = page_group.page_set.all()
+    # todo use page-inputs to filter, remove pages without page-inputs
+    pages = page_group.page_set.all().order_by('item_level')
 
-    return render(request, "iic/page_list.html", {
+    return render(request, "iic/page/list.html", {
         'gateway': gateway,
         'pages': pages,
         'page_group': page_group})
+
+
+def page_order(request, gateway_pk, page_group_pk):
+    gateway = Gateway.objects.get(pk=gateway_pk)
+    page_group = PageGroup.objects.get(pk=page_group_pk)
+    pages = page_group.page_set.all().order_by('item_level')
+
+    if request.method == "POST":
+        form = PageOrderConfigForm(request.POST)
+        if form.is_valid():
+
+            order_configs = json.loads(form.cleaned_data['config'])
+            for order_config in order_configs:
+                Page.objects.filter(pk=order_config['page']).update(item_level=order_config['level'])
+
+            # http://localhost:8000/iic_editor/gateways/4/page_groups/30/pages/order/
+            return redirect(
+                '/iic_editor/gateways/{}/page_groups/{}/pages/order/'.format(gateway_pk, page_group_pk)
+            )
+    else:
+        form = PageOrderConfigForm()
+
+    return render(request, "iic/page/order.html", {
+        'gateway': gateway,
+        'pages': pages,
+        'form': form,
+        'page_group': page_group
+    })
 
 
 def page_detail(request, gateway_pk, page_group_pk, page_pk):
@@ -53,19 +116,45 @@ def page_detail(request, gateway_pk, page_group_pk, page_pk):
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = page_group.page_set.get(pk=page_pk)
 
-    return render(request, "iic/page_detail.html", {
+    return render(request, "iic/page/detail.html", {
         'gateway': gateway,
         'page': page,
         'page_group': page_group})
+
+
+def page_copy(request, gateway_pk, page_group_pk, page_pk):
+    gateway = Gateway.objects.get(pk=gateway_pk)
+    page_group = PageGroup.objects.get(pk=page_group_pk)
+    page = page_group.page_set.get(pk=page_pk)
+
+    if request.method == "POST":
+        form = PageForm(request.POST)
+        if form.is_valid():
+            page = form.save(commit=False)
+
+            page.save()
+            return redirect(
+                '/iic_editor/gateways/{}/page_groups/{}/pages/{}/'.format(gateway_pk, page_group_pk, page_pk)
+            )
+    else:
+        form = PageForm(instance=page)
+    return render(request, "iic/page/create.html", {
+        'gateway': gateway,
+        'page': page,
+        'form': form,
+        'page_group': page_group
+    })
 
 
 def page_input_group_list(request, gateway_pk, page_group_pk, page_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
-    page_input_groups = PageInputGroup.objects.filter(pageinput__page=page)
+    page_inputs = query_page_inputs(gateway)
+    # todo user page to optimize query
+    page_input_groups = PageInputGroup.objects.filter(pageinput__in=page_inputs, pageinput__page=page).distinct()
 
-    return render(request, "iic/page_input_group_list.html", {
+    return render(request, "iic/page_input_group/list.html", {
         'gateway': gateway,
         'page': page,
         'page_input_groups': page_input_groups,
@@ -76,23 +165,148 @@ def page_input_group_detail(request, gateway_pk, page_group_pk, page_pk, page_in
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
-    page_input_group = PageInputGroup.objects.filter(pageinput__page=page).get(pk=page_input_group_pk)
 
-    return render(request, "iic/page_input_group_detail.html", {
+    page_inputs = query_page_inputs(gateway)
+    # todo user page to optimize query
+    page_input_groups = PageInputGroup.objects.filter(pageinput__in=page_inputs, pageinput__page=page).distinct()
+
+    page_input_group = page_input_groups.get(pk=page_input_group_pk)
+
+    return render(request, "iic/page_input_group/detail.html", {
         'gateway': gateway,
         'page': page,
         'page_input_group': page_input_group,
         'page_group': page_group})
 
 
-def page_input_list(request, gateway_pk, page_group_pk, page_pk,page_input_group_pk):
+def page_input_create(request, gateway_pk, page_group_pk, page_pk, page_input_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
     page_input_group = PageInputGroup.objects.get(pk=page_input_group_pk)
-    page_inputs = page_input_group.pageinput_set.all()
+    # page_input = page_input_group.pageinput_set.get(pk=page_input_pk)
+    if request.method == "POST":
+        form = PageInputVariableForm(request.POST)
+        if form.is_valid():
+            page_input = form.save(commit=False)
 
-    return render(request, "iic/page_input_list.html", {
+            # section size
+            page_input.section_size = '24|24|24'
+
+            # page_input
+            # item_level
+
+            # input_variable
+            #   name,variable_type,validate_min,validate_max
+            input_variable_id = form.cleaned_data['input_variable_id']
+            if input_variable_id:
+                input_variable = InputVariable.objects.get(pk=input_variable_id)
+            else:
+                input_variable = InputVariable()
+                input_variable.name = form.cleaned_data['input_variable_name']
+                # iic.models.VariableType
+                try:
+                    input_variable.variable_type = VariableType.objects.get(
+                        name=form.cleaned_data['input_variable_variable_type'])
+                except VariableType.DoesNotExist:
+                    # self.log(self.command.style.ERROR('NO ELEMENT'))
+                    raise
+
+                input_variable.validate_min = form.cleaned_data['input_variable_validate_min']
+                input_variable.validate_max = form.cleaned_data['input_variable_validate_max']
+                input_variable.default_value = form.cleaned_data['input_variable_default_value']
+                # input_variable.variable_kind = None
+                input_variable.save()
+
+            page_input.input_variable = input_variable
+
+            # page_input_group*
+            #   name,description,item_level,input_variable FORM, section_size,section_height
+            page_input.page_input_group = page_input_group
+
+            # page_input_status
+            # page*
+            #   name,description,item_level,page_group*
+            page_input.page = page
+
+            # status ACTIVE INACTIVE
+            # iic.models.PageInputStatus
+            page_input.page_input_status = PageInputStatus.objects.get(name='ACTIVE')
+
+            # channel
+            default_channels = {
+                'iOS', 'BlackBerry', 'Amazon Kindle', 'Windows Phone'
+            }
+            passed_channels = []
+            if len(passed_channels):
+                for c in passed_channels:
+                    default_channels.add(c)
+            else:
+                default_channels.add('WEB')
+                default_channels.add('Android')
+
+            # todo optimize with ids
+            page_input.save()
+            page_input.channel.add(*Channel.objects.filter(name__in=default_channels))
+            return redirect(
+                '/iic_editor/gateways/{}/page_groups/{}/pages/{}/page_input_groups/{}/page_inputs/'.format(
+                    gateway_pk, page_group_pk, page_pk, page_input_group_pk
+                )
+            )
+    else:
+        form = PageInputVariableForm()
+    return render(request, "iic/page_input/create.html", {
+        'gateway': gateway,
+        'page': page,
+        'form': form,
+        'page_input_group': page_input_group,
+        'page_group': page_group})
+
+
+def page_input_order(request, gateway_pk, page_group_pk, page_pk, page_input_group_pk):
+    gateway = Gateway.objects.get(pk=gateway_pk)
+    page_group = PageGroup.objects.get(pk=page_group_pk)
+    page = Page.objects.get(pk=page_pk)
+    page_input_group = PageInputGroup.objects.get(pk=page_input_group_pk)
+    page_inputs = page_input_group.pageinput_set.all().order_by('item_level')
+
+    if request.method == "POST":
+        form = PageInputOrderConfigForm(request.POST)
+        if form.is_valid():
+
+            order_configs = json.loads(form.cleaned_data['config'])
+            for order_config in order_configs:
+                PageInput.objects.filter(pk=order_config['page_input']).update(item_level=order_config['level'])
+
+            # http://localhost:8000/iic_editor/gateways/4/page_groups/30/pages/order/
+            return redirect(
+                '/iic_editor/gateways/{}/page_groups/{}/pages/{}/page_input_groups/{}/page_inputs/order/'.format(
+                    gateway_pk,
+                    page_group_pk,
+                    page_pk,
+                    page_input_group_pk
+                )
+            )
+    else:
+        form = PageInputOrderConfigForm()
+
+    return render(request, "iic/page_input/order.html", {
+        'gateway': gateway,
+        'page': page,
+        'form': form,
+        'page_input_group': page_input_group,
+        'page_inputs': page_inputs,
+        'page_group': page_group})
+
+
+def page_input_list(request, gateway_pk, page_group_pk, page_pk, page_input_group_pk):
+    gateway = Gateway.objects.get(pk=gateway_pk)
+    page_group = PageGroup.objects.get(pk=page_group_pk)
+    page = Page.objects.get(pk=page_pk)
+    page_input_group = PageInputGroup.objects.get(pk=page_input_group_pk)
+    page_inputs = page_input_group.pageinput_set.all().order_by('item_level')
+
+    return render(request, "iic/page_input/list.html", {
         'gateway': gateway,
         'page': page,
         'page_input_group': page_input_group,
@@ -100,16 +314,44 @@ def page_input_list(request, gateway_pk, page_group_pk, page_pk,page_input_group
         'page_group': page_group})
 
 
-def page_input_detail(request, gateway_pk, page_group_pk, page_pk, page_input_group_pk,page_input_pk):
+def page_input_detail(request, gateway_pk, page_group_pk, page_pk, page_input_group_pk, page_input_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
     page_input_group = PageInputGroup.objects.get(pk=page_input_group_pk)
     page_input = page_input_group.pageinput_set.get(pk=page_input_pk)
 
-    return render(request, "iic/page_input_detail.html", {
+    return render(request, "iic/page_input/detail.html", {
         'gateway': gateway,
         'page': page,
+        'page_input': page_input,
+        'page_input_group': page_input_group,
+        'page_group': page_group})
+
+
+def page_input_copy(request, gateway_pk, page_group_pk, page_pk, page_input_group_pk, page_input_pk):
+    gateway = Gateway.objects.get(pk=gateway_pk)
+    page_group = PageGroup.objects.get(pk=page_group_pk)
+    page = Page.objects.get(pk=page_pk)
+    page_input_group = PageInputGroup.objects.get(pk=page_input_group_pk)
+    page_input = page_input_group.pageinput_set.get(pk=page_input_pk)
+    if request.method == "POST":
+        form = PageInputForm(request.POST)
+        if form.is_valid():
+            page_input = form.save(commit=False)
+
+            page_input.save()
+            return redirect(
+                '/iic_editor/gateways/{}/page_groups/{}/pages/{}/page_input_groups/{}/page_inputs/{}/'.format(
+                    gateway_pk, page_group_pk, page_pk, page_input_group_pk, page_input_pk
+                )
+            )
+    else:
+        form = PageInputForm(instance=page_input)
+    return render(request, "iic/page_input/create.html", {
+        'gateway': gateway,
+        'page': page,
+        'form': form,
         'page_input': page_input,
         'page_input_group': page_input_group,
         'page_group': page_group})

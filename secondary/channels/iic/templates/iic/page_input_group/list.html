@@ -1,0 +1,25 @@
+{% extends 'iic/base.html' %}
+{% block content %}
+
+<a href="/iic_editor/gateways/">Gateways</a> /
+<a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway }}</a> /
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">PageGroups</a> /
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/">{{ page_group }}</a> /
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/">Pages</a> /
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page }}</a>
+
+<ul>
+    {% for page_input_group in page_input_groups %}
+
+            <li>
+                <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/">{{ page_input_group }}</a>
+            <a href="/admin/iic/pageinputgroup/{{ page_input_group.pk }}/change/">Edit</a>
+            </li>
+{% empty %}
+        <li>No items</li>
+    {% endfor %}
+
+
+
+</ul>
+{% endblock %}

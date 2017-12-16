@@ -1,0 +1,39 @@
+{% extends 'iic/base.html' %}
+{% block content %}
+
+    <a href="/iic_editor/gateways/">Gateways</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway }}</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">PageGroups</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/">{{ page_group }}</a>
+
+<br>
+         <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/order/">Reorder Pages</a>
+
+
+
+<ul>
+    {% for page in pages %}
+
+            <li>
+                <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a>
+                <a href="/admin/iic/page/{{ page.pk }}/change/">Edit</a>
+            <p>
+
+                pk <strong>{{ page.pk }}</strong> |
+                   <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/"> Page Input Groups <strong>##<strong></strong></a>|
+                page_inputs <strong> {{ page.pageinput_set.count }} </strong> |
+                level <strong>{{ page.item_level }}</strong>
+                <br>
+                <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/copy/">Use as Template </a>
+            </p>
+
+
+            </li>
+{% empty %}
+        <li>No items</li>
+    {% endfor %}
+
+
+
+</ul>
+{% endblock %}

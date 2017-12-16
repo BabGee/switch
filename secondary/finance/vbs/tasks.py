@@ -693,6 +693,7 @@ class System(Wrappers):
 				gl_manager.save()
 
 				payload['account_manager_id'] = session_manager.id
+				payload['balance_out'] = session_manager.amount
 				payload['balance_bf'] = session_manager.balance_bf
 				payload['response_status'] = '00'
 				payload['response'] = 'Account Debited'
@@ -774,6 +775,7 @@ class System(Wrappers):
 				gl_manager.save()
 
 				payload['account_manager_id'] = session_manager.id
+				payload['balance_in'] = session_manager.amount
 				payload['balance_bf'] = session_manager.balance_bf
 				payload['response_status'] = '00'
 				payload['response'] = 'Account Credited'

@@ -1,0 +1,20 @@
+{% extends 'iic/base.html' %}
+{% block content %}
+
+
+    <a href="/iic_editor/gateways/">Gateways</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway }}</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">PageGroups</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/">{{ page_group }}</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/">Pages</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page }}</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">Page Input Groups</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/">{{ page_input_group }}</a>
+<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/">Page Inputs</a>
+
+
+
+<h4>{{ page_input }}</h4>
+<a href="/admin/iic/pageinput/{{ pageinput.pk }}/change/">Edit</a>
+
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'iic/base.html' %}
+{% block content %}
+
+<h4>{{ page }}</h4>
+
+    <h1>Copy Page</h1>
+    <form method="POST" class="post-form">{% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="save btn btn-default">Save</button>
+    </form>
+
+{% endblock %}

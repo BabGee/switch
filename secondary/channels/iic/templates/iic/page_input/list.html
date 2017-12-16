@@ -1,0 +1,48 @@
+{% extends 'iic/base.html' %}
+{% block content %}
+    <a href="/iic_editor/gateways/">Gateways</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway }}</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">PageGroups</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/">{{ page_group }}</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/">Pages</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page }}</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">Page
+        Input Groups</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/">{{ page_input_group }}</a>
+
+    <br>
+    <br>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/order/">Order
+        Page Inputs</a>
+
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/create/">Add
+        New</a>
+    <ul>
+        {% for page_input in page_inputs %}
+            <li>
+                <h3>{{ page_input.page_input }}</h3>
+                <p>
+
+                    <strong>{{ page_input.input_variable.variable_type }}</strong> |
+                    pk <strong>{{ page_input.pk }}</strong> |
+                   name <strong>{{ page_input.input_variable.name }}</strong> |
+                   default_value <strong>{{ page_input.input_variable.default_value }}</strong> |
+                   service <strong>{{ page_input.input_variable.service }}</strong> |
+
+                    level <strong>{{ page_input.item_level }}</strong> |
+                    icon <strong>{{ page_input.icon }}</strong> |
+                    section_size <strong>{{ page_input.section_size }}</strong>
+
+
+                    <br>
+                    <a href="/admin/iic/pageinput/{{ page_input.pk }}/change/">Edit</a> |
+                     <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/{{ page_input.pk }}/copy/">Template </a>
+                </p>
+            </li>
+        {% empty %}
+            <li>No items</li>
+        {% endfor %}
+
+
+    </ul>
+{% endblock %}
