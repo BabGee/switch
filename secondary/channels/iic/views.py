@@ -1,4 +1,6 @@
-from primary.core.administration.models import Gateway
+from primary.core.administration.models import Gateway,Icon,AccessLevel
+from primary.core.bridge.models import Service,Product,ServiceStatus
+
 import json
 from secondary.channels.iic.models import \
     PageGroup, \
@@ -8,9 +10,15 @@ from secondary.channels.iic.models import \
     InputVariable, \
     VariableType, \
     PageInputStatus
-
+from django.db.models import Count
 from django.shortcuts import render, redirect
-from .forms import PageForm, PageInputForm, PageInputVariableForm,PageOrderConfigForm,PageInputOrderConfigForm
+from .forms import \
+    PageForm, \
+    PageInputForm, \
+    PageInputVariableForm,\
+    PageOrderConfigForm,\
+    PageInputOrderConfigForm, \
+    PageInputGroupForm
 from django.db.models import Q
 from primary.core.administration.models import Channel
 
@@ -52,7 +60,7 @@ def page_group_list(request, gateway_pk):
 
     page_inputs = query_page_inputs(gateway)
 
-    page_groups = PageGroup.objects.filter(page__pageinput__in=page_inputs).distinct()
+    page_groups = PageGroup.objects.filter(page__pageinput__in=page_inputs).distinct().order_by('item_level')
     return render(request, "iic/page_group/list.html", {
         'gateway': gateway,
         'page_groups': page_groups
@@ -77,9 +85,16 @@ def page_list(request, gateway_pk, page_group_pk):
     # todo use page-inputs to filter, remove pages without page-inputs
     pages = page_group.page_set.all().order_by('item_level')
 
+    page_inputs = query_page_inputs(gateway)
+    # todo user page to optimize query
+    # query pages from page inputs
+    pages_with_inputs = pages.filter(pageinput__in=page_inputs).distinct()
+    blank_pages = pages.exclude(pk__in=pages_with_inputs)
+
     return render(request, "iic/page/list.html", {
         'gateway': gateway,
-        'pages': pages,
+        'pages': pages_with_inputs,
+        'blank_pages': blank_pages,
         'page_group': page_group})
 
 
@@ -104,6 +119,56 @@ def page_order(request, gateway_pk, page_group_pk):
         form = PageOrderConfigForm()
 
     return render(request, "iic/page/order.html", {
+        'gateway': gateway,
+        'pages': pages,
+        'form': form,
+        'page_group': page_group
+    })
+
+
+def page_create(request, gateway_pk, page_group_pk):
+    gateway = Gateway.objects.get(pk=gateway_pk)
+    page_group = PageGroup.objects.get(pk=page_group_pk)
+    pages = page_group.page_set.all().order_by('item_level')
+
+    if request.method == "POST":
+        form = PageForm(request.POST)
+        if form.is_valid():
+            page = form.save(commit=False)
+            description = form.cleaned_data.get('description')
+            page.description = description if description else page.name
+            services = form.cleaned_data.get('services', ['HOME'])
+            # print(services)
+            level = form.cleaned_data.get('item_level')
+            if not level:
+                level_pages = pages
+                highest_page = level_pages.last()
+                if highest_page:
+                    if str(highest_page.item_level).isdigit():
+                        page.item_level = int(highest_page.item_level) + 1
+                    else:
+                        page.item_level = level_pages.count() + 1
+                else:
+                    page.item_level = 0
+            else:
+                page.item_level = level
+
+            page.page_group = page_group  # iic.models.PageGroup
+            page.save()
+
+            # todo page.access_level.add(*[al for al in AccessLevel.objects.filter(name__in=form.cleaned_data.get('access_levels', []))])
+            # administration.models.Gateway
+            # todo page.gateway.add(*Gateway.objects.filter(name__in=form.cleaned_data.get('gateways')))
+            # bridge.models.Service
+            page.service.add(*Service.objects.filter(name__in=services))
+
+            return redirect(
+                '/iic_editor/gateways/{}/page_groups/{}/pages/{}/'.format(gateway_pk, page_group_pk,page.pk)
+            )
+    else:
+        form = PageForm()
+
+    return render(request, "iic/page/create.html", {
         'gateway': gateway,
         'pages': pages,
         'form': form,
@@ -138,6 +203,8 @@ def page_copy(request, gateway_pk, page_group_pk, page_pk):
             )
     else:
         form = PageForm(instance=page)
+
+
     return render(request, "iic/page/create.html", {
         'gateway': gateway,
         'page': page,
@@ -150,14 +217,25 @@ def page_input_group_list(request, gateway_pk, page_group_pk, page_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
+
     page_inputs = query_page_inputs(gateway)
     # todo user page to optimize query
     page_input_groups = PageInputGroup.objects.filter(pageinput__in=page_inputs, pageinput__page=page).distinct()
+    blank_page_input_groups = PageInputGroup.objects\
+        .annotate(pageinputs_count=Count('pageinput'))\
+        .filter(pageinputs_count__lt=1)\
+        .order_by('-id')
+
+    # query pages
+    # pages = Page.objects.filter(pageinput__in=page_inputs)
+    # page input groups of pages
+    # page_input_groups = PageInputGroup.objects.filter(pageinput__page=pages).distinct()
 
     return render(request, "iic/page_input_group/list.html", {
         'gateway': gateway,
         'page': page,
         'page_input_groups': page_input_groups,
+        'blank_page_input_groups': blank_page_input_groups,
         'page_group': page_group})
 
 
@@ -166,17 +244,122 @@ def page_input_group_detail(request, gateway_pk, page_group_pk, page_pk, page_in
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
 
-    page_inputs = query_page_inputs(gateway)
+    # page_inputs = query_page_inputs(gateway)
     # todo user page to optimize query
-    page_input_groups = PageInputGroup.objects.filter(pageinput__in=page_inputs, pageinput__page=page).distinct()
+    # page_input_groups = PageInputGroup.objects.filter(pageinput__in=page_inputs, pageinput__page=page).distinct()
 
-    page_input_group = page_input_groups.get(pk=page_input_group_pk)
+    page_input_group = PageInputGroup.objects.get(pk=page_input_group_pk)
 
     return render(request, "iic/page_input_group/detail.html", {
         'gateway': gateway,
         'page': page,
         'page_input_group': page_input_group,
         'page_group': page_group})
+
+
+def page_input_group_create(request,  gateway_pk, page_group_pk, page_pk):
+    gateway = Gateway.objects.get(pk=gateway_pk)
+    page_group = PageGroup.objects.get(pk=page_group_pk)
+    page = Page.objects.get(pk=page_pk)
+    page_inputs = query_page_inputs(gateway)
+    # todo user page to optimize query
+    # page_input_groups = PageInputGroup.objects.filter(pageinput__in=page_inputs, pageinput__page=page).distinct()
+
+    # page_input = page_input_group.pageinput_set.get(pk=page_input_pk)
+    if request.method == "POST":
+        form = PageInputGroupForm(request.POST)
+        if form.is_valid():
+            page_input_group = form.save(commit=False)
+
+            # input_variable_id =
+
+            name = form.cleaned_data['name']
+            if not name:
+                name = page.name
+
+            page_input_group.name = name
+            description = form.cleaned_data.get('description')
+            page_input_group.description = description if description else name
+
+            level = form.cleaned_data.get('item_level')
+            if not level:
+                page_inputs = query_page_inputs(gateway)
+                # todo user page to optimize query
+                level_page_input_group = PageInputGroup.objects.filter(pageinput__in=page_inputs,
+                                                                  pageinput__page=page).distinct().order_by('item_level')
+                highest_page_input_group = level_page_input_group.last()
+                if highest_page_input_group:
+                    if highest_page_input_group.item_level.isdigit():
+                        page_input_group.item_level = int(highest_page_input_group.item_level) + 1
+                    else:
+                        page_input_group.item_level = level_page_input_group.count() + 1
+
+                else:
+                    page_input_group.item_level = 0
+            else:
+                page_input_group.item_level = level
+
+            input_variable = InputVariable()
+            input_variable.name = name
+
+            input_variable.variable_type = VariableType.objects.get(name='FORM')  # iic.models.VariableType
+            # todo assigning variable_type using id is better
+            # todo FORM & HIDDEN FORM
+
+            input_variable.validate_min = 0
+            input_variable.validate_max = 0
+            # input_variable.variable_kind = None
+            # todo create submit service and service commands
+            # input_variable.default_value = page_input_group_config.get('service')
+
+            # todo create configured service and commands
+            service_name = form.cleaned_data.get('input_variable_service')
+            if service_name:
+                pass
+            else:
+                service_name = name.upper()
+
+            # todo input_variable.service = service_name
+
+            try:
+                service = Service.objects.get(name=service_name)
+            except Service.DoesNotExist:
+                service = Service(name=service_name)
+
+                service.description = service_name.title()
+                service.product = Product.objects.get(name='SYSTEM')
+                service.status = ServiceStatus.objects.get(name='POLLER')
+
+                service.save()
+                # service.access_level = None
+
+            input_variable.service = service
+            input_variable.save()
+
+            page_input_group.input_variable = input_variable  # iic.models.InputVariable
+            page_input_group.section_size = '24|24|24'
+            page_input_group.section_height = 900
+
+            page_input_group.save()
+            # administration.models.Gateway
+            print(page_input_group)
+
+            page_input_group.gateway.add(
+                *Gateway.objects.filter(name__in=form.cleaned_data.get('gateways', []))
+            )
+
+            return redirect(
+                '/iic_editor/gateways/{}/page_groups/{}/pages/{}/page_input_groups/{}/'.format(
+                    gateway_pk, page_group_pk, page_pk,page_input_group.pk
+                )
+            )
+    else:
+        form = PageInputGroupForm()
+    return render(request, "iic/page_input_group/create.html", {
+        'gateway': gateway,
+        'page_group': page_group,
+        'page': page,
+        'form': form})
 
 
 def page_input_create(request, gateway_pk, page_group_pk, page_pk, page_input_group_pk):
@@ -216,6 +399,24 @@ def page_input_create(request, gateway_pk, page_group_pk, page_pk, page_input_gr
                 input_variable.validate_max = form.cleaned_data['input_variable_validate_max']
                 input_variable.default_value = form.cleaned_data['input_variable_default_value']
                 # input_variable.variable_kind = None
+
+                service_name = form.cleaned_data.get('input_variable_service')
+                if service_name:
+                    try:
+                        service = Service.objects.get(name=service_name)
+                    except Service.DoesNotExist:
+                        raise
+                        # service = Service(name=service_name)
+                        #
+                        # service.description = service_name.title()
+                        # service.product = Product.objects.get(name='SYSTEM')
+                        # service.status = ServiceStatus.objects.get(name='POLLER')
+                        #
+                        # service.save()
+                        # service.access_level = None
+
+                    input_variable.service = service
+
                 input_variable.save()
 
             page_input.input_variable = input_variable

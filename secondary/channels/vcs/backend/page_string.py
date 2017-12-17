@@ -523,6 +523,21 @@ class PageString(ServiceCall, Wrappers):
 					page_string = page_string.replace('['+v+']',item)
 
 
+				elif variable_key == 'i_invest.investmentfundinfo':
+					from thirdparty.i_invest.models import InvestmentFund
+
+					params = payload
+
+					investmentfund = InvestmentFund.objects.filter(name=params['from_investmentfund'])
+
+					item = ''
+					if investmentfund.exists():
+						item = '%s' % (investmentfund[0].description)
+
+					page_string = page_string.replace('['+v+']',item)
+
+
+
 				elif variable_key == 'i_invest.investmentfund':
 					from thirdparty.i_invest.models import InvestmentFund
 

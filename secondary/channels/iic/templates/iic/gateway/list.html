@@ -1,6 +1,10 @@
 {% extends 'iic/base.html' %}
 {% block content %}
-    <a href="/iic_editor/gateways/">Gateways</a>
+    
+    <ol class="breadcrumb">
+  <li class="breadcrumb-item active">Gateways</li>
+</ol>
+
 <ul>
     {% for gateway in gateways %}
 

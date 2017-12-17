@@ -1,8 +1,14 @@
 {% extends 'iic/base.html' %}
 {% block content %}
 
-        <a href="/iic_editor/gateways/">Gateways</a>
-<a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway }}</a>
+    <ol class="breadcrumb">
+
+  <li class="breadcrumb-item"><a href="/iic_editor/gateways/">Gateways</a></li>
+{#<a href="/iic_editor/gateways/{{ gateway.pk }}/"></a>#}
+  <li class="breadcrumb-item active">{{ gateway.name }}</li>
+</ol>
+
+
 
 
 <h4>{{ gateway }}</h4>

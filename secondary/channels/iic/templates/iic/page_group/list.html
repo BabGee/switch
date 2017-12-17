@@ -1,22 +1,30 @@
 {% extends 'iic/base.html' %}
 {% block content %}
 
-    <a href="/iic_editor/gateways/">Gateways</a>
-<a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway }}</a>
-<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">PageGroups</a>
 
-<ul>
-    {% for page_group in page_groups %}
+    <ol class="breadcrumb">
+
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/">Gateways</a></li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway.name }} </a> </li>
+{#        <li class="breadcrumb-item active"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">Page Groups</a>#}
+        <li class="breadcrumb-item active">Page Groups</li>
+
+
+    </ol>
+
+
+
+    <ul>
+        {% for page_group in page_groups %}
 
             <li>
                 <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/">{{ page_group }}</a>
-            <a href="/admin/iic/pagegroup/{{ page_group.pk }}/change/">Edit</a>
+                <a href="/admin/iic/pagegroup/{{ page_group.pk }}/change/">Edit</a>
             </li>
-{% empty %}
-        <li>No items</li>
-    {% endfor %}
+        {% empty %}
+            <li>No items</li>
+        {% endfor %}
 
 
-
-</ul>
+    </ul>
 {% endblock %}

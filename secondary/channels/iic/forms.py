@@ -1,6 +1,6 @@
 from django.forms import ModelForm
 from django import forms
-from .models import Page, PageInput
+from .models import Page, PageInput,PageInputGroup
 
 
 class PageOrderConfigForm(forms.Form):
@@ -13,9 +13,27 @@ class PageInputOrderConfigForm(forms.Form):
 
 # Create the form class.
 class PageForm(ModelForm):
+    description = forms.CharField(required=False,max_length=100)
+
     class Meta:
         model = Page
-        exclude = []
+        fields = ['name','item_level','description','icon']
+
+
+class PageInputGroupForm(ModelForm):
+    # input_variable_name = forms.IntegerField(required=False)
+
+    name = forms.CharField(max_length=45, required=False)
+    item_level = forms.CharField(max_length=4, required=False)
+    section_size = forms.CharField(max_length=45, required=False)
+    # icon = forms.CharField(max_length=45, required=False)
+    # bind_position = forms.CharField(max_length=12800, required=False)
+    input_variable_service = forms.CharField(max_length=50, required=False)
+
+    class Meta:
+        model = PageInputGroup
+        fields = ['name', 'item_level','section_size','icon','bind_position']
+        # exclude = []
 
 
 class PageInputForm(ModelForm):

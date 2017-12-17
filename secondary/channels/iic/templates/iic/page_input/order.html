@@ -1,19 +1,25 @@
 {% extends 'iic/base.html' %}
 {% block content %}
 
-<a href="/iic_editor/gateways/">Gateways</a>
-<a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway }}</a>
-<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">PageGroups</a>
-<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/">{{ page_group }}</a>
-<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/">Pages</a>
-<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page }}</a>
-<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">Page Input Groups</a>
-<a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/">{{ page_input_group }}</a>
+        <ol class="breadcrumb">
+
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/">Gateways</a></li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway.name }} </a> </li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">Page Groups</a>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/">{{ page_group.name }}</a></li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/">Pages</a></li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a> </li>
+        <li class="breadcrumb-item "><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">Page Input Groups</a> </li>
+        <li class="breadcrumb-item "> <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/">{{ page_input_group.name }}</a> </li>
+        <li class="breadcrumb-item active"> Page Inputs Order </li>
+
+
+    </ol>
 
     <h3>Re-Order Page Inputs</h3>
 
     <style>
-        ul {
+        #list {
             margin: 0;
             padding: 0;
             list-style: none;
@@ -22,7 +28,7 @@
             user-select: none;
         }
 
-        li {
+        #list > li {
             cursor: move;
             margin: 1px;
             padding: 5px 20px;

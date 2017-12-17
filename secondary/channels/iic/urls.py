@@ -4,12 +4,16 @@ from .views import *
 page_paterns = [
     url(r'^$', page_list),
     url(r'^order/$', page_order),
+    url(r'^create/$', page_create),
     url(r'^(?P<page_pk>\d+)/', include([
         url(r'^$', page_detail),
         url(r'^copy/$', page_copy),
 
         url(r'^page_input_groups/', include([
             url(r'^$', page_input_group_list),
+            # todo url(r'^order/$', page_input_group_order),
+            url(r'^create/$', page_input_group_create),
+
             url(r'^(?P<page_input_group_pk>\d+)/', include([
                 url(r'^$', page_input_group_detail),
                 url(r'^page_inputs/', include([
@@ -28,7 +32,6 @@ page_paterns = [
 
 urlpatterns = [
     url(r'gateways/', include([
-
         url(r'^$', gateway_list),
         url(r'^(?P<gateway_pk>\d+)/', include([
             url(r'^$', gateway_detail),
@@ -42,6 +45,12 @@ urlpatterns = [
         ]
         )),
         # url(r'create/', views.events_create, name='create')
+    ]), name='gateways'),
+    #
+    # url(r'service/', include([
+    #
+    #
+    #
+    # ]), name='services')
 
-    ]), name='gateways')
 ]
