@@ -362,6 +362,9 @@ class System(Wrappers):
 				if 'email' in payload.keys():
 					payload['original_email'] = payload['email']
 					del payload['email']
+				if 'session_gateway_profile_id' in payload.keys():
+					payload['original_session_gateway_profile_id'] = payload['session_gateway_profile_id']
+					del payload['session_gateway_profile_id']
 
 		 		payload['msisdn'] = str(payload['recipient_msisdn'])
 				msisdn = UPCWrappers().get_msisdn(payload)
