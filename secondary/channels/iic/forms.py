@@ -14,6 +14,7 @@ class PageInputOrderConfigForm(forms.Form):
 # Create the form class.
 class PageForm(ModelForm):
     description = forms.CharField(required=False,max_length=100)
+    item_level = forms.IntegerField(required=False)
 
     class Meta:
         model = Page

@@ -72,6 +72,8 @@ class InputVariable(models.Model):
 	error_group_select = models.IntegerField(blank=True, null=True)
 	override_level = models.IntegerField(blank=True, null=True)
 	error_level = models.IntegerField(blank=True, null=True)
+	override_service = models.IntegerField(blank=True, null=True)
+	error_service = models.IntegerField(blank=True, null=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)		
 

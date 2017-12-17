@@ -251,6 +251,7 @@ class VAS:
 					error_group_select = self.nav.menu.input_variable.error_group_select
 					override_level = self.nav.menu.input_variable.override_level
 					error_level = self.nav.menu.input_variable.error_level
+					override_service = self.nav.menu.input_variable.override_service
 
 					if ('Non-Existing National ID' in self.nav.menu.input_variable.name and \
 					GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
@@ -291,6 +292,9 @@ class VAS:
 						else: pass
 
 						if override_level and isinstance(override_level, int): self.level = override_level
+						else: pass
+
+						if override_service and isinstance(override_service, int): self.service = override_service
 						else: pass
 
 						#Comes after overrides
@@ -334,6 +338,9 @@ class VAS:
 						if override_level and isinstance(override_level, int): self.level = override_level
 						else: pass
 
+						if override_service and isinstance(override_service, int): self.service = override_service
+						else: pass
+
 						if self.gateway_profile.exists():
 							session_gateway_profile = self.gateway_profile[0]
 							hash_pin = crypt.crypt(str(self.payload['input']), str(session_gateway_profile.id))
@@ -357,6 +364,9 @@ class VAS:
 						else: pass
 
 						if override_level and isinstance(override_level, int): self.level = override_level
+						else: pass
+
+						if override_service and isinstance(override_service, int): self.service = override_service
 						else: pass
 
 				else:
