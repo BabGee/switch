@@ -501,6 +501,7 @@ class System(Wrappers):
 					else:
 						payload['message'] = ''
 				payload['notification_product_id'] = notification_product[0].id
+				lgr.info('Payload: %s' % payload)
 				#product_item = ProductItem.objects.filter(institution_till=notification_product[0].notification.institution_till,\
 				#		product_type=notification_product[0].notification.product_type)
 				#payload['product_item_id'] = product_item[0].id #Pick the notification product, product item used in sales and purchases of credits etc| *****@@Will throw error if no product item!!!!
@@ -559,28 +560,6 @@ class System(Wrappers):
 			else:
 				gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 				session_gateway_profile = None
-				#A get_profile function must have been called in order to create gateway_profile for an EMAIL or MSISDN prior to sending out notifications
-				'''
-				if 'msisdn' in payload.keys() and len(payload['msisdn'])>=7 and len(payload['msisdn'])<=15:
-					msisdn = UPCWrappers().get_msisdn(payload)
-					if msisdn is not None:
-						try:msisdn = MSISDN.objects.get(phone_number=msisdn)
-						except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
-
-						session_gateway_profile_list = GatewayProfile.objects.filter(msisdn=msisdn, gateway=gateway_profile.gateway)
-						if session_gateway_profile_list.exists():
-							session_gateway_profile = session_gateway_profile_list[0]
-						else:
-							change_msisdn = ChangeProfileMSISDN.objects.filter(msisdn=msisdn,gateway_profile__gateway=gateway_profile.gateway) 
-							if change_msisdn.exists():
-								session_gateway_profile = change_msisdn[0].gateway_profile
-
-				elif 'email' in payload.keys() and self.validateEmail(payload["email"]):					
-					session_gateway_profile_list = GatewayProfile.objects.filter(user__email=payload["email"], gateway=gateway_profile.gateway)
-					session_gateway_profile = session_gateway_profile_list[0]
-				elif 'session_gateway_profile_id' in payload.keys():
-					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-				'''
 
 				ext_outbound_id = None
 				if "ext_outbound_id" in payload.keys():
