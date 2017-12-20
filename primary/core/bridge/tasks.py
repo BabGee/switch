@@ -280,6 +280,6 @@ def process_background_service():
 		processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
 		for bg in background:
 			background_service_call.delay(bg)
-	exceptions Exception, e:
+	except Exception, e:
 		lgr.info('Error on Processing Background Service: %s' % e)
 
