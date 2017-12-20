@@ -1,9 +1,8 @@
 from django.http import JsonResponse, HttpResponse
 
-from primary.core.administration.models import Gateway,Icon,AccessLevel
+from primary.core.administration.models import Gateway, Icon, AccessLevel
 from primary.core.upc.models import GatewayProfile
-from primary.core.bridge.models import Service,Product,ServiceStatus
-
+from primary.core.bridge.models import Service, Product, ServiceStatus
 
 import json
 from secondary.channels.iic.models import \
@@ -14,14 +13,14 @@ from secondary.channels.iic.models import \
     InputVariable, \
     VariableType, \
     PageInputStatus
-from django.db.models import Count,IntegerField
+from django.db.models import Count, IntegerField
 from django.db.models.functions import Cast
 from django.shortcuts import render, redirect
 from .forms import \
     PageForm, \
     PageInputForm, \
-    PageInputVariableForm,\
-    PageOrderConfigForm,\
+    PageInputVariableForm, \
+    PageOrderConfigForm, \
     PageInputOrderConfigForm, \
     PageInputGroupForm
 from django.db.models import Q
@@ -180,7 +179,7 @@ def page_create(request, gateway_pk, page_group_pk):
             page.service.add(*Service.objects.filter(name__in=services))
 
             return redirect(
-                '/iic_editor/gateways/{}/page_groups/{}/pages/{}/'.format(gateway_pk, page_group_pk,page.pk)
+                '/iic_editor/gateways/{}/page_groups/{}/pages/{}/'.format(gateway_pk, page_group_pk, page.pk)
             )
     else:
         form = PageForm()
@@ -221,7 +220,6 @@ def page_copy(request, gateway_pk, page_group_pk, page_pk):
     else:
         form = PageForm(instance=page)
 
-
     return render(request, "iic/page/create.html", {
         'gateway': gateway,
         'page': page,
@@ -238,9 +236,9 @@ def page_input_group_list(request, gateway_pk, page_group_pk, page_pk):
     page_inputs = query_page_inputs(gateway)
     # todo user page to optimize query
     page_input_groups = PageInputGroup.objects.filter(pageinput__in=page_inputs, pageinput__page=page).distinct()
-    blank_page_input_groups = PageInputGroup.objects\
-        .annotate(pageinputs_count=Count('pageinput'))\
-        .filter(pageinputs_count__lt=1)\
+    blank_page_input_groups = PageInputGroup.objects \
+        .annotate(pageinputs_count=Count('pageinput')) \
+        .filter(pageinputs_count__lt=1) \
         .order_by('-id')
 
     # query pages
@@ -274,7 +272,7 @@ def page_input_group_detail(request, gateway_pk, page_group_pk, page_pk, page_in
         'page_group': page_group})
 
 
-def page_input_group_create(request,  gateway_pk, page_group_pk, page_pk):
+def page_input_group_create(request, gateway_pk, page_group_pk, page_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
@@ -303,7 +301,8 @@ def page_input_group_create(request,  gateway_pk, page_group_pk, page_pk):
                 page_inputs = query_page_inputs(gateway)
                 # todo user page to optimize query
                 level_page_input_group = PageInputGroup.objects.filter(pageinput__in=page_inputs,
-                                                                  pageinput__page=page).distinct().order_by('item_level')
+                                                                       pageinput__page=page).distinct().order_by(
+                    'item_level')
                 highest_page_input_group = level_page_input_group.last()
                 if highest_page_input_group:
                     if highest_page_input_group.item_level.isdigit():
@@ -367,7 +366,7 @@ def page_input_group_create(request,  gateway_pk, page_group_pk, page_pk):
 
             return redirect(
                 '/iic_editor/gateways/{}/page_groups/{}/pages/{}/page_input_groups/{}/'.format(
-                    gateway_pk, page_group_pk, page_pk,page_input_group.pk
+                    gateway_pk, page_group_pk, page_pk, page_input_group.pk
                 )
             )
     else:
@@ -622,13 +621,16 @@ def gateway_profile_put(request):
 
 def page_put(request):
     data = request.POST
-    print(data.getlist('value'))
+    new_levels = [int(x) for x in data.getlist('value[]')]
     page = Page.objects.get(pk=data.get('pk'))
-    current_levels = list( page.access_level.values_list('pk'))
-    print(current_levels)
+    current_levels = page.access_level.values_list('pk',flat=True)
 
+    remove_levels = list(set(current_levels).difference(new_levels))
+    add_levels = list(set(new_levels).difference(current_levels))
 
-    ##GatewayProfile.objects.filter(pk=).update(access_level=access_level)
+    page.access_level.add(*AccessLevel.objects.filter(pk__in=add_levels))
+    page.access_level.remove(*AccessLevel.objects.filter(pk__in=remove_levels))
+
     return HttpResponse(status=200)
 
 
