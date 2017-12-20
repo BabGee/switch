@@ -25,10 +25,153 @@
       name : <strong>{{ page_input_group.input_variable.name }}</strong> <br>
       variable_type : <strong>{{ page_input_group.input_variable.variable_type }}</strong> <br>
       service : <strong>{{ page_input_group.input_variable.service }}</strong>
+
       <a target="_blank" href="/admin/bridge/servicecommand/?q=&service__id__exact={{ page_input_group.input_variable.service.pk }}">View Service Commands</a>
+
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-primary"
+        id="view-s-commands"
+        data-service="{{ page_input_group.input_variable.service.pk }}"
+        data-toggle="modal" data-target="#serviceComandsModal">
+    View Service Commands
+</button>
+
+<br>
+
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-primary" id="copy-service-commands">
+    Copy Service Commands from
+</button>
+      <input type="text" id="copy-service" class=".typeahead" placeholder="Service">
+
+
       <br>
     <br>
     <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/">View Page Inputs</a>
     <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/order/">Order Page Inputs</a>
   </p>
+
+<!-- Modal -->
+<div class="modal fade" id="serviceComandsModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">{{ page_input_group.input_variable.service.name }}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="modal-body">
+
+      </div>
+{#      <div class="modal-footer">#}
+{#        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>#}
+{#        <button type="button" class="btn btn-primary">Save changes</button>#}
+{#      </div>#}
+    </div>
+  </div>
+</div>
+
+
+
+{% endblock %}
+{% block script %}
+    <script type="text/javascript">
+        jQuery(document).ready(function () {
+            function copyServiceCommands(service) {
+                $.ajax({
+                    url: '/iic_editor/services/{{ page_input_group.input_variable.service.pk }}/service_commands/from/',
+                    beforeSend: function (xhr, settings) {
+                        function getCookie(name) {
+                            var cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                var cookies = document.cookie.split(';');
+                                for (var i = 0; i < cookies.length; i++) {
+                                    var cookie = jQuery.trim(cookies[i]);
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+
+                        function csrfSafeMethod(method) {
+                            // these HTTP methods do not require CSRF protection
+                            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                        }
+
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                        }
+                        // todo btn.html('<img src="/static/loader.gif">');
+                    },
+                    data: {'from':service},
+                    type: 'POST',
+                    success: function (data) {
+                        //console.log(data);
+                        $('#copy-service').val('');
+                    }
+                });
+            }
+            function serviceCommands(service) {
+
+                $.ajax({
+                    url: '/iic_editor/services/'+service+'/service_commands/',
+                    beforeSend: function (xhr, settings) {
+                        function getCookie(name) {
+                            var cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                var cookies = document.cookie.split(';');
+                                for (var i = 0; i < cookies.length; i++) {
+                                    var cookie = jQuery.trim(cookies[i]);
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+
+                        function csrfSafeMethod(method) {
+                            // these HTTP methods do not require CSRF protection
+                            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                        }
+
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                        }
+                        // todo btn.html('<img src="/static/loader.gif">');
+                    },
+                    data: {},
+                    type: 'GET',
+                    success: function (data) {
+                        //console.log(data);
+                      $('#modal-body').html(data);
+
+                    }
+                });
+            }
+
+            $('#view-s-commands').on('click', function (e) {
+                // e.preventDefault();//
+                var service = $(this).data('service');
+                serviceCommands(service);
+
+            });
+
+            $('#copy-service-commands').on('click', function (e) {
+                // e.preventDefault();//
+                var service = $('#copy-service').val();
+                if(service) copyServiceCommands(service);
+
+            });
+
+
+        });
+    </script>
 {% endblock %}

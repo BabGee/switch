@@ -192,6 +192,7 @@ class BackgroundServiceActivity(models.Model):
 	charges = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	gateway = models.ForeignKey(Gateway)
 	institution = models.ForeignKey(Institution, null=True, blank=True)
+	current_command = models.ForeignKey(ServiceCommand, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.background_service, self.gateway_profile)
 

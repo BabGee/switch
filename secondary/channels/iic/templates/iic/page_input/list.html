@@ -1,17 +1,30 @@
 {% extends 'iic/base.html' %}
 {% block content %}
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"
+          rel="stylesheet"/>
 
-        <ol class="breadcrumb">
+
+    <ol class="breadcrumb">
 
         <li class="breadcrumb-item"><a href="/iic_editor/gateways/">Gateways</a></li>
-        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway.name }} </a> </li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway.name }} </a></li>
         <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">Page Groups</a>
-        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/">{{ page_group.name }}</a></li>
-        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/">Pages</a></li>
-        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a> </li>
-        <li class="breadcrumb-item "><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">Page Input Groups</a> </li>
-        <li class="breadcrumb-item "> <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/">{{ page_input_group.name }}</a> </li>
-        <li class="breadcrumb-item active"> Page Inputs </li>
+        <li class="breadcrumb-item"><a
+                href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/">{{ page_group.name }}</a>
+        </li>
+        <li class="breadcrumb-item"><a
+                href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/">Pages</a></li>
+        <li class="breadcrumb-item"><a
+                href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a>
+        </li>
+        <li class="breadcrumb-item "><a
+                href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">Page
+            Input Groups</a></li>
+        <li class="breadcrumb-item "><a
+                href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/">{{ page_input_group.name }}</a>
+        </li>
+        <li class="breadcrumb-item active"> Page Inputs</li>
 
 
     </ol>
@@ -31,10 +44,14 @@
 
                     <strong>{{ page_input.input_variable.variable_type }}</strong> |
                     pk <strong>{{ page_input.pk }}</strong> |
-                   input_variable_pk <strong>{{ page_input.input_variable.pk }}</strong> |
-                   name <strong>{{ page_input.input_variable.name }}</strong> |
-                   default_value <strong>{{ page_input.input_variable.default_value }}</strong> |
-                   service <strong>{{ page_input.input_variable.service }}</strong> |
+                    input_variable_pk <strong>{{ page_input.input_variable.pk }}</strong> |
+                    name <strong class="editable"
+                                 data-type="text"
+                                 data-name="name"
+                                 data-pk="{{ page_input.input_variable.pk }}"
+                                 data-url="/iic_editor/input_variables/">{{ page_input.input_variable.name }}</strong> |
+                    default_value <strong>{{ page_input.input_variable.default_value }}</strong> |
+                    service <strong>{{ page_input.input_variable.service }}</strong> |
 
                     level <strong>{{ page_input.item_level }}</strong> |
                     icon <strong>{{ page_input.icon }}</strong> |
@@ -43,13 +60,115 @@
 
                     <br>
                     <a href="/admin/iic/pageinput/{{ page_input.pk }}/change/">Edit</a> |
-                     <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/{{ page_input.pk }}/copy/">Template </a>
+                    <a href="#" class="visibility-toggle" id="{{ page_input.pk }}">
+                        {% if page_input.page_input_status.name == 'ACTIVE' %}Hide{% else %}Show{% endif %}</a> |
+                    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/{{ page_input.pk }}/copy/">Template </a>
                 </p>
             </li>
         {% empty %}
             <li>No items</li>
         {% endfor %}
 
-
     </ul>
+
+
+{% endblock %}
+{% block script %}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+    <script type="text/javascript">
+
+        $.fn.editable.defaults.mode = 'inline';
+        $.fn.editableform.buttons = '' +
+            '<button type="submit" class="btn btn-info editable-submit"><i class="fa fa-fw fa-check"></i></button>' +
+            '<button type="button" class="btn editable-cancel"><i class="fa fa-fw fa-remove"></i></button>';
+
+        $.fn.editable.defaults.ajaxOptions = {
+            type: "POST",
+            beforeSend: function (xhr, settings) {
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+
+            }
+        };
+
+
+        $(document).ready(function () {
+
+
+            $('.editable').editable();
+        });
+    </script>
+    <script type="text/javascript">
+        jQuery(document).ready(function () {
+            function toggleVisibility(page_input) {
+                var btn = $('#' + page_input);
+                $.ajax({
+                    url: '/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/' + page_input + '/',
+                    beforeSend: function (xhr, settings) {
+                        function getCookie(name) {
+                            var cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                var cookies = document.cookie.split(';');
+                                for (var i = 0; i < cookies.length; i++) {
+                                    var cookie = jQuery.trim(cookies[i]);
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+
+                        function csrfSafeMethod(method) {
+                            // these HTTP methods do not require CSRF protection
+                            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                        }
+
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                        }
+                        // todo btn.html('<img src="/static/loader.gif">');
+                    },
+                    data: {"action": 'toggle'},
+                    type: 'POST',
+                    success: function (data) {
+                        //console.log(data);
+                        btn.html(data.status);
+
+                    }
+                });
+            }
+
+            $('.visibility-toggle').on('click', function (e) {
+                e.preventDefault();//
+                toggleVisibility($(this).attr('id'))
+
+            });
+
+        });
+    </script>
 {% endblock %}

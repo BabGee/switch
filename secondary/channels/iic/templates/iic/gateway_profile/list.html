@@ -1,0 +1,98 @@
+{% extends 'iic/base.html' %}
+{% block content %}
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"
+          rel="stylesheet"/>
+
+
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/">Gateways</a></li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway.name }} </a></li>
+        <li class="breadcrumb-item active">Gateway Profiles</li>
+    </ol>
+
+
+
+    <ul>
+        {% for page_group in gateway_profiles %}
+            <li>
+                <a href="/iic_editor/gateways/{{ gateway.pk }}/gateway_profiles/{{ page_group.pk }}/">{{ page_group }}</a>
+
+                <p>
+
+
+                    Access Level <strong class="editable"
+                                         data-type="select"
+                                         data-name="access_level"
+                                         data-pk="{{ page_group.pk }}"
+                                         data-value="{{ page_group.access_level.pk }}"
+                                         data-url="/iic_editor/gateway_profiles/">{{ page_group.access_level.name }}</strong>
+                </p>
+
+            </li>
+        {% empty %}
+            <li>No items</li>
+        {% endfor %}
+
+    </ul>
+{% endblock %}
+{% block script %}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+    <script type="text/javascript">
+
+        $.fn.editable.defaults.mode = 'inline';
+        $.fn.editableform.buttons = '' +
+            '<button type="submit" class="btn btn-info editable-submit"><i class="fa fa-fw fa-check"></i></button>' +
+            '<button type="button" class="btn editable-cancel"><i class="fa fa-fw fa-remove"></i></button>';
+
+        $.fn.editable.defaults.ajaxOptions = {
+            type: "POST",
+            beforeSend: function (xhr, settings) {
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+
+            }
+        };
+
+        $(document).ready(function () {
+            $('.editable').editable({
+                source: [
+                    {value: 1, text: 'CUSTOMER'},
+                    {value: 3, text: 'SYSTEM'},
+                    {value: 7, text: 'MANAGER'},
+                    {value: 8, text: 'OPERATOR'},
+                    {value: 11, text: 'ADMINISTRATOR'},
+                    {value: 14, text: 'SUPERVISOR'},
+                    {value: 15, text: 'SUPER ADMINISTRATOR'},
+                    {value: 16, text: 'API USER'},
+                    {value: 17, text: 'SALES'},
+                    {value: 18, text: 'DELIVERY'},
+                    {value: 19, text: 'AGENT'},
+                    {value: 20, text: 'SUPER AGENT'}
+                ]
+            });
+        });
+    </script>
+{% endblock %}

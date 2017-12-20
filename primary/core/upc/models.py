@@ -38,6 +38,7 @@ class Institution(models.Model):
 	default_color = models.CharField(max_length=100)
 	website = models.CharField(max_length=200, blank=True, null=True)
 	physical_address = models.CharField(max_length=200, blank=True, null=True) #HQ
+	address = models.CharField(max_length=200, blank=True,null=True,help_text='Post Office Box')
 	gateway = models.ManyToManyField(Gateway)
 	currency = models.ManyToManyField(Currency, blank=True) #Allowed Currencies
 	country = models.ForeignKey(Country)

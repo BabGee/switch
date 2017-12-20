@@ -1,4 +1,7 @@
+from django.http import JsonResponse, HttpResponse
+
 from primary.core.administration.models import Gateway,Icon,AccessLevel
+from primary.core.upc.models import GatewayProfile
 from primary.core.bridge.models import Service,Product,ServiceStatus
 
 import json
@@ -10,7 +13,8 @@ from secondary.channels.iic.models import \
     InputVariable, \
     VariableType, \
     PageInputStatus
-from django.db.models import Count
+from django.db.models import Count,IntegerField
+from django.db.models.functions import Cast
 from django.shortcuts import render, redirect
 from .forms import \
     PageForm, \
@@ -52,6 +56,18 @@ def gateway_detail(request, gateway_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
 
     return render(request, "iic/gateway/detail.html", {'gateway': gateway})
+
+
+def gateway_profile_list(request, gateway_pk):
+    gateway = Gateway.objects.get(pk=gateway_pk)
+    # page_groups = gateway.pagegroup_set.all()
+
+    gateway_profiles = GatewayProfile.objects.filter(gateway=gateway)
+
+    return render(request, "iic/gateway_profile/list.html", {
+        'gateway': gateway,
+        'gateway_profiles': gateway_profiles
+    })
 
 
 def page_group_list(request, gateway_pk):
@@ -469,7 +485,7 @@ def page_input_order(request, gateway_pk, page_group_pk, page_pk, page_input_gro
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
     page_input_group = PageInputGroup.objects.get(pk=page_input_group_pk)
-    page_inputs = page_input_group.pageinput_set.all().order_by('item_level')
+    page_inputs = page_input_group.pageinput_set.all().annotate(pos=Cast('item_level', IntegerField())).order_by('pos')
 
     if request.method == "POST":
         form = PageInputOrderConfigForm(request.POST)
@@ -522,12 +538,21 @@ def page_input_detail(request, gateway_pk, page_group_pk, page_pk, page_input_gr
     page_input_group = PageInputGroup.objects.get(pk=page_input_group_pk)
     page_input = page_input_group.pageinput_set.get(pk=page_input_pk)
 
-    return render(request, "iic/page_input/detail.html", {
-        'gateway': gateway,
-        'page': page,
-        'page_input': page_input,
-        'page_input_group': page_input_group,
-        'page_group': page_group})
+    if request.method == "POST":
+        action = request.POST.get('action').strip()
+        new_status = PageInputStatus.objects.get(
+            name='ACTIVE' if (page_input.page_input_status.name == 'INACTIVE') else 'INACTIVE'
+        )
+        page_input.page_input_status = new_status
+        page_input.save()
+        return JsonResponse({'status': "Hide" if page_input.page_input_status.name == 'ACTIVE' else "Show"})
+    else:
+        return render(request, "iic/page_input/detail.html", {
+            'gateway': gateway,
+            'page': page,
+            'page_input': page_input,
+            'page_input_group': page_input_group,
+            'page_group': page_group})
 
 
 def page_input_copy(request, gateway_pk, page_group_pk, page_pk, page_input_group_pk, page_input_pk):
@@ -556,3 +581,47 @@ def page_input_copy(request, gateway_pk, page_group_pk, page_pk, page_input_grou
         'page_input': page_input,
         'page_input_group': page_input_group,
         'page_group': page_group})
+
+
+def service_command_list(request, service_pk):
+    service = Service.objects.get(pk=service_pk)
+    service_commands = service.servicecommand_set.all().order_by('level')
+
+    return render(request, "iic/service_command/list.html", {
+        'service_commands': service_commands
+    })
+
+
+def service_command_copy(request, service_pk):
+    if request.method == 'POST':
+        service = Service.objects.get(name=request.POST.get('from'))
+        service_commands = service.servicecommand_set.all()
+
+        for service_command in service_commands:
+            service_command.pk = None
+            service_command.service_id = service_pk
+            service_command.save()
+
+    return HttpResponse(status=200)
+
+
+def input_variable_put(request):
+    data = request.POST
+    InputVariable.objects.filter(pk=data.get('pk')).update(name=data.get('value'))
+    return HttpResponse(status=200)
+
+
+def gateway_profile_put(request):
+    data = request.POST
+    access_level = AccessLevel.objects.get(pk=data.get('value'))
+
+    GatewayProfile.objects.filter(pk=data.get('pk')).update(access_level=access_level)
+    return HttpResponse(status=200)
+
+
+def input_variable_detail(request, input_variable_pk):
+    input_variable = InputVariable.objects.get(pk=input_variable_pk)
+
+    return render(request, "iic/service_command/list.html", {
+
+    })

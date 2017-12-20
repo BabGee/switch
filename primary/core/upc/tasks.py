@@ -112,6 +112,16 @@ class Wrappers:
 			try: profile.dob = datetime.strptime(payload['dob'], '%d/%m/%Y').date()
 			except Exception, e: lgr.info('Error on DOB: %s' % e)
 
+		if 'photo' in payload.keys():
+			try:
+				filename = payload['photo']
+				fromdir_name = settings.MEDIA_ROOT + '/tmp/uploads/'
+				from_file = fromdir_name + str(filename)
+				with open(from_file, 'r') as f:
+					myfile = File(f)
+					profile.photo.save(filename, myfile, save=False)
+			except Exception, e:
+				lgr.info('Error on saving Profile Image: %s' % e)
 
 		profile.save()
 
@@ -1030,9 +1040,9 @@ class System(Wrappers):
 
 			#logo, if exists
 			#Create co-ordinates if dont exist
-			lng = payload['lng'] if 'lng' in payload.keys() else 0.0
-			lat = payload['lat'] if 'lat' in payload.keys() else 0.0
-	                trans_point = Point(float(lng), float(lat))
+			# lng = payload['lng'] if 'lng' in payload.keys() else 0.0
+			# lat = payload['lat'] if 'lat' in payload.keys() else 0.0
+	         #        trans_point = Point(float(lng), float(lat))
 
 			institution = Institution()
 			institution.name = payload['institution_name']
@@ -1054,6 +1064,14 @@ class System(Wrappers):
 
 			if 'institution_reg_number' in payload.keys(): institution.registration_number = payload['institution_reg_number']
 
+			if 'institution_address' in payload.keys(): institution.address = payload['institution_address']
+			if 'institution_physical_address' in payload.keys(): institution.physical_address = payload['institution_physical_address']
+			if 'institution_location' in payload.keys():
+				coordinates = payload['institution_location']
+				longitude,latitude = coordinates.split(',', 1)
+				# institution.geometry = Point(x=longitude, y=latitude)
+				trans_point = Point(float(longitude), float(latitude))
+
 			if 'institution_description' in payload.keys(): institution.description = payload['institution_description']
 			else: institution.description = payload['institution_name']
 
@@ -1061,7 +1079,7 @@ class System(Wrappers):
 			else: institution.status = InstitutionStatus.objects.get(name='ACTIVE') 
 
 			if 'institution_tagline' in payload.keys(): institution.tagline = payload['institution_tagline']
-			else: institution.tagline=payload['institution_tagline']
+			else: institution.tagline=payload['institution_name']
 
 			try:
 				filename = payload['institution_logo']

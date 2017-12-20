@@ -344,6 +344,10 @@ class System(Wrappers):
 		                        if 'product_item_id' in payload.keys():
 						lgr.info('Product Item Found')
         		                        all_enrollments = all_enrollments.filter(enrollment_type__product_item__id=payload['product_item_id'])
+		                        elif 'enrollment_type_id' in payload.keys():
+						lgr.info('Enrollment Type Found')
+        		                        all_enrollments = all_enrollments.filter(enrollment_type__id=payload['enrollment_type_id'])
+
 
 					if all_enrollments.exists():
 						lgr.info('All Enrollment Found')
@@ -359,6 +363,14 @@ class System(Wrappers):
 			                        if 'product_item_id' in payload.keys():
 							lgr.info('All Enrollment for inst got product')
         			                        all_enrollments = all_enrollments.filter(enrollment_type__product_item__id=payload['product_item_id']).\
+									extra(
+									    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
+										).\
+									order_by("-int_record")
+
+			                        elif 'enrollment_type_id' in payload.keys():
+							lgr.info('All Enrollment for inst got product')
+        			                        all_enrollments = all_enrollments.filter(enrollment_type__id=payload['enrollment_type_id']).\
 									extra(
 									    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
 										).\
@@ -387,6 +399,14 @@ class System(Wrappers):
 									).\
 								order_by("-int_record")
 
+		                        elif 'enrollment_type_id' in payload.keys():
+						lgr.info('Product Item Found')
+        		                        all_enrollments = all_enrollments.filter(enrollment_type__id=payload['enrollment_type_id']).\
+								extra(
+								    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
+									).\
+								order_by("-int_record")
+
 					if all_enrollments.exists():
 						lgr.info('All Enrollment exists for institution gives new record (+1) or allocates 1')
 						try:record = int(all_enrollments[0].record)+1
@@ -407,6 +427,10 @@ class System(Wrappers):
                         if 'product_item_id' in payload.keys():
 				lgr.info('Product Item Found')
                                 enrollment_list = enrollment_list.filter(enrollment_type__product_item__id=payload['product_item_id'])
+
+                        elif 'enrollment_type_id' in payload.keys():
+				lgr.info('Product Item Found')
+                                enrollment_list = enrollment_list.filter(enrollment_type__id=payload['enrollment_type_id'])
 
                         if enrollment_list.exists():
 				lgr.info('Enrollment with record exists')
@@ -429,6 +453,9 @@ class System(Wrappers):
 
 				if 'product_item_id' in payload.keys():
 					enrollment_type = enrollment_type.filter(product_item__id=payload['product_item_id'])
+				elif 'enrollment_type_id' in payload.keys():
+					enrollment_type = enrollment_type.filter(id=payload['enrollment_type_id'])
+
 
 				if enrollment_type.exists():
 	                                status = EnrollmentStatus.objects.get(name='ACTIVE')
