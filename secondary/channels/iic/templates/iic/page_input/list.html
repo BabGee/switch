@@ -57,6 +57,18 @@
                     icon <strong>{{ page_input.icon }}</strong> |
                     section_size <strong>{{ page_input.section_size }}</strong>
 
+                  <br>
+                        Access Levels<br>
+                            <a href="#"
+                               class="page_input_access_level"
+                               data-type="checklist"
+                               data-pk="{{ page_input.pk }}"
+                               data-name="access_levels"
+                               data-value="{% for cat in page_input.access_level.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                               data-url="/iic_editor/page_inputs/"
+                               data-title="Select Access Levels"></a>
+                        
+
 
                     <br>
                     <a href="/admin/iic/pageinput/{{ page_input.pk }}/change/">Edit</a> |
@@ -113,11 +125,24 @@
             }
         };
 
-
         $(document).ready(function () {
-
-
             $('.editable').editable();
+            $('.page_input_access_level').editable({
+                source: [
+                    {value: 1, text: 'CUSTOMER'},
+                    {value: 3, text: 'SYSTEM'},
+                    {value: 7, text: 'MANAGER'},
+                    {value: 8, text: 'OPERATOR'},
+                    {value: 11, text: 'ADMINISTRATOR'},
+                    {value: 14, text: 'SUPERVISOR'},
+                    {value: 15, text: 'SUPER ADMINISTRATOR'},
+                    {value: 16, text: 'API USER'},
+                    {value: 17, text: 'SALES'},
+                    {value: 18, text: 'DELIVERY'},
+                    {value: 19, text: 'AGENT'},
+                    {value: 20, text: 'SUPER AGENT'}
+                ]
+            });
         });
     </script>
     <script type="text/javascript">

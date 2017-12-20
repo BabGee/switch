@@ -240,7 +240,7 @@ def background_service_call(background):
 		i.transaction_reference = payload['bridge__transaction_id'] if 'bridge__transaction_id' in payload.keys() else None
 		i.current_command = ServiceCommand.objects.get(id=payload['action_id']) if 'action_id' in payload.keys() else None
 
-		if 'response' in payload.keys():i.message = Wrappers().response_payload(payload['response'])[:3839]
+		if 'last_response' in payload.keys():i.message = Wrappers().response_payload(payload['last_response'])[:3839]
 		if 'response_status' in payload.keys():
 			i.status = TransactionStatus.objects.get(name='PROCESSED')
 			i.response_status = ResponseStatus.objects.get(response=payload['response_status'])

@@ -634,6 +634,21 @@ def page_put(request):
     return HttpResponse(status=200)
 
 
+def page_input_put(request):
+    data = request.POST
+    new_levels = [int(x) for x in data.getlist('value[]')]
+    page_input = PageInput.objects.get(pk=data.get('pk'))
+    current_levels = page_input.access_level.values_list('pk',flat=True)
+
+    remove_levels = list(set(current_levels).difference(new_levels))
+    add_levels = list(set(new_levels).difference(current_levels))
+
+    page_input.access_level.add(*AccessLevel.objects.filter(pk__in=add_levels))
+    page_input.access_level.remove(*AccessLevel.objects.filter(pk__in=remove_levels))
+
+    return HttpResponse(status=200)
+
+
 def input_variable_detail(request, input_variable_pk):
     input_variable = InputVariable.objects.get(pk=input_variable_pk)
 

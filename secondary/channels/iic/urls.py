@@ -79,10 +79,15 @@ urlpatterns = [
         url(r'^$', gateway_profile_put),
 
     ]), name='gateway_profiles'),
-    
+
     url(r'pages/', include([
         url(r'^$', page_put),
 
-    ]), name='pages')
+    ]), name='pages'),
+
+    url(r'page_inputs/', include([
+        url(r'^$', page_input_put),
+
+    ]), name='page_inputs')
 
 ]
