@@ -17,10 +17,9 @@
         {% for page_group in gateway_profiles %}
             <li>
                 <a href="/iic_editor/gateways/{{ gateway.pk }}/gateway_profiles/{{ page_group.pk }}/">{{ page_group }}</a>
+                <a target="_blank" href="/admin/auth/user/{{ page_group.user.pk }}/delete/">Delete</a>
 
                 <p>
-
-
                     Access Level <strong class="editable"
                                          data-type="select"
                                          data-name="access_level"
