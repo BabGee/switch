@@ -176,6 +176,7 @@ class ServiceProcessor:
 			response_tree['response'][item.command_function] = response
 
 		#!Important to decide whether service success/failure
+		response_tree['action_id'] = payload['action_id'] if 'action_id' in payload.keys() else 0
 		response_tree['response_status'] = payload['response_status']
 		response_tree['overall_status']	= payload['response_status']
 		response_tree['last_response'] = response
