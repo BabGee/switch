@@ -78,6 +78,11 @@ urlpatterns = [
         # url(r'^$', input_variables_list),
         url(r'^$', gateway_profile_put),
 
-    ]), name='gateway_profiles')
+    ]), name='gateway_profiles'),
+    
+    url(r'pages/', include([
+        url(r'^$', page_put),
+
+    ]), name='pages')
 
 ]

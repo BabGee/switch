@@ -41,6 +41,31 @@ class Wrappers:
 			lgr.info('Unable to make service call: %s' % e)
 		return payload
 
+	def response_payload(self, payload):
+
+		lgr.info('Response Payload: %s' % payload)
+		try:
+			payload = payload if isinstance(payload, dict)  else json.loads(payload)
+			new_payload, transaction, count = {}, None, 1
+			for k, v in dict(payload).items():
+				key = k.lower()
+				if 'photo' not in key and 'fingerprint' not in key and 'signature' not in key and \
+				'institution_id' not in key and 'gateway_id' not in key and 'response_status' not in key and \
+				'username' not in key and 'product_item' not in key and 'bridge__transaction_id' not in key and \
+				'currency' not in key and 'action_id' not in key:
+					if count <= 30:
+						new_payload[str(k)[:30] ] = str(v)[:40]
+					else:
+						break
+					count = count+1
+
+			payload = json.dumps(new_payload)
+		except Exception, e:
+
+			lgr.info('Error on Response Payload: %s' % e)
+		return payload
+
+
 	def transaction_payload(self, payload):
 		new_payload, transaction, count = {}, None, 1
 		for k, v in payload.items():
@@ -89,13 +114,30 @@ class System(Wrappers):
 
 
 				activity = BackgroundServiceActivity(background_service=background_service[0], status=status, \
-                                              gateway_profile=session_gateway_profile,
-                                              request=self.transaction_payload(payload), channel=channel, \
-						response_status=response_status, currency = currency,\
-						amount = amount, charges = charges, \
-						gateway=session_gateway_profile.gateway)
+						gateway_profile=session_gateway_profile,request=self.transaction_payload(payload),\
+						channel=channel, response_status=response_status, currency = currency,\
+						amount = amount, charges = charges, gateway=session_gateway_profile.gateway,\
+						sends=0)
 
 				activity.transaction_reference = payload['bridge__transaction_id'] if 'bridge__transaction_id' in payload.keys() else None
+
+				if 'scheduled_send' in payload.keys() and payload['scheduled_send'] not in ["",None]:
+					try:date_obj = datetime.strptime(payload["scheduled_send"], '%d/%m/%Y %I:%M %p')
+					except: date_obj = None
+					if date_obj is not None:		
+						profile_tz = pytz.timezone(gateway_profile.profile.timezone)
+						scheduled_send = pytz.timezone(gateway_profile.profile.timezone).localize(date_obj)
+						lgr.info("Send Scheduled: %s" % scheduled_send)
+					else:
+						scheduled_send = timezone.now()+timezone.timedelta(seconds=1)
+				else:
+					scheduled_send = timezone.now()+timezone.timedelta(seconds=1)
+
+				activity.scheduled_send = scheduled_send
+
+				if 'ext_outbound_id' in payload.keys() and payload['ext_outbound_id'] not in ["",None]:
+					activity.ext_outbound_id = payload['ext_outbound_id']
+
 				if 'institution_id' in payload.keys():
 					activity.institution = Institution.objects.get(id=payload['institution_id'])
 
@@ -197,12 +239,24 @@ def background_service_call(background):
 
 		i.transaction_reference = payload['bridge__transaction_id'] if 'bridge__transaction_id' in payload.keys() else None
 		i.current_command = ServiceCommand.objects.get(id=payload['action_id']) if 'action_id' in payload.keys() else None
+
+		if 'response' in payload.keys():i.message = Wrappers().response_payload(payload['response'])[:3839]
 		if 'response_status' in payload.keys():
 			i.status = TransactionStatus.objects.get(name='PROCESSED')
 			i.response_status = ResponseStatus.objects.get(response=payload['response_status'])
 		else:
+			payload['response_status'] = '20'
 			i.status = TransactionStatus.objects.get(name='FAILED')
 			i.response_status = ResponseStatus.objects.get(response='20')
+
+		#Set for failed retries in every 6 hours within 24 hours
+		if payload['response_status'] <> '00':
+			if i.background_service.cut_off_command and i.current_command and i.current_command.level <= i.background_service.cut_off_command.level and i.sends <=3:
+				i.status = TransactionStatus.objects.get(name='CREATED')
+				i.response_status = ResponseStatus.objects.get(response='DEFAULT')
+				i.scheduled_send = timezone.now()-timezone.timedelta(hours=6)
+				i.sends = i.sends + 1
+
 		i.save()
 
 	except Exception, e:
@@ -218,11 +272,12 @@ def process_background_service():
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 
-	orig_background = BackgroundServiceActivity.objects.select_for_update().filter(status__name='CREATED',response_status__response='DEFAULT', \
-									date_modified__lte=timezone.now()-timezone.timedelta(seconds=2))
+	orig_background = BackgroundServiceActivity.objects.select_for_update().filter(response_status__response='DEFAULT',\
+				status__name='CREATED', date_modified__lte=timezone.now()-timezone.timedelta(seconds=2),\
+				scheduled_send__lte=timezone.now())
 	background = list(orig_background.values_list('id',flat=True)[:250])
 
-	processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now())
+	processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
 	for bg in background:
 		background_service_call.delay(bg)
 

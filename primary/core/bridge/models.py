@@ -194,6 +194,10 @@ class BackgroundServiceActivity(models.Model):
 	gateway = models.ForeignKey(Gateway)
 	institution = models.ForeignKey(Institution, null=True, blank=True)
 	current_command = models.ForeignKey(ServiceCommand, null=True, blank=True)
+	scheduled_send = models.DateTimeField(blank=True, null=True)
+	message = models.CharField(max_length=3840, blank=True, null=True)
+	sends = models.IntegerField()
+	ext_outbound_id = models.CharField(max_length=200, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.background_service, self.gateway_profile)
 

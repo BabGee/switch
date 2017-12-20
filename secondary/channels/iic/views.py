@@ -4,6 +4,7 @@ from primary.core.administration.models import Gateway,Icon,AccessLevel
 from primary.core.upc.models import GatewayProfile
 from primary.core.bridge.models import Service,Product,ServiceStatus
 
+
 import json
 from secondary.channels.iic.models import \
     PageGroup, \
@@ -616,6 +617,18 @@ def gateway_profile_put(request):
     access_level = AccessLevel.objects.get(pk=data.get('value'))
 
     GatewayProfile.objects.filter(pk=data.get('pk')).update(access_level=access_level)
+    return HttpResponse(status=200)
+
+
+def page_put(request):
+    data = request.POST
+    print(data.getlist('value'))
+    page = Page.objects.get(pk=data.get('pk'))
+    current_levels = list( page.access_level.values_list('pk'))
+    print(current_levels)
+
+
+    ##GatewayProfile.objects.filter(pk=).update(access_level=access_level)
     return HttpResponse(status=200)
 
 
