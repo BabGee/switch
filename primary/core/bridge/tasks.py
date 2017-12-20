@@ -9,7 +9,7 @@ from switch.celery import single_instance_task
 from django.shortcuts import render
 from django.contrib.auth.models import User
 #from upc.backend.wrappers import *
-from django.db.models import Q
+from django.db.models import Q, F
 from django.db import transaction
 from django.utils import timezone
 from datetime import datetime, timedelta
