@@ -22,6 +22,8 @@ class ServiceCall:
 		try:
 			payload = dict(filter(lambda x:x[1], payload.items())) #Remove empty value items
 			response = ServiceProcessor().do_process(service, gateway_profile, payload.copy())
+
+			payload['action_id'] = response['action_id']
 			payload['last_response'] = response['last_response']
 			payload['response'] = response['response']
 			payload['response_status'] = response['response_status']
