@@ -103,7 +103,7 @@ class ServiceProcessor:
 		#do request
 		count = 1
 		for item in commands:
-			payload['action_id'] = count
+			payload['action_id'] = item.id
 			count = count+1
 
 			lgr.info('Got Items: %s' % item)
