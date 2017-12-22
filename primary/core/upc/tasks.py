@@ -883,10 +883,14 @@ class System(Wrappers):
 				session_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
 				session_gateway_profile.save()
 
-			payload['response'] = 'Valid One Time PIN'
-			payload['response_status'] = '00'
+				payload['response'] = 'Profile Institution Updated'
+				payload['response_status'] = '00'
+			else:
+				payload['response'] = 'Institution not Submitted'
+				payload['response_status'] = '25'
+
 		except Exception, e:
-			lgr.info('Error on Validating One Time Pin: %s' % e)
+			lgr.info('Error on Updating Profile Institution: %s' % e)
 			payload['response_status'] = '96'
 		return payload
 

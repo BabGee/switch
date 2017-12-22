@@ -67,11 +67,11 @@
                                data-value="{% for cat in page_input.access_level.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"
                                data-url="/iic_editor/page_inputs/"
                                data-title="Select Access Levels"></a>
-                        
+
 
 
                     <br>
-                    <a href="/admin/iic/pageinput/{{ page_input.pk }}/change/">Edit</a> |
+                    <a target="_blank" href="/admin/iic/pageinput/{{ page_input.pk }}/change/">Edit</a> |
                     <a href="#" class="visibility-toggle" id="{{ page_input.pk }}">
                         {% if page_input.page_input_status.name == 'ACTIVE' %}Hide{% else %}Show{% endif %}</a> |
                     <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/{{ page_input.pk }}/copy/">Template </a>

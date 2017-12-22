@@ -331,136 +331,77 @@ class System(Wrappers):
 			elif 'institution_id' not in payload.keys() and gateway_profile.institution is not None:
 				institution = gateway_profile.institution
 
+			enrollment_type = None
+
+			if 'enrollment_type_id' in payload.keys():
+				enrollment_type = EnrollmentType.objects.get(id=payload['enrollment_type_id'])
+			else:
+				enrollment_type_list = EnrollmentType.objects.filter(product_item__institution=institution)
+
+				if 'product_item_id' in payload.keys():
+					lgr.info('Product Item Found')
+					enrollment_type_list = enrollment_type_list.filter(product_item__id=payload['product_item_id'])
+
+				if enrollment_type_list.exists():
+					enrollment_type = enrollment_type_list[0]
+
 			if 'record' not in payload.keys():
 				lgr.info('Record not in paylod')
-				if 'session_gateway_profile_id' in payload.keys():
-					lgr.info('Session Gateway Found')
-					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-					all_enrollments = Enrollment.objects.filter(enrollment_type__product_item__institution=institution,profile=session_gateway_profile.user.profile).\
-							extra(
-							    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
-								).\
-							order_by("-int_record")
-		                        if 'product_item_id' in payload.keys():
-						lgr.info('Product Item Found')
-        		                        all_enrollments = all_enrollments.filter(enrollment_type__product_item__id=payload['product_item_id'])
-		                        elif 'enrollment_type_id' in payload.keys():
-						lgr.info('Enrollment Type Found')
-        		                        all_enrollments = all_enrollments.filter(enrollment_type__id=payload['enrollment_type_id'])
 
-
-					if all_enrollments.exists():
-						lgr.info('All Enrollment Found')
-						record = all_enrollments[0].record
-					else:
-						lgr.info('All Enrollment Not found, does institution')
-						all_enrollments = Enrollment.objects.filter(enrollment_type__product_item__institution=institution).\
+				#Filter By enrollment type from enrollment_type_id or one captured from product item
+				all_enrollments = Enrollment.objects.filter(enrollment_type=enrollment_type).\
 							extra(
 							    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
 								).\
 							order_by("-int_record")
 
-			                        if 'product_item_id' in payload.keys():
-							lgr.info('All Enrollment for inst got product')
-        			                        all_enrollments = all_enrollments.filter(enrollment_type__product_item__id=payload['product_item_id']).\
-									extra(
-									    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
-										).\
-									order_by("-int_record")
-
-			                        elif 'enrollment_type_id' in payload.keys():
-							lgr.info('All Enrollment for inst got product')
-        			                        all_enrollments = all_enrollments.filter(enrollment_type__id=payload['enrollment_type_id']).\
-									extra(
-									    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
-										).\
-									order_by("-int_record")
-
-						if all_enrollments.exists():
-							lgr.info('All Enrollment for inst exists gives new record (+1) or allocates 1: %s|%s' % (all_enrollments[0],all_enrollments[0].record))
-							try:record = int(all_enrollments[0].record)+1
-							except: record = 1
-						else:
-							lgr.info('All enrollment for inst does not exists allocates 1')
-							record = 1
-				else:					
-					lgr.info('No Session Gateway Found')
+				if all_enrollments.exists():
+					lgr.info('All Enrollment Found')
+					record = all_enrollments[0].record
+				else:
+					lgr.info('All Enrollment Not found, does institution')
 					all_enrollments = Enrollment.objects.filter(enrollment_type__product_item__institution=institution).\
-							extra(
-							    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
-								).\
-							order_by("-int_record")
+						extra(
+						    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
+							).\
+						order_by("-int_record")
 
 		                        if 'product_item_id' in payload.keys():
-						lgr.info('Product Item Found')
-        		                        all_enrollments = all_enrollments.filter(enrollment_type__product_item__id=payload['product_item_id']).\
-								extra(
-								    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
-									).\
-								order_by("-int_record")
-
-		                        elif 'enrollment_type_id' in payload.keys():
-						lgr.info('Product Item Found')
-        		                        all_enrollments = all_enrollments.filter(enrollment_type__id=payload['enrollment_type_id']).\
+						lgr.info('All Enrollment for inst got product')
+       			                        all_enrollments = all_enrollments.filter(enrollment_type__product_item__id=payload['product_item_id']).\
 								extra(
 								    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
 									).\
 								order_by("-int_record")
 
 					if all_enrollments.exists():
-						lgr.info('All Enrollment exists for institution gives new record (+1) or allocates 1')
+						lgr.info('All Enrollment for inst exists gives new record (+1) or allocates 1: %s|%s' % (all_enrollments[0],all_enrollments[0].record))
 						try:record = int(all_enrollments[0].record)+1
 						except: record = 1
 					else:
 						lgr.info('All enrollment for inst does not exists allocates 1')
 						record = 1
 			else:
-				lgr.info('Record in payload then allocates record')
 				record = payload['record']
 
 			lgr.info('Record: %s' % record)
                         #Check if enrollment exists
-                        enrollment_list = Enrollment.objects.filter(status__name='ACTIVE',record=record,\
-                                                                enrollment_type__product_item__institution=institution)
-
-			lgr.info('Enrollment List: %s' % enrollment_list)
-                        if 'product_item_id' in payload.keys():
-				lgr.info('Product Item Found')
-                                enrollment_list = enrollment_list.filter(enrollment_type__product_item__id=payload['product_item_id'])
-
-                        elif 'enrollment_type_id' in payload.keys():
-				lgr.info('Product Item Found')
-                                enrollment_list = enrollment_list.filter(enrollment_type__id=payload['enrollment_type_id'])
-
-                        if enrollment_list.exists():
-				lgr.info('Enrollment with record exists')
-				enrollment = enrollment_list[0]
+			if enrollment_type:
 				if 'session_gateway_profile_id' in payload.keys():
+					lgr.info('Session Gateway Found')
 					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-					enrollment_profile = enrollment_list.filter(profile=session_gateway_profile.user.profile)
-					if enrollment_profile.exists():
-						enrollment = enrollment_profile[0]
-					else:
-						enrollment = enrollment_list[0]
-						enrollment.profile = session_gateway_profile.user.profile
-						enrollment.save()
+				else:
+					session_gateway_profile = gateway_profile
 
-				payload['record'] = enrollment.record
-                        else:
-				lgr.info('Enrollment with record does not exist')
+	                        enrollment_list = Enrollment.objects.filter(status__name='ACTIVE',record=record,enrollment_type=enrollment_type, profile=session_gateway_profile.user.profile)
 
-				enrollment_type = EnrollmentType.objects.filter(product_item__institution=institution)
-
-				if 'product_item_id' in payload.keys():
-					enrollment_type = enrollment_type.filter(product_item__id=payload['product_item_id'])
-				elif 'enrollment_type_id' in payload.keys():
-					enrollment_type = enrollment_type.filter(id=payload['enrollment_type_id'])
-
-
-				if enrollment_type.exists():
+				lgr.info('Enrollment List: %s' % enrollment_list)
+	                        if enrollment_list.exists():
+					lgr.info('Enrollment with record exists')
+					enrollment = enrollment_list[0]
+				else:
 	                                status = EnrollmentStatus.objects.get(name='ACTIVE')
-
-        	                        enrollment = Enrollment(record=record, status=status, enrollment_type=enrollment_type[0])
+        	                        enrollment = Enrollment(record=record, status=status, enrollment_type=enrollment_type, profile=session_gateway_profile.user.profile)
 
                 	                if 'alias' in payload.keys():
                         	                enrollment.alias = payload['alias']
@@ -485,12 +426,6 @@ class System(Wrappers):
 					else:
 						enrollment.enrollment_date = timezone.now().date()
 
-					if 'session_gateway_profile_id' in payload.keys():
-						session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-						enrollment.profile = session_gateway_profile.user.profile
-					else:
-						enrollment.profile = gateway_profile.profile
-
 					if 'expiry' in payload.keys():
 						#enrollment.expiry = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload['expiry'], '%d/%m/%Y'))
 						enrollment.expiry = datetime.strptime(payload['expiry'], '%d/%m/%Y')
@@ -503,13 +438,14 @@ class System(Wrappers):
 
 	                                enrollment.save()
 
-					payload['record'] = enrollment.record
-					payload['response_status'] = '00'
-					payload['response'] = 'Enrollment Captured'
+				#Assign Record to payload
+				payload['record'] = enrollment.record
+				payload['response_status'] = '00'
+				payload['response'] = 'Enrollment Captured'
 
-				else:
-					payload['response_status'] = '00'
-					payload['response'] = 'Enrollment Type Does Not Exist'
+			else:
+				payload['response_status'] = '00'
+				payload['response'] = 'Enrollment Type Does Not Exist'
 
 		except Exception, e:
 			payload['response_status'] = '96'
