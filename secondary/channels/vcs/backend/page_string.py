@@ -99,11 +99,6 @@ class PageString(ServiceCall, Wrappers):
 				item_level = item_val.id if item_val else 0
 				try:item_list = json.loads(value.item_list)
 				except: item_list = []
-				#add menu details
-				try: 
-					details = json.loads(value.menu.details)
-					if isinstance(details,dict): payload.update(details)
-				except: pass
 				lgr.info('variable: %s' % value.menu.menu_description)
 				if len(item_list) > 0:
 					lgr.info('Item List not None: %s|Item Level: %s' % (item_list,item_level) )
@@ -114,6 +109,13 @@ class PageString(ServiceCall, Wrappers):
 					try:input_nav = item[item_level].input_select 
 					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
 				nav[value.menu.menu_description] = input_nav
+
+			#add menu details
+			try: 
+				details = json.loads(value.menu.details)
+				if isinstance(details,dict): payload.update(details)
+			except: pass
+
 		lgr.info('Nav: %s' % nav)
 		return nav
 
