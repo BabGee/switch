@@ -294,12 +294,18 @@ class Wrappers:
 
 	    #lgr.info('Time Filters Report List Count: %s' % report_list.count())
 	    if or_filters not in [None,'']:
-                # for a in filters.split("&"):
                 for f in or_filters.split("|"):
-            	    if 'q' in payload.keys() and payload['q'] not in ['', None]:
-                    	if f not in ['',None]: or_filter_data[f + '__icontains'] = payload['q']
-            	    if f in payload.keys():
-                    	if f not in ['',None]: or_filter_data[f + '__icontains'] = payload[f]
+		    of_list = f.split('%')
+		    if len(of_list)==2:
+			if 'q' in payload.keys() and payload['q'] not in ['', None]:
+				if f not in ['',None]: or_filter_data[of_list[1] + '__icontains'] = payload['q']
+			if of_list[0] in payload.keys():
+				if f not in ['',None]: or_filter_data[of_list[1] + '__icontains'] = payload[of_list[0]]
+		    else:
+			if 'q' in payload.keys() and payload['q'] not in ['', None]:
+				if f not in ['',None]: or_filter_data[f + '__icontains'] = payload['q']
+			if f in payload.keys():
+				if f not in ['',None]: or_filter_data[f + '__icontains'] = payload[f]
 
                 if len(or_filter_data):
                     or_query = reduce(operator.or_, (Q(k) for k in or_filter_data.items()))
@@ -636,6 +642,9 @@ class Wrappers:
             if 'order_by' in payload.keys():
 		order_by = payload['order_by'].split(',')
                 report_list = report_list.order_by(*order_by)
+	    else:
+                report_list = report_list.order_by('id')
+
             #
             # report_list = report_list[:]
             #
