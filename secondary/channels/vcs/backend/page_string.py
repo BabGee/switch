@@ -53,7 +53,6 @@ class PageString(ServiceCall, Wrappers):
 		self._registry = {} # model_class class -> admin_class instance
 	def get_nav(self, navigator, attrs={}):
 		navigator_list = Navigator.objects.filter(Q(session=navigator.session), Q(nav_step=navigator.nav_step),\
-			~Q(menu=navigator.menu),\
 			~Q(input_select__in=['']) ).order_by('-date_created','-menu__level')
 		item = {}
 		nav = {}
@@ -108,7 +107,7 @@ class PageString(ServiceCall, Wrappers):
 					lgr.info('Item List None')
 					try:input_nav = item[item_level].input_select 
 					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
-				nav[value.menu.menu_description] = input_nav
+				if input_nav: nav[value.menu.menu_description] = input_nav
 
 			#add menu details
 			try: 
