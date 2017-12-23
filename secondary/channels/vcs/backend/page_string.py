@@ -98,6 +98,7 @@ class PageString(ServiceCall, Wrappers):
 				item_level = item_val.id if item_val else 0
 				try:item_list = json.loads(value.item_list)
 				except: item_list = []
+				lgr.info('variable: %s' % value.menu.menu_description)
 				if len(item_list) > 0:
 					lgr.info('Item List not None: %s|Item Level: %s' % (item_list,item_level) )
 					try: input_nav = item_list[int(item[item_level].input_select) - 1]
