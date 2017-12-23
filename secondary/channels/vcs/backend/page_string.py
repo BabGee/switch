@@ -53,6 +53,7 @@ class PageString(ServiceCall, Wrappers):
 		self._registry = {} # model_class class -> admin_class instance
 	def get_nav(self, navigator, attrs={}):
 		navigator_list = Navigator.objects.filter(Q(session=navigator.session), Q(nav_step=navigator.nav_step),\
+			~Q(menu=navigator.menu),\
 			~Q(input_select__in=['']) ).order_by('-date_created','-menu__level')
 		item = {}
 		nav = {}
@@ -98,6 +99,11 @@ class PageString(ServiceCall, Wrappers):
 				item_level = item_val.id if item_val else 0
 				try:item_list = json.loads(value.item_list)
 				except: item_list = []
+				#add menu details
+				try: 
+					details = json.loads(value.menu.details)
+					if isinstance(details,dict): payload.update(details)
+				except: pass
 				lgr.info('variable: %s' % value.menu.menu_description)
 				if len(item_list) > 0:
 					lgr.info('Item List not None: %s|Item Level: %s' % (item_list,item_level) )
@@ -117,12 +123,6 @@ class PageString(ServiceCall, Wrappers):
 
 
 		payload.update(self.get_nav(navigator))
-
-		#update static details
-		try: 
-			details = json.loads(navigator.menu.details)
-			if isinstance(details,dict): payload.update(details)
-		except: pass
 
 
 		if navigator is not None and navigator.menu is not None and navigator.menu.submit == True:
