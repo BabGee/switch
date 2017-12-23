@@ -767,8 +767,9 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 
-			if payload['pin'] == payload['confirm_pin']:
-				hash_pin = crypt.crypt(str(payload['pin']), str(session_gateway_profile.id))
+			new_pin = payload['new_pin'] if 'new_pin' in payload.keys() else payload['pin']
+			if new_pin == payload['confirm_pin']:
+				hash_pin = crypt.crypt(str(new_pin), str(session_gateway_profile.id))
 				session_gateway_profile.pin = hash_pin
 				session_gateway_profile.save()
 				payload['response'] = 'New PIN isSet'
