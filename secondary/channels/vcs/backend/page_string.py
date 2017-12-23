@@ -113,7 +113,7 @@ class PageString(ServiceCall, Wrappers):
 			#add menu details
 			try: 
 				details = json.loads(value.menu.details)
-				if isinstance(details,dict): payload.update(details)
+				if isinstance(details,dict): nav.update(details)
 			except: pass
 
 		lgr.info('Nav: %s' % nav)
