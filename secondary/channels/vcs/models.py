@@ -72,8 +72,8 @@ class InputVariable(models.Model):
 	error_group_select = models.IntegerField(blank=True, null=True)
 	override_level = models.IntegerField(blank=True, null=True)
 	error_level = models.IntegerField(blank=True, null=True)
-	override_service = models.IntegerField(blank=True, null=True)
-	error_service = models.IntegerField(blank=True, null=True)
+	override_service = models.ForeignKey(Service, blank=True, null=True, related_name='override_service')
+	error_service = models.ForeignKey(Service, blank=True, null=True, related_name='error_service')
 	init_nav_step = models.BooleanField(default=False)
 	def __unicode__(self):
 		return u'%s' % (self.name)		
