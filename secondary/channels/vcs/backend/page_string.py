@@ -107,6 +107,7 @@ class PageString(ServiceCall, Wrappers):
 					try:input_nav = item[item_level].input_select 
 					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
 				nav[value.menu.menu_description] = input_nav
+		lgr.info('Nav: %s' % nav)
 		return nav
 
 	def pagestring(self, navigator, page_string, payload, code):
