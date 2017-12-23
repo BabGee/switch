@@ -93,6 +93,12 @@ class PageString(ServiceCall, Wrappers):
 				item[value.id] = value
 
 		for key, value in item.items():
+			#add menu details
+			try: 
+				details = json.loads(value.menu.details)
+				if isinstance(details,dict): nav.update(details)
+			except: pass
+
 			if value.menu.selection_preview == True:
 				item_val = navigator_list.filter(id__gt=value.id).last()
 				item_level = item_val.id if item_val else 0
@@ -109,11 +115,6 @@ class PageString(ServiceCall, Wrappers):
 					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
 				if input_nav: nav[value.menu.menu_description] = input_nav
 
-			#add menu details
-			try: 
-				details = json.loads(value.menu.details)
-				if isinstance(details,dict): nav.update(details)
-			except: pass
 
 		lgr.info('Nav: %s' % nav)
 		return nav
