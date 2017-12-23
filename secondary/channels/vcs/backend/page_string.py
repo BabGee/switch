@@ -114,14 +114,14 @@ class PageString(ServiceCall, Wrappers):
 		#Process Submit and input not in ['0','00']
 
 
+		payload.update(self.get_nav(navigator))
+
 		#update static details
 		try: 
 			details = json.loads(navigator.menu.details)
 			if isinstance(details,dict): payload.update(details)
 		except: pass
 
-		#params to come after static details
-		payload.update(self.get_nav(navigator))
 
 		if navigator is not None and navigator.menu is not None and navigator.menu.submit == True:
 			#payload = {}

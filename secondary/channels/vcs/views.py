@@ -252,6 +252,7 @@ class VAS:
 					override_level = self.nav.menu.input_variable.override_level
 					error_level = self.nav.menu.input_variable.error_level
 					override_service = self.nav.menu.input_variable.override_service
+					init_nav_step= self.nav.menu.input_variable.init_nav_step
 
 					if ('Non-Existing National ID' in self.nav.menu.input_variable.name and \
 					GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
@@ -289,13 +290,12 @@ class VAS:
 							self.group_select = self.payload['input']
 
 						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
-						else: pass
 
 						if override_level and isinstance(override_level, int): self.level = override_level
-						else: pass
 
 						if override_service and isinstance(override_service, int): self.service = override_service
-						else: pass
+
+						if init_nav_step: self.nav_step = (self.navigator[0].nav_step + 1) if self.navigator.exists() else 0
 
 						#Comes after overrides
 						if 'Product of Select' in self.nav.menu.input_variable.name:
@@ -333,13 +333,12 @@ class VAS:
 							self.group_select = 0
 
 						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
-						else: pass
 
 						if override_level and isinstance(override_level, int): self.level = override_level
-						else: pass
 
 						if override_service and isinstance(override_service, int): self.service = override_service
-						else: pass
+
+						if init_nav_step: self.nav_step = (self.navigator[0].nav_step + 1) if self.navigator.exists() else 0
 
 						if self.gateway_profile.exists():
 							session_gateway_profile = self.gateway_profile[0]
@@ -361,13 +360,12 @@ class VAS:
 
 					else:
 						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
-						else: pass
 
 						if override_level and isinstance(override_level, int): self.level = override_level
-						else: pass
 
 						if override_service and isinstance(override_service, int): self.service = override_service
-						else: pass
+
+						if init_nav_step: self.nav_step = (self.navigator[0].nav_step + 1) if self.navigator.exists() else 0
 
 				else:
 					#Not for change to error_group_select as it would need a page or redirect to page on invalid input
