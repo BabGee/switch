@@ -1304,6 +1304,17 @@ class PageString(ServiceCall, Wrappers):
 
 					page_string = page_string.replace('['+v+']',item)
 
+				elif variable_key == 'user.email':
+
+					item = ''
+
+					if navigator.session.gateway_profile:
+						item = navigator.session.gateway_profile.user.email
+
+					page_string = page_string.replace('['+v+']',item)
+
+
+
 				elif variable_key == 'national_id':
 
 					item = ''
