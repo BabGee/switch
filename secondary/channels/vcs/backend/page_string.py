@@ -535,7 +535,7 @@ class PageString(ServiceCall, Wrappers):
 
 					item = ''
 					if investmentfund.exists():
-						item = '%s' % (investmentfund[0].description)
+						item = '%s' % (investmentfund[0].ussd_info)
 
 					page_string = page_string.replace('['+v+']',item)
 
