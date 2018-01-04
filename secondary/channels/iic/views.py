@@ -4,6 +4,11 @@ from primary.core.administration.models import Gateway, Icon, AccessLevel
 from primary.core.upc.models import GatewayProfile
 from primary.core.bridge.models import Service, Product, ServiceStatus
 
+# data list editor
+from secondary.channels.dsc.models import DataList
+from primary.core.api.models import NodeSystem
+
+# iic editor
 import json
 from secondary.channels.iic.models import \
     PageGroup, \
@@ -27,9 +32,9 @@ from django.db.models import Q
 from primary.core.administration.models import Channel
 
 
-def query_page_inputs(gateway):
+def query_page_inputs(gateway, service='HOME'):
     return PageInput.objects \
-        .filter(Q(page__service__name='HOME'),
+        .filter(Q(page__service__name=service),
                 Q(page_input_status__name='ACTIVE'),
                 # Q(Q(access_level=gateway_profile.access_level) | Q(access_level=None)),
                 # Q(Q(page__access_level=gateway_profile.access_level) | Q(page__access_level=None)),
@@ -51,6 +56,66 @@ def gateway_list(request):
     return render(request, "iic/gateway/list.html", {'gateways': gateways})
 
 
+def datalist_list(request):
+    # filter gateways
+
+    datalists = DataList.objects.all().order_by('id')
+
+    return render(request, "iic/datalist/list.html", {'datalists': datalists})
+
+
+def module_models(request):
+    from django.apps import apps
+    module = request.GET.get('module').lower()
+    app = module.split('.')[-1]
+
+    app_models = apps.get_app_config(app).get_models()
+    # for model in app_models:
+    #     pass
+
+    return render(request, "iic/shared/models.html", {'models': app_models})
+
+
+def datalist_list_query_editor(request, data_name):
+    # filter gateways
+    data_list = DataList.objects.get(data_name=data_name)
+    data_list_query = data_list.query
+
+    modules = NodeSystem.objects.filter(node_status__name='LOCAL')
+
+    values = data_list_query.values.split('|')
+    values_objs = []
+    for value in values:
+        v = value.split('%')
+        tmp = {
+            'label': v[0],
+            'path': v[1]
+        }
+        values_objs.append(tmp)
+
+
+    values = []
+    if data_list_query.links:
+        values = data_list_query.links.split('|')
+    links_objs = []
+    for value in values:
+        v = value.split('%')
+        tmp = {
+            'label': v[0],
+            'service': v[1],
+            'icon': v[2]
+        }
+        links_objs.append(tmp)
+
+
+    return render(request, "iic/datalist/editor.html", {
+        'datalists': data_list,
+        'values': values_objs,
+        'links': links_objs,
+        'modules': modules
+    })
+
+
 def gateway_detail(request, gateway_pk):
     # filter gateway
     gateway = Gateway.objects.get(pk=gateway_pk)
@@ -70,38 +135,55 @@ def gateway_profile_list(request, gateway_pk):
     })
 
 
-def page_group_list(request, gateway_pk):
+def page_group_list(request, gateway_pk, service):
     gateway = Gateway.objects.get(pk=gateway_pk)
     # page_groups = gateway.pagegroup_set.all()
 
-    page_inputs = query_page_inputs(gateway)
+    page_inputs = query_page_inputs(gateway, service)
 
     page_groups = PageGroup.objects.filter(page__pageinput__in=page_inputs).distinct().order_by('item_level')
     return render(request, "iic/page_group/list.html", {
         'gateway': gateway,
+        'service': service,
         'page_groups': page_groups
     })
 
 
-def page_group_detail(request, gateway_pk, page_group_pk):
+def gateway_service(request, gateway_pk, service):
+    gateway = Gateway.objects.get(pk=gateway_pk)
+    # page_groups = gateway.pagegroup_set.all()
+
+    # page_inputs = query_page_inputs(gateway,service)
+
+    page_input_groups = PageInputGroup.objects.filter(input_variable__service__name=service).order_by('item_level')
+
+    return render(request, "iic/service/detail.html", {
+        'service': Service.objects.get(name=service),
+        'gateway': gateway,
+        'page_input_groups': page_input_groups
+    })
+
+
+def page_group_detail(request, gateway_pk, service, page_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
 
-    page_inputs = query_page_inputs(gateway)
+    page_inputs = query_page_inputs(gateway, service)
     page_groups = PageGroup.objects.filter(page__pageinput__in=page_inputs).distinct()
     page_group = page_groups.get(pk=page_group_pk)
 
     return render(request, "iic/page_group/detail.html", {
         'gateway': gateway,
+        'service': service,
         'page_group': page_group})
 
 
-def page_list(request, gateway_pk, page_group_pk):
+def page_list(request, gateway_pk, service, page_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     # todo use page-inputs to filter, remove pages without page-inputs
     pages = page_group.page_set.all().order_by('item_level')
 
-    page_inputs = query_page_inputs(gateway)
+    page_inputs = query_page_inputs(gateway, service)
     # todo user page to optimize query
     # query pages from page inputs
     pages_with_inputs = pages.filter(pageinput__in=page_inputs).distinct()
@@ -109,6 +191,7 @@ def page_list(request, gateway_pk, page_group_pk):
 
     return render(request, "iic/page/list.html", {
         'gateway': gateway,
+        'service': service,
         'pages': pages_with_inputs,
         'blank_pages': blank_pages,
         'page_group': page_group})
@@ -192,7 +275,7 @@ def page_create(request, gateway_pk, page_group_pk):
     })
 
 
-def page_detail(request, gateway_pk, page_group_pk, page_pk):
+def page_detail(request, gateway_pk, service, page_group_pk, page_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = page_group.page_set.get(pk=page_pk)
@@ -200,10 +283,11 @@ def page_detail(request, gateway_pk, page_group_pk, page_pk):
     return render(request, "iic/page/detail.html", {
         'gateway': gateway,
         'page': page,
+        'service': service,
         'page_group': page_group})
 
 
-def page_copy(request, gateway_pk, page_group_pk, page_pk):
+def page_copy(request, gateway_pk, service, page_group_pk, page_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = page_group.page_set.get(pk=page_pk)
@@ -223,17 +307,18 @@ def page_copy(request, gateway_pk, page_group_pk, page_pk):
     return render(request, "iic/page/create.html", {
         'gateway': gateway,
         'page': page,
+        'service': service,
         'form': form,
         'page_group': page_group
     })
 
 
-def page_input_group_list(request, gateway_pk, page_group_pk, page_pk):
+def page_input_group_list(request, gateway_pk, service, page_group_pk, page_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
 
-    page_inputs = query_page_inputs(gateway)
+    page_inputs = query_page_inputs(gateway, service)
     # todo user page to optimize query
     page_input_groups = PageInputGroup.objects.filter(pageinput__in=page_inputs, pageinput__page=page).distinct()
     blank_page_input_groups = PageInputGroup.objects \
@@ -249,12 +334,13 @@ def page_input_group_list(request, gateway_pk, page_group_pk, page_pk):
     return render(request, "iic/page_input_group/list.html", {
         'gateway': gateway,
         'page': page,
+        'service': service,
         'page_input_groups': page_input_groups,
         'blank_page_input_groups': blank_page_input_groups,
         'page_group': page_group})
 
 
-def page_input_group_detail(request, gateway_pk, page_group_pk, page_pk, page_input_group_pk):
+def page_input_group_detail(request, gateway_pk, service, page_group_pk, page_pk, page_input_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
@@ -268,6 +354,7 @@ def page_input_group_detail(request, gateway_pk, page_group_pk, page_pk, page_in
     return render(request, "iic/page_input_group/detail.html", {
         'gateway': gateway,
         'page': page,
+        'service': service,
         'page_input_group': page_input_group,
         'page_group': page_group})
 
@@ -378,7 +465,7 @@ def page_input_group_create(request, gateway_pk, page_group_pk, page_pk):
         'form': form})
 
 
-def page_input_create(request, gateway_pk, page_group_pk, page_pk, page_input_group_pk):
+def page_input_create(request, gateway_pk, service, page_group_pk, page_pk, page_input_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
@@ -475,6 +562,8 @@ def page_input_create(request, gateway_pk, page_group_pk, page_pk, page_input_gr
     return render(request, "iic/page_input/create.html", {
         'gateway': gateway,
         'page': page,
+        'variable_types': VariableType.objects.all(),
+        'service': service,
         'form': form,
         'page_input_group': page_input_group,
         'page_group': page_group})
@@ -516,7 +605,7 @@ def page_input_order(request, gateway_pk, page_group_pk, page_pk, page_input_gro
         'page_group': page_group})
 
 
-def page_input_list(request, gateway_pk, page_group_pk, page_pk, page_input_group_pk):
+def page_input_list(request, gateway_pk, service, page_group_pk, page_pk, page_input_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
@@ -526,6 +615,7 @@ def page_input_list(request, gateway_pk, page_group_pk, page_pk, page_input_grou
     return render(request, "iic/page_input/list.html", {
         'gateway': gateway,
         'page': page,
+        'service': service,
         'page_input_group': page_input_group,
         'page_inputs': page_inputs,
         'page_group': page_group})
@@ -623,7 +713,7 @@ def page_put(request):
     data = request.POST
     new_levels = [int(x) for x in data.getlist('value[]')]
     page = Page.objects.get(pk=data.get('pk'))
-    current_levels = page.access_level.values_list('pk',flat=True)
+    current_levels = page.access_level.values_list('pk', flat=True)
 
     remove_levels = list(set(current_levels).difference(new_levels))
     add_levels = list(set(new_levels).difference(current_levels))
@@ -638,7 +728,7 @@ def page_input_put(request):
     data = request.POST
     new_levels = [int(x) for x in data.getlist('value[]')]
     page_input = PageInput.objects.get(pk=data.get('pk'))
-    current_levels = page_input.access_level.values_list('pk',flat=True)
+    current_levels = page_input.access_level.values_list('pk', flat=True)
 
     remove_levels = list(set(current_levels).difference(new_levels))
     add_levels = list(set(new_levels).difference(current_levels))

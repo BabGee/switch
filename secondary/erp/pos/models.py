@@ -176,7 +176,7 @@ class DeliveryActivityStatus(models.Model):
 	def __unicode__(self):
 		return u'%s' % (self.name)
   
-class DeliveryContactStatus(models.Model):
+class DeliveryTypeStatus(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
@@ -184,12 +184,13 @@ class DeliveryContactStatus(models.Model):
 	def __unicode__(self):
 		return u'%s' % (self.name)
 
-class DeliveryContact(models.Model):
+class DeliveryType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	notification_delivery_channel = models.ForeignKey(Channel)
-	gateway_profile = models.ForeignKey(GatewayProfile)
-	status = models.ForeignKey(DeliveryContactStatus)
+	status = models.ForeignKey(DeliveryTypeStatus)
+	channel = models.ForeignKey(Channel)
+	gateway = models.ForeignKey(Gateway)
+	institution = models.ForeignKey(Institution, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.gateway_profile.institution)
 
@@ -197,8 +198,11 @@ class DeliveryActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	delivery = models.ForeignKey(Delivery)
-	contact = models.ForeignKey(DeliveryContact)
+	delivery_type = models.ManyToManyField(DeliveryType)
 	status = models.ForeignKey(DeliveryActivityStatus)
+	profile = models.ForeignKey(Profile)
 	def __unicode__(self):
 		return u'%s %s' % (self.delivery, self.contact)
+	def delivery_type_list(self):
+		return "\n".join(['%s %s %s' % (a.channel,a.gateway,a.institution.name) for a in self.payment_method.all()])
 

@@ -1360,7 +1360,7 @@ def process_overdue_credit():
 
 				payload = json.loads(c.notification_details)	
 				profile= a.dest_account.profile
-				gateway_profile_list = GatewayProfile.objects.filter(gateway=a.account_type.gateway,user=profile.user)
+				gateway_profile_list = GatewayProfile.objects.filter(gateway=a.dest_account.account_type.gateway,user=profile.user)
 				gateway_profile = gateway_profile_list[0]
 				service = c.service
 

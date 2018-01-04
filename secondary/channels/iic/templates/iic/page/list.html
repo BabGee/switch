@@ -27,11 +27,11 @@
                 {% for page in pages %}
 
                     <li>
-                        <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a>
+                        <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a>
                         <a target="_blank" href="/admin/iic/page/{{ page.pk }}/change/">Edit</a>
                         <p>
                             pk <strong>{{ page.pk }}</strong> |
-                            <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">
+                            <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">
                                 Page Input Groups <strong>##</strong></a>|
                             page_inputs <strong> {{ page.pageinput_set.count }} </strong> |
                             level <strong>{{ page.item_level }}</strong>
@@ -47,7 +47,7 @@
                                data-title="Select Access Levels"></a>
                         <br>
 
-                            <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/copy/">Use
+                            <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/copy/">Use
                                 as Template </a>
                         </p>
                     </li>

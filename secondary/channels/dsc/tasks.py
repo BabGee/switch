@@ -515,10 +515,10 @@ class Wrappers:
 		    args.append(k.strip())
                     params['cols'].append({"label": k.strip(), "type": "number", "value": k.strip()})
                     if k <> v:kwargs[k.strip()] = Count(v.strip())
-
+		lgr.info('Count: %s' % report_list.count())
                 report_list = report_list.annotate(**kwargs)
 
-	    #lgr.info('Report Count Values')
+	    #lgr.info('Report Count Values: %s' % report_list)
             if sum_values not in [None,'']:
                 kwargs = {}
                 for i in sum_values.split('|'):
@@ -630,6 +630,7 @@ class Wrappers:
 
 	    ##########################################################################
 
+	    #lgr.info('Report List: %s' % report_list)
 
             ct = report_list.count()
 	    #lgr.info('Count: %s' % ct)
@@ -643,7 +644,12 @@ class Wrappers:
 		order_by = payload['order_by'].split(',')
                 report_list = report_list.order_by(*order_by)
 	    else:
-                report_list = report_list.order_by('id')
+		if values not in [None,'']:
+        		i  = values.split('|')[0]
+                	k,v = i.split('%')
+                	report_list = report_list.order_by(v)
+		else:
+                	report_list = report_list.order_by('id')
 
             #
             # report_list = report_list[:]

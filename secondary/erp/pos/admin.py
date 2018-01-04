@@ -69,16 +69,16 @@ class DeliveryActivityStatusAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description')
 admin.site.register(DeliveryActivityStatus, DeliveryActivityStatusAdmin)
 
-class DeliveryContactStatusAdmin(admin.ModelAdmin):
+class DeliveryTypeStatusAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description')
-admin.site.register(DeliveryContactStatus, DeliveryContactStatusAdmin)
+admin.site.register(DeliveryTypeStatus, DeliveryTypeStatusAdmin)
 
-class DeliveryContactAdmin(admin.ModelAdmin):
-		list_display = ('id','notification_delivery_channel','gateway_profile','status')
-admin.site.register(DeliveryContact, DeliveryContactAdmin)
+class DeliveryTypeAdmin(admin.ModelAdmin):
+		list_display = ('id','status','channel','gateway','institution')
+admin.site.register(DeliveryType, DeliveryTypeAdmin)
 
 class DeliveryActivityAdmin(admin.ModelAdmin):
-		list_display = ('id','delivery','contact','status')
+		list_display = ('id','delivery','delivery_type_list','status','profile')
 admin.site.register(DeliveryActivity, DeliveryActivityAdmin)
 
 

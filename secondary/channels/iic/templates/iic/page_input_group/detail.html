@@ -5,11 +5,11 @@
 
         <li class="breadcrumb-item"><a href="/iic_editor/gateways/">Gateways</a></li>
         <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway.name }} </a> </li>
-        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">Page Groups</a>
-        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/">{{ page_group.name }}</a></li>
-        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/">Pages</a></li>
-        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a> </li>
-        <li class="breadcrumb-item "><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">Page Input Groups</a> </li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/">Page Groups</a>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/">{{ page_group.name }}</a></li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/">Pages</a></li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a> </li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">Page Input Groups</a> </li>
         <li class="breadcrumb-item active"> {{ page_input_group.name }} </li>
 
 
@@ -24,9 +24,11 @@
 
       name : <strong>{{ page_input_group.input_variable.name }}</strong> <br>
       variable_type : <strong>{{ page_input_group.input_variable.variable_type }}</strong> <br>
-      service : <strong>{{ page_input_group.input_variable.service }}</strong>
+      service : <strong>{{ page_input_group.input_variable.service }}</strong><br>
+      bind_position : <strong>{{ page_input_group.bind_position.name }}</strong><br>
 
       <a target="_blank" href="/admin/bridge/servicecommand/?o=3&q=&service__id__exact={{ page_input_group.input_variable.service.pk }}">View Service Commands</a>
+      <a target="_blank" href="/iic_editor/gateways/{{ gateway.pk }}/{{ page_input_group.input_variable.service.name }}">View Service Pages</a>
 
 <!-- Button trigger modal -->
 <button type="button" class="btn btn-primary"
@@ -47,8 +49,8 @@
 
       <br>
     <br>
-    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/">View Page Inputs</a>
-    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/order/">Order Page Inputs</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/">View Page Inputs</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/order/">Order Page Inputs</a>
   </p>
 
 <!-- Modal -->

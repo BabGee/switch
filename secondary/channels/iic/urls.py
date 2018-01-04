@@ -1,7 +1,7 @@
 from django.conf.urls import *
 from .views import *
 
-page_paterns = [
+page_patterns = [
     url(r'^$', page_list),
     url(r'^order/$', page_order),
     url(r'^create/$', page_create),
@@ -31,24 +31,42 @@ page_paterns = [
 ]
 
 urlpatterns = [
+    url(r'dsc/', include([
+        url(r'^$', datalist_list),
+        url(r'^models/$', module_models),
+        # url(r'^fields$', datalist_list),
+        url(r'^(?P<data_name>[\w]+)/', include([
+            url(r'^$', datalist_list_query_editor),
+        ])),
+    ]), name='dsc'),
     url(r'gateways/', include([
         url(r'^$', gateway_list),
         url(r'^(?P<gateway_pk>\d+)/', include([
             url(r'^$', gateway_detail),
-            url(r'^page_groups/', include([
-                url(r'^$', page_group_list),
-                url(r'^(?P<page_group_pk>\d+)/', include([
-                    url(r'^$', page_group_detail),
-                    url(r'^pages/', include(page_paterns)),
-                ])),
-            ])),
+            # url(r'^page_groups/', include([
+            #     url(r'^$', page_group_list),
+            #     url(r'^(?P<page_group_pk>\d+)/', include([
+            #         url(r'^$', page_group_detail),
+            #         url(r'^pages/', include(page_paterns)),
+            #     ])),
+            # ])),
             url(r'^gateway_profiles/', include([
                 url(r'^$', gateway_profile_list),
                 # url(r'^(?P<page_group_pk>\d+)/', include([
                 #     url(r'^$', page_group_detail),
                 #     url(r'^pages/', include(page_paterns)),
                 # ])),
-            ]))
+            ])),
+            url(r'^(?P<service>[\w\ ]+)/', include([
+                url(r'^$', gateway_service), # todo detail view
+                url(r'^page_groups/', include([
+                    url(r'^$', page_group_list),
+                    url(r'^(?P<page_group_pk>\d+)/', include([
+                        url(r'^$', page_group_detail),
+                        url(r'^pages/', include(page_patterns)),
+                    ])),
+                ])),
+            ])),
         ]
         )),
         # url(r'create/', views.events_create, name='create')

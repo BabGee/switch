@@ -34,7 +34,7 @@
     <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/order/">Order
         Page Inputs</a>
 
-    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/create/">Add
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/create/">Add
         New</a>
     <ul>
         {% for page_input in page_inputs %}
@@ -51,7 +51,14 @@
                                  data-pk="{{ page_input.input_variable.pk }}"
                                  data-url="/iic_editor/input_variables/">{{ page_input.input_variable.name }}</strong> |
                     default_value <strong>{{ page_input.input_variable.default_value }}</strong> |
-                    service <strong>{{ page_input.input_variable.service }}</strong> |
+
+                {% if page_input.input_variable.service.name == 'DATA SOURCE' %}
+                    DATA SOURCE
+                    <a href="/iic_editor/dsc/{{ page_input.input_variable.default_value }}/"><strong>Edit</strong></a> |
+                {% else %}
+                    service <strong>{{ page_input.input_variable.service.name }}</strong>
+                    <a href="/iic_editor/gateways/4/{{page_input.input_variable.service.name }}">get_section</a>  |
+                {% endif %}
 
                     level <strong>{{ page_input.item_level }}</strong> |
                     icon <strong>{{ page_input.icon }}</strong> |

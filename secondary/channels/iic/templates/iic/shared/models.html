@@ -1,0 +1,5 @@
+{% load iic_extras %}
+
+{% for model in models %}
+<option>{{ model|to_class_name }}</option>
+{% endfor %}
