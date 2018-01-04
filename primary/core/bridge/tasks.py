@@ -259,7 +259,7 @@ def background_service_call(background):
 				i.status = TransactionStatus.objects.get(name='CREATED')
 				i.response_status = ResponseStatus.objects.get(response='DEFAULT')
 				i.scheduled_send = timezone.now()+timezone.timedelta(hours=6)
-				i.sends = i.sends + 1
+				#i.sends = i.sends + 1 #Sends already set on capture
 
 		i.save()
 
