@@ -8,9 +8,9 @@
 
         <li class="breadcrumb-item"><a href="/iic_editor/gateways/">Gateways</a></li>
         <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway.name }} </a></li>
-        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">Page Groups</a>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/">Page Groups</a>
         <li class="breadcrumb-item "><a
-                href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/">{{ page_group.name }}</a>
+                href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/">{{ page_group.name }}</a>
         </li>
         <li class="breadcrumb-item active">Pages</li>
 
@@ -18,8 +18,8 @@
     </ol>
 
     <br>
-    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/create/">Add New</a>
-    <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/order/">Reorder Pages</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/create/">Add New</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/order/">Reorder Pages</a>
     <div class="row">
         <div class="col-md-6">
             <h4>Pages</h4>

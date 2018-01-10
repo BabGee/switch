@@ -87,12 +87,12 @@ class InvestmentManagerAdmin(admin.ModelAdmin):
 admin.site.register(InvestmentManager, InvestmentManagerAdmin)
 
 class LoanTypeAdmin(admin.ModelAdmin):
-	list_display = ('name','description','interest_rate','interest_time','service_list','product_type_list')
+	list_display = ('name','description','interest_rate','interest_time','trigger_service_list','product_type_list')
 admin.site.register(LoanType, LoanTypeAdmin)
 
 
 class LoanStatusAdmin(admin.ModelAdmin):
-	list_display = ('name','description',)
+	list_display = ('name','description','service',)
 admin.site.register(LoanStatus, LoanStatusAdmin)
 
 class LoanAdmin(admin.ModelAdmin):
@@ -103,7 +103,7 @@ class LoanAdmin(admin.ModelAdmin):
 admin.site.register(Loan, LoanAdmin)
 
 class LoanActivityAdmin(admin.ModelAdmin):
-	list_display = ('id','loan','request','response_status','comment','processed','gateway_profile',\
+	list_display = ('id','loan_type','loan','request','response_status','comment','processed','gateway_profile',\
 			'status','follow_on_loan','channel','gateway','institution',)
 admin.site.register(LoanActivity, LoanActivityAdmin)
 

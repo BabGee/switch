@@ -1,5 +1,9 @@
 {% extends 'iic/base.html' %}
 {% block content %}
+
+
+
+
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"
           rel="stylesheet"/>
@@ -8,29 +12,30 @@
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="/iic_editor/gateways/">Gateways</a></li>
         <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway.name }} </a></li>
-        <li class="breadcrumb-item active">Gateway Profiles</li>
+        <li class="breadcrumb-item active">Institutions</li>
     </ol>
 
 
 
     <ul>
-        {% for page_group in gateway_profiles %}
+        {% for page_group in gateway_institutions %}
             <li>
-            <strong> {{ page_group.user.pk}}</strong>
-                <a href="/iic_editor/gateways/{{ gateway.pk }}/gateway_profiles/{{ page_group.pk }}/">
-                    {{ page_group.user.username }} ({{ page_group.user.first_name }} {{ page_group.user.last_name }})</a>
 
-                msisdn : {{ page_group.msisdn }}
-                institution : {{ page_group.institution }}
+                <strong> {{ page_group.pk}}</strong>
+                <a href="/iic_editor/gateways/{{ gateway.pk }}/institutions/{{ page_group.pk }}/">
+                    {{ page_group.name }} ({{ page_group.tagline }})</a>
 
-                    <strong class="editable"
-                                         data-type="select"
-                                         data-name="access_level"
-                                         data-pk="{{ page_group.pk }}"
-                                         data-value="{{ page_group.access_level.pk }}"
-                                         data-url="/iic_editor/gateway_profiles/">{{ page_group.access_level.name }}</strong>
 
- <a target="_blank" href="/admin/auth/user/{{ page_group.user.pk }}/delete/">Delete</a>
+{#                    <strong class="editable"#}
+{#                                         data-type="select"#}
+{#                                         data-name="access_level"#}
+{#                                         data-pk="{{ page_group.pk }}"#}
+{#                                         data-value="{{ page_group.access_level.pk }}"#}
+{#                                         data-url="/iic_editor/gateway_profiles/">{{ page_group.access_level.name }}</strong>#}
+
+                    <a target="_blank" href="/admin/upc/institution/{{ page_group.pk }}/delete/">Delete</a>
+
+
             </li>
         {% empty %}
             <li>No items</li>
@@ -38,6 +43,8 @@
 
     </ul>
 {% endblock %}
+{% comment %}
+
 {% block script %}
     <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
     <script type="text/javascript">
@@ -98,3 +105,4 @@
         });
     </script>
 {% endblock %}
+{% endcomment %}

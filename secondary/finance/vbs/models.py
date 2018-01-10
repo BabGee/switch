@@ -192,14 +192,14 @@ class LoanType(models.Model):
 	description = models.CharField(max_length=100)
 	interest_rate = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) 
 	interest_time = models.IntegerField(null=True, blank=True, help_text="In Days")
-	service = models.ManyToManyField(Service, blank=True)
+	trigger_service = models.ManyToManyField(Service, blank=True)
 	product_type = models.ManyToManyField(ProductType, blank=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.name, self.description)
 	def product_type_list(self):
 		return "\n".join([a.name for a in self.product_type.all()])
-	def service_list(self):
-		return "\n".join([a.name for a in self.service.all()])
+	def trigger_service_list(self):
+		return "\n".join([a.name for a in self.trigger_service.all()])
 
 class LoanStatus(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -235,6 +235,7 @@ class Loan(models.Model):
 class LoanActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
+	loan_type = models.ForeignKey(LoanType)
 	loan = models.ForeignKey(Loan)
 	request = models.CharField(max_length=1920)
 	response_status = models.ForeignKey(ResponseStatus)
@@ -247,6 +248,6 @@ class LoanActivity(models.Model):
 	gateway = models.ForeignKey(Gateway)
 	institution = models.ForeignKey(Institution, null=True, blank=True)
 	def __unicode__(self):
-		return u'%s %s %s' % (self.loan, self.gateway_profile, self.status)
+		return u'%s %s %s' % (self.loan, self.gateway_profile, self.status, self.loan_type)
 
 

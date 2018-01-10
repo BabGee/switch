@@ -99,17 +99,17 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			loan_type_list = LoanType.objects.filter(service__name=payload['SERVICE'])
+			loan_type_list = LoanType.objects.filter(trigger_service__name=payload['SERVICE'])
 			if loan_type_list.exists():
 				account = Account.objects.get(id=payload['session_account_id'])
 				request_status = LoanStatus.objects.get(name='CREATED')
-				request_type = loan_type_list[0]
+				loan_type = loan_type_list[0]
 
 				payment_method = PaymentMethod.objects.get(name__iexact=payload['payment_method'])
 				loan = Loan(amount=payload['amount'],\
 							loan_time=payload['loan_time'],payment_method=payment_method,\
 							currency=Currency.objects.get(code='KES'),\
-							gateway=gateway_profile.gateway,account=account,loan_type=request_type,\
+							gateway=gateway_profile.gateway,account=account,loan_type=loan_type,\
 							status=request_status,gateway_profile=gateway_profile)
 
 				if 'security_amount'in payload.keys():
@@ -170,17 +170,17 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			loan_type_list = LoanType.objects.filter(service__name=payload['SERVICE'])
+			loan_type_list = LoanType.objects.filter(trigger_service__name=payload['SERVICE'])
 			if loan_type_list.exists():
 				account = Account.objects.get(id=payload['session_account_id'])
 				request_status = LoanStatus.objects.get(name='CREATED')
-				request_type = loan_type_list[0]
+				loan_type = loan_type_list[0]
 
 				payment_method = PaymentMethod.objects.get(name__iexact=payload['payment_method'])
 				loan = Loan(amount=payload['amount'],\
 							loan_time=payload['loan_time'],payment_method=payment_method,\
 							currency=Currency.objects.get(code='KES'),\
-							gateway=gateway_profile.gateway,account=account,loan_type=request_type,\
+							gateway=gateway_profile.gateway,account=account,loan_type=loan_type,\
 							status=request_status, gateway_profile=gateway_profile)
 
 				if 'security_amount'in payload.keys():
@@ -243,17 +243,17 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			loan_type_list = LoanType.objects.filter(service__name=payload['SERVICE'])
+			loan_type_list = LoanType.objects.filter(trigger_service__name=payload['SERVICE'])
 			if loan_type_list.exists():
 				account = Account.objects.get(id=payload['session_account_id'])
 				request_status = LoanStatus.objects.get(name='CREATED')
-				request_type = loan_type_list[0]
+				loan_type = loan_type_list[0]
 
 				payment_method = PaymentMethod.objects.get(name__iexact=payload['payment_method'])
 				loan = Loan(amount=payload['amount'],\
 							loan_time=payload['loan_time'],payment_method=payment_method,\
 							currency=Currency.objects.get(code='KES'),\
-							gateway=gateway_profile.gateway,account=account,loan_type=request_type,\
+							gateway=gateway_profile.gateway,account=account,loan_type=loan_type,\
 							status=request_status,gateway_profile=gateway_profile)
 
 				if 'security_amount'in payload.keys():

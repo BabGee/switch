@@ -9,11 +9,18 @@
 </ol>
 
 
+<img src="{{ gateway.logo.url }}" alt="Logo" class="img-thumbnail">
 
 
-<h4>{{ gateway }}</h4>
+<h4>{{ gateway.name }}</h4>
+<span
+        class="badge badge-pill badge-primary"
+        style="background-color: {{ gateway.default_color }}"> Background Color </span>
 
-    <a href="/iic_editor/gateways/{{ gateway.pk }}/HOME/page_groups/">View Page Groups</a>
-    <a href="/iic_editor/gateways/{{ gateway.pk }}/gateway_profiles/">View Profiles</a>
+    <br>
+
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/HOME/page_groups/">Interface</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/gateway_profiles/">Profiles</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/institutions/">Institutions</a>
 
 {% endblock %}

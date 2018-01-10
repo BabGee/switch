@@ -10,11 +10,11 @@ class DataListGroupAdmin(admin.ModelAdmin):
 admin.site.register(DataListGroup, DataListGroupAdmin)
 
 class DataListQueryAdmin(admin.ModelAdmin):
-	list_display = ('name', 'description', 'model_name', 'values', 'or_filters','and_filters','module_name',\
-			'institution_filters','gateway_filters','order','count_values','sum_values','filters',\
-			'not_filters','date_values','date_time_values','links','link_params','list_filters',\
-			'last_balance','gateway_profile_filters','month_year_values','avg_values',\
-			'date_filters','time_filters','token_filter',)
+	list_display = ('name', 'description', 'model_name', 'module_name','values','date_values','date_time_values',\
+			'month_year_values','avg_values','sum_values','count_values','filters','or_filters','and_filters',\
+			'not_filters','institution_filters','gateway_filters','gateway_profile_filters','profile_filters',\
+			'list_filters','date_filters','time_filters','token_filters','links','link_params',\
+			'last_balance','order',)
 	search_fields = ('name','description','model_name','module_name',)
 admin.site.register(DataListQuery, DataListQueryAdmin)
 

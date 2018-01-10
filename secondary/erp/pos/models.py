@@ -192,7 +192,7 @@ class DeliveryType(models.Model):
 	gateway = models.ForeignKey(Gateway)
 	institution = models.ForeignKey(Institution, blank=True, null=True)
 	def __unicode__(self):
-		return u'%s %s' % (self.gateway_profile.institution)
+		return u'%s %s' % (self.gateway,self.channel)
 
 class DeliveryActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -202,7 +202,7 @@ class DeliveryActivity(models.Model):
 	status = models.ForeignKey(DeliveryActivityStatus)
 	profile = models.ForeignKey(Profile)
 	def __unicode__(self):
-		return u'%s %s' % (self.delivery, self.contact)
+		return u'%s %s' % (self.delivery, self.profile)
 	def delivery_type_list(self):
-		return "\n".join(['%s %s %s' % (a.channel,a.gateway,a.institution.name) for a in self.payment_method.all()])
+		return "\n".join(['%s %s' % (a.channel,a.gateway) for a in self.delivery_type.all()])
 

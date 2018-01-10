@@ -842,6 +842,33 @@ class System(Wrappers):
 
 		return payload
 
+	def create_delivery_activities(self, payload, node_info):
+		try:
+			profiles_id_list = payload['profiles'].split(',')
+			delivery = Delivery.objects.get(pk=payload['delivery_id'])
+			delivery_type = DeliveryType.objects.get(id=payload['delivery_type'])
+			g_profiles = GatewayProfile.objects.filter(id__in=profiles_id_list)
+
+			for g_profile in g_profiles:
+				delivery_activity = DeliveryActivity()
+				delivery_activity.delivery = delivery
+				delivery_activity.profile = g_profile.user.profile
+				delivery_activity.status = DeliveryActivityStatus.objects.get(name='NOTIFIED')
+				
+				delivery_activity.save()
+
+				delivery_activity.delivery_type.add(delivery_type)
+
+				# payload["delivery_activity"] = delivery_activity.pk
+
+			payload["response_status"] = "00"
+			payload["response"] = "Delivery Activities Created"
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Creating Delivery Activities: %s" % e)
+
+		return payload
+
 
 class Trade(System):
 	pass

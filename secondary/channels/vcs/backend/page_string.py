@@ -1117,14 +1117,16 @@ class PageString(ServiceCall, Wrappers):
 					from secondary.finance.vbs.models import AccountManager
 
 					mipay_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=payload['msisdn'],gateway__name='MIPAY')
-					params = payload
 
-					if 'product_item_id' in params.keys():
-						product_item = ProductItem.objects.filter(id=params['product_item_id'])
-					elif 'item' in params.keys() and code[0].institution:
-						product_item = ProductItem.objects.filter(name=params['item'],institution__id=code[0].institution.id, status__name='ACTIVE').order_by('id')[:10]
+
+					product_item = ProductItem.objects.filter(Q(institution=code[0].institution)|Q(institution__gateway=code[0].gateway),Q(status__name='ACTIVE'))
+
+					if 'product_item_id' in payload.keys():
+						product_item = product_item.filter(id=payload['product_item_id'])
+					elif 'item' in payload.keys():
+						product_item = product_item.filter(name=payload['item']).order_by('id')[:10]
 					else:
-						product_item = ProductItem.objects.none()
+						product_item = product_item.none()
 
 					if variable_val not in ['',None]:
 						product_item = product_item.filter(Q(product_type__name=variable_val)|Q(product_type__product_category__name=variable_val))
@@ -1374,16 +1376,14 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'product_item_details':
 					from secondary.erp.crm.models import ProductItem
 
-					params = payload
+					product_item = ProductItem.objects.filter(Q(institution=code[0].institution)|Q(institution__gateway=code[0].gateway),Q(status__name='ACTIVE'))
 
-					if 'product_item_id' in params.keys():
-						product_item = ProductItem.objects.filter(id=params['product_item_id'])
-					elif 'item' in params.keys() and code[0].institution:
-						product_item = ProductItem.objects.filter(name=params['item'],\
-								institution__id=code[0].institution.id, status__name='ACTIVE').\
-								order_by('id')[:10]
+					if 'product_item_id' in payload.keys():
+						product_item = product_item.filter(id=payload['product_item_id'])
+					elif 'item' in payload.keys():
+						product_item = product_item.filter(name=payload['item']).order_by('id')[:10]
 					else:
-						product_item = ProductItem.objects.none()
+						product_item = product_item.none()
 
 					if variable_val not in ['',None]:
 						product_item = product_item.filter(Q(product_type__name=variable_val)|Q(product_type__product_category__name=variable_val))
@@ -1391,10 +1391,10 @@ class PageString(ServiceCall, Wrappers):
 					item = ''
 					if product_item.exists():
 						unit_cost = product_item[0].unit_cost
-						if  product_item[0].variable_unit and 'quantity' in params.keys():
-							unit_cost = unit_cost*Decimal(params['quantity'])
-						elif product_item[0].variable_unit and 'amount' in params.keys():
-							unit_cost = Decimal(params['amount'])	
+						if  product_item[0].variable_unit and 'quantity' in payload.keys():
+							unit_cost = unit_cost*Decimal(payload['quantity'])
+						elif product_item[0].variable_unit and 'amount' in payload.keys():
+							unit_cost = Decimal(payload['amount'])	
 
 						unit_cost = self.sale_charge_bill(unit_cost, product_item[0], code[0].gateway)
 		                                cost = '{0:,.2f}'.format(unit_cost) if unit_cost > 0 else None
@@ -1406,7 +1406,9 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key == 'purchase_order_institution_id':
 					from secondary.erp.pos.models import PurchaseOrder
 
-					purchase_order = PurchaseOrder.objects.filter(status__name='UNPAID',gateway_profile__msisdn__phone_number=payload['msisdn']).values('cart_item__product_item__institution__id','cart_item__product_item__institution__name').distinct('cart_item__product_item__institution__id','cart_item__product_item__institution__name')
+					purchase_order = PurchaseOrder.objects.filter(status__name='UNPAID',gateway_profile__msisdn__phone_number=payload['msisdn'],\
+								cart_item__product_item__institution__gateway=code[0].gateway).\
+								values('cart_item__product_item__institution__id','cart_item__product_item__institution__name').distinct('cart_item__product_item__institution__id','cart_item__product_item__institution__name')
 					purchase_order = purchase_order[:10]
 					item = ''
 					item_list = []
@@ -1435,7 +1437,8 @@ class PageString(ServiceCall, Wrappers):
 					from secondary.erp.pos.models import BillManager
 					params = payload
 
-					bill = BillManager.objects.filter(order__status__name='UNPAID',order__gateway_profile__msisdn__phone_number=payload['msisdn']).\
+					bill = BillManager.objects.filter(order__status__name='UNPAID',order__gateway_profile__msisdn__phone_number=payload['msisdn'],\
+							order__cart_item__product_item__institution__gateway=code[0].gateway).\
 							distinct('order__id','order__date_created').order_by('-order__date_created')
 					if 'institution_id' in params.keys():
 						bill = bill.filter(order__cart_item__product_item__institution__id=params['institution_id'])

@@ -28,132 +28,18 @@
 
 
     </ol>
-{#    <h4>{{ page_input_group }}</h4>#}
+    {#    <h4>{{ page_input_group }}</h4>#}
     <h5>Create New Page Input</h5>
 
-    <form>
-  <div class="form-group row">
-    <label for="inputEmail3" class="col-sm-2 col-form-label">Email</label>
-    <div class="col-sm-10">
-      <input type="email" class="form-control" id="inputEmail3" placeholder="Email">
-    </div>
-  </div>
-  <div class="form-group row">
-    <label for="inputPassword3" class="col-sm-2 col-form-label">Password</label>
-    <div class="col-sm-10">
-      <input type="password" class="form-control" id="inputPassword3" placeholder="Password">
-    </div>
-  </div>
-  <fieldset class="form-group">
-    <div class="row">
-      <legend class="col-form-label col-sm-2 pt-0">Radios</legend>
-      <div class="col-sm-10">
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="gridRadios" id="gridRadios1" value="option1" checked>
-          <label class="form-check-label" for="gridRadios1">
-            First radio
-          </label>
-        </div>
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="gridRadios" id="gridRadios2" value="option2">
-          <label class="form-check-label" for="gridRadios2">
-            Second radio
-          </label>
-        </div>
-        <div class="form-check disabled">
-          <input class="form-check-input" type="radio" name="gridRadios" id="gridRadios3" value="option3" disabled>
-          <label class="form-check-label" for="gridRadios3">
-            Third disabled radio
-          </label>
-        </div>
-      </div>
-    </div>
-  </fieldset>
-  <div class="form-group row">
-    <div class="col-sm-2">Checkbox</div>
-    <div class="col-sm-10">
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="gridCheck1">
-        <label class="form-check-label" for="gridCheck1">
-          Example checkbox
-        </label>
-      </div>
-    </div>
-  </div>
-  <div class="form-group row">
-    <div class="col-sm-10">
-      <button type="submit" class="btn btn-primary">Sign in</button>
-    </div>
-  </div>
-</form>
-
-
-
     <form method="POST" class="post-form">{% csrf_token %}
-
-    <div class="row">
-
-        <label for="variable_type">Choose Variable Type</label>
-        <select id="variable_type" name="variable_type">
-
-            {% for variable_type in variable_types %}
-                <option value="{{ variable_type.name }}" data-pk="{{ variable_type.pk }}">{{ variable_type.name }}</option>
-            {% endfor %}
-
-            <option value="new">Create New</option>
-        </select>
-
-
-        <div id="otherServer">
-            <p>Server:
-                <input type="text" name="server_name"/>
-            </p>
-            <p>Port:
-                <input type="text" name="port_no"/>
-            </p>
+        {{ form.as_p }}
+        <div class="form-group row">
+            <div class="col-sm-10">
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
         </div>
-
-        <div id="text_view">
-                <input type="text" name="server_name" placeholder="Enter text to display"/>
-        </div>
-
-
-        {#        {{ form.as_p }}#}
-
-    <br>
-
-        <button type="submit" class="save btn btn-default">Save</button>
-    </div>
     </form>
-
 {% endblock %}
 {% block script %}
-    <script type="text/javascript">
-        $(document).ready(function () {
-            toggleFields(); // call this first so we start out with the correct visibility depending on the selected form values
-            // this will call our toggleFields function every time the selection value of our other field changes
-            $("#variable_type").change(function () {
-                toggleFields();
-            });
 
-        });
-
-        // this toggles the visibility of other server
-        function toggleFields() {
-            var selection = $("#variable_type").val();
-
-            if (selection === "new") {
-                $("#otherServer").show();
-                $("#text_view").hide();
-            }
-            else if(selection === 'TEXT VIEW'){
-                $("#text_view").show();
-                $("#otherServer").hide();
-
-            }else {
-                $("#otherServer").hide();
-            }
-        }
-
-    </script>
 {% endblock %}

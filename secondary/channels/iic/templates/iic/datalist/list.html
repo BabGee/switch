@@ -1,0 +1,26 @@
+{% extends 'iic/base.html' %}
+{% block content %}
+
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item active">Datalists</li>
+    </ol>
+
+    <ul>
+        {% for gateway in datalists %}
+
+            <li>
+            {{ gateway.title }}
+
+                <a href="/iic_editor/dsc/{{ gateway.data_name }}/">{{ gateway.data_name }}</a>
+
+
+            <a href="/admin/dsc/datalist/{{ gateway.pk }}/change/" target="_blank">Edit</a>
+            </li>
+
+        {% empty %}
+            <li>No items</li>
+        {% endfor %}
+
+
+    </ul>
+{% endblock %}

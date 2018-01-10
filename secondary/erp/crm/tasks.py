@@ -332,28 +332,24 @@ class System(Wrappers):
 				institution = gateway_profile.institution
 
 			enrollment_type = None
-
-			if 'enrollment_type_id' in payload.keys():
-				enrollment_type = EnrollmentType.objects.get(id=payload['enrollment_type_id'])
-			else:
+			if 'record' not in payload.keys():
+				lgr.info('Record not in paylod')
 				enrollment_type_list = EnrollmentType.objects.filter(product_item__institution=institution)
 
-				if 'product_item_id' in payload.keys():
+	                        if 'product_item_id' in payload.keys():
 					lgr.info('Product Item Found')
-					enrollment_type_list = enrollment_type_list.filter(product_item__id=payload['product_item_id'])
+       		                        enrollment_type_list = enrollment_type_list.filter(product_item__id=payload['product_item_id'])
 
 				if enrollment_type_list.exists():
 					enrollment_type = enrollment_type_list[0]
-
-			if 'record' not in payload.keys():
-				lgr.info('Record not in paylod')
-
-				#Filter By enrollment type from enrollment_type_id or one captured from product item
-				all_enrollments = Enrollment.objects.filter(enrollment_type=enrollment_type).\
+					all_enrollments = Enrollment.objects.filter(enrollment_type__).\
 							extra(
 							    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
 								).\
 							order_by("-int_record")
+				else:
+					all_enrollments = Enrollment.objects.none()
+
 
 				if all_enrollments.exists():
 					lgr.info('All Enrollment Found')
@@ -374,6 +370,7 @@ class System(Wrappers):
 									).\
 								order_by("-int_record")
 
+
 					if all_enrollments.exists():
 						lgr.info('All Enrollment for inst exists gives new record (+1) or allocates 1: %s|%s' % (all_enrollments[0],all_enrollments[0].record))
 						try:record = int(all_enrollments[0].record)+1
@@ -386,22 +383,44 @@ class System(Wrappers):
 
 			lgr.info('Record: %s' % record)
                         #Check if enrollment exists
-			if enrollment_type:
+			if 'session_gateway_profile_id' in payload.keys():
+				lgr.info('Session Gateway Found')
+				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+                        enrollment_list = Enrollment.objects.filter(status__name='ACTIVE',record=record,\
+                                                                enrollment_type__product_item__institution=institution)
+
+			lgr.info('Enrollment List: %s' % enrollment_list)
+                        if 'product_item_id' in payload.keys():
+				lgr.info('Product Item Found')
+                                enrollment_list = enrollment_list.filter(enrollment_type__product_item__id=payload['product_item_id'])
+
+                        if enrollment_list.exists():
+				lgr.info('Enrollment with record exists')
+				enrollment = enrollment_list[0]
 				if 'session_gateway_profile_id' in payload.keys():
-					lgr.info('Session Gateway Found')
 					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-				else:
-					session_gateway_profile = gateway_profile
+					enrollment_profile = enrollment_list.filter(profile=session_gateway_profile.user.profile)
+					if enrollment_profile.exists():
+						enrollment = enrollment_profile[0]
+					else:
+						enrollment = enrollment_list[0]
+						enrollment.profile = session_gateway_profile.user.profile
+						enrollment.save()
 
-	                        enrollment_list = Enrollment.objects.filter(status__name='ACTIVE',record=record,enrollment_type=enrollment_type, profile=session_gateway_profile.user.profile)
+				payload['record'] = enrollment.record
+                        else:
+				lgr.info('Enrollment with record does not exist')
 
-				lgr.info('Enrollment List: %s' % enrollment_list)
-	                        if enrollment_list.exists():
-					lgr.info('Enrollment with record exists')
-					enrollment = enrollment_list[0]
-				else:
+				enrollment_type = EnrollmentType.objects.filter(product_item__institution=institution)
+
+				if 'product_item_id' in payload.keys():
+					enrollment_type = enrollment_type.filter(product_item__id=payload['product_item_id'])
+
+				if enrollment_type.exists():
 	                                status = EnrollmentStatus.objects.get(name='ACTIVE')
-        	                        enrollment = Enrollment(record=record, status=status, enrollment_type=enrollment_type, profile=session_gateway_profile.user.profile)
+
+        	                        enrollment = Enrollment(record=record, status=status, enrollment_type=enrollment_type[0])
 
                 	                if 'alias' in payload.keys():
                         	                enrollment.alias = payload['alias']
@@ -426,6 +445,12 @@ class System(Wrappers):
 					else:
 						enrollment.enrollment_date = timezone.now().date()
 
+					if 'session_gateway_profile_id' in payload.keys():
+						session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+						enrollment.profile = session_gateway_profile.user.profile
+					else:
+						enrollment.profile = gateway_profile.profile
+
 					if 'expiry' in payload.keys():
 						#enrollment.expiry = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload['expiry'], '%d/%m/%Y'))
 						enrollment.expiry = datetime.strptime(payload['expiry'], '%d/%m/%Y')
@@ -438,14 +463,13 @@ class System(Wrappers):
 
 	                                enrollment.save()
 
-				#Assign Record to payload
-				payload['record'] = enrollment.record
-				payload['response_status'] = '00'
-				payload['response'] = 'Enrollment Captured'
+					payload['record'] = enrollment.record
+					payload['response_status'] = '00'
+					payload['response'] = 'Enrollment Captured'
 
-			else:
-				payload['response_status'] = '00'
-				payload['response'] = 'Enrollment Type Does Not Exist'
+				else:
+					payload['response_status'] = '00'
+					payload['response'] = 'Enrollment Type Does Not Exist'
 
 		except Exception, e:
 			payload['response_status'] = '96'
@@ -469,7 +493,7 @@ class System(Wrappers):
 
 			try:
 				product_type = ShopProductType.objects.get(name=payload['product_type_name'])
-			except ProductType.DoesNotExist:
+			except ShopProductType.DoesNotExist:
 				product_type = ShopProductType()
 				product_type.name = payload['product_type_name']
 

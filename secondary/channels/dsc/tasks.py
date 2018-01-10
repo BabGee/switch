@@ -177,7 +177,7 @@ class Wrappers:
             filters = data.query.filters
             date_filters = data.query.date_filters
             time_filters = data.query.time_filters
-            token_filter = data.query.token_filter
+            token_filters = data.query.token_filters
 
             not_filters = data.query.not_filters
             or_filters = data.query.or_filters
@@ -185,7 +185,7 @@ class Wrappers:
             institution_filters = data.query.institution_filters
             gateway_filters = data.query.gateway_filters
             gateway_profile_filters = data.query.gateway_profile_filters
-
+            profile_filters = data.query.profile_filters
             list_filters = data.query.list_filters
 
             values = data.query.values
@@ -198,7 +198,7 @@ class Wrappers:
             filter_data = {}
             date_filter_data = {}
             time_filter_data = {}
-            token_filter_data = {}
+            token_filters_data = {}
 
             not_filter_data = {}
             or_filter_data = {}
@@ -206,7 +206,7 @@ class Wrappers:
             institution_filter_data = {}
             gateway_filter_data = {}
             gateway_profile_filter_data = {}
-
+            profile_filter_data = {}
 	    list_filter_data = {}
 
 	    #lgr.info('\n\n\n')
@@ -331,17 +331,17 @@ class Wrappers:
                     report_list = report_list.filter(and_query)
 
 	    #lgr.info('And Filters Report List Count: %s' % report_list.count())
-            if token_filter not in ['',None]:
-                for f in token_filter.split("|"):
+            if token_filters not in ['',None]:
+                for f in token_filters.split("|"):
             	    if 'csrfmiddlewaretoken' in payload.keys() and payload['csrfmiddlewaretoken'] not in ['', None]:
-                    	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['csrfmiddlewaretoken']
+                    	if f not in ['',None]: token_filters_data[f + '__iexact'] = payload['csrfmiddlewaretoken']
             	    elif 'csrf_token' in payload.keys() and payload['csrf_token'] not in ['', None]:
-                    	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['csrf_token']
+                    	if f not in ['',None]: token_filters_data[f + '__iexact'] = payload['csrf_token']
             	    elif 'token' in payload.keys() and payload['token'] not in ['', None]:
-                    	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['token']
+                    	if f not in ['',None]: token_filters_data[f + '__iexact'] = payload['token']
 
-                if len(token_filter_data):
-                    query = reduce(operator.and_, (Q(k) for k in token_filter_data.items()))
+                if len(token_filters_data):
+                    query = reduce(operator.and_, (Q(k) for k in token_filters_data.items()))
 		    #lgr.info('Query: %s' % query)
 
                     report_list = report_list.filter(query)
@@ -379,7 +379,6 @@ class Wrappers:
 		    #lgr.info('Institution Query: %s' % institution_query)
                     report_list = report_list.filter(institution_query)
 
-
 	    #lgr.info('Gateway Profile Filters Report List Count: %s' % report_list.count())
             if gateway_profile_filters not in ['', None]:
                 for f in gateway_profile_filters.split("|"):
@@ -392,6 +391,19 @@ class Wrappers:
                 if len(gateway_profile_filter_data):
                     gateway_profile_query = reduce(operator.and_, (Q(k) for k in gateway_profile_filter_data.items()))
                     report_list = report_list.filter(gateway_profile_query)
+
+	    #lgr.info('Profile Filters Report List Count: %s' % report_list.count())
+            if profile_filters not in ['', None]:
+                for f in profile_filters.split("|"):
+		    #MQTT doesn't filter institution for push notifications
+		    if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+			pass
+		    else:
+			if f not in ['',None]: profile_filter_data[f] = gateway_profile.user.profile
+
+                if len(profile_filter_data):
+                    profile_query = reduce(operator.and_, (Q(k) for k in profile_filter_data.items()))
+                    report_list = report_list.filter(profile_query)
 
 	    #lgr.info('Date Filters Report List Count: %s' % report_list.count())
             if 'start_date' in payload.keys():

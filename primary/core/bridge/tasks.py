@@ -144,9 +144,10 @@ class System(Wrappers):
 				activity.save()
 
 				payload['response'] = "Activity Logged. Wait to Process"
-				payload['response_status'] = '00'
 			else:
-				payload['response_status'] = '21'
+				payload['response'] = 'No Activity Service Found'
+			#all are successes
+			payload['response_status'] = '00'
 		except Exception, e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Background Service: %s" % e)

@@ -1,9 +1,13 @@
 {% extends 'iic/base.html' %}
 {% block content %}
     <ol class="breadcrumb">
-        <li class="breadcrumb-item active">Datalists</li>
-        <li class="breadcrumb-item">{dataname}</li>
+      <li class="breadcrumb-item"><a href="/iic_editor/dsc/">Datalists</a></li>
+        <li class="breadcrumb-item active">{{ data_list.title }}</li>
     </ol>
+
+    <a href="/admin/dsc/datalist/{{ data_list.pk }}/change/" target="_blank">Datalist Edit</a>
+    <a href="/admin/dsc/datalistquery/{{ data_list.query.pk }}/change/" target="_blank">Query Edit</a>
+<br>
     <!--
 
         Data List
@@ -54,24 +58,27 @@
         {% endfor %}
     </div>
     <button onclick="textBoxCreate()">Add</button>
-
+    <button id="saveValues">Save</button>
     <br>
     <p>Links</p>
     <div id="links">
         {% for link in links %}
             <div>
-                <input type="text" value="{{ value.label }}"> :
-                <input type="text" value="{{ value.service }}"> :
-                <input type="text" value="{{ value.icon }}">
+                <input type="text" value="{{ link.label }}"> :
+                <input type="text" value="{{ link.service }}"> :
+                <input type="text" value="{{ link.icon }}">
+                <!-- TODO add link params -->
+            <button >-</button>
             </div>
 
             {% empty %}
             <p>No links</p>
         {% endfor %}
-    <button onclick="linkInputCreate()">Add</button>
+
     </div>
-
-
+<button onclick="linkInputCreate()">Add</button>
+<button id="saveLinks">Save</button>
+<br>
 {% endblock %}
 
 
@@ -97,8 +104,6 @@
 
         $(function(){
 			$("select#module").change(function(){
-
-
                 $.ajax({
                     url: "/iic_editor/dsc/models/",
                     beforeSend: function (xhr, settings) {
@@ -131,13 +136,123 @@
                     data: { module:$(this).val()},
                     type: 'GET',
                     success: function (data) {
-                        console.log(data);
+                       // console.log(data);
                         $('#model').html(data);
 
                     }
                 });
+			});
 
+            $("#saveLinks").click(function(){
+
+                var genLinks = [];
+
+                $('#links').children('div').each(function () {
+                    console.log(this);
+                    var genLink = [];
+                    $(this).children('input').each(function () {
+                        genLink.push($(this).val())
+                    });
+                    genLinks.push(genLink.join('%'))
+                });
+
+                console.log(genLinks);
+
+                $.ajax({
+                    url: "/iic_editor/dsc/{{ data_list.data_name }}/",
+                    beforeSend: function (xhr, settings) {
+                        function getCookie(name) {
+                            var cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                var cookies = document.cookie.split(';');
+                                for (var i = 0; i < cookies.length; i++) {
+                                    var cookie = jQuery.trim(cookies[i]);
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+
+                        function csrfSafeMethod(method) {
+                            // these HTTP methods do not require CSRF protection
+                            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                        }
+
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                        }
+                        // todo btn.html('<img src="/static/loader.gif">');
+                    },
+                    data: {name:'links', value:genLinks.join('|')},
+                    type: 'POST',
+                    success: function (data) {
+                        console.log(data);
+
+                        // $('#model').html(data);
+                    }
+
+                });
+			});
+
+            $("#saveValues").click(function(){
+
+                var genLinks = [];
+
+                $('#values').children('div').each(function () {
+                    // console.log(this);
+                    var genLink = [];
+                    $(this).children('input').each(function () {
+                        genLink.push($(this).val())
+                    });
+                    genLinks.push(genLink.join('%'))
+                });
+
+                // console.log(genLinks);
+
+                $.ajax({
+                    url: "/iic_editor/dsc/{{ data_list.data_name }}/",
+                    beforeSend: function (xhr, settings) {
+                        function getCookie(name) {
+                            var cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                var cookies = document.cookie.split(';');
+                                for (var i = 0; i < cookies.length; i++) {
+                                    var cookie = jQuery.trim(cookies[i]);
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+
+                        function csrfSafeMethod(method) {
+                            // these HTTP methods do not require CSRF protection
+                            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                        }
+
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                        }
+                        // todo btn.html('<img src="/static/loader.gif">');
+                    },
+                    data: {name:'values', value:genLinks.join('|')},
+                    type: 'POST',
+                    success: function (data) {
+                        console.log(data);
+
+                        // $('#model').html(data);
+                    }
+
+                });
 			})
+
 		})
 
 

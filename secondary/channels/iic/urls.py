@@ -57,6 +57,10 @@ urlpatterns = [
                 #     url(r'^pages/', include(page_paterns)),
                 # ])),
             ])),
+            url(r'^institutions/', include([
+                url(r'^$', gateway_institution_list),
+
+            ])),
             url(r'^(?P<service>[\w\ ]+)/', include([
                 url(r'^$', gateway_service), # todo detail view
                 url(r'^page_groups/', include([

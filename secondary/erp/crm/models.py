@@ -165,6 +165,7 @@ class ProductItem(models.Model):
 	default_product = models.FileField(upload_to='crm_productitem_productpath/', max_length=200, blank=True, null=True)
 	buying_cost =  models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) 
 	shop_product_type = models.ForeignKey(ShopProductType, blank=True, null=True)
+	barcode = models.CharField(max_length=256,blank=True,null=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.name)
 
