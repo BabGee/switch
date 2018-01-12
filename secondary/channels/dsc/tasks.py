@@ -174,6 +174,7 @@ class Wrappers:
         try:
             model_class = apps.get_model(data.query.module_name, data.query.model_name)
             # model_class = globals()[data.query.model_name]
+
             filters = data.query.filters
             date_filters = data.query.date_filters
             time_filters = data.query.time_filters
@@ -208,10 +209,14 @@ class Wrappers:
             gateway_profile_filter_data = {}
             profile_filter_data = {}
 	    list_filter_data = {}
+		
 
 	    #lgr.info('\n\n\n')
 	    #lgr.info('Model Name: %s' % data.query.name)
             report_list = model_class.objects.all()
+
+
+
 
 	    #Gateway Filter is a default Filter
 	    #lgr.info('Gateway Filters Report List Count: %s' % report_list.count())
@@ -436,6 +441,78 @@ class Wrappers:
                     profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
                     end_date = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
                 report_list = report_list.filter(date_created__lte=end_date)
+
+
+	    join_model_class = None
+	    if data.query.join_module_name and data.query.join_model_name and (data.query.join_fields or \
+	     data.query.join_manytomany_fields):
+		try:join_model_class = apps.get_model(data.query.join_module_name, data.query.join_model_name)
+		except: pass
+		if join_model_class:
+
+			join_gateway_filters = data.query.join_gateway_filters
+			join_gateway_profile_filters = data.query.join_gateway_profile_filters
+			join_profile_filters = data.query.join_profile_filters
+			join_fields = data.query.join_fields
+			join_manytomany_fields = data.query.join_manytomany_fields
+
+			join_gateway_filters_data = {}
+			join_gateway_profile_filters_data  = {}
+			join_profile_filters = {}
+			join_fields_data = {}
+			join_manytomany_fields_data = {}
+
+            		join_report_list = join_model_class.objects.all()
+
+			if join_gateway_filters not in ['', None]:
+				for f in join_gateway_filters.split("|"):
+					if f not in ['',None]: join_gateway_filter_data[f] = gateway_profile.gateway
+				if len(join_gateway_filter_data):
+					join_gateway_query = reduce(operator.and_, (Q(k) for k in gateway_filter_data.items()))
+					join_report_list = join_report_list.filter(join_gateway_query)
+
+            		if join_gateway_profile_filters not in ['', None]:
+				for f in join_gateway_profile_filters.split("|"):
+					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+						pass
+					else:
+						if f not in ['',None]: join_gateway_profile_filter_data[f] = gateway_profile
+
+				if len(join_gateway_profile_filter_data):
+					gateway_profile_query = reduce(operator.and_, (Q(k) for k in join_gateway_profile_filter_data.items()))
+					report_list = report_list.filter(gateway_profile_query)
+
+			if join_profile_filters not in ['', None]:
+				for f in join_profile_filters.split("|"):
+					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+						pass
+					else:
+						if f not in ['',None]: join_profile_filter_data[f] = gateway_profile.user.profile
+
+				if len(join_profile_filter_data):
+					profile_query = reduce(operator.and_, (Q(k) for k in join_profile_filter_data.items()))
+					report_list = report_list.filter(profile_query)
+
+        	    	if join_fields not in ['',None]:
+                		for i in join_fields.split("|"):
+	                	    k,v = i.split('%')
+				    record = join_report_list.values_list(v,flat=True)
+				    join_fields_data[k+'__in'] = list(record)
+
+        	        	if len(join_fields_data):
+	                	    query = reduce(operator.and_, (Q(k) for k in join_fields_data.items()))
+                		    report_list = report_list.filter(query)
+
+        	    	if join_manytomany_fields not in ['',None]:
+                		for i in join_manytomany_fields.split("|"):
+	                	    k,v = i.split('%')
+				    record = join_report_list.values_list(v,flat=True)
+				    join_manytomany_fields[k+'__in'] = list(record)
+
+        	        	if len(join_manytomany_fields_data):
+	                	    query = reduce(operator.and_, (Q(k) for k in join_manytomany_fields_data.items()))
+                		    report_list = report_list.filter(query)
+
 
 
 	    #lgr.info('Report End Date')

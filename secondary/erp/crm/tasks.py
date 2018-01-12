@@ -538,7 +538,9 @@ class System(Wrappers):
 
 			product.vat = payload['product_vat']
 			product.discount = payload['product_discount']
-			product.barcode = payload['product_barcode']
+			
+			if 'product_barcode' in payload.keys():
+				product.barcode = payload['product_barcode']
 			# product.unit_limit_min = payload['product_current_stok']
 
 			product.kind = payload['product_kind']

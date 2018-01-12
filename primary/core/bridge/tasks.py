@@ -98,7 +98,14 @@ class System(Wrappers):
 	def background_service(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			background_service = BackgroundService.objects.filter(trigger_service__name=payload['SERVICE'])
+
+			background_service = BackgroundService.objects.filter(Q(trigger_service__name=payload['SERVICE']),\
+										Q(gateway=gateway_profile.gateway)|Q(gateway=None))
+
+			if 'institution_id' in payload.keys():
+				background_service = background_service.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+
+
 			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 
 			if background_service.exists():

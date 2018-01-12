@@ -141,7 +141,7 @@ class System(Wrappers):
 	
 				channel = Channel.objects.get(id=int(payload['chid']))
 				follow_on_loan = Loan.objects.get(id=payload['loan_id'])
-				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
+				loan_activity = LoanActivity(loan_type=loan_type,loan=loan,request=self.transaction_payload(payload),\
 							response_status=response_status,gateway_profile=gateway_profile,\
 							status=request_status,follow_on_loan=follow_on_loan,\
 							channel=channel,gateway=gateway_profile.gateway)
@@ -212,7 +212,7 @@ class System(Wrappers):
 
 				channel = Channel.objects.get(id=int(payload['chid']))
 				follow_on_loan = Loan.objects.get(id=payload['loan_id'])
-				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
+				loan_activity = LoanActivity(loan_type=loan_type,loan=loan,request=self.transaction_payload(payload),\
 							response_status=response_status,gateway_profile=gateway_profile,\
 							status=request_status,follow_on_loan=follow_on_loan,\
 							channel=channel,gateway=gateway_profile.gateway)
@@ -284,7 +284,7 @@ class System(Wrappers):
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
 
 				channel = Channel.objects.get(id=int(payload['chid']))
-				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
+				loan_activity = LoanActivity(loan_type=loan_type,loan=loan,request=self.transaction_payload(payload),\
 							response_status=response_status,gateway_profile=gateway_profile,\
 							status=request_status,\
 							channel=channel,gateway=gateway_profile.gateway)

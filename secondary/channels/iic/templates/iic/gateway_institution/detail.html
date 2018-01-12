@@ -5,32 +5,23 @@
 
         <li class="breadcrumb-item"><a href="/iic_editor/gateways/">Gateways</a></li>
         <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway.name }} </a> </li>
-        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">Page Groups</a>
-        <li class="breadcrumb-item active">{{ page_group.name }}</li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/institutions/">Institutions</a>
+        <li class="breadcrumb-item active">{{ institution.name }}</li>
 
 
     </ol>
 
-    <h4>{{ page_group.name }}</h4>
+    <img src="{{ institution.logo.url }}" alt="Logo" class="img-thumbnail">
 
-    <p>
-        pk : <strong>{{ page_group.pk }}</strong> <br>
-        item_level : <strong>{{ page_group.item_level }}</strong> <br>
-        icon : <strong>{{ page_group.icon }}</strong> <br>
+    <h4>{{ institution.name }}</h4>
+<span
+        class="badge badge-pill badge-primary"
+        style="background-color: {{ institution.default_color }}"> Background Color </span>
 
-        <strong>Gateways</strong>
-        {% for gateway in page.gateway.all %}
-            {{ gateway.name }} |
-        {% empty %}
-            All Gateways
-        {% endfor %} <br>
+    <br>
 
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/institutions/{{ institution.pk }}/HOME/page_groups/">Interface</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/institutions/{{ institution.pk }}/gateway_profiles/">Profiles</a>
 
-        <br>
-        <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/">View Pages</a>
-        <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/order/">Reorder Pages</a>
-        <a href="/admin/iic/pagegroup/{{ page_group.pk }}/change/">Edit</a>
-
-    </p>
 
 {% endblock %}

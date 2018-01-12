@@ -32,7 +32,7 @@ from django.db.models import Q
 from primary.core.administration.models import Channel
 
 
-def query_page_inputs(gateway, service='HOME'):
+def query_page_inputs(gateway, service='HOME',institution=None):
     return PageInput.objects \
         .filter(Q(page__service__name=service),
                 Q(page_input_status__name='ACTIVE'),
@@ -160,6 +160,22 @@ def gateway_institution_list(request, gateway_pk):
     })
 
 
+def institution_detail(request, gateway_pk, institution_pk):
+    gateway = Gateway.objects.get(pk=gateway_pk)
+    institution = gateway.institution_set.get(pk=institution_pk)
+
+    # page_inputs = query_page_inputs(gateway, service)
+    # page_groups = PageGroup.objects.filter(page__pageinput__in=page_inputs).distinct()
+    # page_group = page_groups.get(pk=page_group_pk)
+
+    return render(request, "iic/gateway_institution/detail.html", {
+        'gateway': gateway,
+        'institution': institution
+    })
+
+
+
+
 def page_group_list(request, gateway_pk, service):
     gateway = Gateway.objects.get(pk=gateway_pk)
     # page_groups = gateway.pagegroup_set.all()
@@ -169,6 +185,21 @@ def page_group_list(request, gateway_pk, service):
     page_groups = PageGroup.objects.filter(page__pageinput__in=page_inputs).distinct().order_by('item_level')
     return render(request, "iic/page_group/list.html", {
         'gateway': gateway,
+        'service': service,
+        'page_groups': page_groups
+    })
+
+
+def institution_page_group_list(request, gateway_pk,institution_pk, service):
+    gateway = Gateway.objects.get(pk=gateway_pk)
+    institution = gateway.institution_set.get(pk=institution_pk)
+
+    page_inputs = query_page_inputs(gateway, service,institution)
+
+    page_groups = PageGroup.objects.filter(page__pageinput__in=page_inputs).distinct().order_by('item_level')
+    return render(request, "iic/page_group/list.html", {
+        'gateway': gateway,
+        'institution': institution,
         'service': service,
         'page_groups': page_groups
     })
@@ -386,7 +417,7 @@ def page_input_group_detail(request, gateway_pk, service, page_group_pk, page_pk
         'page_group': page_group})
 
 
-def page_input_group_create(request, gateway_pk, page_group_pk, page_pk):
+def page_input_group_create(request, gateway_pk,service, page_group_pk, page_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
@@ -487,6 +518,7 @@ def page_input_group_create(request, gateway_pk, page_group_pk, page_pk):
         form = PageInputGroupForm()
     return render(request, "iic/page_input_group/create.html", {
         'gateway': gateway,
+        'service': service,
         'page_group': page_group,
         'page': page,
         'form': form})
@@ -580,8 +612,8 @@ def page_input_create(request, gateway_pk, service, page_group_pk, page_pk, page
             page_input.save()
             page_input.channel.add(*Channel.objects.filter(name__in=default_channels))
             return redirect(
-                '/iic_editor/gateways/{}/page_groups/{}/pages/{}/page_input_groups/{}/page_inputs/'.format(
-                    gateway_pk, page_group_pk, page_pk, page_input_group_pk
+                '/iic_editor/gateways/{}/{}/page_groups/{}/pages/{}/page_input_groups/{}/page_inputs/'.format(
+                    gateway_pk,service, page_group_pk, page_pk, page_input_group_pk
                 )
             )
     else:
@@ -647,7 +679,8 @@ def page_input_list(request, gateway_pk, service, page_group_pk, page_pk, page_i
         'service': service,
         'page_input_group': page_input_group,
         'page_inputs': page_inputs,
-        'page_group': page_group})
+        'page_group': page_group
+    })
 
 
 def page_input_detail(request, gateway_pk,service, page_group_pk, page_pk, page_input_group_pk, page_input_pk):

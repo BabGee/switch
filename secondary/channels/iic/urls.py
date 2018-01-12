@@ -52,13 +52,25 @@ urlpatterns = [
             # ])),
             url(r'^gateway_profiles/', include([
                 url(r'^$', gateway_profile_list),
-                # url(r'^(?P<page_group_pk>\d+)/', include([
-                #     url(r'^$', page_group_detail),
-                #     url(r'^pages/', include(page_paterns)),
-                # ])),
+
             ])),
             url(r'^institutions/', include([
                 url(r'^$', gateway_institution_list),
+                url(r'^(?P<institution_pk>\d+)/', include([
+                    url(r'^$', institution_detail),
+                    # url(r'^pages/', include(page_paterns)),
+
+                    url(r'^(?P<service>[\w\ ]+)/', include([
+                        # url(r'^$', gateway_service), # todo detail view
+                        url(r'^page_groups/', include([
+                            url(r'^$', institution_page_group_list),
+                            # url(r'^(?P<page_group_pk>\d+)/', include([
+                            #     url(r'^$', page_group_detail),
+                            #     url(r'^pages/', include(page_patterns)),
+                            # ])),
+                        ])),
+                    ])),
+                ])),
 
             ])),
             url(r'^(?P<service>[\w\ ]+)/', include([
