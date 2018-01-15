@@ -192,10 +192,12 @@ class LoanType(models.Model):
 	description = models.CharField(max_length=100)
 	interest_rate = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) 
 	interest_time = models.IntegerField(null=True, blank=True, help_text="In Days")
-	trigger_service = models.ManyToManyField(Service, blank=True)
+	trigger_service = models.ManyToManyField(Service, blank=True, related_name='trigger_service')
 	product_type = models.ManyToManyField(ProductType, blank=True)
+	credit = models.BooleanField(default=False) #Dr | Cr (Credit/Debit Charge to amount)
+	service = models.ForeignKey(Service, null=True, blank=True)
 	def __unicode__(self):
-		return u'%s %s' % (self.name, self.description)
+		return u'%s %s %s %s' % (self.name, self.description, self.credit, self.service)
 	def product_type_list(self):
 		return "\n".join([a.name for a in self.product_type.all()])
 	def trigger_service_list(self):
@@ -206,13 +208,14 @@ class LoanStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	service = models.ForeignKey(Service, null=True, blank=True)
 	def __unicode__(self):
-		return u'%s %s %s' % (self.name, self.description, self.service)
+		return u'%s %s' % (self.name, self.description)
 
 class Loan(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
+	loan_type = models.ForeignKey(LoanType)
+	credit = models.BooleanField(default=False) #Dr | Cr (Credit/Debit Charge to amount)
 	amount = models.DecimalField(max_digits=19, decimal_places=2)
 	security_amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	other_loans = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
@@ -226,28 +229,27 @@ class Loan(models.Model):
 	account = models.ForeignKey(Account)
 	interest_rate = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) 
 	interest_time = models.IntegerField(null=True, blank=True, help_text="In Days")
-	loan_type = models.ForeignKey(LoanType)
 	status = models.ForeignKey(LoanStatus)
 	gateway_profile = models.ForeignKey(GatewayProfile)
 	def __unicode__(self):
-		return u'%s %s %s %s' % (self.id, self.account, self.amount, self.loan_type)
+		return u'%s %s %s %s' % (self.id, self.loan_type, self.amount, self.credit)
 
 class LoanActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	loan_type = models.ForeignKey(LoanType)
 	loan = models.ForeignKey(Loan)
 	request = models.CharField(max_length=1920)
+	transaction_reference = models.CharField(max_length=45, null=True, blank=True) #Transaction ID
 	response_status = models.ForeignKey(ResponseStatus)
 	comment = models.CharField(max_length=256, null=True, blank=True)
 	processed = models.BooleanField(default=False)
 	gateway_profile = models.ForeignKey(GatewayProfile)
-	status = models.ForeignKey(LoanStatus)
-	follow_on_loan = models.ForeignKey(Loan, related_name="follow_on_loan", null=True, blank=True)
+	status = models.ForeignKey(TransactionStatus)
+	follow_on_loan = models.ForeignKey(Loan, related_name="follow_on_loan")
 	channel = models.ForeignKey(Channel)
 	gateway = models.ForeignKey(Gateway)
 	institution = models.ForeignKey(Institution, null=True, blank=True)
 	def __unicode__(self):
-		return u'%s %s %s' % (self.loan, self.gateway_profile, self.status, self.loan_type)
+		return u'%s %s %s' % (self.loan, self.gateway_profile, self.status)
 
 

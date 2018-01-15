@@ -1,7 +1,7 @@
 from django.forms import ModelForm
 from django import forms
-from .models import Page, PageInput,PageInputGroup
-
+from .models import Page, PageInput,PageInputGroup,PageGroup
+from primary.core.bridge.models import Service
 
 class PageOrderConfigForm(forms.Form):
     config = forms.CharField(widget = forms.HiddenInput(), required = True)
@@ -41,6 +41,30 @@ class PageInputForm(ModelForm):
     class Meta:
         model = PageInput
         exclude = []
+
+
+class PageGroupPageForm(forms.ModelForm):
+    # page = forms.CharField(max_length=50)
+    # menu = forms.ModelChoiceField(queryset=PageGroup.objects.all())
+
+
+    class Meta:
+        exclude = ['profile_status','description','icon_old','access_level','gateway','service']
+        model = Page
+
+    def save(self, commit=True):
+        page = super(PageGroupPageForm, self).save(commit=False)
+        # message.created_by = self.request.user
+        # print(self.cleaned_data) # .get('groups')
+
+        # create page
+        page.description = page.name
+        # page.item_level = 1
+        # page.page_group = page_group
+
+        if commit:
+            page.save()
+        return page
 
 
 # todo should extend

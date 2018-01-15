@@ -87,23 +87,25 @@ class InvestmentManagerAdmin(admin.ModelAdmin):
 admin.site.register(InvestmentManager, InvestmentManagerAdmin)
 
 class LoanTypeAdmin(admin.ModelAdmin):
-	list_display = ('name','description','interest_rate','interest_time','trigger_service_list','product_type_list')
+	list_display = ('name','description','interest_rate','interest_time','trigger_service_list','product_type_list',\
+			'credit','service',)
 admin.site.register(LoanType, LoanTypeAdmin)
 
 
 class LoanStatusAdmin(admin.ModelAdmin):
-	list_display = ('name','description','service',)
+	list_display = ('name','description',)
 admin.site.register(LoanStatus, LoanStatusAdmin)
 
 class LoanAdmin(admin.ModelAdmin):
-	list_display = ('id','amount','security_amount','other_loans','payment_method',\
+	list_display = ('id','loan_type','credit','amount','security_amount','other_loans','payment_method',\
 			'loan_time','transaction_reference','currency',\
 			'institution','gateway','comment','account','interest_rate','interest_time',\
-			'loan_type','status','gateway_profile',)
+			'status','gateway_profile',)
 admin.site.register(Loan, LoanAdmin)
 
 class LoanActivityAdmin(admin.ModelAdmin):
-	list_display = ('id','loan_type','loan','request','response_status','comment','processed','gateway_profile',\
+	list_display = ('id','loan','request','transaction_reference','response_status','comment',\
+			'processed','gateway_profile',\
 			'status','follow_on_loan','channel','gateway','institution',)
 admin.site.register(LoanActivity, LoanActivityAdmin)
 

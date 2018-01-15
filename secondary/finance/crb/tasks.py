@@ -179,28 +179,41 @@ class System(Wrappers):
 					reference_data['credit_grade'] = credit_grade
 
 					probability = score_output['probability']
-					payload['credit_probability'] = probability
-					reference_data['credit_probability'] = probability
+
+					is_int,is_float = False,False
+					try: is_int=isinstance(int(probability), int) 
+					except:pass
+					try: is_float=isinstance(float(probability),float)
+					except:pass
+					if is_int or is_float:
+						payload['credit_probability'] = probability
+						reference_data['credit_probability'] = probability
+					else:
+						payload['credit_probability'] = Decimal(0)
+						reference_data['credit_probability'] = Decimal(0)
+
 
 					score = score_output['positiveScore']
 					payload['credit_score'] = score
 					reference_data['credit_score'] = score
 
 				#accounts details
-				if 'accountList'  in details['accountList']:
+				if 'accountList'  in details.keys():
 					payload['credit_account_list'] = details['accountList']
 					accountList = json.dumps(details['accountList'])
 					lgr.info('Account List: %s' % accountList)
 					reference_data['credit_account_list'] = accountList
 
-				if 'summary'  in details['summary']:
+				if 'summary'  in details.keys():
 					payload['credit_account_summary'] = details['summary']
 					summary = json.dumps(details['summary'])
 					lgr.info('Summary : %s' % summary)
 					reference_data['credit_account_summary'] = summary
-
+					lgr.info('Summary 2: %s' % summary)
 
 				identity = IdentificationProfile.objects.filter(national_id=payload['national_id'])
+
+				lgr.info('Reference Data: %s' % reference_data)
 				if identity.exists():
 					if hasattr(identity[0], 'reference'):
 						reference = identity[0].reference

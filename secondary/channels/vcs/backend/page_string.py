@@ -701,18 +701,26 @@ class PageString(ServiceCall, Wrappers):
 
 					params = payload
 
-					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'),Q(processed=False),\
+					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'),Q(loan__status__name='CREATED'),Q(processed=False),\
 										Q(follow_on_loan__account__profile=navigator.session.gateway_profile.user.profile),\
-										Q(loan__gateway=code[0].gateway),\
-										Q(loan__loan_type__name='P2P LOAN OFFER')|Q(loan__loan_type__name='P2P LOAN REQUEST')).\
+										~Q(loan__id=F('follow_on_loan__id')),\
+										Q(loan__gateway=code[0].gateway)).\
 										order_by('-date_created')
+					lgr.info('Loan Activity: %s' % loan_activity)
 
 					if 'institution_id' in params.keys():
 						loan_activity = loan_activity.filter(Q(loan__institution__id=params['institution_id'])\
 											|Q(loan__institution=None))
-					else:
+						lgr.info('Institution ID')
+					elif code[0].institution:
+						lgr.info('Code Institution')
 						loan_activity = loan_activity.filter(Q(loan__institution=code[0].institution)|Q(loan__institution=None))
+					else:
+						lgr.info('None')
+						loan_activity = loan_activity.filter(loan__institution=None)
 
+
+					lgr.info('Loan Activity: %s' % loan_activity)
 					loan_activity = loan_activity[:10]
 					item = ''
 					item_list = []
@@ -749,7 +757,7 @@ class PageString(ServiceCall, Wrappers):
 										~Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
 										Q(gateway_profile__user__profile=F('loan__account__profile')),\
 										Q(loan__gateway=code[0].gateway),\
-										Q(loan__loan_type__name='P2P LOAN OFFER')).\
+										Q(loan__credit=True)).\
 										order_by('-date_created')
 
 					if 'institution_id' in params.keys():
@@ -794,7 +802,7 @@ class PageString(ServiceCall, Wrappers):
 										~Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
 										Q(gateway_profile__user__profile=F('loan__account__profile')),\
 										Q(loan__gateway=code[0].gateway),\
-										Q(loan__loan_type__name='P2P LOAN REQUEST')).\
+										Q(loan__credit=False)).\
 										order_by('-date_created')
 
 					if 'institution_id' in params.keys():

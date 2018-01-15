@@ -77,6 +77,7 @@ urlpatterns = [
                 url(r'^$', gateway_service), # todo detail view
                 url(r'^page_groups/', include([
                     url(r'^$', page_group_list),
+                    url(r'^create/$', page_group_create),
                     url(r'^(?P<page_group_pk>\d+)/', include([
                         url(r'^$', page_group_detail),
                         url(r'^pages/', include(page_patterns)),

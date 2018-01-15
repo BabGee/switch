@@ -57,16 +57,6 @@ class System(Wrappers):
 				lgr.info('Product: %s' % product)
 				product_item = ProductItem.objects.filter(id=product_item_id,status__name='ACTIVE')
 
-				if 'product_type' in payload.keys():
-					product_item = product_item.filter(product_type__name=payload['product_type'])
-
-
-				if 'product_type_id' in payload.keys():
-					product_item = product_item.filter(product_type__id=payload['product_type_id'])
-
-				if 'institution_id' in payload.keys():
-					product_item = product_item.filter(institution__id=payload['institution_id'])
-
 				if product_item.exists():
 					product['product_item_id'] = product_item[0].id
 					product['product_item_name'] = product_item[0].name
@@ -122,20 +112,15 @@ class System(Wrappers):
 				product_item = ProductItem.objects.filter(id=payload['product_item_id'],status__name='ACTIVE').order_by('id')
 			elif 'item' in payload.keys() and 'institution_id' in payload.keys():
 				product_item = ProductItem.objects.filter(name=payload["item"], institution__id=payload['institution_id'], status__name='ACTIVE').order_by('id')
+
+				if 'product_type' in payload.keys():
+					product_item = product_item.filter(product_type__name=payload['product_type'])
+
+				if 'product_type_id' in payload.keys():
+					product_item = product_item.filter(product_type__id=payload['product_type_id'])
+
 			else:
 				product_item = ProductItem.objects.none()	
-
-			if 'product_type' in payload.keys():
-				product_item = product_item.filter(product_type__name=payload['product_type'])
-
-
-			if 'product_type_id' in payload.keys():
-				product_item = product_item.filter(product_type__id=payload['product_type_id'])
-
-
-			if 'institution_id' in payload.keys():
-				product_item = product_item.filter(institution__id=payload['institution_id'])
-
 
 			if product_item.exists():
 				payload['product_item_id'] = product_item[0].id
@@ -342,7 +327,7 @@ class System(Wrappers):
 
 				if enrollment_type_list.exists():
 					enrollment_type = enrollment_type_list[0]
-					all_enrollments = Enrollment.objects.filter(enrollment_type__).\
+					all_enrollments = Enrollment.objects.filter(enrollment_type__in=enrollment_type_list).\
 							extra(
 							    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
 								).\
@@ -353,7 +338,7 @@ class System(Wrappers):
 
 				if all_enrollments.exists():
 					lgr.info('All Enrollment Found')
-					record = all_enrollments[0].record
+					record = int(all_enrollments[0].record)+1
 				else:
 					lgr.info('All Enrollment Not found, does institution')
 					all_enrollments = Enrollment.objects.filter(enrollment_type__product_item__institution=institution).\
