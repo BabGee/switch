@@ -196,12 +196,22 @@ class LoanType(models.Model):
 	product_type = models.ManyToManyField(ProductType, blank=True)
 	credit = models.BooleanField(default=False) #Dr | Cr (Credit/Debit Charge to amount)
 	service = models.ForeignKey(Service, null=True, blank=True)
+	details = models.CharField(max_length=512, default=json.dumps({}))
+	access_level = models.ManyToManyField(AccessLevel, blank=True)
+	institution = models.ManyToManyField(Institution, blank=True)
+	gateway = models.ManyToManyField(Gateway, blank=True)
 	def __unicode__(self):
 		return u'%s %s %s %s' % (self.name, self.description, self.credit, self.service)
 	def product_type_list(self):
 		return "\n".join([a.name for a in self.product_type.all()])
 	def trigger_service_list(self):
 		return "\n".join([a.name for a in self.trigger_service.all()])
+	def institution_list(self):
+		return "\n".join([a.name for a in self.institution.all()])
+	def gateway_list(self):
+		return "\n".join([a.name for a in self.gateway.all()])
+	def access_level_list(self):
+		return "\n".join([a.name for a in self.access_level.all()])
 
 class LoanStatus(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)

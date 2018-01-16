@@ -88,9 +88,8 @@ admin.site.register(InvestmentManager, InvestmentManagerAdmin)
 
 class LoanTypeAdmin(admin.ModelAdmin):
 	list_display = ('name','description','interest_rate','interest_time','trigger_service_list','product_type_list',\
-			'credit','service',)
+			'credit','service','details','access_level_list','institution_list','gateway_list',)
 admin.site.register(LoanType, LoanTypeAdmin)
-
 
 class LoanStatusAdmin(admin.ModelAdmin):
 	list_display = ('name','description',)

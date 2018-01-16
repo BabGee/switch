@@ -237,7 +237,7 @@ def background_service_call(background):
 		if i.amount:
 			payload['amount'] = i.amount
 
-		service = i.background_service.activity_service
+		service = i.background_service.service
 		gateway_profile = i.gateway_profile
 
 		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))

@@ -76,12 +76,16 @@ class System(Wrappers):
 				approval['Reject'] = 'REJECTED'
 				status = approval[str(payload['approval'])]
 
+				activity = loan_activity[0]
 				loan_status = LoanStatus.objects.get(name=status)
 
-				activity = loan_activity[0]
+				if activity.follow_on_loan.credit == False:
+					activity.follow_on_loan.status = loan_status
+					activity.follow_on_loan.save()
+				else:
+					activity.loan.status = loan_status
+					activity.loan.save()
 
-				activity.follow_on_loan.status = loan_status
-				activity.follow_on_loan.save()
 
 				payload['response'] = 'Loan Approval Logged'
 				payload['response_status'] = '00'
@@ -1292,16 +1296,20 @@ def approved_loan_service_call(loan_activity):
 		if i.loan.amount:
 			payload['amount'] = i.loan.amount
 
-		if i.follow_on_loan <> i.loan:
+		if i.follow_on_loan <> i.loan and i.follow_on_loan.status.name=='APPROVED':
 			gateway_profile = i.follow_on_loan.gateway_profile
 			service = i.follow_on_loan.loan_type.service
 			payload['account_type_id'] = i.follow_on_loan.account.account_type.id
 			payload['loan_time'] = i.follow_on_loan.account.account_type.id
-		else:
+		elif i.loan.status.name=='APPROVED':
 			gateway_profile = i.loan.gateway_profile
 			service = i.loan.loan_type.service
 			payload['account_type_id'] = i.loan.account.account_type.id
 			payload['loan_time'] = i.loan.account.account_type.id
+		else:
+			gateway_profile = None
+			service = None
+		
 
 		if gateway_profile and service:
 			lgr.info('Approved Loan Service Call')
@@ -1319,6 +1327,8 @@ def approved_loan_service_call(loan_activity):
 				i.status = TransactionStatus.objects.get(name='FAILED')
 				i.response_status = ResponseStatus.objects.get(response='20')
 		else:
+
+			lgr.info('\n\n\n\n\t### %s #### %s #\n\n' % (gateway_profile, service))
 			i.status = TransactionStatus.objects.get(name='PROCESSED')
 
 		i.save()

@@ -164,11 +164,11 @@ class BackgroundService(models.Model):
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	trigger_service = models.ManyToManyField(Service)
-	activity_service = models.ForeignKey(Service, related_name='activity_serice')
+	service = models.ForeignKey(Service, related_name='background_service')
 	details = models.CharField(max_length=1920, default=json.dumps({}))
 	cut_off_command = models.ForeignKey(ServiceCommand, null=True, blank=True)
 	def __unicode__(self):
-		return u'%s %s' % (self.id, self.activity_service)  
+		return u'%s %s' % (self.id, self.service)  
 	def institution_list(self):
 		return "\n".join([a.name for a in self.institution.all()])
 	def gateway_list(self):
