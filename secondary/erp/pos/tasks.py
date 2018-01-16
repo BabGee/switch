@@ -334,6 +334,21 @@ class System(Wrappers):
 		return payload
 
 
+	def allow_cash_on_delivery(self, payload, node_info):
+		try:
+			if 'purchase_order_id' in payload.keys() and 'amount' in payload.keys() and 'currency' in payload.keys():
+				payload['balance_bf'] = payload['amount']
+				payload["response_status"] = "00"
+				payload["response"] = "Allowed: %s %s to cash on delivery" % (payload['currency'], payload['amount'])
+			else:
+				payload["response_status"] = "25"
+				payload["response"] = "Bill Detail(s) missing"
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on allowing cash on delivery: %s" % e)
+		return payload
+
+
 	def get_bill(self, payload, node_info):
 		try:
 			if 'reference' in payload.keys():
@@ -568,8 +583,10 @@ class System(Wrappers):
 					prefix = ''.join(rnd.choice(chars) for i in range(3))
 					suffix = ''.join(rnd.choice(nums) for i in range(2,4))
 					trial = '%s-%s%s' % (pre_reference, prefix.upper(), suffix)
-					reference_list = PurchaseOrder.objects.filter(reference=trial,status__name='UNPAID',\
-							expiry__gte=timezone.now()).order_by('-reference')[:1]
+					#reference_list = PurchaseOrder.objects.filter(reference=trial,status__name='UNPAID',\
+					#		expiry__gte=timezone.now()).order_by('-reference')[:1]
+
+					reference_list = PurchaseOrder.objects.filter(reference=trial).order_by('-reference')[:1]
 					if len(reference_list)>0:
 						return reference(pre_reference)
 					else:

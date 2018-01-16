@@ -75,8 +75,7 @@
                                data-value="{% for cat in page_input.access_level.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"
                                data-url="/iic_editor/page_inputs/"
                                data-title="Select Access Levels"></a>
-
-
+                                Input Variable Usage Count : <strogn>{{ page_input.input_variable.pageinput_set.count }}</strogn>
 
                     <br>
                     <a target="_blank" href="/admin/iic/pageinput/{{ page_input.pk }}/change/">Edit</a> |

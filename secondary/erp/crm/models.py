@@ -65,7 +65,7 @@ class ProductType(models.Model):
 	icon = models.ForeignKey(Icon, null=True, blank=True)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	def __unicode__(self):
-		return u'%s' % (self.name)
+		return u'%s %s' % (self.id, self.name)
 	def payment_method_list(self):
 		return "\n".join([a.name for a in self.payment_method.all()])
 
@@ -80,7 +80,7 @@ class ShopProductType(models.Model):
 	institution = models.ForeignKey(Institution)
 	icon = models.ForeignKey(Icon, null=True, blank=True)
 	def __unicode__(self):
-		return u'%s' % (self.name)
+		return u'%s %s' % (self.id, self.name)
 
 
 class ProductCharge(models.Model):

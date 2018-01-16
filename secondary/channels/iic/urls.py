@@ -97,6 +97,7 @@ urlpatterns = [
             # url(r'^$', page_detail),
             url(r'^service_commands/$', service_command_list),
             url(r'^service_commands/from/$', service_command_copy),
+            url(r'^service_commands/order/$', service_command_order),
         ])),
     ]), name='services'),
 

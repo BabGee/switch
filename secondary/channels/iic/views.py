@@ -2,7 +2,7 @@ from django.http import JsonResponse, HttpResponse
 
 from primary.core.administration.models import Gateway, Icon, AccessLevel
 from primary.core.upc.models import GatewayProfile, Institution
-from primary.core.bridge.models import Service, Product, ServiceStatus
+from primary.core.bridge.models import Service, Product, ServiceStatus,ServiceCommand,CommandStatus
 
 # data list editor
 from secondary.channels.dsc.models import DataList
@@ -533,6 +533,8 @@ def page_input_group_detail(request, gateway_pk, service, page_group_pk, page_pk
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
 
+    node_systems = NodeSystem.objects.all()
+
     # page_inputs = query_page_inputs(gateway)
     # todo user page to optimize query
     # page_input_groups = PageInputGroup.objects.filter(pageinput__in=page_inputs, pageinput__page=page).distinct()
@@ -544,7 +546,10 @@ def page_input_group_detail(request, gateway_pk, service, page_group_pk, page_pk
         'page': page,
         'service': service,
         'page_input_group': page_input_group,
-        'page_group': page_group})
+        'page_group': page_group,
+        # Extra
+        'node_systems': node_systems
+    })
 
 
 def page_input_group_create(request, gateway_pk, service, page_group_pk, page_pk):
@@ -869,6 +874,20 @@ def service_command_list(request, service_pk):
     service = Service.objects.get(pk=service_pk)
     service_commands = service.servicecommand_set.all().order_by('level')
 
+    if request.method == 'POST':
+        service_command = ServiceCommand()
+
+        service_command.service_id = service_pk
+        service_command.command_function = request.POST.get('command_function')
+        last_sc = service.servicecommand_set.order_by('level').last()
+        service_command.level = last_sc.level + 1
+        service_command.node_system_id  = request.POST.get('node_system')
+        service_command.status = CommandStatus.objects.get(name='ENABLED')
+        service_command.description = service_command.command_function
+        service_command.save()
+
+        return HttpResponse(status=200)
+
     return render(request, "iic/service_command/list.html", {
         'service_commands': service_commands
     })
@@ -883,6 +902,15 @@ def service_command_copy(request, service_pk):
             service_command.pk = None
             service_command.service_id = service_pk
             service_command.save()
+
+    return HttpResponse(status=200)
+
+
+def service_command_order(request, service_pk):
+    if request.method == 'POST':
+        order_configs = json.loads(request.POST.get('config'))
+        for order_config in order_configs:
+            ServiceCommand.objects.filter(pk=order_config['service_command']).update(level=order_config['level'])
 
     return HttpResponse(status=200)
 

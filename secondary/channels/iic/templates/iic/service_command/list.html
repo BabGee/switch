@@ -1,25 +1,15 @@
-<table class="table table-bordered">
-  <thead>
-    <tr>
-      <th scope="col">command_function</th>
-      <th scope="col">level</th>
-      <th scope="col">node_system</th>
-      <th scope="col">status</th>
-    </tr>
-  </thead>
-  <tbody>
+
+
+
+  <ul id="list">
 
   {% for service_command in service_commands %}
 
 
-    <tr>
-      <th scope="row">{{ service_command.command_function }}</th>
-      <td>{{ service_command.level }}</td>
-      <td>{{ service_command.node_system }}</td>
-      <td>{{ service_command.status }}</td>
-    </tr>
+    <li id="service_command-li-{{ service_command.pk }}">
+       {{ service_command.command_function }} {{ service_command.level }} {{ service_command.node_system }} {{ service_command.status }} {{ service_command.details }}
+    </li>
 
   {% endfor %}
+</ul>
 
-  </tbody>
-</table>

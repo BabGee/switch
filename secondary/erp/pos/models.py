@@ -122,7 +122,7 @@ class PurchaseOrder(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	cart_item = models.ManyToManyField(CartItem)
-	reference = models.CharField(max_length=45)
+	reference = models.CharField(max_length=45, unique=True)
 	amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	currency = models.ForeignKey(Currency)
 	description = models.CharField(max_length=200, blank=True, null=True)
