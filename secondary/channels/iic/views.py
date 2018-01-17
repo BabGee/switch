@@ -533,7 +533,7 @@ def page_input_group_detail(request, gateway_pk, service, page_group_pk, page_pk
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
 
-    node_systems = NodeSystem.objects.all()
+    node_systems = NodeSystem.objects.filter(node_status__name='LOCAL')
 
     # page_inputs = query_page_inputs(gateway)
     # todo user page to optimize query

@@ -359,8 +359,10 @@ class System(Wrappers):
 				if bill_manager_list.exists():
 					cart_items = bill_manager_list[0].order.cart_item.all()
 					if cart_items.exists():
+						#Takes up the institution with the most products
 						product_institution = cart_items.values('product_item__institution__id').annotate(Count('product_item__institution__id')).order_by('-product_item__institution__id__count')
-						payload['institution_id'] = product_institution[0]['product_item__institution__id']
+						if product_institution.count() == 1:
+							payload['institution_id'] = product_institution[0]['product_item__institution__id']
 					payload['amount'] = str(bill_manager_list[0].balance_bf)
                                         payload['currency'] = bill_manager_list[0].order.currency.code
 					payload['purchase_order_id'] = bill_manager_list[0].order.id
@@ -582,7 +584,7 @@ class System(Wrappers):
 					rnd = random.SystemRandom()
 					prefix = ''.join(rnd.choice(chars) for i in range(3))
 					suffix = ''.join(rnd.choice(nums) for i in range(2,4))
-					trial = '%s-%s%s' % (pre_reference, prefix.upper(), suffix)
+					trial = '%s-%s%s' % (pre_reference, prefix.upper()[:6], suffix)
 					#reference_list = PurchaseOrder.objects.filter(reference=trial,status__name='UNPAID',\
 					#		expiry__gte=timezone.now()).order_by('-reference')[:1]
 
@@ -596,7 +598,7 @@ class System(Wrappers):
 					institution = Institution.objects.get(id=payload['institution_id'])
 					reference = reference(institution.business_number)
 				else:
-					reference = reference(cart_items[0].product_item.institution.business_number)
+					reference = reference(gateway_profile.gateway.name)
 
 				expiry = timezone.localtime(timezone.now())+timezone.timedelta(days=45)
 				status = OrderStatus.objects.get(name='UNPAID')
@@ -919,7 +921,7 @@ def order_service_call(order):
 			payload['currency'] = c.currency.code
 			payload['amount'] = c.total
 			payload['reference'] = o.reference
-			payload['institution_id'] = c.product_item.institution.id
+			#payload['institution_id'] = c.product_item.institution.id
 			payload['chid'] = c.channel.id
 			payload['ip_address'] = '127.0.0.1'
 			payload['gateway_host'] = '127.0.0.1'
@@ -997,7 +999,7 @@ def process_paid_order():
 				payload['currency'] = c.currency.code
 				payload['amount'] = c.total
 				payload['reference'] = o.reference
-				payload['institution_id'] = c.product_item.institution.id
+				#payload['institution_id'] = c.product_item.institution.id
 				payload['chid'] = c.channel.id
 				payload['ip_address'] = '127.0.0.1'
 				payload['gateway_host'] = '127.0.0.1'

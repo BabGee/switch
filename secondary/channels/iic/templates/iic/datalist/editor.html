@@ -32,11 +32,14 @@
 
     <input placeholder="Title" name="title" type="text"> <br>
 
+
+    <p>{{ data_list.query.module_name }} {{ data_list.query.model_name }}</p>
+
     <label for="module">Module</label>
     <select id="module" name="module">
         {% for node_system in modules %}
-                <option {% if node_system.name == module %}selected{% endif %}
-                        value="{{ node_system.URL }}">{{ node_system }}</option>
+                <option {% if node_system.name == data_list.query.module_name %}selected{% endif %}
+                        value="{{ node_system.URL }}">{{ node_system.name }}</option>
         {% endfor %}
 
     </select>

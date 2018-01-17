@@ -62,7 +62,7 @@ class System(Wrappers):
 					product['product_item_name'] = product_item[0].name
 					product['product_item_kind'] = product_item[0].kind
 					product['product_item_image'] = product_item[0].default_image if product_item[0].default_image else ''
-					product['institution_id'] = product_item[0].institution.id
+					#product['institution_id'] = product_item[0].institution.id
 					#product['till_number'] = product_item[0].product_type.institution_till.till_number
 					product['currency'] = product_item[0].currency.code
 					if  product_item[0].variable_unit and 'quantity' in product.keys() and product['quantity'] not in ["",None]:
@@ -127,7 +127,7 @@ class System(Wrappers):
 				payload['product_item_name'] = product_item[0].name
 				payload['product_item_kind'] = product_item[0].kind
 				payload['product_item_image'] = product_item[0].default_image if product_item[0].default_image else ''
-				payload['institution_id'] = product_item[0].institution.id
+				#payload['institution_id'] = product_item[0].institution.id
 				#payload['till_number'] = product_item[0].product_type.institution_till.till_number
 				payload['currency'] = product_item[0].currency.code
 				if  product_item[0].variable_unit and 'quantity' in payload.keys():
@@ -178,7 +178,7 @@ class System(Wrappers):
 
 			if product_item.exists():
 				payload['product_item_id'] = product_item[0].id
-				payload['institution_id'] = product_item[0].institution.id
+				#payload['institution_id'] = product_item[0].institution.id
 				#payload['till_number'] = product_item[0].product_type.institution_till.till_number
 				payload['currency'] = product_item[0].currency.code
 				payload['amount'] = product_item[0].unit_cost
@@ -215,7 +215,7 @@ class System(Wrappers):
 					payload['response_status'] = '26'
 				else:
 					payload['product_item_id'] = product_item[0].id
-					payload['institution_id'] = product_item[0].institution.id
+					#payload['institution_id'] = product_item[0].institution.id
 					#payload['till_number'] = product_item[0].product_type.institution_till.till_number
 					payload['currency'] = product_item[0].currency.code
 					payload['amount'] = product_item[0].unit_cost
@@ -252,7 +252,7 @@ class System(Wrappers):
 					payload['response_status'] = '26'
 				else:
 					payload['product_item_id'] = product_item[0].id
-					payload['institution_id'] = product_item[0].institution.id
+					#payload['institution_id'] = product_item[0].institution.id
 					#payload['till_number'] = product_item[0].product_type.institution_till.till_number
 					payload['currency'] = product_item[0].currency.code
 					payload['amount'] = product_item[0].unit_cost
@@ -310,23 +310,26 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			institution = None
-			if 'institution_id' in payload.keys():
-				institution = Institution.objects.get(id=payload['institution_id'])
-			elif 'institution_id' not in payload.keys() and gateway_profile.institution is not None:
-				institution = gateway_profile.institution
+			if 'enrollment_type_id' in payload.keys():
+				enrollment_type_list = EnrollmentType.objects.filter(id=payload['enrollment_type_id'])
+                        if 'product_item_id' in payload.keys():
+				enrollment_type_list = EnrollmentType.objects.filter(product_item__id=payload['product_item_id'])
+			else:
+				if 'institution_id' in payload.keys():
+					institution = Institution.objects.get(id=payload['institution_id'])
+				elif 'institution_id' not in payload.keys() and gateway_profile.institution is not None:
+					institution = gateway_profile.institution
+				else:
+					institution = None
 
-			enrollment_type = None
+				if institution:
+					enrollment_type_list = EnrollmentType.objects.filter(product_item__institution=institution)
+				else:
+					enrollment_type_list = EnrollmentType.objects.none()
+
 			if 'record' not in payload.keys():
 				lgr.info('Record not in paylod')
-				enrollment_type_list = EnrollmentType.objects.filter(product_item__institution=institution)
-
-	                        if 'product_item_id' in payload.keys():
-					lgr.info('Product Item Found')
-       		                        enrollment_type_list = enrollment_type_list.filter(product_item__id=payload['product_item_id'])
-
 				if enrollment_type_list.exists():
-					enrollment_type = enrollment_type_list[0]
 					all_enrollments = Enrollment.objects.filter(enrollment_type__in=enrollment_type_list).\
 							extra(
 							    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
@@ -338,47 +341,23 @@ class System(Wrappers):
 
 				if all_enrollments.exists():
 					lgr.info('All Enrollment Found')
-					record = int(all_enrollments[0].record)+1
+					all_enrollments = all_enrollments.extra(
+							    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
+								).\
+							order_by("-int_record")
+					record = int(all_enrollments[0].int_record)+1
+					#try:record = int(all_enrollments[0].record)+1
+					#except: record = 1
 				else:
-					lgr.info('All Enrollment Not found, does institution')
-					all_enrollments = Enrollment.objects.filter(enrollment_type__product_item__institution=institution).\
-						extra(
-						    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
-							).\
-						order_by("-int_record")
-
-		                        if 'product_item_id' in payload.keys():
-						lgr.info('All Enrollment for inst got product')
-       			                        all_enrollments = all_enrollments.filter(enrollment_type__product_item__id=payload['product_item_id']).\
-								extra(
-								    select={'int_record': "CAST(substring(record FROM '^[0-9]+') AS INTEGER)"}
-									).\
-								order_by("-int_record")
-
-
-					if all_enrollments.exists():
-						lgr.info('All Enrollment for inst exists gives new record (+1) or allocates 1: %s|%s' % (all_enrollments[0],all_enrollments[0].record))
-						try:record = int(all_enrollments[0].record)+1
-						except: record = 1
-					else:
-						lgr.info('All enrollment for inst does not exists allocates 1')
-						record = 1
+					lgr.info('All enrollment for inst does not exists allocates 1')
+					record = 1
 			else:
 				record = payload['record']
 
 			lgr.info('Record: %s' % record)
                         #Check if enrollment exists
-			if 'session_gateway_profile_id' in payload.keys():
-				lgr.info('Session Gateway Found')
-				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-
                         enrollment_list = Enrollment.objects.filter(status__name='ACTIVE',record=record,\
-                                                                enrollment_type__product_item__institution=institution)
-
-			lgr.info('Enrollment List: %s' % enrollment_list)
-                        if 'product_item_id' in payload.keys():
-				lgr.info('Product Item Found')
-                                enrollment_list = enrollment_list.filter(enrollment_type__product_item__id=payload['product_item_id'])
+                                                                enrollment_type__in=enrollment_type_list)
 
                         if enrollment_list.exists():
 				lgr.info('Enrollment with record exists')
@@ -397,20 +376,14 @@ class System(Wrappers):
                         else:
 				lgr.info('Enrollment with record does not exist')
 
-				enrollment_type = EnrollmentType.objects.filter(product_item__institution=institution)
-
-				if 'product_item_id' in payload.keys():
-					enrollment_type = enrollment_type.filter(product_item__id=payload['product_item_id'])
-
-				if enrollment_type.exists():
+				if enrollment_type_list.exists():
 	                                status = EnrollmentStatus.objects.get(name='ACTIVE')
 
-        	                        enrollment = Enrollment(record=record, status=status, enrollment_type=enrollment_type[0])
+        	                        enrollment = Enrollment(record=record, status=status, enrollment_type=enrollment_type_list[0])
 
                 	                if 'alias' in payload.keys():
                         	                enrollment.alias = payload['alias']
                                 	else:
-						alias = institution.name if institution else ''
 						if 'full_names' in payload.keys():
 							alias = payload['full_names']
 						elif 'first_name' in payload.keys() or 'last_name' in payload.keys() or 'middle_name' in payload.keys():
@@ -421,6 +394,8 @@ class System(Wrappers):
 								alias = '%s %s' % (alias, payload['middle_name'])
 							if 'last_name' in payload.keys():
 								alias = '%s %s' % (alias, payload['last_name'])
+						else:
+							alias = enrollment_type_list[0].name 
 
                         	                enrollment.alias = alias.strip()
 
