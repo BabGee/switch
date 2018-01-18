@@ -38,6 +38,7 @@ class PageInputGroupForm(ModelForm):
 
 
 class PageInputForm(ModelForm):
+
     class Meta:
         model = PageInput
         exclude = []
@@ -70,6 +71,7 @@ class PageGroupPageForm(forms.ModelForm):
 # todo should extend
 class PageInputVariableForm(ModelForm):
     input_variable_id = forms.IntegerField(required=False)
+    item_level = forms.IntegerField(required=False)
 
     input_variable_name = forms.CharField(max_length=45, required=False)
     input_variable_variable_type = forms.CharField(max_length=45,required=False)

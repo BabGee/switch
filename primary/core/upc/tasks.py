@@ -488,7 +488,7 @@ class System(Wrappers):
 
 				if gateway_profile_device_list.exists():
 					session_gateway_profile_device = gateway_profile_device_list[0]
-					hash_pin = crypt.crypt(str(payload['code']), str(session_gateway_profile_device.gateway_profile.id))
+					hash_pin = crypt.crypt(str(payload['one_time_code']), str(session_gateway_profile_device.gateway_profile.id))
 					if hash_pin == session_gateway_profile_device.activation_code:
 						session_gateway_profile_device.device_id = payload['fingerprint']
 						session_gateway_profile_device.save()

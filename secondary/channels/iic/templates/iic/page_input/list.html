@@ -41,6 +41,19 @@
                 <h3>{{ page_input.page_input }}</h3>
                 <p>
 
+
+                    page <strong class="editable"
+                                 data-type="text"
+                                 data-name="page"
+                                 data-pk="{{ page_input.pk }}"
+                                 data-url="/iic_editor/page_inputs/">{{ page_input.page.pk }}</strong> |
+
+                    page input group <strong class="editable"
+                                 data-type="text"
+                                 data-name="page_input_group"
+                                 data-pk="{{ page_input.pk }}"
+                                 data-url="/iic_editor/page_inputs/">{{ page_input.page_input_group.pk }}</strong>
+                <br>
                     <strong>{{ page_input.input_variable.variable_type }}</strong> |
                     pk <strong>{{ page_input.pk }}</strong> |
                     input_variable_pk <strong>{{ page_input.input_variable.pk }}</strong> |
@@ -78,6 +91,8 @@
                                 Input Variable Usage Count : <strogn>{{ page_input.input_variable.pageinput_set.count }}</strogn>
 
                     <br>
+                Triggers {{ page_input.trigger_list }}
+                <br>
                     <a target="_blank" href="/admin/iic/pageinput/{{ page_input.pk }}/change/">Edit</a> |
                     <a target="_blank" href="/admin/iic/inputvariable/{{ page_input.input_variable.pk }}/change/">Edit Input Variable</a> |
                     <a href="#" class="visibility-toggle" id="{{ page_input.pk }}">

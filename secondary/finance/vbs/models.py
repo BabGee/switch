@@ -255,11 +255,13 @@ class LoanActivity(models.Model):
 	processed = models.BooleanField(default=False)
 	gateway_profile = models.ForeignKey(GatewayProfile)
 	status = models.ForeignKey(TransactionStatus)
-	follow_on_loan = models.ForeignKey(Loan, related_name="follow_on_loan")
+	follow_on_loan = models.ManyToManyField(Loan, related_name="follow_on_loan")
 	channel = models.ForeignKey(Channel)
 	gateway = models.ForeignKey(Gateway)
 	institution = models.ForeignKey(Institution, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.loan, self.gateway_profile, self.status)
+	def follow_on_loan_list(self):
+		return "\n".join([a.loan_type.name for a in self.follow_on_loan.all()])
 
 

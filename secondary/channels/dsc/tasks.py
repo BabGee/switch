@@ -174,11 +174,10 @@ class Wrappers:
         try:
             model_class = apps.get_model(data.query.module_name, data.query.model_name)
             # model_class = globals()[data.query.model_name]
-
             filters = data.query.filters
             date_filters = data.query.date_filters
             time_filters = data.query.time_filters
-            token_filters = data.query.token_filters
+            token_filter = data.query.token_filter
 
             not_filters = data.query.not_filters
             or_filters = data.query.or_filters
@@ -186,7 +185,7 @@ class Wrappers:
             institution_filters = data.query.institution_filters
             gateway_filters = data.query.gateway_filters
             gateway_profile_filters = data.query.gateway_profile_filters
-            profile_filters = data.query.profile_filters
+
             list_filters = data.query.list_filters
 
             values = data.query.values
@@ -199,7 +198,7 @@ class Wrappers:
             filter_data = {}
             date_filter_data = {}
             time_filter_data = {}
-            token_filters_data = {}
+            token_filter_data = {}
 
             not_filter_data = {}
             or_filter_data = {}
@@ -207,16 +206,12 @@ class Wrappers:
             institution_filter_data = {}
             gateway_filter_data = {}
             gateway_profile_filter_data = {}
-            profile_filter_data = {}
+
 	    list_filter_data = {}
-		
 
 	    #lgr.info('\n\n\n')
 	    #lgr.info('Model Name: %s' % data.query.name)
             report_list = model_class.objects.all()
-
-
-
 
 	    #Gateway Filter is a default Filter
 	    #lgr.info('Gateway Filters Report List Count: %s' % report_list.count())
@@ -299,18 +294,12 @@ class Wrappers:
 
 	    #lgr.info('Time Filters Report List Count: %s' % report_list.count())
 	    if or_filters not in [None,'']:
+                # for a in filters.split("&"):
                 for f in or_filters.split("|"):
-		    of_list = f.split('%')
-		    if len(of_list)==2:
-			if 'q' in payload.keys() and payload['q'] not in ['', None]:
-				if f not in ['',None]: or_filter_data[of_list[1] + '__icontains'] = payload['q']
-			if of_list[0] in payload.keys():
-				if f not in ['',None]: or_filter_data[of_list[1] + '__icontains'] = payload[of_list[0]]
-		    else:
-			if 'q' in payload.keys() and payload['q'] not in ['', None]:
-				if f not in ['',None]: or_filter_data[f + '__icontains'] = payload['q']
-			if f in payload.keys():
-				if f not in ['',None]: or_filter_data[f + '__icontains'] = payload[f]
+            	    if 'q' in payload.keys() and payload['q'] not in ['', None]:
+                    	if f not in ['',None]: or_filter_data[f + '__icontains'] = payload['q']
+            	    if f in payload.keys():
+                    	if f not in ['',None]: or_filter_data[f + '__icontains'] = payload[f]
 
                 if len(or_filter_data):
                     or_query = reduce(operator.or_, (Q(k) for k in or_filter_data.items()))
@@ -336,17 +325,17 @@ class Wrappers:
                     report_list = report_list.filter(and_query)
 
 	    #lgr.info('And Filters Report List Count: %s' % report_list.count())
-            if token_filters not in ['',None]:
-                for f in token_filters.split("|"):
+            if token_filter not in ['',None]:
+                for f in token_filter.split("|"):
             	    if 'csrfmiddlewaretoken' in payload.keys() and payload['csrfmiddlewaretoken'] not in ['', None]:
-                    	if f not in ['',None]: token_filters_data[f + '__iexact'] = payload['csrfmiddlewaretoken']
+                    	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['csrfmiddlewaretoken']
             	    elif 'csrf_token' in payload.keys() and payload['csrf_token'] not in ['', None]:
-                    	if f not in ['',None]: token_filters_data[f + '__iexact'] = payload['csrf_token']
+                    	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['csrf_token']
             	    elif 'token' in payload.keys() and payload['token'] not in ['', None]:
-                    	if f not in ['',None]: token_filters_data[f + '__iexact'] = payload['token']
+                    	if f not in ['',None]: token_filter_data[f + '__iexact'] = payload['token']
 
-                if len(token_filters_data):
-                    query = reduce(operator.and_, (Q(k) for k in token_filters_data.items()))
+                if len(token_filter_data):
+                    query = reduce(operator.and_, (Q(k) for k in token_filter_data.items()))
 		    #lgr.info('Query: %s' % query)
 
                     report_list = report_list.filter(query)
@@ -384,6 +373,7 @@ class Wrappers:
 		    #lgr.info('Institution Query: %s' % institution_query)
                     report_list = report_list.filter(institution_query)
 
+
 	    #lgr.info('Gateway Profile Filters Report List Count: %s' % report_list.count())
             if gateway_profile_filters not in ['', None]:
                 for f in gateway_profile_filters.split("|"):
@@ -396,19 +386,6 @@ class Wrappers:
                 if len(gateway_profile_filter_data):
                     gateway_profile_query = reduce(operator.and_, (Q(k) for k in gateway_profile_filter_data.items()))
                     report_list = report_list.filter(gateway_profile_query)
-
-	    #lgr.info('Profile Filters Report List Count: %s' % report_list.count())
-            if profile_filters not in ['', None]:
-                for f in profile_filters.split("|"):
-		    #MQTT doesn't filter institution for push notifications
-		    if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
-			pass
-		    else:
-			if f not in ['',None]: profile_filter_data[f] = gateway_profile.user.profile
-
-                if len(profile_filter_data):
-                    profile_query = reduce(operator.and_, (Q(k) for k in profile_filter_data.items()))
-                    report_list = report_list.filter(profile_query)
 
 	    #lgr.info('Date Filters Report List Count: %s' % report_list.count())
             if 'start_date' in payload.keys():
@@ -441,78 +418,6 @@ class Wrappers:
                     profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
                     end_date = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
                 report_list = report_list.filter(date_created__lte=end_date)
-
-
-	    join_model_class = None
-	    if data.query.join_module_name and data.query.join_model_name and (data.query.join_fields or \
-	     data.query.join_manytomany_fields):
-		try:join_model_class = apps.get_model(data.query.join_module_name, data.query.join_model_name)
-		except: pass
-		if join_model_class:
-
-			join_gateway_filters = data.query.join_gateway_filters
-			join_gateway_profile_filters = data.query.join_gateway_profile_filters
-			join_profile_filters = data.query.join_profile_filters
-			join_fields = data.query.join_fields
-			join_manytomany_fields = data.query.join_manytomany_fields
-
-			join_gateway_filters_data = {}
-			join_gateway_profile_filters_data  = {}
-			join_profile_filters = {}
-			join_fields_data = {}
-			join_manytomany_fields_data = {}
-
-            		join_report_list = join_model_class.objects.all()
-
-			if join_gateway_filters not in ['', None]:
-				for f in join_gateway_filters.split("|"):
-					if f not in ['',None]: join_gateway_filter_data[f] = gateway_profile.gateway
-				if len(join_gateway_filter_data):
-					join_gateway_query = reduce(operator.and_, (Q(k) for k in gateway_filter_data.items()))
-					join_report_list = join_report_list.filter(join_gateway_query)
-
-            		if join_gateway_profile_filters not in ['', None]:
-				for f in join_gateway_profile_filters.split("|"):
-					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
-						pass
-					else:
-						if f not in ['',None]: join_gateway_profile_filter_data[f] = gateway_profile
-
-				if len(join_gateway_profile_filter_data):
-					gateway_profile_query = reduce(operator.and_, (Q(k) for k in join_gateway_profile_filter_data.items()))
-					report_list = report_list.filter(gateway_profile_query)
-
-			if join_profile_filters not in ['', None]:
-				for f in join_profile_filters.split("|"):
-					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
-						pass
-					else:
-						if f not in ['',None]: join_profile_filter_data[f] = gateway_profile.user.profile
-
-				if len(join_profile_filter_data):
-					profile_query = reduce(operator.and_, (Q(k) for k in join_profile_filter_data.items()))
-					report_list = report_list.filter(profile_query)
-
-        	    	if join_fields not in ['',None]:
-                		for i in join_fields.split("|"):
-	                	    k,v = i.split('%')
-				    record = join_report_list.values_list(v,flat=True)
-				    join_fields_data[k+'__in'] = list(record)
-
-        	        	if len(join_fields_data):
-	                	    query = reduce(operator.and_, (Q(k) for k in join_fields_data.items()))
-                		    report_list = report_list.filter(query)
-
-        	    	if join_manytomany_fields not in ['',None]:
-                		for i in join_manytomany_fields.split("|"):
-	                	    k,v = i.split('%')
-				    record = join_report_list.values_list(v,flat=True)
-				    join_manytomany_fields[k+'__in'] = list(record)
-
-        	        	if len(join_manytomany_fields_data):
-	                	    query = reduce(operator.and_, (Q(k) for k in join_manytomany_fields_data.items()))
-                		    report_list = report_list.filter(query)
-
 
 
 	    #lgr.info('Report End Date')
@@ -604,10 +509,10 @@ class Wrappers:
 		    args.append(k.strip())
                     params['cols'].append({"label": k.strip(), "type": "number", "value": k.strip()})
                     if k <> v:kwargs[k.strip()] = Count(v.strip())
-		lgr.info('Count: %s' % report_list.count())
+
                 report_list = report_list.annotate(**kwargs)
 
-	    #lgr.info('Report Count Values: %s' % report_list)
+	    #lgr.info('Report Count Values')
             if sum_values not in [None,'']:
                 kwargs = {}
                 for i in sum_values.split('|'):
@@ -719,7 +624,6 @@ class Wrappers:
 
 	    ##########################################################################
 
-	    #lgr.info('Report List: %s' % report_list)
 
             ct = report_list.count()
 	    #lgr.info('Count: %s' % ct)
@@ -732,14 +636,6 @@ class Wrappers:
             if 'order_by' in payload.keys():
 		order_by = payload['order_by'].split(',')
                 report_list = report_list.order_by(*order_by)
-	    else:
-		if values not in [None,'']:
-        		i  = values.split('|')[0]
-                	k,v = i.split('%')
-                	report_list = report_list.order_by(v)
-		else:
-                	report_list = report_list.order_by('id')
-
             #
             # report_list = report_list[:]
             #

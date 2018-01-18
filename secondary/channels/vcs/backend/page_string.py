@@ -755,6 +755,7 @@ class PageString(ServiceCall, Wrappers):
 
 					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'),Q(processed=False),\
 										~Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
+										Q(follow_on_loan__id=F('loan__id')),\
 										Q(gateway_profile__user__profile=F('loan__account__profile')),\
 										Q(loan__gateway=code[0].gateway),\
 										Q(loan__credit=True)).\
@@ -800,6 +801,7 @@ class PageString(ServiceCall, Wrappers):
 
 					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'),Q(processed=False),\
 										~Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
+										Q(follow_on_loan__id=F('loan__id')),\
 										Q(gateway_profile__user__profile=F('loan__account__profile')),\
 										Q(loan__gateway=code[0].gateway),\
 										Q(loan__credit=False)).\
@@ -818,6 +820,16 @@ class PageString(ServiceCall, Wrappers):
 
 					if loan_activity.exists():
 						for i in loan_activity:
+							'''
+							amount = i.loan.amount
+
+							all_loan_activity = LoanActivity.objects.filter(Q(loan=i.loan, loan__status__name='APPROVED')\
+										|Q(follow_on_loan=i.loan,follow_on_loan__status__name='APPROVED'))
+							for a in all_loan_activity:
+								if a.loan ==
+							'''
+
+
        		                                        amount = '{0:,.2f}'.format(i.loan.amount)
                		                                name = '%s %s%s %s' % (i.gateway_profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
 

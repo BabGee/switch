@@ -584,12 +584,12 @@ class System(Wrappers):
 					rnd = random.SystemRandom()
 					prefix = ''.join(rnd.choice(chars) for i in range(3))
 					suffix = ''.join(rnd.choice(nums) for i in range(2,4))
-					trial = '%s-%s%s' % (pre_reference, prefix.upper()[:6], suffix)
+					trial = '%s-%s%s' % (pre_reference.upper()[:8], prefix.upper(), suffix)
 					#reference_list = PurchaseOrder.objects.filter(reference=trial,status__name='UNPAID',\
 					#		expiry__gte=timezone.now()).order_by('-reference')[:1]
 
 					reference_list = PurchaseOrder.objects.filter(reference=trial).order_by('-reference')[:1]
-					if len(reference_list)>0:
+					if reference_list.exists():
 						return reference(pre_reference)
 					else:
 						return trial
@@ -879,6 +879,8 @@ class System(Wrappers):
 				delivery_activity.delivery_type.add(delivery_type)
 
 				# payload["delivery_activity"] = delivery_activity.pk
+			delivery.status = DeliveryStatus.objects.get(name='ASSIGNED')
+			delivery.save()
 
 			payload["response_status"] = "00"
 			payload["response"] = "Delivery Activities Created"
@@ -887,6 +889,111 @@ class System(Wrappers):
 			lgr.info("Error on Creating Delivery Activities: %s" % e)
 
 		return payload
+
+
+	def order_status(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			if gateway_profile.access_level == AccessLevel.objects.get(name='DELIVERY'):
+				delivery_activity = DeliveryActivity.objects.get(id=payload['delivery_activity_id'])
+
+				purchase_order = delivery_activity.delivery.order
+
+				payload['purchase_order_id'] = purchase_order.pk
+
+				delivery_activities = DeliveryActivity.objects.filter(delivery__order=purchase_order)
+				# accepted_by_me
+				if delivery_activities.filter(profile=gateway_profile.user.profile,status__name='ACCEPTED').exists():
+					payload['trigger'] = 'accepted_by_me%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				# accepted_by_else
+				elif delivery_activities.filter(status__name='ACCEPTED').exists():
+					payload['trigger'] = 'accepted_by_else%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
+				else:
+					payload['trigger'] = 'accepted_by_none%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
+
+			else:
+				purchase_order = PurchaseOrder.objects.get(id = payload['purchase_order_id'])
+				delivery = Delivery.objects.get(order=purchase_order)
+				if delivery.status.name =='WAITTING CONFIRMATION':
+					payload['trigger'] = 'should_confirm%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
+
+
+			payload["response_status"] = "00"
+			payload["response"] = "Got Purchase Order Details"
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on getting Purchase Order Details: %s" % e)
+
+		return payload
+
+
+	def accept_delivery_activity(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			delivery_activity = DeliveryActivity.objects.get(id=payload['delivery_activity_id'])
+
+			purchase_order = delivery_activity.delivery.order
+			payload['purchase_order_id'] = purchase_order.pk
+
+			delivery_activity.delivery.status =  DeliveryStatus.objects.get(name='IN_PROCESS')
+			delivery_activity.delivery.save()
+
+
+			DeliveryActivity.objects.filter(delivery__order=purchase_order)\
+				.update(status = DeliveryActivityStatus.objects.get(name='REJECTED'))
+
+			delivery_activity.status = DeliveryActivityStatus.objects.get(name='ACCEPTED')
+			delivery_activity.save()
+
+			payload["response_status"] = "00"
+			payload["response"] = "Delivery Activity Accepted"
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on accepting Delivery Activity: %s" % e)
+
+		return payload
+
+	def delivery_done(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			delivery_activity = DeliveryActivity.objects.get(id=payload['delivery_activity_id'])
+
+			purchase_order = delivery_activity.delivery.order
+			payload['purchase_order_id'] = purchase_order.pk
+
+			delivery_activity.delivery.status =  DeliveryStatus.objects.get(name='WAITTING CONFIRMATION')
+			delivery_activity.delivery.save()
+
+			delivery_activity.status = DeliveryActivityStatus.objects.get(name='COMPLETED')
+			delivery_activity.save()
+
+			payload["response_status"] = "00"
+			payload["response"] = "Delivery Activity COMPLETED"
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Completing Delivery Activity: %s" % e)
+
+		return payload
+
+	def delivery_confirm(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			#purchase_order = PurchaseOrder.objects.get()
+			delivery = Delivery.objects.get(id=payload['delivery_id'])
+
+			delivery.status = DeliveryStatus.objects.get(name='DELIVERED')
+			delivery.save()
+
+			payload["response_status"] = "00"
+			payload["response"] = "Delivery Activity confirmed"
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Confirming Delivery Activity: %s" % e)
+
+		return payload
+
+
 
 
 class Trade(System):

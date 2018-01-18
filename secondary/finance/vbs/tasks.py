@@ -148,19 +148,13 @@ class System(Wrappers):
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
 	
 				channel = Channel.objects.get(id=int(payload['chid']))
-				follow_on_loan = Loan.objects.get(id=payload['loan_id'])
-				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
-							response_status=response_status,gateway_profile=gateway_profile,\
-							status=transaction_status,follow_on_loan=follow_on_loan,\
-							channel=channel,gateway=gateway_profile.gateway)
-
-				if 'comment' in payload.keys():
-					loan_activity.comment = payload['comment']
-
-				if 'institution_id' in payload.keys():
-					loan_activity.institution = Institution.objects.get(id=payload['institution_id'])
-
-				loan_activity.save()
+				if 'loan_id' in payload.keys():
+					follow_on_loan = Loan.objects.get(id=payload['loan_id'])
+				else:
+					follow_on_loan = loan
+				loan_activity_list  = LoanActivity.objects.filter(loan=follow_on_loan)
+				if loan_activity_list.exists():
+					loan_activity_list[0].follow_on_loan.add(follow_on_loan)
 
 				payload['response'] = 'Loan Offer Logged'
 				payload['response_status'] = '00'
@@ -225,10 +219,9 @@ class System(Wrappers):
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
 
 				channel = Channel.objects.get(id=int(payload['chid']))
-				follow_on_loan = Loan.objects.get(id=payload['loan_id'])
 				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
 							response_status=response_status,gateway_profile=gateway_profile,\
-							status=transaction_status,follow_on_loan=follow_on_loan,\
+							status=transaction_status,\
 							channel=channel,gateway=gateway_profile.gateway)
 
 				if 'comment' in payload.keys():
@@ -237,8 +230,14 @@ class System(Wrappers):
 				if 'institution_id' in payload.keys():
 					loan_activity.institution = Institution.objects.get(id=payload['institution_id'])
 
-
 				loan_activity.save()
+
+				if 'loan_id' in payload.keys():
+					follow_on_loan = Loan.objects.get(id=payload['loan_id'])
+				else:
+					follow_on_loan = loan
+
+				loan_activity.follow_on_loan.add(follow_on_loan)
 
 				payload['response'] = 'Loan Request Logged'
 				payload['response_status'] = '00'
@@ -382,7 +381,7 @@ class System(Wrappers):
 				channel = Channel.objects.get(id=int(payload['chid']))
 				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
 							response_status=response_status,gateway_profile=gateway_profile,\
-							status=transaction_status,follow_on_loan=loan,\
+							status=transaction_status,\
 							channel=channel,gateway=gateway_profile.gateway)
 
 				if 'comment' in payload.keys():

@@ -675,6 +675,7 @@ def page_input_create(request, gateway_pk, service, page_group_pk, page_pk, page
 
             # page_input
             # item_level
+            page_input.item_level = int(page_input_group.pageinput_set.order_by('item_level').last().item_level)+1
 
             # input_variable
             #   name,variable_type,validate_min,validate_max
@@ -946,15 +947,27 @@ def page_put(request):
 
 def page_input_put(request):
     data = request.POST
-    new_levels = [int(x) for x in data.getlist('value[]')]
     page_input = PageInput.objects.get(pk=data.get('pk'))
-    current_levels = page_input.access_level.values_list('pk', flat=True)
+    field = data.get('name')
 
-    remove_levels = list(set(current_levels).difference(new_levels))
-    add_levels = list(set(new_levels).difference(current_levels))
+    if field == 'page_input_group':
+        page_input.page_input_group_id = data.get('value')
+        page_input.save()
+    elif field == 'page':
+        page_input.page_id = data.get('value')
+        page_input.save()
 
-    page_input.access_level.add(*AccessLevel.objects.filter(pk__in=add_levels))
-    page_input.access_level.remove(*AccessLevel.objects.filter(pk__in=remove_levels))
+    else:
+        # TODO this should use name too and not be default
+        new_levels = [int(x) for x in data.getlist('value[]')]
+
+        current_levels = page_input.access_level.values_list('pk', flat=True)
+
+        remove_levels = list(set(current_levels).difference(new_levels))
+        add_levels = list(set(new_levels).difference(current_levels))
+
+        page_input.access_level.add(*AccessLevel.objects.filter(pk__in=add_levels))
+        page_input.access_level.remove(*AccessLevel.objects.filter(pk__in=remove_levels))
 
     return HttpResponse(status=200)
 
