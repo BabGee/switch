@@ -255,7 +255,8 @@ class LoanActivity(models.Model):
 	processed = models.BooleanField(default=False)
 	gateway_profile = models.ForeignKey(GatewayProfile)
 	status = models.ForeignKey(TransactionStatus)
-	follow_on_loan = models.ManyToManyField(Loan, related_name="follow_on_loan")
+	follow_on_loan = models.ManyToManyField(Loan, blank=True, related_name="follow_on_loan")
+	loan_approval = models.ManyToManyField(Loan, blank=True, related_name="loan_approval")
 	channel = models.ForeignKey(Channel)
 	gateway = models.ForeignKey(Gateway)
 	institution = models.ForeignKey(Institution, null=True, blank=True)
@@ -263,5 +264,6 @@ class LoanActivity(models.Model):
 		return u'%s %s %s' % (self.loan, self.gateway_profile, self.status)
 	def follow_on_loan_list(self):
 		return "\n".join([a.loan_type.name for a in self.follow_on_loan.all()])
-
+	def loan_approval_list(self):
+		return "\n".join([a.loan_type.name for a in self.loan_approval.all()])
 

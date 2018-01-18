@@ -68,27 +68,28 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			loan_activity = LoanActivity.objects.filter(loan__id=payload['loan_id'],\
-						follow_on_loan__account__profile=gateway_profile.user.profile)
+			loan_activity = LoanActivity.objects.filter(loan__id=payload['loan_id'])
+
+
 			if loan_activity.exists():
-				approval = {}
-				approval['Accept'] = 'APPROVED'
-				approval['Reject'] = 'REJECTED'
-				status = approval[str(payload['approval'])]
 
-				activity = loan_activity[0]
-				loan_status = LoanStatus.objects.get(name=status)
+				loan_list = loan_activity[0].follow_on_loan.filter(account__profile=gateway_profile.user.profile)
+				if loan_list.exists():
+					approval = {}
+					approval['Accept'] = 'APPROVED'
+					approval['Reject'] = 'REJECTED'
+					status = approval[str(payload['approval'])]
 
-				if activity.follow_on_loan.credit == False:
-					activity.follow_on_loan.status = loan_status
-					activity.follow_on_loan.save()
+					loan_status = LoanStatus.objects.get(name=status)
+
+					loan.status = loan_status
+					loan.save()
+
+					payload['response'] = 'Loan Approval Logged'
+					payload['response_status'] = '00'
 				else:
-					activity.loan.status = loan_status
-					activity.loan.save()
-
-
-				payload['response'] = 'Loan Approval Logged'
-				payload['response_status'] = '00'
+					payload['response'] = 'Loan Approval Unknown'
+					payload['response_status'] = '25'
 			else:
 				payload['response'] = 'Loan Approval Unknown'
 				payload['response_status'] = '25'
@@ -150,11 +151,8 @@ class System(Wrappers):
 				channel = Channel.objects.get(id=int(payload['chid']))
 				if 'loan_id' in payload.keys():
 					follow_on_loan = Loan.objects.get(id=payload['loan_id'])
-				else:
-					follow_on_loan = loan
-				loan_activity_list  = LoanActivity.objects.filter(loan=follow_on_loan)
-				if loan_activity_list.exists():
-					loan_activity_list[0].follow_on_loan.add(follow_on_loan)
+					loan_activity = LoanActivity.objects.get(loan=loan)
+					loan_activity.follow_on_loan.add(follow_on_loan)
 
 				payload['response'] = 'Loan Offer Logged'
 				payload['response_status'] = '00'
@@ -234,10 +232,7 @@ class System(Wrappers):
 
 				if 'loan_id' in payload.keys():
 					follow_on_loan = Loan.objects.get(id=payload['loan_id'])
-				else:
-					follow_on_loan = loan
-
-				loan_activity.follow_on_loan.add(follow_on_loan)
+					loan_activity.follow_on_loan.add(follow_on_loan)
 
 				payload['response'] = 'Loan Request Logged'
 				payload['response_status'] = '00'
@@ -305,7 +300,7 @@ class System(Wrappers):
 				channel = Channel.objects.get(id=int(payload['chid']))
 				loan_activity = LoanActivity(loan=loan,request=self.transaction_payload(payload),\
 							response_status=response_status,gateway_profile=gateway_profile,\
-							status=transaction_status,follow_on_loan=loan,\
+							status=transaction_status,\
 							channel=channel,gateway=gateway_profile.gateway)
 
 				if 'comment' in payload.keys():

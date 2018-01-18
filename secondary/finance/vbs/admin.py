@@ -105,7 +105,7 @@ admin.site.register(Loan, LoanAdmin)
 class LoanActivityAdmin(admin.ModelAdmin):
 	list_display = ('id','loan','request','transaction_reference',\
 			'response_status','comment','processed','gateway_profile',\
-			'status','follow_on_loan_list','channel','gateway','institution',)
+			'status','follow_on_loan_list','loan_approval_list','channel','gateway','institution',)
 admin.site.register(LoanActivity, LoanActivityAdmin)
 
 

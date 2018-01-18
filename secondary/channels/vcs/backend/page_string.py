@@ -753,7 +753,7 @@ class PageString(ServiceCall, Wrappers):
 
 					params = payload
 
-					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'),Q(processed=False),\
+					loan_activity = Loan.objects.filter(Q(status__name='CREATED'),Q(credit=True),\
 										~Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
 										Q(follow_on_loan__id=F('loan__id')),\
 										Q(gateway_profile__user__profile=F('loan__account__profile')),\
