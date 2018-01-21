@@ -492,7 +492,8 @@ class System(Wrappers):
 					amount=Decimal(payload['amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					balance_bf=session_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
-				if 'loan_time' in payload.keys():
+
+				if 'is_loan' in payload.keys() and payload['is_loan'] and 'loan_time' in payload.keys():
 					session_manager.credit_time = int(payload['loan_time'])
 					session_manager.credit_due_date = timezone.now() + timezone.timedelta(days=int(payload['loan_time']))
 
