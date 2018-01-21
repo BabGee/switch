@@ -75,6 +75,28 @@ urlpatterns = [
             ])),
             url(r'^(?P<service>[\w\ ]+)/', include([
                 url(r'^$', gateway_service), # todo detail view
+                url(r'^interface/', include([
+                    url(r'^$', interface),
+                    # url(r'^create/$', page_group_create),
+                    url(r'^(?P<page_group_pk>\d+)/', include([
+                        url(r'^$', interface),
+                        url(r'^(?P<page_pk>\d+)/', include([
+                            url(r'^$', interface),
+                            url(r'^(?P<page_input_group_pk>\d+)/', include([
+                                url(r'^$', interface),
+                                # url(r'^page_inputs/', include([
+                                #     url(r'^$', page_input_list),
+                                #     url(r'^order/$', page_input_order),
+                                #     url(r'^create/$', page_input_create),
+                                #     url(r'^(?P<page_input_pk>\d+)/', include([
+                                #         url(r'^$', page_input_detail),
+                                #         url(r'^copy/$', page_input_copy),
+                                #     ])),
+                                # ])),
+                            ])),
+                        ])),
+                    ])),
+                ])),
                 url(r'^page_groups/', include([
                     url(r'^$', page_group_list),
                     url(r'^create/$', page_group_create),

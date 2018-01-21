@@ -638,7 +638,7 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'my_loan_request':
 
-					from secondary.finance.vbs.models import LoanActivity
+					from thirdparty.wahi.models import LoanActivity
 
 					params = payload
 
@@ -680,14 +680,24 @@ class PageString(ServiceCall, Wrappers):
 
 
 				elif variable_key == 'p2p_loan_details':
-					from secondary.finance.vbs.models import Loan
+					from thirdparty.wahi.models import Loan
 
 					params = payload
 
 					loan = Loan.objects.get(id=params['loan_id'])
 
+					amount = loan.amount
+
+
+					given_amount = Decimal(0)
+					approved_loan = Loan.objects.filter(follow_on_loan=loan,status__name='APPROVED')
+					for f in approved_loan:
+						given_amount = given_amount + f.amount
+
+					amount = amount - given_amount
+
 					item = ''
-					cost = '{0:,.2f}'.format(loan.amount) if loan.amount else ''
+					cost = '{0:,.2f}'.format(amount) if amount else ''
 					item = '%s@(%s%%)-%s %s' % (loan.loan_type.name, loan.interest_rate,\
 									loan.currency.code,\
 									cost)
@@ -697,28 +707,25 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'p2p_loan_approval':
 
-					from secondary.finance.vbs.models import LoanActivity
+					from thirdparty.wahi.models import LoanActivity
 
 					params = payload
 
-					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'),Q(loan__status__name='CREATED'),Q(processed=False),\
-										Q(follow_on_loan__account__profile=navigator.session.gateway_profile.user.profile),\
-										~Q(loan__id=F('follow_on_loan__id')),\
-										Q(loan__gateway=code[0].gateway)).\
-										order_by('-date_created')
+					loan_activity = LoanActivity.objects.filter(Q(loan__status__name='CREATED'),Q(processed=False),\
+							Q(loan__follow_on_loan__account__profile=navigator.session.gateway_profile.user.profile),\
+							Q(loan__gateway=code[0].gateway)).\
+							order_by('-date_created')
+
 					lgr.info('Loan Activity: %s' % loan_activity)
 
 					if 'institution_id' in params.keys():
 						loan_activity = loan_activity.filter(Q(loan__institution__id=params['institution_id'])\
 											|Q(loan__institution=None))
-						lgr.info('Institution ID')
 					elif code[0].institution:
-						lgr.info('Code Institution')
 						loan_activity = loan_activity.filter(Q(loan__institution=code[0].institution)|Q(loan__institution=None))
 					else:
 						lgr.info('None')
-						loan_activity = loan_activity.filter(loan__institution=None)
-
+						loan_activity = loan_activity.filter(institution=None)
 
 					lgr.info('Loan Activity: %s' % loan_activity)
 					loan_activity = loan_activity[:10]
@@ -728,8 +735,8 @@ class PageString(ServiceCall, Wrappers):
 
 					if loan_activity.exists():
 						for i in loan_activity:
-       		                                        amount = '{0:,.2f}'.format(i.loan.amount)
-               		                                name = '%s %s%s %s' % (i.gateway_profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
+							amount = '{0:,.2f}'.format(i.loan.amount)
+							name = '%s %s%s %s' % (i.loan.gateway_profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
@@ -738,6 +745,7 @@ class PageString(ServiceCall, Wrappers):
 
 							item_list.append(i.loan.id)
 							count+=1
+
 						navigator.item_list = json.dumps(item_list)
 						navigator.save()
 					else:
@@ -749,14 +757,14 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'p2p_loan_offer':
 
-					from secondary.finance.vbs.models import LoanActivity
+					from thirdparty.wahi.models import LoanActivity, Loan
 
 					params = payload
 
-					loan_activity = Loan.objects.filter(Q(status__name='CREATED'),Q(credit=True),\
+					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'), Q(processed=False),\
+										Q(loan__status__name='CREATED'),Q(loan__follow_on_loan=None),\
 										~Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
-										Q(follow_on_loan__id=F('loan__id')),\
-										Q(gateway_profile__user__profile=F('loan__account__profile')),\
+										Q(loan__gateway_profile__user__profile=F('loan__account__profile')),\
 										Q(loan__gateway=code[0].gateway),\
 										Q(loan__credit=True)).\
 										order_by('-date_created')
@@ -772,10 +780,17 @@ class PageString(ServiceCall, Wrappers):
 					item_list = []
 					count = 1
 
-					if loan_activity.exists():
-						for i in loan_activity:
-       		                                        amount = '{0:,.2f}'.format(i.loan.amount)
-               		                                name = '%s %s%s %s' % (i.gateway_profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
+					for i in loan_activity:
+						amount = i.loan.amount
+						given_amount = Decimal(0)
+						approved_loan = Loan.objects.filter(follow_on_loan=i.loan,status__name='APPROVED')
+						for f in approved_loan:
+							given_amount = given_amount + f.amount
+
+						amount = amount - given_amount
+						if amount > Decimal(0):
+							amount = '{0:,.2f}'.format(amount)
+							name = '%s %s%s %s' % (i.loan.gateway_profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
@@ -784,9 +799,10 @@ class PageString(ServiceCall, Wrappers):
 
 							item_list.append(i.loan.id)
 							count+=1
-						navigator.item_list = json.dumps(item_list)
-						navigator.save()
-					else:
+
+					navigator.item_list = json.dumps(item_list)
+					navigator.save()
+					if len(item_list)==0:
 						item = 'No Record Available'
 
 					lgr.info('Your List: %s' % item)
@@ -795,14 +811,14 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'p2p_loan_request':
 
-					from secondary.finance.vbs.models import LoanActivity
+					from thirdparty.wahi.models import LoanActivity, Loan
 
 					params = payload
 
-					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'),Q(processed=False),\
+					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'), Q(processed=False),\
+										Q(loan__status__name='CREATED'),Q(loan__follow_on_loan=None),\
 										~Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
-										Q(follow_on_loan__id=F('loan__id')),\
-										Q(gateway_profile__user__profile=F('loan__account__profile')),\
+										Q(loan__gateway_profile__user__profile=F('loan__account__profile')),\
 										Q(loan__gateway=code[0].gateway),\
 										Q(loan__credit=False)).\
 										order_by('-date_created')
@@ -818,20 +834,17 @@ class PageString(ServiceCall, Wrappers):
 					item_list = []
 					count = 1
 
-					if loan_activity.exists():
-						for i in loan_activity:
-							'''
-							amount = i.loan.amount
+					for i in loan_activity:
+						amount = i.loan.amount
+						given_amount = Decimal(0)
+						approved_loan = Loan.objects.filter(follow_on_loan=i.loan,status__name='APPROVED')
+						for f in approved_loan:
+							given_amount = given_amount + f.amount
 
-							all_loan_activity = LoanActivity.objects.filter(Q(loan=i.loan, loan__status__name='APPROVED')\
-										|Q(follow_on_loan=i.loan,follow_on_loan__status__name='APPROVED'))
-							for a in all_loan_activity:
-								if a.loan ==
-							'''
-
-
-       		                                        amount = '{0:,.2f}'.format(i.loan.amount)
-               		                                name = '%s %s%s %s' % (i.gateway_profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
+						amount = amount - given_amount
+						if amount > Decimal(0):
+							amount = '{0:,.2f}'.format(amount)
+							name = '%s %s%s %s' % (i.loan.gateway_profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
@@ -840,9 +853,10 @@ class PageString(ServiceCall, Wrappers):
 
 							item_list.append(i.loan.id)
 							count+=1
-						navigator.item_list = json.dumps(item_list)
-						navigator.save()
-					else:
+
+					navigator.item_list = json.dumps(item_list)
+					navigator.save()
+					if len(item_list)==0:
 						item = 'No Record Available'
 
 					lgr.info('Your List: %s' % item)
@@ -1066,7 +1080,6 @@ class PageString(ServiceCall, Wrappers):
 					page_string = page_string.replace('['+v+']',item)
 
 				elif variable_key == 'loan_time':
-					from secondary.finance.vbs.models import CreditType
 
 					loan_time_list = variable_val.split("|") if variable_val not in ['',None] else []
 					item = ''
@@ -1094,7 +1107,7 @@ class PageString(ServiceCall, Wrappers):
 
 
 				elif variable_key == 'account_type_id':
-					from secondary.finance.vbs.models import Account, CreditType
+					from secondary.finance.vbs.models import Account
 
 					params = payload
 
@@ -1269,7 +1282,7 @@ class PageString(ServiceCall, Wrappers):
 
 
 				elif variable_key == 'account_type_details':
-					from secondary.finance.vbs.models import AccountType, AccountCharge
+					from secondary.finance.vbs.models import AccountType, AccountCharge, SavingsCreditType
 					params = payload
 
 					account_type = AccountType.objects.get(id=params['account_type_id'])
@@ -1316,13 +1329,16 @@ class PageString(ServiceCall, Wrappers):
 					if charge>Decimal(0):
 						item = '%s\nCharges@%s %s' % (item,account_type.product_item.currency.code,'{0:,.2f}'.format(charge))
 
+					loan_amount = unit_cost
+					if 'loan_time' in payload.keys():
+						credit_type = SavingsCreditType.objects.filter(account_type=account_type,\
+									 min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
 
-					if 'loan_time' in params.keys():
-						credit_type = account_type.credit_type.filter(min_time__lte=int(params['loan_time']), max_time__gte=int(params['loan_time']))
-						if credit_type.exists():
-							loan_amount = (((credit_type[0].interest_rate*(int(params['loan_time'])/credit_type[0].interest_time))+100)/100)*unit_cost
-			                                loan_cost = '{0:,.2f}'.format(loan_amount) if loan_amount > 0 else None
-							item = '%s\nLoan Amount@%s %s' % (item,account_type.product_item.currency.code,loan_cost)
+						for c in credit_type:
+							loan_amount = loan_amount + ((c.interest_rate/100)*(int(payload['loan_time'])/c.interest_time)*unit_cost)
+
+	                                loan_cost = '{0:,.2f}'.format(loan_amount) if loan_amount > 0 else None
+					item = '%s\nLoan Amount@%s %s' % (item,account_type.product_item.currency.code,loan_cost)
 
 					page_string = page_string.replace('['+v+']',item)
 

@@ -1,19 +1,6 @@
 from django.contrib.gis.db import models
 from secondary.erp.crm.models import *
 
-class CreditType(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	interest_rate = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) #For Loan Interest Rate
-	interest_time = models.IntegerField(null=True, blank=True, help_text="In Days") #For Loan Interest Rate
-	min_time = models.IntegerField(null=True, blank=True, help_text="In Days") #For Loan Interest Rate
-	max_time = models.IntegerField(null=True, blank=True, help_text="In Days") #For Loan Interest Rate
-	def __unicode__(self):
-		return u'%s %s %s' % (self.name, self.interest_rate, self.interest_time)
-
-
 class AccountType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
@@ -21,21 +8,33 @@ class AccountType(models.Model):
 	deposit_taking = models.BooleanField(default=False) #False For loan accounts
 	min_balance = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	max_balance = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) #For deposit Limits
-	loan_interest_rate = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) #For Loan Interest Rate
-	loan_time = models.IntegerField(null=True, blank=True, help_text="In Days") #For Loan Interest Rate
 	saving_interest_rate = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) #For Saving Interest Rate
 	saving_time = models.IntegerField(null=True, blank=True, help_text="In Days") #For Saving Interest Rate
 	description = models.CharField(max_length=100)
-	compound_interest= models.BooleanField(default=False) #True For compound, false for simple interest
 	daily_withdrawal_limit = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	product_item = models.OneToOneField(ProductItem)
-	credit_type = models.ManyToManyField(CreditType, blank=True)
 	gateway = models.ForeignKey(Gateway)
 	institution = models.ForeignKey(Institution, blank=True, null=True)
+	disburse_deductions = models.BooleanField(default=False)
 	def __unicode__(self):
 		return u'%s %s' % (self.name, self.product_item.currency)
 	def credit_type_list(self):
 		return "\n".join([a.name for a in self.credit_type.all()])
+
+#For Both Savings & Loans (credit = False - Loans, credit = True - Savings)
+class SavingsCreditType(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	account_type = models.ForeignKey(AccountType)
+	credit = models.BooleanField(default=False) #False For loan accounts
+	interest_rate = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) #For Loan Interest Rate
+	interest_time = models.IntegerField(null=True, blank=True, help_text="In Days") #For Loan Interest Rate
+	compound_interest= models.BooleanField(default=False) #True For compound, false for simple interest
+	min_time = models.IntegerField(null=True, blank=True, help_text="In Days") #For Loan Interest Rate
+	max_time = models.IntegerField(null=True, blank=True, help_text="In Days") #For Loan Interest Rate
+	installment_time = models.IntegerField(null=True, blank=True, help_text="In Days") #For Loan Interest Rate
+	def __unicode__(self):
+		return u'%s %s %s' % (self.account_type, self.interest_rate, self.interest_time)
 
 class AccountCharge(models.Model):#Add either withdrawal/deposit charge, add institution & gateway, null=True for specific individual rates
         date_modified  = models.DateTimeField(auto_now=True)
@@ -150,10 +149,24 @@ class AccountManager(models.Model):
 	def credit_overdue_list(self):
 		return "\n".join([a.description for a in self.credit_overdue.all()])
 
-class CreditOverdueActivity(models.Model):
+class SavingsCreditManager(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	account_manager = models.ForeignKey(AccountManager)
+	credit = models.BooleanField(default=False) #False For loan accounts
+	installment_time = models.IntegerField(null=True, blank=True, help_text="In Days") #For Loan Interest Rate
+	amount = models.DecimalField(max_digits=19, decimal_places=2)
+	charge = models.DecimalField(max_digits=19, decimal_places=2)
+	due_date = models.DateTimeField(null=True, blank=True)
+	credit_paid = models.BooleanField(default=False)
+	def __unicode__(self):
+		return u'%s %s %s' % (self.account_manager, self.installment_time, self.due_date)
+
+
+class CreditOverdueManager(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	savings_credit_manager = models.ForeignKey(SavingsCreditManager)
 	credit_overdue = models.ForeignKey(CreditOverdue)
 	response_status = models.ForeignKey(ResponseStatus)
 	processed = models.BooleanField(default=False)
@@ -184,86 +197,4 @@ class InvestmentManager(models.Model):
 	processed = models.BooleanField(default=False)
 	def __unicode__(self):
 		return '%s %s %s %s %s %s' % (self.investment_type, self.account, self.amount, self.share_value, self.balance_bf, self.processed)
-
-class LoanType(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	interest_rate = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) 
-	interest_time = models.IntegerField(null=True, blank=True, help_text="In Days")
-	trigger_service = models.ManyToManyField(Service, blank=True, related_name='trigger_service')
-	product_type = models.ManyToManyField(ProductType, blank=True)
-	credit = models.BooleanField(default=False) #Dr | Cr (Credit/Debit Charge to amount)
-	service = models.ForeignKey(Service, null=True, blank=True)
-	details = models.CharField(max_length=512, default=json.dumps({}))
-	access_level = models.ManyToManyField(AccessLevel, blank=True)
-	institution = models.ManyToManyField(Institution, blank=True)
-	gateway = models.ManyToManyField(Gateway, blank=True)
-	def __unicode__(self):
-		return u'%s %s %s %s' % (self.name, self.description, self.credit, self.service)
-	def product_type_list(self):
-		return "\n".join([a.name for a in self.product_type.all()])
-	def trigger_service_list(self):
-		return "\n".join([a.name for a in self.trigger_service.all()])
-	def institution_list(self):
-		return "\n".join([a.name for a in self.institution.all()])
-	def gateway_list(self):
-		return "\n".join([a.name for a in self.gateway.all()])
-	def access_level_list(self):
-		return "\n".join([a.name for a in self.access_level.all()])
-
-class LoanStatus(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	def __unicode__(self):
-		return u'%s %s' % (self.name, self.description)
-
-class Loan(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	loan_type = models.ForeignKey(LoanType)
-	credit = models.BooleanField(default=False) #Dr | Cr (Credit/Debit Charge to amount)
-	amount = models.DecimalField(max_digits=19, decimal_places=2)
-	security_amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
-	other_loans = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
-	payment_method = models.ForeignKey(PaymentMethod)
-	loan_time = models.IntegerField(help_text="In Days")
-	transaction_reference = models.CharField(max_length=45, null=True, blank=True) #Transaction ID
-	currency = models.ForeignKey(Currency)
-	gateway = models.ForeignKey(Gateway)
-	institution = models.ForeignKey(Institution, blank=True, null=True)
-	comment = models.CharField(max_length=256, null=True, blank=True)
-	account = models.ForeignKey(Account)
-	interest_rate = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) 
-	interest_time = models.IntegerField(null=True, blank=True, help_text="In Days")
-	status = models.ForeignKey(LoanStatus)
-	gateway_profile = models.ForeignKey(GatewayProfile)
-	def __unicode__(self):
-		return u'%s %s %s %s' % (self.id, self.loan_type, self.amount, self.credit)
-
-class LoanActivity(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	loan = models.ForeignKey(Loan)
-	request = models.CharField(max_length=1920)
-	transaction_reference = models.CharField(max_length=45, null=True, blank=True) #Transaction ID
-	response_status = models.ForeignKey(ResponseStatus)
-	comment = models.CharField(max_length=256, null=True, blank=True)
-	processed = models.BooleanField(default=False)
-	gateway_profile = models.ForeignKey(GatewayProfile)
-	status = models.ForeignKey(TransactionStatus)
-	follow_on_loan = models.ManyToManyField(Loan, blank=True, related_name="follow_on_loan")
-	loan_approval = models.ManyToManyField(Loan, blank=True, related_name="loan_approval")
-	channel = models.ForeignKey(Channel)
-	gateway = models.ForeignKey(Gateway)
-	institution = models.ForeignKey(Institution, null=True, blank=True)
-	def __unicode__(self):
-		return u'%s %s %s' % (self.loan, self.gateway_profile, self.status)
-	def follow_on_loan_list(self):
-		return "\n".join([a.loan_type.name for a in self.follow_on_loan.all()])
-	def loan_approval_list(self):
-		return "\n".join([a.loan_type.name for a in self.loan_approval.all()])
 

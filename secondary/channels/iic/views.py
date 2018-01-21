@@ -189,6 +189,63 @@ def page_group_list(request, gateway_pk, service):
     })
 
 
+def interface(request, gateway_pk, service,page_group_pk=None,page_pk=None,page_input_group_pk=None):
+    gateway = Gateway.objects.get(pk=gateway_pk)
+
+    page_inputs = query_page_inputs(gateway, service)
+
+    page_groups = PageGroup.objects.filter(page__pageinput__in=page_inputs).distinct().order_by('item_level')
+
+    # query pages for first page group
+    if page_group_pk:
+        page_group = page_groups.get(pk=page_group_pk)
+    else:
+        page_group = page_groups.first()
+
+
+    # todo use page-inputs to filter, remove pages without page-inputs
+    pages = page_group.page_set.all().order_by('item_level')
+
+    # todo user page to optimize query
+    # query pages from page inputs
+    pages_with_inputs = pages.filter(pageinput__in=page_inputs).distinct()
+    # blank_pages = pages.exclude(pk__in=pages_with_inputs)
+
+    # query page input groups for first page
+    if page_pk:
+        page = pages_with_inputs.get(pk=page_pk)
+    else:
+        page = pages_with_inputs.first()
+    page_input_groups = PageInputGroup.objects.filter(pageinput__in=page_inputs, pageinput__page=page).distinct()
+
+    # query page inputs for first page input group
+    if page_input_group_pk:
+        page_input_group = page_input_groups.get(pk=page_input_group_pk)
+    else:
+        page_input_group = page_input_groups.first()
+
+    page_inputs = page_input_group.pageinput_set.extra(
+        select={
+            'item_level_int': 'CAST(item_level AS INTEGER)'
+        }
+    ).order_by('item_level_int')
+
+    # all().order_by('item_level')
+
+    return render(request, "iic/page_group/interface.html", {
+        'gateway': gateway,
+        'service': service,
+        'page_groups': page_groups,
+        'page_group': page_group,
+        'pages': pages_with_inputs,
+        'page': page,
+        'page_input_groups': page_input_groups,
+        'page_input_group': page_input_group,
+        'page_inputs': page_inputs,
+
+    })
+
+
 def page_group_create(request, gateway_pk, service):
     gateway = Gateway.objects.get(pk=gateway_pk)
     # page_groups = gateway.pagegroup_set.all()
@@ -205,6 +262,24 @@ def page_group_create(request, gateway_pk, service):
                 service_obj = Service.objects.get(name=service)
             except Service.DoesNotExist:
                 return None
+
+            # add get_section service command if not exists
+            try:
+                service_obj.servicecommand_set.get(command_function='get_section')
+            except ServiceCommand.DoesNotExist as e:
+                service_command = ServiceCommand()
+
+                service_command.service = service_obj
+
+                service_command.command_function = 'get_section'
+
+                last_sc = service_obj.servicecommand_set.order_by('level').last()
+                service_command.level = (last_sc.level) + 1 if last_sc else 0
+                service_command.node_system_id = 6 # todo IIC
+
+                service_command.status = CommandStatus.objects.get(name='ENABLED')
+                service_command.description = 'Get Section'
+                service_command.save()
 
             page.save()
 
@@ -617,6 +692,7 @@ def page_input_group_create(request, gateway_pk, service, page_group_pk, page_pk
 
             # todo input_variable.service = service_name
 
+            # todo this is duplicated
             try:
                 service = Service.objects.get(name=service_name)
             except Service.DoesNotExist:
@@ -876,12 +952,13 @@ def service_command_list(request, service_pk):
     service_commands = service.servicecommand_set.all().order_by('level')
 
     if request.method == 'POST':
+        # todo duplicated above
         service_command = ServiceCommand()
 
         service_command.service_id = service_pk
         service_command.command_function = request.POST.get('command_function')
         last_sc = service.servicecommand_set.order_by('level').last()
-        service_command.level = last_sc.level + 1
+        service_command.level = (last_sc.level + 1) if last_sc else 0
         service_command.node_system_id  = request.POST.get('node_system')
         service_command.status = CommandStatus.objects.get(name='ENABLED')
         service_command.description = service_command.command_function
@@ -918,7 +995,30 @@ def service_command_order(request, service_pk):
 
 def input_variable_put(request):
     data = request.POST
-    InputVariable.objects.filter(pk=data.get('pk')).update(name=data.get('value'))
+
+    field = data.get('name')
+    value = data.get('value')
+
+    input_variable = InputVariable.objects.get(pk=data.get('pk'))
+
+    if field == 'name':
+        input_variable.name = value
+
+    elif field == 'service':
+        try:
+            service = Service.objects.get(name=value)
+        except Service.DoesNotExist:
+            service = Service()
+            service.name = value.upper()
+            service.description = value.title()
+            service.product = Product.objects.get(name='SYSTEM')
+            service.status = ServiceStatus.objects.get(name='POLLER')
+            service.save()
+
+        input_variable.service = service
+
+    input_variable.save()
+
     return HttpResponse(status=200)
 
 

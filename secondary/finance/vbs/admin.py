@@ -4,17 +4,17 @@ from django.forms.widgets import TextInput, Textarea
 from django import forms
 
 
-class CreditTypeAdmin(admin.ModelAdmin):
-	list_display = ('name','description','interest_rate','interest_time','min_time','max_time',)
-admin.site.register(CreditType, CreditTypeAdmin)
-
-
 class AccountTypeAdmin(admin.ModelAdmin):
-	list_display = ('id','name','deposit_taking', 'min_balance','max_balance','loan_interest_rate', 'loan_time',\
-			 'saving_interest_rate', 'saving_time', 'description',\
-			 'compound_interest','daily_withdrawal_limit','product_item','credit_type_list','gateway','institution',)
+	list_display = ('id','name','deposit_taking', 'min_balance','max_balance', 'description',\
+			 'daily_withdrawal_limit','product_item','gateway','institution','disburse_deductions',)
 	list_filter = ('product_item__institution','institution',)
 admin.site.register(AccountType, AccountTypeAdmin)
+
+class SavingsCreditTypeAdmin(admin.ModelAdmin):
+	list_display = ('account_type','credit','interest_rate','interest_time','compound_interest',\
+			'min_time','max_time','installment_time',)
+admin.site.register(SavingsCreditType, SavingsCreditTypeAdmin)
+
 
 class AccountChargeAdmin(admin.ModelAdmin):
 	list_display = ('name','account_type', 'min_amount','max_amount',\
@@ -73,10 +73,14 @@ class AccountManagerAdmin(admin.ModelAdmin):
 			'source_account__profile__user__username',\
 			'dest_account__profile__user__username',)
 admin.site.register(AccountManager, AccountManagerAdmin)  
- 
-class CreditOverdueActivityAdmin(admin.ModelAdmin):
-	list_display = ('account_manager','credit_overdue','response_status','processed',)
-admin.site.register(CreditOverdueActivity, CreditOverdueActivityAdmin)
+  
+class SavingsCreditManagerAdmin(admin.ModelAdmin):
+	list_display = ('account_manager','credit','installment_time','amount','charge','due_date','credit_paid',)
+admin.site.register(SavingsCreditManager, SavingsCreditManagerAdmin)
+
+class CreditOverdueManagerAdmin(admin.ModelAdmin):
+	list_display = ('savings_credit_manager','credit_overdue','response_status','processed',)
+admin.site.register(CreditOverdueManager, CreditOverdueManagerAdmin)
 
 class InvestmentAccountTypeAdmin(admin.ModelAdmin):
 	list_display = ('id','name','description','nominal_value','investment_loan_allowed','product_item','gateway',)
@@ -85,27 +89,4 @@ admin.site.register(InvestmentAccountType, InvestmentAccountTypeAdmin)
 class InvestmentManagerAdmin(admin.ModelAdmin):
 	list_display = ('id','investment_type','account','amount','share_value','balance_bf','processed',)
 admin.site.register(InvestmentManager, InvestmentManagerAdmin)
-
-class LoanTypeAdmin(admin.ModelAdmin):
-	list_display = ('name','description','interest_rate','interest_time','trigger_service_list','product_type_list',\
-			'credit','service','details','access_level_list','institution_list','gateway_list',)
-admin.site.register(LoanType, LoanTypeAdmin)
-
-class LoanStatusAdmin(admin.ModelAdmin):
-	list_display = ('name','description',)
-admin.site.register(LoanStatus, LoanStatusAdmin)
-
-class LoanAdmin(admin.ModelAdmin):
-	list_display = ('id','loan_type','credit','amount','security_amount','other_loans','payment_method',\
-			'loan_time','transaction_reference','currency',\
-			'institution','gateway','comment','account','interest_rate','interest_time',\
-			'status','gateway_profile',)
-admin.site.register(Loan, LoanAdmin)
-
-class LoanActivityAdmin(admin.ModelAdmin):
-	list_display = ('id','loan','request','transaction_reference',\
-			'response_status','comment','processed','gateway_profile',\
-			'status','follow_on_loan_list','loan_approval_list','channel','gateway','institution',)
-admin.site.register(LoanActivity, LoanActivityAdmin)
-
 

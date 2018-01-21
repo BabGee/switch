@@ -61,7 +61,7 @@
             <ul>
                 {% for page in blank_pages %}
                     <li>
-                        <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a>
+                        <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a>
                         <a target="_blank" href="/admin/iic/page/{{ page.pk }}/change/">Edit</a>
                         <p>
                             pk <strong>{{ page.pk }}</strong> |

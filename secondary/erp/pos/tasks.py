@@ -843,15 +843,24 @@ class System(Wrappers):
 	def create_delivery(self, payload, node_info):
 		try:
 			# gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			# add model pos Delivery
-			# order PurchaseOrder
-			# status WAITTING IN_PROCESS DELIVERED
+			purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
+			cart_item = CartItem.objects.get(id=payload['cart_item_id'])
+			product_item = cart_item.product_item
+			institution = product_item
 
-			delivery = Delivery()
-			delivery.order_id = payload['purchase_order_id']
-			delivery.status = DeliveryStatus.objects.get(name='WAITTING')
-			delivery.save()
-			payload["delivery"] = delivery.pk
+			delivery_types = DeliveryType.objects.filter(institution=institution)
+			if delivery_types.exists():
+				deliveries = Delivery.objects.filter(delivery_type__institution=institution,order=purchase_order)
+				if not deliveries.exists():
+					delivery = Delivery()
+					delivery_type = DeliveryType.objects.get(id=payload['delivery_type'])
+					delivery.order_id = payload['purchase_order_id']
+					delivery.status = DeliveryStatus.objects.get(name='WAITTING')
+
+					delivery.save()
+					delivery.delivery_type.add(delivery_type)
+
+					payload["delivery_id"] = delivery.pk
 
 			payload["response_status"] = "00"
 			payload["response"] = "Delivery Created"
@@ -861,11 +870,11 @@ class System(Wrappers):
 
 		return payload
 
+
 	def create_delivery_activities(self, payload, node_info):
 		try:
 			profiles_id_list = payload['profiles'].split(',')
 			delivery = Delivery.objects.get(pk=payload['delivery_id'])
-			delivery_type = DeliveryType.objects.get(id=payload['delivery_type'])
 			g_profiles = GatewayProfile.objects.filter(id__in=profiles_id_list)
 
 			for g_profile in g_profiles:
@@ -873,10 +882,7 @@ class System(Wrappers):
 				delivery_activity.delivery = delivery
 				delivery_activity.profile = g_profile.user.profile
 				delivery_activity.status = DeliveryActivityStatus.objects.get(name='NOTIFIED')
-				
 				delivery_activity.save()
-
-				delivery_activity.delivery_type.add(delivery_type)
 
 				# payload["delivery_activity"] = delivery_activity.pk
 			delivery.status = DeliveryStatus.objects.get(name='ASSIGNED')
@@ -894,6 +900,7 @@ class System(Wrappers):
 	def order_status(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
 			if gateway_profile.access_level == AccessLevel.objects.get(name='DELIVERY'):
 				delivery_activity = DeliveryActivity.objects.get(id=payload['delivery_activity_id'])
 
@@ -912,8 +919,11 @@ class System(Wrappers):
 					payload['trigger'] = 'accepted_by_none%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
 
 			else:
-				purchase_order = PurchaseOrder.objects.get(id = payload['purchase_order_id'])
-				delivery = Delivery.objects.get(order=purchase_order)
+				# purchase_order = PurchaseOrder.objects.get(id = payload['purchase_order_id'])
+				delivery = Delivery.objects.get(id=payload['delivery_id'])
+				purchase_order = delivery.order
+
+				payload['purchase_order_id'] = purchase_order.pk
 				if delivery.status.name =='WAITTING CONFIRMATION':
 					payload['trigger'] = 'should_confirm%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
 
@@ -1020,6 +1030,7 @@ def order_service_call(order):
 			gateway_profile = c.gateway_profile
 			service = c.product_item.product_type.service
 
+			payload['cart_item_id'] = c.id
 			payload['purchase_order_id'] = o.id
 			payload['product_item_id'] = c.product_item.id
 			payload['item'] = c.product_item.name

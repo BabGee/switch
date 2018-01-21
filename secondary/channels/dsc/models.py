@@ -45,6 +45,7 @@ class DataListQuery(models.Model):
 	token_filters = models.CharField(max_length=512, null=True, blank=True)
 	join_model_name = models.CharField(max_length=100, null=True, blank=True) 
 	join_module_name = models.CharField(max_length=100, null=True, blank=True) 
+	join_institution_filters = models.CharField(max_length=512, blank=True, null=True)
 	join_gateway_filters = models.CharField(max_length=512, blank=True, null=True)
 	join_gateway_profile_filters = models.CharField(max_length=512, blank=True, null=True)
 	join_profile_filters = models.CharField(max_length=512, blank=True, null=True)
@@ -54,6 +55,7 @@ class DataListQuery(models.Model):
 	link_params = models.CharField(max_length=512, blank=True, null=True) 
 	last_balance = models.CharField(max_length=512, blank=True, null=True)
 	order = models.CharField(max_length=512, blank=True, null=True)
+	distinct = models.CharField(max_length=512, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)  
 

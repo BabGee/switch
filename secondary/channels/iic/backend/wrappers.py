@@ -20,6 +20,9 @@ class Wrappers:
 			for v in variables:
 				if v in payload.keys():
 					default_value5 = default_value5.replace('['+v+']',str(payload[v]))
+				else:
+					default_value5 = default_value5.replace('['+v+']',"")
+
 
 
 			#Escape html entities
@@ -40,6 +43,8 @@ class Wrappers:
 			for v in variables:
 				if v in payload.keys():
 					default_value8 = default_value8.replace('['+v+']',str(payload[v]))
+				else:
+					default_value8 = default_value8.replace('['+v+']',"")
 
 
 			#Escape html entities

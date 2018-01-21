@@ -194,6 +194,8 @@ class Wrappers:
             sum_values = data.query.sum_values
             last_balance = data.query.last_balance
             avg_values = data.query.avg_values
+	    order = data.query.order
+	    distinct = data.query.distinct
 
 	    values_data = {}
             filter_data = {}
@@ -443,6 +445,7 @@ class Wrappers:
                 report_list = report_list.filter(date_created__lte=end_date)
 
 
+	    lgr.info('Join Filter: %s' % report_list.count())
 	    join_model_class = None
 	    if data.query.join_module_name and data.query.join_model_name and (data.query.join_fields or \
 	     data.query.join_manytomany_fields):
@@ -454,16 +457,19 @@ class Wrappers:
 			join_gateway_profile_filters = data.query.join_gateway_profile_filters
 			join_profile_filters = data.query.join_profile_filters
 			join_fields = data.query.join_fields
+	            	join_institution_filters = data.query.join_institution_filters
 			join_manytomany_fields = data.query.join_manytomany_fields
 
 			join_gateway_filters_data = {}
 			join_gateway_profile_filters_data  = {}
-			join_profile_filters = {}
+			join_profile_filter_data = {}
 			join_fields_data = {}
+            		join_institution_filter_data = {}
 			join_manytomany_fields_data = {}
 
             		join_report_list = join_model_class.objects.all()
 
+			lgr.info('Join Filter: %s' % report_list.count())
 			if join_gateway_filters not in ['', None]:
 				for f in join_gateway_filters.split("|"):
 					if f not in ['',None]: join_gateway_filter_data[f] = gateway_profile.gateway
@@ -471,6 +477,7 @@ class Wrappers:
 					join_gateway_query = reduce(operator.and_, (Q(k) for k in gateway_filter_data.items()))
 					join_report_list = join_report_list.filter(join_gateway_query)
 
+			lgr.info('Join Filter: %s' % report_list.count())
             		if join_gateway_profile_filters not in ['', None]:
 				for f in join_gateway_profile_filters.split("|"):
 					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
@@ -480,8 +487,9 @@ class Wrappers:
 
 				if len(join_gateway_profile_filter_data):
 					gateway_profile_query = reduce(operator.and_, (Q(k) for k in join_gateway_profile_filter_data.items()))
-					report_list = report_list.filter(gateway_profile_query)
+					join_report_list = join_report_list.filter(gateway_profile_query)
 
+			lgr.info('Join Filter: %s' % report_list.count())
 			if join_profile_filters not in ['', None]:
 				for f in join_profile_filters.split("|"):
 					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
@@ -491,8 +499,27 @@ class Wrappers:
 
 				if len(join_profile_filter_data):
 					profile_query = reduce(operator.and_, (Q(k) for k in join_profile_filter_data.items()))
-					report_list = report_list.filter(profile_query)
+					join_report_list = join_report_list.filter(profile_query)
 
+			lgr.info('Join Filter: %s' % report_list.count())
+	    		if join_institution_filters not in ['',None]:
+		                for f in join_institution_filters.split("|"):
+		            	    if 'institution_id' in payload.keys() and payload['institution_id'] not in ['', None]:
+		                    	if f not in ['',None]: join_institution_filter_data[f + '__id'] = payload['institution_id']
+		            	    elif gateway_profile.institution not in ['', None]:
+		                    	if f not in ['',None]: join_institution_filter_data[f] = gateway_profile.institution
+				    else:
+					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+						pass
+					else:
+			                    	if f not in ['',None]: join_institution_filter_data[f] = None
+
+		                if len(join_institution_filter_data):
+		                    institution_query = reduce(operator.and_, (Q(k) for k in join_institution_filter_data.items()))
+		                    join_report_list = join_report_list.filter(institution_query)
+
+
+			lgr.info('Join Filter: %s' % report_list.count())
         	    	if join_fields not in ['',None]:
                 		for i in join_fields.split("|"):
 	                	    k,v = i.split('%')
@@ -503,16 +530,24 @@ class Wrappers:
 	                	    query = reduce(operator.and_, (Q(k) for k in join_fields_data.items()))
                 		    report_list = report_list.filter(query)
 
+			lgr.info('Join Filter: %s' % report_list.count())
         	    	if join_manytomany_fields not in ['',None]:
                 		for i in join_manytomany_fields.split("|"):
 	                	    k,v = i.split('%')
-				    record = join_report_list.values_list(v,flat=True)
-				    join_manytomany_fields[k+'__in'] = list(record)
 
+				    lgr.info('Join Filter: %s' % report_list.count())
+				    record = join_report_list.values_list(v,flat=True).distinct()
+
+				    lgr.info('Join Filter: %s' % report_list.count())
+				    join_manytomany_fields_data[k+'__in'] = list(record)
+
+				    lgr.info('Join Filter: %s' % report_list.count())
         	        	if len(join_manytomany_fields_data):
+
+				    lgr.info('Join Filter: %s' % report_list.count())
 	                	    query = reduce(operator.and_, (Q(k) for k in join_manytomany_fields_data.items()))
                 		    report_list = report_list.filter(query)
-
+				    lgr.info('Join Filter: %s' % report_list.count())
 
 
 	    #lgr.info('Report End Date')
@@ -727,13 +762,20 @@ class Wrappers:
             #    report_list = report_list.filter(id__lt=payload['max_id'])
             #if 'min_id' in payload.keys() and payload['min_id'] > 0:
             #    report_list = report_list.filter(id__gt=payload['min_id'])
+	    if distinct:
+			distinct_list = distinct.split('|')
+			report_list = report_list.distinct(*distinct_list)
 
 
             if 'order_by' in payload.keys():
 		order_by = payload['order_by'].split(',')
                 report_list = report_list.order_by(*order_by)
 	    else:
-		if values not in [None,'']:
+
+		if order:
+        		order_list  = order.split('|')
+			report_list = report_list.order_by(*order_list)
+		elif values not in [None,'']:
         		i  = values.split('|')[0]
                 	k,v = i.split('%')
                 	report_list = report_list.order_by(v)

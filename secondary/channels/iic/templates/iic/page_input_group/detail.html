@@ -1,6 +1,8 @@
 {% extends 'iic/base.html' %}
 {% block content %}
-
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"
+          rel="stylesheet"/>
     <ol class="breadcrumb">
 
         <li class="breadcrumb-item"><a href="/iic_editor/gateways/">Gateways</a></li>
@@ -58,7 +60,14 @@
 
         name : <strong>{{ page_input_group.input_variable.name }}</strong> <br>
         variable_type : <strong>{{ page_input_group.input_variable.variable_type }}</strong> <br>
-        service : <strong>{{ page_input_group.input_variable.service }}</strong><br>
+        service : <strong class="editable"
+                                 data-type="text"
+                                 data-name="service"
+                                 data-pk="{{ page_input_group.input_variable.pk }}"
+                                 data-url="/iic_editor/input_variables/">{{ page_input_group.input_variable.service }}</strong><br>
+
+
+
         bind_position : <strong>{{ page_input_group.bind_position.name }}</strong><br>
 
         <a target="_blank"
@@ -136,7 +145,45 @@
 
 {% endblock %}
 {% block script %}
+        <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
     <script type="text/javascript">
+
+     $.fn.editable.defaults.mode = 'inline';
+        $.fn.editableform.buttons = '' +
+            '<button type="submit" class="btn btn-info editable-submit"><i class="fa fa-fw fa-check"></i></button>' +
+            '<button type="button" class="btn editable-cancel"><i class="fa fa-fw fa-remove"></i></button>';
+
+        $.fn.editable.defaults.ajaxOptions = {
+            type: "POST",
+            beforeSend: function (xhr, settings) {
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+
+            }
+        };
+
         jQuery(document).ready(function () {
             function copyServiceCommands(service) {
                 $.ajax({
@@ -396,6 +443,15 @@
 
 
             });
+
+
+
+            /* inline service edit */
+
+
+
+            $('.editable').editable();
+
 
 
         });

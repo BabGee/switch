@@ -122,7 +122,7 @@ class PurchaseOrder(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	cart_item = models.ManyToManyField(CartItem)
-	reference = models.CharField(max_length=45, unique=True)
+	reference = models.CharField(max_length=45)
 	amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	currency = models.ForeignKey(Currency)
 	description = models.CharField(max_length=200, blank=True, null=True)
@@ -160,29 +160,16 @@ class DeliveryStatus(models.Model):
 	def __unicode__(self):
 		return u'%s' % (self.name)
 
-class Delivery(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	order = models.ForeignKey(PurchaseOrder)
-	status = models.ForeignKey(DeliveryStatus)
-	def __unicode__(self):
-		return u'%s %s' % (self.order, self.status)
 
-class DeliveryActivityStatus(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	def __unicode__(self):
-		return u'%s' % (self.name)
-  
 class DeliveryTypeStatus(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
+	date_modified = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
+
 	def __unicode__(self):
 		return u'%s' % (self.name)
+
 
 class DeliveryType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -194,15 +181,36 @@ class DeliveryType(models.Model):
 	def __unicode__(self):
 		return u'%s %s' % (self.gateway,self.channel)
 
+
+class Delivery(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	order = models.ForeignKey(PurchaseOrder)
+	status = models.ForeignKey(DeliveryStatus)
+	delivery_type = models.ManyToManyField(DeliveryType)
+
+	def __unicode__(self):
+		return u'%s %s' % (self.order, self.status)
+
+
+class DeliveryActivityStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
+
 class DeliveryActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	delivery = models.ForeignKey(Delivery)
-	delivery_type = models.ManyToManyField(DeliveryType)
 	status = models.ForeignKey(DeliveryActivityStatus)
 	profile = models.ForeignKey(Profile)
 	def __unicode__(self):
 		return u'%s %s' % (self.delivery, self.profile)
 	def delivery_type_list(self):
 		return "\n".join(['%s %s' % (a.channel,a.gateway) for a in self.delivery_type.all()])
+
 

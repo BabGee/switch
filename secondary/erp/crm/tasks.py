@@ -125,6 +125,7 @@ class System(Wrappers):
 			if product_item.exists():
 				payload['product_item_id'] = product_item[0].id
 				payload['product_item_name'] = product_item[0].name
+				payload['product_item_description'] = product_item[0].description
 				payload['product_item_kind'] = product_item[0].kind
 				payload['product_item_image'] = product_item[0].default_image if product_item[0].default_image else ''
 				#payload['institution_id'] = product_item[0].institution.id
@@ -466,7 +467,7 @@ class System(Wrappers):
 					shop_product_category.status = ProductStatus.objects.get(name='ACTIVE')
 					shop_product_category.save()
 
-				product_type.product_category = shop_product_category
+				product_type.shop_product_category = shop_product_category
 				product_type.description = payload['product_type_description']
 				product_type.status = ProductStatus.objects.get(name='ACTIVE')
 				product_type.institution = gateway_profile.institution
