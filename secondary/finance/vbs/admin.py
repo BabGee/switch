@@ -75,7 +75,7 @@ class AccountManagerAdmin(admin.ModelAdmin):
 admin.site.register(AccountManager, AccountManagerAdmin)  
   
 class SavingsCreditManagerAdmin(admin.ModelAdmin):
-	list_display = ('account_manager','credit','installment_time','amount','charge','due_date','credit_paid',)
+	list_display = ('account_manager','credit','installment_time','amount','charge','due_date','credit_paid','paid','outstanding',)
 admin.site.register(SavingsCreditManager, SavingsCreditManagerAdmin)
 
 class CreditOverdueManagerAdmin(admin.ModelAdmin):

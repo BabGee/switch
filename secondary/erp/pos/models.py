@@ -211,6 +211,6 @@ class DeliveryActivity(models.Model):
 	def __unicode__(self):
 		return u'%s %s' % (self.delivery, self.profile)
 	def delivery_type_list(self):
-		return "\n".join(['%s %s' % (a.channel,a.gateway) for a in self.delivery_type.all()])
+		return "\n".join(['%s %s' % (a.channel,a.gateway) for a in self.delivery.delivery_type.all()])
 
 

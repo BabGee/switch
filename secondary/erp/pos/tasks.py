@@ -846,7 +846,7 @@ class System(Wrappers):
 			purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 			cart_item = CartItem.objects.get(id=payload['cart_item_id'])
 			product_item = cart_item.product_item
-			institution = product_item
+			institution = product_item.institution
 
 			delivery_types = DeliveryType.objects.filter(institution=institution)
 			if delivery_types.exists():
@@ -867,6 +867,33 @@ class System(Wrappers):
 		except Exception, e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Creating Delivery: %s" % e)
+
+		return payload
+
+
+	def create_delivery_type(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			institution = gateway_profile.institution
+			channel = Channel.objects.get(name=payload['channel'])
+
+			delivery_types = DeliveryType.objects.filter(institution=institution,channel=channel,gateway=gateway_profile.gateway)
+			if delivery_types.exists():
+				pass
+			else:
+				delivery_type = DeliveryType()
+				delivery_type.channel = channel
+				delivery_type.institution = institution
+				delivery_type.status = DeliveryTypeStatus.objects.get(name='ACTIVE')
+				delivery_type.gateway = gateway_profile.gateway
+				delivery_type.save()
+				payload["delivery_id"] = delivery_type.pk
+
+			payload["response_status"] = "00"
+			payload["response"] = "Delivery Type Created"
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Creating Delivery Type: %s" % e)
 
 		return payload
 

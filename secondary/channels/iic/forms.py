@@ -74,7 +74,7 @@ class PageInputVariableForm(ModelForm):
     item_level = forms.IntegerField(required=False)
 
     input_variable_name = forms.CharField(max_length=45, required=False)
-    input_variable_variable_type = forms.CharField(max_length=45,required=False)
+    input_variable_variable_type = forms.CharField(max_length=45,required=False,label='Element')
     input_variable_validate_min = forms.CharField(max_length=45,required=False)
     input_variable_validate_max = forms.CharField(max_length=45,required=False)
     input_variable_default_value = forms.CharField(max_length=12800,required=False)

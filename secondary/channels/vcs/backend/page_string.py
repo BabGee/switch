@@ -636,39 +636,181 @@ class PageString(ServiceCall, Wrappers):
 					lgr.info('Your List: %s' % item)
 					page_string = page_string.replace('['+v+']',item)
 
-				elif variable_key == 'my_loan_request':
+				elif variable_key == 'account_manager_payment_method':
 
-					from thirdparty.wahi.models import LoanActivity
+					from secondary.finance.vbs.models import AccountType,AccountManager
 
 					params = payload
 
-					loan_activity = LoanActivity.objects.filter(processed=False,\
-										loan__account__profile=navigator.session.gateway_profile.user.profile,\
-										gateway_profile__user__profile=F('loan__account__profile'),\
-										loan__gateway=code[0].gateway).\
-										order_by('-date_created')
+					mipay_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=payload['msisdn'],gateway__name='MIPAY')
 
-					if 'institution_id' in params.keys():
-						loan_activity = loan_activity.filter(Q(loan__institution__id=params['institution_id'])\
-											|Q(loan__institution=None))
-					else:
-						loan_activity = loan_activity.filter(Q(loan__institution=code[0].institution)|Q(loan__institution=None))
+					account_type = AccountManager.objects.get(id=payload['account_manager_id']).dest_account.account_type
+					payment_method = account_type.product_item.product_type.payment_method.filter(Q(channel__id=payload['chid'])|Q(channel=None))
 
-					loan_activity = loan_activity[:10]
+					if variable_val == 'Send':
+						payment_method = payment_method.filter(send=True)
+					elif variable_val == 'Receive':
+						payment_method = payment_method.filter(receive=True)
+
+
 					item = ''
 					item_list = []
 					count = 1
-					if loan_activity.exists():
-						for i in loan_activity:
-       		                                        amount = '{0:,.2f}'.format(i.loan.amount)
-               		                                name = '%s %s%s' % (i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
+					for i in payment_method:
+						account_balance = None
+						if i.name == 'MIPAY' and variable_val <> 'Send' and mipay_gateway_profile.exists():
+							session_account_manager = AccountManager.objects.filter(dest_account__account_status__name='ACTIVE',\
+									dest_account__profile=mipay_gateway_profile[0].user.profile,\
+									dest_account__account_type__gateway__name='MIPAY').\
+									order_by('-date_created')[:1]
+
+							if session_account_manager.exists():
+								account_balance = session_account_manager[0].balance_bf
+							else: continue
+							if (account_balance is not None and account_balance>0) or variable_val=='Send': pass
+							else: continue
+						name = '%s' % (i.name)
+						if navigator.session.channel.name == 'IVR':
+							item = '%s\nFor %s, press %s.' % (item, name, count)
+						elif navigator.session.channel.name == 'USSD':
+							item = '%s\n%s:%s' % (item, count, name)
+							if account_balance is not None and account_balance>0: 
+								account_balance = '{0:,.2f}'.format(account_balance) 
+								item = '%s(%s)' % (item,account_balance)
+
+						item_list.append(name)
+						count+=1
+					navigator.item_list = json.dumps(item_list)
+					navigator.save()
+
+					lgr.info('Your List: %s' % item)
+					page_string = page_string.replace('['+v+']',item)
+
+
+				elif variable_key == 'all_installment_details':
+
+					from secondary.finance.vbs.models import SavingsCreditManager
+
+					params = payload
+
+					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id']).\
+									order_by('-date_created')
+
+					currency = savings_credit_manager[0].account_manager.dest_account.account_type.product_item.currency.code
+					due_date = savings_credit_manager[0].due_date
+					account_type = savings_credit_manager[0].account_manager.dest_account.account_type.name
+
+					amount = Decimal(0)
+					for i in savings_credit_manager:
+						amount = amount + i.outstanding
+
+					item = ''
+					amount = '{0:,.2f}'.format(amount)
+					item = '%s-%s %s %s' % (account_type, currency, amount,\
+									due_date.strftime("%d/%b/%Y"))
+
+					page_string = page_string.replace('['+v+']',item)
+
+
+				elif variable_key == 'one_installment_details':
+
+					from secondary.finance.vbs.models import SavingsCreditManager
+
+					params = payload
+
+					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id']).\
+									order_by('-date_created')[:1]
+
+					account_type = savings_credit_manager[0].account_manager.dest_account.account_type.name
+					amount = savings_credit_manager[0].outstanding
+
+					currency = savings_credit_manager[0].account_manager.dest_account.account_type.product_item.currency.code
+					due_date = savings_credit_manager[0].due_date
+					item = ''
+					amount = '{0:,.2f}'.format(amount)
+					item = '%s-%s %s %s' % (account_type, currency, amount,\
+									due_date.strftime("%d/%b/%Y"))
+
+					page_string = page_string.replace('['+v+']',item)
+
+
+
+				elif variable_key == 'outstanding_loan':
+
+					from secondary.finance.vbs.models import AccountManager
+
+					params = payload
+
+					account_manager = AccountManager.objects.filter(Q(credit=False),Q(credit_paid=False),\
+									~Q(credit_due_date=None),~Q(credit_time=None),\
+									Q(dest_account__profile=navigator.session.gateway_profile.user.profile),\
+									Q(dest_account__account_type__gateway=code[0].gateway)).\
+									order_by('-date_created')
+
+					if 'institution_id' in params.keys():
+						account_manager = account_manager.filter(Q(dest_account__account_type__institution__id=params['institution_id'])\
+											|Q(dest_account__account_type__institution=None))
+					else:
+						account_manager = account_manager.filter(Q(dest_account__account_type__institution=code[0].institution)|Q(dest_account__account_type__institution=None))
+
+					account_manager = account_manager[:10]
+					item = ''
+					item_list = []
+					count = 1
+					if account_manager.exists():
+						for i in account_manager:
+       		                                        amount = '{0:,.2f}'.format(i.amount)
+               		                                name = '%s %s%s' % (i.dest_account.account_type.product_item.currency.code, amount, i.credit_due_date.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
 							elif navigator.session.channel.name == 'USSD':
 								item = '%s\n%s:%s' % (item, count, name)
 
-							item_list.append(i.loan.id)
+							item_list.append(i.id)
+							count+=1
+						navigator.item_list = json.dumps(item_list)
+						navigator.save()
+					else:
+						item = 'No Record Available'
+
+					lgr.info('Your List: %s' % item)
+					page_string = page_string.replace('['+v+']',item)
+
+
+				elif variable_key == 'my_loan_request':
+
+					from thirdparty.wahi.models import Loan
+
+					params = payload
+
+					loan = Loan.objects.filter(processed=False,\
+									account__profile=navigator.session.gateway_profile.user.profile,\
+									gateway_profile__user__profile=F('loan__account__profile'),\
+									gateway=code[0].gateway).\
+									order_by('-date_created')
+
+					if 'institution_id' in params.keys():
+						loan = loan.filter(Q(institution__id=params['institution_id'])\
+											|Q(loan__institution=None))
+					else:
+						loan = loan.filter(Q(institution=code[0].institution)|Q(loan__institution=None))
+
+					loan = loan[:10]
+					item = ''
+					item_list = []
+					count = 1
+					if loan.exists():
+						for i in loan:
+       		                                        amount = '{0:,.2f}'.format(i.amount)
+               		                                name = '%s %s%s' % (i.currency.code, amount, i.date_created.strftime("%d/%b/%Y"))
+
+							if navigator.session.channel.name == 'IVR':
+								item = '%s\nFor %s, press %s.' % (item, name, count)
+							elif navigator.session.channel.name == 'USSD':
+								item = '%s\n%s:%s' % (item, count, name)
+
+							item_list.append(i.id)
 							count+=1
 						navigator.item_list = json.dumps(item_list)
 						navigator.save()
@@ -690,7 +832,7 @@ class PageString(ServiceCall, Wrappers):
 
 
 					given_amount = Decimal(0)
-					approved_loan = Loan.objects.filter(follow_on_loan=loan,status__name='APPROVED')
+					approved_loan = Loan.objects.filter(follow_on_loan=loan,loan_status__name='APPROVED')
 					for f in approved_loan:
 						given_amount = given_amount + f.amount
 
@@ -707,43 +849,43 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'p2p_loan_approval':
 
-					from thirdparty.wahi.models import LoanActivity
+					from thirdparty.wahi.models import Loan
 
 					params = payload
 
-					loan_activity = LoanActivity.objects.filter(Q(loan__status__name='CREATED'),Q(processed=False),\
-							Q(loan__follow_on_loan__account__profile=navigator.session.gateway_profile.user.profile),\
-							Q(loan__gateway=code[0].gateway)).\
+					loan = Loan.objects.filter(Q(loan_status__name='CREATED'),Q(processed=False),\
+							Q(follow_on_loan__account__profile=navigator.session.gateway_profile.user.profile),\
+							Q(gateway=code[0].gateway)).\
 							order_by('-date_created')
 
-					lgr.info('Loan Activity: %s' % loan_activity)
+					lgr.info('Loan: %s' % loan)
 
 					if 'institution_id' in params.keys():
-						loan_activity = loan_activity.filter(Q(loan__institution__id=params['institution_id'])\
+						loan = loan.filter(Q(institution__id=params['institution_id'])\
 											|Q(loan__institution=None))
 					elif code[0].institution:
-						loan_activity = loan_activity.filter(Q(loan__institution=code[0].institution)|Q(loan__institution=None))
+						loan = loan.filter(Q(loan__institution=code[0].institution)|Q(loan__institution=None))
 					else:
 						lgr.info('None')
-						loan_activity = loan_activity.filter(institution=None)
+						loan = loan.filter(institution=None)
 
-					lgr.info('Loan Activity: %s' % loan_activity)
-					loan_activity = loan_activity[:10]
+					lgr.info('Loan: %s' % loan)
+					loan = loan[:10]
 					item = ''
 					item_list = []
 					count = 1
 
-					if loan_activity.exists():
-						for i in loan_activity:
-							amount = '{0:,.2f}'.format(i.loan.amount)
-							name = '%s %s%s %s' % (i.loan.gateway_profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
+					if loan.exists():
+						for i in loan:
+							amount = '{0:,.2f}'.format(i.amount)
+							name = '%s %s%s %s' % (i.gateway_profile.user.last_name[:6], i.currency.code, amount, i.date_created.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
 							elif navigator.session.channel.name == 'USSD':
 								item = '%s\n%s:%s' % (item, count, name)
 
-							item_list.append(i.loan.id)
+							item_list.append(i.id)
 							count+=1
 
 						navigator.item_list = json.dumps(item_list)
@@ -757,47 +899,47 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'p2p_loan_offer':
 
-					from thirdparty.wahi.models import LoanActivity, Loan
+					from thirdparty.wahi.models import Loan
 
 					params = payload
 
-					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'), Q(processed=False),\
-										Q(loan__status__name='CREATED'),Q(loan__follow_on_loan=None),\
-										~Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
-										Q(loan__gateway_profile__user__profile=F('loan__account__profile')),\
-										Q(loan__gateway=code[0].gateway),\
-										Q(loan__credit=True)).\
+					loan = Loan.objects.filter(Q(status__name='CREATED'), Q(processed=False),\
+										Q(loan_status__name='CREATED'),Q(follow_on_loan=None),\
+										~Q(account__profile=navigator.session.gateway_profile.user.profile),\
+										Q(gateway_profile__user__profile=F('account__profile')),\
+										Q(gateway=code[0].gateway),\
+										Q(credit=True)).\
 										order_by('-date_created')
 
 					if 'institution_id' in params.keys():
-						loan_activity = loan_activity.filter(Q(loan__institution__id=params['institution_id'])\
-											|Q(loan__institution=None))
+						loan = loan.filter(Q(institution__id=params['institution_id'])\
+											|Q(institution=None))
 					else:
-						loan_activity = loan_activity.filter(Q(loan__institution=code[0].institution)|Q(loan__institution=None))
+						loan = loan.filter(Q(institution=code[0].institution)|Q(institution=None))
 
-					loan_activity = loan_activity[:10]
+					loan = loan[:10]
 					item = ''
 					item_list = []
 					count = 1
 
-					for i in loan_activity:
-						amount = i.loan.amount
+					for i in loan:
+						amount = i.amount
 						given_amount = Decimal(0)
-						approved_loan = Loan.objects.filter(follow_on_loan=i.loan,status__name='APPROVED')
+						approved_loan = Loan.objects.filter(follow_on_loan=i,status__name='APPROVED')
 						for f in approved_loan:
 							given_amount = given_amount + f.amount
 
 						amount = amount - given_amount
 						if amount > Decimal(0):
 							amount = '{0:,.2f}'.format(amount)
-							name = '%s %s%s %s' % (i.loan.gateway_profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
+							name = '%s %s%s %s' % (i.gateway_profile.user.last_name[:6], i.currency.code, amount, i.date_created.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
 							elif navigator.session.channel.name == 'USSD':
 								item = '%s\n%s:%s' % (item, count, name)
 
-							item_list.append(i.loan.id)
+							item_list.append(i.id)
 							count+=1
 
 					navigator.item_list = json.dumps(item_list)
@@ -811,47 +953,47 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'p2p_loan_request':
 
-					from thirdparty.wahi.models import LoanActivity, Loan
+					from thirdparty.wahi.models import Loan
 
 					params = payload
 
-					loan_activity = LoanActivity.objects.filter(Q(status__name='CREATED'), Q(processed=False),\
-										Q(loan__status__name='CREATED'),Q(loan__follow_on_loan=None),\
-										~Q(loan__account__profile=navigator.session.gateway_profile.user.profile),\
-										Q(loan__gateway_profile__user__profile=F('loan__account__profile')),\
-										Q(loan__gateway=code[0].gateway),\
-										Q(loan__credit=False)).\
+					loan = Loan.objects.filter(Q(status__name='CREATED'), Q(processed=False),\
+										Q(loan_status__name='CREATED'),Q(follow_on_loan=None),\
+										~Q(account__profile=navigator.session.gateway_profile.user.profile),\
+										Q(gateway_profile__user__profile=F('account__profile')),\
+										Q(gateway=code[0].gateway),\
+										Q(credit=False)).\
 										order_by('-date_created')
 
 					if 'institution_id' in params.keys():
-						loan_activity = loan_activity.filter(Q(loan__institution__id=params['institution_id'])\
-											|Q(loan__institution=None))
+						loan = loan.filter(Q(institution__id=params['institution_id'])\
+											|Q(institution=None))
 					else:
-						loan_activity = loan_activity.filter(Q(loan__institution=code[0].institution)|Q(loan__institution=None))
+						loan = loan.filter(Q(institution=code[0].institution)|Q(institution=None))
 
-					loan_activity = loan_activity[:10]
+					loan = loan[:10]
 					item = ''
 					item_list = []
 					count = 1
 
-					for i in loan_activity:
-						amount = i.loan.amount
+					for i in loan:
+						amount = i.amount
 						given_amount = Decimal(0)
-						approved_loan = Loan.objects.filter(follow_on_loan=i.loan,status__name='APPROVED')
+						approved_loan = Loan.objects.filter(follow_on_loan=i,loan_status__name='APPROVED')
 						for f in approved_loan:
 							given_amount = given_amount + f.amount
 
 						amount = amount - given_amount
 						if amount > Decimal(0):
 							amount = '{0:,.2f}'.format(amount)
-							name = '%s %s%s %s' % (i.loan.gateway_profile.user.last_name[:6], i.loan.currency.code, amount, i.loan.date_created.strftime("%d/%b/%Y"))
+							name = '%s %s%s %s' % (i.gateway_profile.user.last_name[:6], i.currency.code, amount, i.date_created.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
 							elif navigator.session.channel.name == 'USSD':
 								item = '%s\n%s:%s' % (item, count, name)
 
-							item_list.append(i.loan.id)
+							item_list.append(i.id)
 							count+=1
 
 					navigator.item_list = json.dumps(item_list)

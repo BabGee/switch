@@ -38,18 +38,14 @@
     <label for="module">Module</label>
     <select id="module" name="module">
         {% for node_system in modules %}
-                <option {% if node_system.name == data_list.query.module_name %}selected{% endif %}
+                <option {% if node_system.name == data_list.query.module_name|upper %}selected{% endif %}
                         value="{{ node_system.URL }}">{{ node_system.name }}</option>
         {% endfor %}
 
     </select>
 
-
     <label for="model">Model</label>
-    <select id="model" name="model">
-        <option>pos</option>
-        <option>crm</option>
-    </select>
+    <select id="model" name="model"></select>
 
     <p>Values</p>
     <div id="values">
@@ -115,8 +111,8 @@
 
         }
 
-        $(function(){
-			$("select#module").change(function(){
+
+            function loadModels(){
                 $.ajax({
                     url: "/iic_editor/dsc/models/",
                     beforeSend: function (xhr, settings) {
@@ -146,7 +142,7 @@
                         }
                         // todo btn.html('<img src="/static/loader.gif">');
                     },
-                    data: { module:$(this).val()},
+                    data: { module:$('select#module').val()},
                     type: 'GET',
                     success: function (data) {
                        // console.log(data);
@@ -154,7 +150,15 @@
 
                     }
                 });
-			});
+			}
+
+        $(function(){
+
+
+			$("select#module").change(loadModels);
+
+			// load models from templated selection
+			loadModels();
 
             $("#saveLinks").click(function(){
 
@@ -282,12 +286,6 @@
               // ----------
 
               // constructs the suggestion engine
-              var states = new Bloodhound({
-                datumTokenizer: Bloodhound.tokenizers.whitespace,
-                queryTokenizer: Bloodhound.tokenizers.whitespace,
-                // `states` is an array of state names defined in "The Basics"
-                local: statesS
-              });
 
               $('#bloodhound .typeahead').typeahead({
                 hint: true,
@@ -296,7 +294,7 @@
               },
               {
                 name: 'states',
-                source: states
+                source: statesS
               });
 
 

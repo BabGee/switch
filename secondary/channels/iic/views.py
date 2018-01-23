@@ -21,6 +21,7 @@ from secondary.channels.iic.models import \
 from django.db.models import Count, IntegerField
 from django.db.models.functions import Cast
 from django.shortcuts import render, redirect
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .forms import \
     PageForm, \
     PageInputForm, \
@@ -141,7 +142,17 @@ def gateway_profile_list(request, gateway_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     # page_groups = gateway.pagegroup_set.all()
 
-    gateway_profiles = GatewayProfile.objects.filter(gateway=gateway)
+    gateway_profiles = GatewayProfile.objects.filter(gateway=gateway).order_by('-id')
+    page = request.GET.get('page', 1)
+
+
+    paginator = Paginator(gateway_profiles, 50)
+    try:
+        gateway_profiles = paginator.page(page)
+    except PageNotAnInteger:
+        gateway_profiles = paginator.page(1)
+    except EmptyPage:
+        gateway_profiles = paginator.page(paginator.num_pages)
 
     return render(request, "iic/gateway_profile/list.html", {
         'gateway': gateway,
@@ -414,13 +425,16 @@ def gateway_service(request, gateway_pk, service):
     # page_groups = gateway.pagegroup_set.all()
 
     # page_inputs = query_page_inputs(gateway,service)
+    node_systems = NodeSystem.objects.filter(node_status__name='LOCAL')
 
     page_input_groups = PageInputGroup.objects.filter(input_variable__service__name=service).order_by('item_level')
 
     return render(request, "iic/service/detail.html", {
         'service': Service.objects.get(name=service),
         'gateway': gateway,
-        'page_input_groups': page_input_groups
+        'page_input_groups': page_input_groups,
+        # Extra
+        'node_systems': node_systems
     })
 
 
@@ -751,7 +765,9 @@ def page_input_create(request, gateway_pk, service, page_group_pk, page_pk, page
 
             # page_input
             # item_level
-            page_input.item_level = int(page_input_group.pageinput_set.order_by('item_level').last().item_level)+1
+            if not page_input.item_level:
+                last_page_input = page_input_group.pageinput_set.order_by('item_level').last()
+                page_input.item_level = (int(last_page_input.item_level)+1) if last_page_input else 0
 
             # input_variable
             #   name,variable_type,validate_min,validate_max
@@ -857,7 +873,7 @@ def page_input_order(request, gateway_pk, service, page_group_pk, page_pk, page_
 
             # http://localhost:8000/iic_editor/gateways/4/page_groups/30/pages/order/
             return redirect(
-                '/iic_editor/gateways/{}/{}/page_groups/{}/pages/{}/page_input_groups/{}/page_inputs/order/'.format(
+                '/iic_editor/gateways/{}/{}/page_groups/{}/pages/{}/page_input_groups/{}/page_inputs/'.format(
                     gateway_pk,
                     service,
                     page_group_pk,
@@ -883,7 +899,11 @@ def page_input_list(request, gateway_pk, service, page_group_pk, page_pk, page_i
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
     page_input_group = PageInputGroup.objects.get(pk=page_input_group_pk)
-    page_inputs = page_input_group.pageinput_set.all().order_by('item_level')
+    page_inputs = page_input_group.pageinput_set.extra(
+        select={
+            'item_level_int': 'CAST(item_level AS INTEGER)'
+        }
+    ).order_by('item_level_int')
 
     return render(request, "iic/page_input/list.html", {
         'gateway': gateway,
@@ -967,7 +987,8 @@ def service_command_list(request, service_pk):
         return HttpResponse(status=200)
 
     return render(request, "iic/service_command/list.html", {
-        'service_commands': service_commands
+        'service_commands': service_commands,
+        'service': service
     })
 
 
@@ -1003,6 +1024,9 @@ def input_variable_put(request):
 
     if field == 'name':
         input_variable.name = value
+
+    if field == 'default_value':
+        input_variable.default_value = value
 
     elif field == 'service':
         try:
@@ -1045,16 +1069,35 @@ def page_put(request):
     return HttpResponse(status=200)
 
 
+def page_input_group_put(request):
+    data = request.POST
+    page_input_group = PageInputGroup.objects.get(pk=data.get('pk'))
+    field = data.get('name')
+    value = data.get('value')
+
+    if field == 'name':
+        page_input_group.name = value
+
+    page_input_group.save()
+
+    return HttpResponse(status=200)
+
+
 def page_input_put(request):
     data = request.POST
     page_input = PageInput.objects.get(pk=data.get('pk'))
     field = data.get('name')
+    value = data.get('value')
 
     if field == 'page_input_group':
-        page_input.page_input_group_id = data.get('value')
+        page_input.page_input_group_id = value
         page_input.save()
     elif field == 'page':
-        page_input.page_id = data.get('value')
+        page_input.page_id = value
+        page_input.save()
+
+    elif field == 'page_input':
+        page_input.page_input = value
         page_input.save()
 
     else:

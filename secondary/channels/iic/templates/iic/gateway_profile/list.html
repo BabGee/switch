@@ -1,5 +1,9 @@
 {% extends 'iic/base.html' %}
 {% block content %}
+
+
+
+
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"
           rel="stylesheet"/>
@@ -37,6 +41,34 @@
         {% endfor %}
 
     </ul>
+
+
+
+    {% if gateway_profiles.has_other_pages %}
+  <ul class="pagination">
+    {% if gateway_profiles.has_previous %}
+      <li><a href="?page={{ gateway_profiles.previous_page_number }}">&laquo;</a></li>
+    {% else %}
+      <li class="disabled"><span>&laquo;</span></li>
+    {% endif %}
+    {% for i in gateway_profiles.paginator.page_range %}
+      {% if gateway_profiles.number == i %}
+        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+      {% else %}
+        <li><a href="?page={{ i }}">{{ i }}</a></li>
+      {% endif %}
+    {% endfor %}
+    {% if gateway_profiles.has_next %}
+      <li><a href="?page={{ gateway_profiles.next_page_number }}">&raquo;</a></li>
+    {% else %}
+      <li class="disabled"><span>&raquo;</span></li>
+    {% endif %}
+  </ul>
+{% endif %}
+
+
+
+
 {% endblock %}
 {% block script %}
     <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>

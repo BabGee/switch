@@ -50,15 +50,19 @@
 
     </style>
 
-    <h4>{{ page_input_group.name }}</h4>
+    <h4 class="editable"
+         data-type="text"
+         data-name="name"
+         data-pk="{{ page_input_group.pk }}"
+         data-url="/iic_editor/page_input_groups/">{{ page_input_group.name }}</h4>
     <p>
         pk : <strong>{{ page_input_group.pk }}</strong> <br>
         item_level : <strong>{{ page_input_group.item_level }}</strong> <br>
         icon : <strong>{{ page_input_group.icon }}</strong> <br>
-        <strong>Input Variable</strong> <a
+        <strong>Input Variable</strong> <a target="_blank"
             href="/admin/iic/inputvariable/{{ page_input_group.input_variable.pk }}/change/">Edit</a> <br>
 
-        name : <strong>{{ page_input_group.input_variable.name }}</strong> <br>
+        input var name : <strong>{{ page_input_group.input_variable.name }}</strong> <br>
         variable_type : <strong>{{ page_input_group.input_variable.variable_type }}</strong> <br>
         service : <strong class="editable"
                                  data-type="text"
@@ -93,8 +97,6 @@
         </button>
         <input type="text" id="copy-service" class=".typeahead" placeholder="Service">
 
-
-        <br>
         <br>
         <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/">View
             Page Inputs</a>
@@ -120,16 +122,17 @@
                 <div class="modal-footer">
 
                     <form class="form-inline my-2 my-lg-0">
-                        <input class="form-control mr-sm-2"
-                               type="text"
-                               id="command_function"
-                               placeholder="Command Function">
 
                         <select id="node_system" class="form-control mr-sm-2">
                             {% for node_system in node_systems %}
                                 <option value="{{ node_system.pk }}">{{ node_system }}</option>
                             {% endfor %}
                         </select>
+
+                        <input class="form-control mr-sm-2"
+                               type="text"
+                               id="command_function"
+                               placeholder="Command Function">
 
                         <button class="btn btn-outline-success my-2 my-sm-0" id="add-command">Add </button>
                     </form>
@@ -144,6 +147,10 @@
 
 
 {% endblock %}
+{% comment %}
+script looks exactly like
+secondary/channels/iic/templates/iic/service/detail.html
+{% endcomment %}
 {% block script %}
         <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
     <script type="text/javascript">

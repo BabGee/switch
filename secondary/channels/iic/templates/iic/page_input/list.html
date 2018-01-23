@@ -9,7 +9,7 @@
 
         <li class="breadcrumb-item"><a href="/iic_editor/gateways/">Gateways</a></li>
         <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway.name }} </a></li>
-        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">Page Groups</a>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/">Page Groups</a>
         <li class="breadcrumb-item"><a
                 href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/">{{ page_group.name }}</a>
         </li>
@@ -38,7 +38,11 @@
     <ul>
         {% for page_input in page_inputs %}
             <li>
-                <h3>{{ page_input.page_input }}</h3>
+                <h3 class="editable"
+                     data-type="text"
+                     data-name="page_input"
+                     data-pk="{{ page_input.pk }}"
+                     data-url="/iic_editor/page_inputs/">{{ page_input.page_input }}</h3>
                 <p>
 
 
@@ -64,7 +68,11 @@
                                  data-name="name"
                                  data-pk="{{ page_input.input_variable.pk }}"
                                  data-url="/iic_editor/input_variables/">{{ page_input.input_variable.name }}</strong> |
-                    default_value <strong>{{ page_input.input_variable.default_value }}</strong> |
+                    default_value <strong class="editable"
+                                 data-type="text"
+                                 data-name="default_value"
+                                 data-pk="{{ page_input.input_variable.pk }}"
+                                 data-url="/iic_editor/input_variables/">{{ page_input.input_variable.default_value }}</strong> |
 
                 {% if page_input.input_variable.service.name == 'DATA SOURCE' %}
                     DATA SOURCE

@@ -159,6 +159,8 @@ class SavingsCreditManager(models.Model):
 	charge = models.DecimalField(max_digits=19, decimal_places=2)
 	due_date = models.DateTimeField(null=True, blank=True)
 	credit_paid = models.BooleanField(default=False)
+	paid = models.DecimalField(max_digits=19, decimal_places=2)
+	outstanding = models.DecimalField(max_digits=19, decimal_places=2)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.account_manager, self.installment_time, self.due_date)
 

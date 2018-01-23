@@ -146,6 +146,11 @@ urlpatterns = [
     url(r'page_inputs/', include([
         url(r'^$', page_input_put),
 
-    ]), name='page_inputs')
+    ]), name='page_inputs'),
+
+    url(r'page_input_groups/', include([
+        url(r'^$', page_input_group_put),
+
+    ]), name='page_input_groups')
 
 ]

@@ -886,6 +886,13 @@ class System(Wrappers):
 
 				payload['response'] = 'Profile Institution Updated'
 				payload['response_status'] = '00'
+			if gateway_profile.institution:
+				session_gateway_profile.institution = gateway_profile.institution
+				session_gateway_profile.save()
+
+				payload['response'] = 'Profile Institution Updated'
+				payload['response_status'] = '00'
+
 			else:
 				payload['response'] = 'Institution not Submitted'
 				payload['response_status'] = '25'
@@ -1120,6 +1127,71 @@ class System(Wrappers):
 		return payload
 
 
+	def delete_institution(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			institution = Institution.objects.get(pk=payload['institution_id'])
+			institution.delete()
+
+			payload['response'] = 'Institution Deleted'
+			payload['response_status'] = '00'
+		except Exception as e:
+			lgr.info('Error on Deleting Institution: %s' % e)
+			payload['response_status'] = '96'
+
+		return payload
+
+
+	def update_institution_details(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+
+			institution = Institution.objects.get(pk=payload['institution_id'])
+			institution.name = payload['institution_name']
+
+			if 'institution_reg_number' in payload.keys(): institution.registration_number = payload['institution_reg_number']
+
+			if 'institution_address' in payload.keys(): institution.address = payload['institution_address']
+			if 'institution_physical_address' in payload.keys(): institution.physical_address = payload['institution_physical_address']
+			if 'institution_location' in payload.keys():
+				coordinates = payload['institution_location']
+				longitude,latitude = coordinates.split(',', 1)
+				# institution.geometry = Point(x=longitude, y=latitude)
+				trans_point = Point(float(longitude), float(latitude))
+
+			if 'institution_description' in payload.keys(): institution.description = payload['institution_description']
+			else: institution.description = payload['institution_name']
+
+			if 'institution_tagline' in payload.keys(): institution.tagline = payload['institution_tagline']
+			else: institution.tagline=payload['institution_name']
+
+			try:
+				filename = payload['institution_logo']
+				fromdir_name = settings.MEDIA_ROOT + '/tmp/uploads/'
+				from_file = fromdir_name + str(filename)
+				with open(from_file, 'r') as f:
+					myfile = File(f)
+					institution.logo.save(filename, myfile, save=False)
+			except Exception, e:
+				lgr.info('Error on saving Institution Logo: %s' % e)
+
+			if 'institution_default_color' in payload.keys(): institution.default_color = payload['institution_default_color']
+			else: institution.default_color = '#fff'
+			if 'institution_country' in payload.keys(): institution.country = Country.objects.get(name=payload['institution_country'])
+			else: institution.country = Country.objects.get(iso2='KE')
+			institution.geometry = trans_point
+
+			institution.save()
+			payload['response'] = 'Institution Updated'
+			payload['response_status'] = '00'
+		except Exception, e:
+			lgr.info('Error on Updating Institution: %s' % e)
+			payload['response_status'] = '96'
+
+		return payload
+
+
 	def create_institution_till(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
@@ -1231,6 +1303,47 @@ class System(Wrappers):
 			payload['response_status'] = '00'
 			lgr.info('\n\n\n\t#####Host: %s' % gateway_profile)
 			#payload['trigger_state'] = True		
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Getting Host Details: %s" % e)
+
+		return payload
+
+	def get_institution_details(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			gateway = gateway_profile.gateway
+			details = {}
+
+			institution = None
+			if 'institution_id' in payload.keys() and payload['institution_id'] not in ["",None,'None']:
+				institution_list = Institution.objects.filter(status__name='ACTIVE',id=payload['institution_id']).prefetch_related('gateway')
+				if len(institution_list)>0:
+					institution = institution_list[0]
+			elif gateway_profile.institution is not None:
+				institution = gateway_profile.institution
+			if institution is not None:
+				details['institution_logo'] =institution.logo.name
+				details['institution_name'] =institution.name
+				details['institution_reg_number'] =institution.registration_number
+				details['institution_physical_address'] =institution.physical_address
+				details['institution_tagline'] =institution.tagline
+				details['institution_address'] =institution.address
+				details['background_image'] = institution.background_image
+
+				details['institution_default_color'] = institution.default_color
+				details['institution_primary_color'] = institution.primary_color
+				details['institution_secondary_color'] = institution.secondary_color
+				details['institution_accent_color'] = institution.accent_color
+
+				details['institution_location'] = institution.geometry
+
+			payload.update(details)
+
+			payload['response'] = 'Got Institution Details'
+			payload['response_status'] = '00'
+			# lgr.info('\n\n\n\t#####Host: %s' % gateway_profile)
+			#payload['trigger_state'] = True
 		except Exception, e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Getting Host Details: %s" % e)

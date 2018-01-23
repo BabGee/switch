@@ -97,14 +97,16 @@ class System(Wrappers):
 					savings_credit_manager = SavingsCreditManager(account_manager=account_manager,\
 								credit=account_manager.credit,installment_time=installment_time,\
 								amount=installment_amount,charge=installment_charge,\
-								due_date=due_date)
+								due_date=due_date,\
+								paid=Decimal(0),outstanding=(installment_amount+installment_charge))
 					savings_credit_list.append(savings_credit_manager)
 			else:
 
 					savings_credit_manager = SavingsCreditManager(account_manager=account_manager,\
 								credit=account_manager.credit,installment_time=account_manager.credit_time,\
 								amount=account_manager.amount,charge=account_manager.charge,\
-								due_date=account_manager.credit_due_date)
+								due_date=account_manager.credit_due_date,\
+								paid=Decimal(0),outstanding=(account_manager.amount+account_manager.charge))
 					savings_credit_list.append(savings_credit_manager)
 
 			if len(savings_credit_list)>0: SavingsCreditManager.objects.bulk_create(savings_credit_list)
@@ -456,11 +458,14 @@ class System(Wrappers):
 
 			#For loan Accounts (Adding Interest To Charge) #Loans only Debit accounts
 			if 'is_loan' in payload.keys() and payload['is_loan'] and 'loan_time' in payload.keys():
-				credit_type = SavingsCreditType.objects.filter(account_type=session_account.account_type,\
+				if 'interest_rate' in payload.keys() and 'interest_time' in payload.keys():
+					charget = charge + ((Decimal(payload['interest_rate'])/100)*(int(payload['loan_time'])/int(payload['interest_time']))*Decimal(payload['amount']))
+				else:
+					credit_type = SavingsCreditType.objects.filter(account_type=session_account.account_type,\
 								 min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
 
-				for c in credit_type:
-					charge = charge + ((c.interest_rate/100)*(int(payload['loan_time'])/c.interest_time)*Decimal(payload['amount']))
+					for c in credit_type:
+						charge = charge + ((c.interest_rate/100)*(int(payload['loan_time'])/c.interest_time)*Decimal(payload['amount']))
 
 				payload['quantity'] = Decimal(payload['amount'])+charge
 	
@@ -784,9 +789,35 @@ class Payments(System):
 
 	def loan_repayment(self, payload, node_info):
 		try:
-			account_manager = AccountManager.objects.get(id=payload['account_manager_id'])
-			account_manager.credit_paid = True
-			account_manager.save()
+			savings_credit_manager = SavingsCreditManager.objects.get(account_manager__id=payload['account_manager_id'],\
+								credit_paid=False).order_by('date_created')
+			amount = Decimal(0)
+			for i in savings_credit_manager:
+				amount = amount (i.amount + i.charge)
+
+
+			credit_amount = Decimal(payload['amount'])
+			if amount <= credit_amount:
+				savings_credit_manager.update(credit_paid=True,paid=F('outstanding'),outstanding=Decimal(0))
+				account_manager = savings_credit_manager[0].account_manager
+				account_manager.credit_paid = True
+				account_manager.save()
+			else:
+				for i in savings_credit_manager:
+					if credit_amount > i.outstanding:
+						credit_amount = credit - i.outstanding
+						i.paid = i.outstanding
+						i.outstanding = 0
+						i.credit_paid = True
+					else:
+						credit_amount = credit_amount - credit_amount
+						i.paid = credit_amount
+						i.outstanding = i.outstanding - credit_amount
+
+					#save installment updates
+					i.save()
+
+
 
 			payload['response'] = 'Loan Repaid'
 			payload['response_status'] = '00'
@@ -891,6 +922,39 @@ class Payments(System):
 			lgr.info("Error on getting account limit: %s" % e)
 		return payload
 
+	def loan_installment_details(self, payload, node_info):
+		try:
+
+
+			savings_credit_manager = SavingsCreditManager.objects.filter(credit_paid=False,outstanding__gt=0,\
+							account_manager__id=payload['account_manager_id']).\
+							order_by('-date_created')
+
+			due_date = savings_credit_manager[0].due_date.strftime("%d/%b/%Y")
+			account_type = savings_credit_manager[0].account_manager.dest_account.account_type
+
+			amount = Decimal(0)
+			for i in savings_credit_manager:
+				amount = amount + i.outstanding
+
+			payload['amount'] = amount
+			payload['due_date'] = due_date
+			product_item = account_type.product_item
+			payload['institution_id'] = product_item.institution.id
+			payload['product_item_id'] = product_item.id
+			#payload['till_number'] = product_item.product_type.institution_till.till_number
+			payload['currency'] = product_item.currency.code
+
+			payload['response'] = 'Captured'
+			payload['response_status'] = '00'
+
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on loan details: %s" % e)
+		return payload
+
+
+
 	def loan_details(self, payload, node_info):
 		try:
 			account_type = AccountType.objects.get(id=payload['account_type_id'])
@@ -956,13 +1020,20 @@ class Payments(System):
 						payload['currency'] = product_item.currency.code
 
 
-						loan_amount = Decimal(payload['amount'])
-						credit_type = SavingsCreditType.objects.filter(account_type=account_type,\
-								 min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
 
-						for c in credit_type:
-							interest = ((c.interest_rate/100)*(int(payload['loan_time'])/c.interest_time)*Decimal(payload['amount']))
-						#loan_cost = '{0:,.2f}'.format(loan_amount) if loan_amount > 0 else None #Formatter
+						loan_amount = Decimal(payload['amount'])
+
+						if 'interest_rate' in payload.keys() and 'interest_time' in payload.keys():
+							interest = ((Decimal(payload['interest_rate'])/100)*(int(payload['loan_time'])/int(payload['interest_time']))*Decimal(payload['amount']))
+
+						else:
+							credit_type = SavingsCreditType.objects.filter(account_type=account_type,\
+									 min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
+
+							interest = Decimal(0)
+							for c in credit_type:
+								interest = ((c.interest_rate/100)*(int(payload['loan_time'])/c.interest_time)*Decimal(payload['amount']))
+							#loan_cost = '{0:,.2f}'.format(loan_amount) if loan_amount > 0 else None #Formatter
 
 						due_date = timezone.localtime(timezone.now())+timezone.timedelta(days=int(payload['loan_time']))
 						due_date = due_date.strftime("%d/%b/%Y")
