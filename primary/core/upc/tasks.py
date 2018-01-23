@@ -886,7 +886,7 @@ class System(Wrappers):
 
 				payload['response'] = 'Profile Institution Updated'
 				payload['response_status'] = '00'
-			if gateway_profile.institution:
+			elif gateway_profile.institution:
 				session_gateway_profile.institution = gateway_profile.institution
 				session_gateway_profile.save()
 

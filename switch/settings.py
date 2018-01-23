@@ -217,6 +217,7 @@ INSTALLED_APPS = (
     'secondary.channels.iic',
     'secondary.channels.dsc',
     'secondary.channels.notify',
+    'secondary.erp.distro',
     'secondary.erp.pos',
     'secondary.erp.ads',
     'secondary.erp.crm',
