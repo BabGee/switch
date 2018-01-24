@@ -1,8 +1,15 @@
 {% extends 'iic/base.html' %}
+
+{% block nav_form %}
+            <form class="form-inline my-2 my-lg-0">
+                <input class="form-control mr-sm-2"
+                       type="search"
+                       name="q"
+                       placeholder="Search {{ gateway_profiles.paginator.count }} Profiles" aria-label="Search">
+
+            </form>
+{% endblock %}
 {% block content %}
-
-
-
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"

@@ -842,25 +842,44 @@ class System(Wrappers):
 
 	def create_delivery(self, payload, node_info):
 		try:
-			# gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 			cart_item = CartItem.objects.get(id=payload['cart_item_id'])
 			product_item = cart_item.product_item
 			institution = product_item.institution
 
-			delivery_types = DeliveryType.objects.filter(institution=institution)
-			if delivery_types.exists():
-				deliveries = Delivery.objects.filter(delivery_type__institution=institution,order=purchase_order)
-				if not deliveries.exists():
-					delivery = Delivery()
-					delivery_type = DeliveryType.objects.get(id=payload['delivery_type'])
-					delivery.order_id = payload['purchase_order_id']
-					delivery.status = DeliveryStatus.objects.get(name='WAITTING')
+			# delivery_types = DeliveryType.objects.filter(institution=institution)
+			# if delivery_types.exists():
+			deliveries = Delivery.objects.filter(order=purchase_order)
+			if not deliveries.exists():
+				delivery = Delivery()
+				delivery.order_id = payload['purchase_order_id']
+				delivery.status = DeliveryStatus.objects.get(name='CREATED')
+				# TODO
 
-					delivery.save()
-					delivery.delivery_type.add(delivery_type)
+				try:
+					date_string = payload['scheduled_date'] + ' ' + payload['scheduled_time']
+					date_obj = datetime.strptime(date_string, '%d/%m/%Y %I:%M %p')
+				except:
+					date_obj = None
 
-					payload["delivery_id"] = delivery.pk
+				if date_obj is not None:
+					# profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
+					scheduled_send = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
+				else:
+					scheduled_send = timezone.now()
+
+				delivery.schedule = scheduled_send
+
+				coordinates = payload['delivery_location']
+				longitude, latitude = coordinates.split(',', 1)
+				trans_point = Point(float(longitude), float(latitude))
+				delivery.destination_name = coordinates
+				delivery.destination_coord = trans_point
+
+				delivery.save()
+
+				payload["delivery_id"] = delivery.pk
 
 			payload["response_status"] = "00"
 			payload["response"] = "Delivery Created"
@@ -905,13 +924,9 @@ class System(Wrappers):
 			g_profiles = GatewayProfile.objects.filter(id__in=profiles_id_list)
 
 			for g_profile in g_profiles:
-				delivery_activity = DeliveryActivity()
-				delivery_activity.delivery = delivery
-				delivery_activity.profile = g_profile.user.profile
-				delivery_activity.status = DeliveryActivityStatus.objects.get(name='NOTIFIED')
-				delivery_activity.save()
+				delivery.delivery_profile = g_profile
+				break
 
-				# payload["delivery_activity"] = delivery_activity.pk
 			delivery.status = DeliveryStatus.objects.get(name='ASSIGNED')
 			delivery.save()
 

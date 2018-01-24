@@ -19,7 +19,7 @@ class TradingInstitutionStatusAdmin(admin.ModelAdmin):
 admin.site.register(TradingInstitutionStatus, TradingInstitutionStatusAdmin)
 
 class TraderTypeAdmin(admin.ModelAdmin):
-	list_display = ('id','name','description','product_item',)
+	list_display = ('id','name','description','enrollment_type',)
 admin.site.register(TraderType, TraderTypeAdmin)
 
 class TradingInstitutionAdmin(admin.ModelAdmin):

@@ -65,11 +65,11 @@ class System(Wrappers):
 			trading_institution.save()
 
 		if 'supplier' in payload.keys():
-				supplier_list = TradingInstitution.objects.filter(id__in=[a for a in payload['supplier'].split(',') if a])
+				supplier_list = TradingInstitution.objects.filter(institution__id__in=[a for a in payload['supplier'].split(',') if a])
 				for supplier in supplier_list: trading_institution.supplier.add(supplier)
 
 		payload['trading_institution_id'] = trading_institution.id
-		payload['product_item_id'] = trading_institution.trader_type.product_item.id
+		payload['enrollment_type_id'] = trading_institution.trader_type.enrollment_type.id
 		payload['response'] = 'Institution Captured'
 		payload['response_status'] = '00'
         except Exception, e:

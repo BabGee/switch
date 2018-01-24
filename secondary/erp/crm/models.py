@@ -210,9 +210,9 @@ class EnrollmentType(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	product_item = models.ForeignKey(ProductItem)
+	product_item = models.ForeignKey(ProductItem, blank=True, null=True)
 	def __unicode__(self):
-		return u'%s' % (self.name)
+		return u'%s %s' % (self.name, self.product_item)
 
 class Enrollment(models.Model):
 	date_modified = models.DateTimeField(auto_now=True)

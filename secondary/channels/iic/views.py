@@ -1100,6 +1100,10 @@ def page_input_put(request):
         page_input.page_input = value
         page_input.save()
 
+    elif field == 'section_size':
+        page_input.section_size = value
+        page_input.save()
+
     else:
         # TODO this should use name too and not be default
         new_levels = [int(x) for x in data.getlist('value[]')]

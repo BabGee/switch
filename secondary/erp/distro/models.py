@@ -34,7 +34,7 @@ class TraderType(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	product_item = models.ForeignKey(ProductItem)
+	enrollment_type = models.ForeignKey(EnrollmentType)
 	def __unicode__(self):
 		return u'%s %s' % (self.name, self.description)
 
