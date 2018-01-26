@@ -307,6 +307,7 @@ class System(Wrappers):
 			lgr.info("Error on getting Profile Details: %s" % e)
 		return payload
 
+	@transaction.atomic
 	def create_enrollment(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
@@ -357,10 +358,14 @@ class System(Wrappers):
 
 			lgr.info('Record: %s' % record)
                         #Check if enrollment exists
-                        enrollment_list = Enrollment.objects.filter(status__name='ACTIVE',record=record,\
-                                                                enrollment_type__in=enrollment_type_list)
+                        orig_enrollment_list = Enrollment.objects.select_for_update(nowait=True).filter(status__name='ACTIVE',\
+							enrollment_type__in=enrollment_type_list).order_by('-date_created')
 
-                        if enrollment_list.exists():
+			#Check if record_exists
+                        enrollment_list = orig_enrollment_list.filter(record=record)
+
+
+			if enrollment_list.exists():
 				lgr.info('Enrollment with record exists')
 				enrollment = enrollment_list[0]
 				if 'session_gateway_profile_id' in payload.keys():
@@ -374,10 +379,14 @@ class System(Wrappers):
 						enrollment.save()
 
 				payload['record'] = enrollment.record
-                        else:
+			else:
 				lgr.info('Enrollment with record does not exist')
 
+	 			#Last Enrollment Check
+				if orig_enrollment_list.exists():orig_enrollment_list.filter(id=orig_enrollment_list[:1][0].id).update(updated=True)
+
 				if enrollment_type_list.exists():
+					
 	                                status = EnrollmentStatus.objects.get(name='ACTIVE')
 
         	                        enrollment = Enrollment(record=record, status=status, enrollment_type=enrollment_type_list[0])
@@ -431,6 +440,10 @@ class System(Wrappers):
 				else:
 					payload['response_status'] = '00'
 					payload['response'] = 'Enrollment Type Does Not Exist'
+
+		except DatabaseError, e:
+			transaction.set_rollback(True)
+
 
 		except Exception, e:
 			payload['response_status'] = '96'

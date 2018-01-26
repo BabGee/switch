@@ -224,6 +224,7 @@ class Enrollment(models.Model):
 	enrollment_type = models.ForeignKey(EnrollmentType)
 	profile = models.ForeignKey(Profile)
 	expiry = models.DateTimeField()
+	updated = models.BooleanField(default=False, help_text="True for record that is not the last record")
 	def __unicode__(self):
 		return u'%s %s %s' % (self.profile, self.record, self.alias)
 
