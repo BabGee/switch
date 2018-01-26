@@ -874,7 +874,7 @@ class System(Wrappers):
 				coordinates = payload['delivery_location']
 				longitude, latitude = coordinates.split(',', 1)
 				trans_point = Point(float(longitude), float(latitude))
-				delivery.destination_name = coordinates
+				delivery.destination_name = payload['delivery_location_name']
 				delivery.destination_coord = trans_point
 
 				delivery.save()
@@ -917,24 +917,20 @@ class System(Wrappers):
 		return payload
 
 
-	def create_delivery_activities(self, payload, node_info):
+	def assign_order(self, payload, node_info):
 		try:
-			profiles_id_list = payload['profiles'].split(',')
 			delivery = Delivery.objects.get(pk=payload['delivery_id'])
-			g_profiles = GatewayProfile.objects.filter(id__in=profiles_id_list)
+			delivery_profile = GatewayProfile.objects.get(id=payload['profile'])
 
-			for g_profile in g_profiles:
-				delivery.delivery_profile = g_profile
-				break
-
+			delivery.delivery_profile = delivery_profile
 			delivery.status = DeliveryStatus.objects.get(name='ASSIGNED')
 			delivery.save()
 
 			payload["response_status"] = "00"
-			payload["response"] = "Delivery Activities Created"
+			payload["response"] = "Delivery Assigned"
 		except Exception, e:
 			payload['response_status'] = '96'
-			lgr.info("Error on Creating Delivery Activities: %s" % e)
+			lgr.info("Error on Assigning Delivery: %s" % e)
 
 		return payload
 
@@ -942,30 +938,17 @@ class System(Wrappers):
 	def order_status(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-
+			delivery = Delivery.objects.get(id=payload['delivery_id'])
+			purchase_order = delivery.order
+			payload['purchase_order_id'] = purchase_order.pk
 			if gateway_profile.access_level == AccessLevel.objects.get(name='DELIVERY'):
-				delivery_activity = DeliveryActivity.objects.get(id=payload['delivery_activity_id'])
-
-				purchase_order = delivery_activity.delivery.order
-
-				payload['purchase_order_id'] = purchase_order.pk
-
-				delivery_activities = DeliveryActivity.objects.filter(delivery__order=purchase_order)
 				# accepted_by_me
-				if delivery_activities.filter(profile=gateway_profile.user.profile,status__name='ACCEPTED').exists():
-					payload['trigger'] = 'accepted_by_me%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-				# accepted_by_else
-				elif delivery_activities.filter(status__name='ACCEPTED').exists():
-					payload['trigger'] = 'accepted_by_else%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
-				else:
-					payload['trigger'] = 'accepted_by_none%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
-
+				if delivery.delivery_profile == gateway_profile:
+					if delivery.status.name == 'IN PROGRESS':
+						payload['trigger'] = 'accepted_by_me%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					elif delivery.status.name == 'CREATED':
+						payload['trigger'] = 'accepted_by_none%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
 			else:
-				# purchase_order = PurchaseOrder.objects.get(id = payload['purchase_order_id'])
-				delivery = Delivery.objects.get(id=payload['delivery_id'])
-				purchase_order = delivery.order
-
-				payload['purchase_order_id'] = purchase_order.pk
 				if delivery.status.name =='WAITTING CONFIRMATION':
 					payload['trigger'] = 'should_confirm%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
 
@@ -979,52 +962,79 @@ class System(Wrappers):
 		return payload
 
 
-	def accept_delivery_activity(self, payload, node_info):
+	def accept_order(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			delivery_activity = DeliveryActivity.objects.get(id=payload['delivery_activity_id'])
+			delivery = Delivery.objects.get(id=payload['delivery_id'])
 
-			purchase_order = delivery_activity.delivery.order
+			purchase_order = delivery.order
 			payload['purchase_order_id'] = purchase_order.pk
 
-			delivery_activity.delivery.status =  DeliveryStatus.objects.get(name='IN_PROCESS')
-			delivery_activity.delivery.save()
+			coordinates = payload['delivery_origin']
+			longitude, latitude = coordinates.split(',', 1)
+			trans_point = Point(float(longitude), float(latitude))
+			delivery.origin_name = coordinates
+			delivery.origin_coord = trans_point
+			delivery.status =  DeliveryStatus.objects.get(name='IN PROGRESS')
+			delivery.save()
 
-
-			DeliveryActivity.objects.filter(delivery__order=purchase_order)\
-				.update(status = DeliveryActivityStatus.objects.get(name='REJECTED'))
-
-			delivery_activity.status = DeliveryActivityStatus.objects.get(name='ACCEPTED')
-			delivery_activity.save()
 
 			payload["response_status"] = "00"
-			payload["response"] = "Delivery Activity Accepted"
+			payload["response"] = "Delivery Accepted Accepted"
 		except Exception, e:
 			payload['response_status'] = '96'
-			lgr.info("Error on accepting Delivery Activity: %s" % e)
+			lgr.info("Error on accepting Delivery: %s" % e)
 
 		return payload
 
 	def delivery_done(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			delivery_activity = DeliveryActivity.objects.get(id=payload['delivery_activity_id'])
+			delivery = Delivery.objects.get(id=payload['delivery_id'])
 
-			purchase_order = delivery_activity.delivery.order
-			payload['purchase_order_id'] = purchase_order.pk
-
-			delivery_activity.delivery.status =  DeliveryStatus.objects.get(name='WAITTING CONFIRMATION')
-			delivery_activity.delivery.save()
-
-			delivery_activity.status = DeliveryActivityStatus.objects.get(name='COMPLETED')
-			delivery_activity.save()
+			delivery.status =  DeliveryStatus.objects.get(name='WAITTING CONFIRMATION')
+			delivery.save()
 
 			payload["response_status"] = "00"
-			payload["response"] = "Delivery Activity COMPLETED"
+			payload["response"] = "Delivery DELIVERED"
 		except Exception, e:
 			payload['response_status'] = '96'
-			lgr.info("Error on Completing Delivery Activity: %s" % e)
+			lgr.info("Error on Completing Delivery: %s" % e)
 
+		return payload
+
+	def delivery_details(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			delivery = Delivery.objects.get(id=payload['delivery_id'])
+
+			purchase_order = delivery.order
+			payload['purchase_order_id'] = purchase_order.pk
+			payload['delivery_status'] = delivery.status.name
+
+			if delivery.delivery_profile:
+				payload['delivery_profile_phone'] = delivery.delivery_profile.msisdn.phone_number
+				delivery_user = delivery.delivery_profile.user
+				payload['delivery_profile_name'] = delivery_user.first_name +' '+delivery_user.last_name
+
+			payload['delivery_origin_name'] = delivery.origin_name
+			if delivery.origin_coord:
+				payload['delivery_origin_coord'] = '{},{}'.format(delivery.origin_coord.x,delivery.origin_coord.y)
+			payload['delivery_destination_name'] = delivery.destination_name
+			if delivery.destination_coord:
+				payload['delivery_destination_coord'] = '{},{}'.format(delivery.destination_coord.x, delivery.destination_coord.y)
+
+			delivery_recipient = purchase_order.gateway_profile
+			payload['delivery_recipient_name'] = delivery_recipient.user.first_name+' '+delivery_recipient.user.last_name
+			payload['delivery_recipient_phone'] = delivery_recipient.msisdn.phone_number
+
+			payload['delivery_schedule'] = delivery.schedule
+
+			payload["response_status"] = "00"
+			payload["response"] = "Got Delivery Details"
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error Getting Delivery Details: %s" % e)
 		return payload
 
 	def delivery_confirm(self, payload, node_info):
