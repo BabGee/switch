@@ -100,7 +100,23 @@
                                data-value="{% for cat in page_input.access_level.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"
                                data-url="/iic_editor/page_inputs/"
                                data-title="Select Access Levels"></a>
-                                Input Variable Usage Count : <strogn>{{ page_input.input_variable.pageinput_set.count }}</strogn>
+
+                    <br>
+                    Gateways {% for cat in page_input.gateway.all %}{{ cat.name }},{% endfor %}
+{#                            <a href="#"#}
+{#                               class="page_input_gateway"#}
+{#                               data-type="checklist"#}
+{#                               data-pk="{{ page_input.pk }}"#}
+{#                               data-name="gateways"#}
+{#                               data-value="{% for cat in page_input.gateway.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"#}
+{#                               data-url="/iic_editor/page_inputs/"#}
+{#                               data-title="Select gateways"></a>#}
+{#                #}
+                <br>
+                    Channels {% for cat in page_input.channel.all %}{{ cat.name }},{% endfor %}
+
+
+                           <br>     Input Variable Usage Count : <strong>{{ page_input.input_variable.pageinput_set.count }}</strong>
 
                     <br>
                 Triggers {{ page_input.trigger_list }}

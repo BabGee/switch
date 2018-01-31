@@ -590,7 +590,8 @@ class System(Wrappers):
 			# gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			product = ProductItem.objects.get(pk=payload['product_item_id'])
-			product.delete()
+			product.status = ProductStatus.objects.get(name='DELETED')
+			product.save()
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Product Deleted Succefully'

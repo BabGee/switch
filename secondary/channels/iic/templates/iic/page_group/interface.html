@@ -43,6 +43,7 @@
                     <div class="list-group-item list-group-item-action {% if page_l == page %}active{% endif %}">
                         {{ page_l.name }}
 
+                        <a class="float-right" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page_l.pk }}/">
                         <span class="fa fa-info-circle" ></span>
 
                         <a class="float-right" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page_l.pk }}/">
@@ -88,7 +89,7 @@
 
             <ul class="list-group">
                 {% for page_input in page_inputs %}
-                    <li class="list-group-item">
+                    <li class="list-group-item list-group-item-{% if page_input.page_input_status.name == 'ACTIVE' %}{% else %}danger{% endif %}">
                         {{ page_input.page_input }}
 
                        <strong>{{ page_input.input_variable.variable_type }}</strong>

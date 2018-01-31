@@ -108,7 +108,7 @@ class Interface(Authorize, ServiceCall):
 					lgr.info('# A system User Login')
 					gateway_profile_list = GatewayProfile.objects.filter(Q(Q(allowed_host__host=str(payload['gateway_host'])),Q(allowed_host__status__name='ENABLED'))\
 								|Q(Q(gateway__default_host__host=str(payload['gateway_host'])),Q(gateway__default_host__status__name='ENABLED')),\
-								Q(user__username='System@User'),Q(status__name__in=['ACTIVATED','ONE TIME PIN'])).\
+								Q(user__username='System@User'),Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS'])).\
 								prefetch_related('user','msisdn','gateway')[:1]
 
 				#Integration would need an API Key for the specific user.
@@ -123,7 +123,7 @@ class Interface(Authorize, ServiceCall):
 								allowed_host__status__name='ENABLED')|Q(gateway__default_host__host=payload['gateway_host'],\
 								gateway__default_host__status__name='ENABLED'),\
 								Q(Q(user__username=credentials['username'])|Q(user__email=credentials['username'])),\
-								Q(status__name__in=['ACTIVATED','ONE TIME PIN']))#Cant Filter as password check continues
+								Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS']))#Cant Filter as password check continues
 
                 	        	if gateway_profile_list.exists():
 						gp = None
@@ -151,7 +151,7 @@ class Interface(Authorize, ServiceCall):
 							gateway_profile__allowed_host__status__name='ENABLED')|\
 							Q(gateway_profile__gateway__default_host__host=payload['gateway_host'],\
 							gateway_profile__gateway__default_host__status__name='ENABLED'),\
-							Q(gateway_profile__status__name__in=['ACTIVATED','ONE TIME PIN'])).\
+							Q(gateway_profile__status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS'])).\
 							prefetch_related('gateway_profile')[:1]
 
 						if session.exists():

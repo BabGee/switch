@@ -145,6 +145,9 @@ def gateway_profile_list(request, gateway_pk):
     gateway_profiles = GatewayProfile.objects.filter(gateway=gateway).order_by('-id')
     page = request.GET.get('page', 1)
 
+    q = request.GET.get('q',None)
+    if q:
+        gateway_profiles = gateway_profiles.filter(msisdn__phone_number__icontains=q)
 
     paginator = Paginator(gateway_profiles, 50)
     try:
@@ -471,7 +474,7 @@ def page_list(request, gateway_pk, service, page_group_pk):
         'page_group': page_group})
 
 
-def page_order(request, gateway_pk, page_group_pk):
+def page_order(request, gateway_pk,service, page_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     pages = page_group.page_set.all().order_by('item_level')
@@ -486,13 +489,14 @@ def page_order(request, gateway_pk, page_group_pk):
 
             # http://localhost:8000/iic_editor/gateways/4/page_groups/30/pages/order/
             return redirect(
-                '/iic_editor/gateways/{}/page_groups/{}/pages/order/'.format(gateway_pk, page_group_pk)
+                '/iic_editor/gateways/{}/{}/page_groups/{}/pages/order/'.format(gateway_pk,service, page_group_pk)
             )
     else:
         form = PageOrderConfigForm()
 
     return render(request, "iic/page/order.html", {
         'gateway': gateway,
+        'service': service,
         'pages': pages,
         'form': form,
         'page_group': page_group
@@ -845,7 +849,7 @@ def page_input_create(request, gateway_pk, service, page_group_pk, page_pk, page
                 )
             )
     else:
-        form = PageInputVariableForm()
+        form = PageInputVariableForm(initial={'input_variable_validate_min': '1','input_variable_validate_max':'100'})
     return render(request, "iic/page_input/create.html", {
         'gateway': gateway,
         'page': page,

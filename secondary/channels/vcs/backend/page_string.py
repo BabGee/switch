@@ -932,7 +932,7 @@ class PageString(ServiceCall, Wrappers):
 						amount = amount - given_amount
 						if amount > Decimal(0):
 							amount = '{0:,.2f}'.format(amount)
-							name = '%s %s%s %s' % (i.gateway_profile.user.last_name[:6], i.currency.code, amount, i.date_created.strftime("%d/%b/%Y"))
+							name = '%s %s%s@%s%% %s' % (i.gateway_profile.user.last_name[:6], i.currency.code, amount, i.interest_rate, i.date_created.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
@@ -986,7 +986,8 @@ class PageString(ServiceCall, Wrappers):
 						amount = amount - given_amount
 						if amount > Decimal(0):
 							amount = '{0:,.2f}'.format(amount)
-							name = '%s %s%s %s' % (i.gateway_profile.user.last_name[:6], i.currency.code, amount, i.date_created.strftime("%d/%b/%Y"))
+							#name = '%s %s%s %s' % (i.gateway_profile.user.last_name[:6], i.currency.code, amount, i.date_created.strftime("%d/%b/%Y"))
+							name = '%s %s%s@%s%% %s' % (i.gateway_profile.user.last_name[:6], i.currency.code, amount, i.interest_rate, i.date_created.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)

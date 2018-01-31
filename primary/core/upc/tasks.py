@@ -567,22 +567,22 @@ class System(Wrappers):
 
 					if gateway_profile_device_list.exists() and gateway_profile_device.exists() and gateway_profile_device[0].gateway_profile.status.name=='ONE TIME PIN':
 						payload['trigger'] = 'one_time_pin%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-						payload['response'] = 'Device Validation'
+						payload['response'] = 'Device Validation one_time_pin'
 						payload['response_status'] = '00'
 					elif gateway_profile_device_list.exists() and gateway_profile_device.exists():
 						payload['trigger'] = 'device_valid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-						payload['response'] = 'Device Validation'
+						payload['response'] = 'Device Validation device_valid'
 						payload['response_status'] = '00'
 					elif gateway_profile_device_list.exists():
 						payload['trigger'] = 'device_not_valid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-						payload['response'] = 'Device Validation'
+						payload['response'] = 'Device Validation device_not_valid'
 						payload['response_status'] = '00'
 					else:
 						payload['trigger'] = 'device_not_valid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 						gateway_profile_device = GatewayProfileDevice(channel=Channel.objects.get(id=payload['chid']),\
 												gateway_profile=gateway_profile_list[0])
 						gateway_profile_device.save()
-						payload['response'] = 'Device Validation'
+						payload['response'] = 'Device Validation device_not_valid new device'
 						payload['response_status'] = '00'
 				else:
 					payload['response'] = 'MSISDN Not Found'
@@ -742,7 +742,7 @@ class System(Wrappers):
 			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 			if 'email' in payload.keys() and self.validateEmail(payload["email"]): 
 				existing_gateway_profile = GatewayProfile.objects.filter(Q(user__email=payload['email']), ~Q(id=session_gateway_profile.id),\
-							Q(gateway=session_gateway_profile.gateway),Q(status__name__in=['ACTIVATED','ONE TIME PIN']))
+							Q(gateway=session_gateway_profile.gateway),Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS']))
 				if existing_gateway_profile.exists():
 					payload['response'] = 'Profile With Email Already exists'
 					payload['response_status'] = '26'
@@ -1024,7 +1024,7 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			session_gateway_profile = GatewayProfile.objects.filter(Q(user__username=payload['username'])|Q(user__email=payload['username']),\
-								Q(gateway=gateway_profile.gateway),Q(status__name__in=['ACTIVATED','ONE TIME PIN']))
+								Q(gateway=gateway_profile.gateway),Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS']))
 			if len(session_gateway_profile) > 0:
 				email = session_gateway_profile[0].user.email
 				if  email not in [None,""] and self.validateEmail(email):
@@ -1075,6 +1075,7 @@ class System(Wrappers):
 			institution.business_number = createBusinessNumber(str(payload['institution_name'].replace(' ','')[:4]))
 
 			if 'institution_reg_number' in payload.keys(): institution.registration_number = payload['institution_reg_number']
+			if 'institution_tax_pin' in payload.keys(): institution.tax_pin = payload['institution_tax_pin']
 
 			if 'institution_address' in payload.keys(): institution.address = payload['institution_address']
 			if 'institution_physical_address' in payload.keys(): institution.physical_address = payload['institution_physical_address']
@@ -1131,7 +1132,8 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			institution = Institution.objects.get(pk=payload['institution_id'])
-			institution.delete()
+			institution.status = InstitutionStatus.objects.get(name='DELETED')
+			institution.save()
 
 			payload['response'] = 'Institution Deleted'
 			payload['response_status'] = '00'
@@ -1151,6 +1153,7 @@ class System(Wrappers):
 			institution.name = payload['institution_name']
 
 			if 'institution_reg_number' in payload.keys(): institution.registration_number = payload['institution_reg_number']
+			if 'institution_tax_pin' in payload.keys(): institution.tax_pin = payload['institution_tax_pin']
 
 			if 'institution_address' in payload.keys(): institution.address = payload['institution_address']
 			if 'institution_physical_address' in payload.keys(): institution.physical_address = payload['institution_physical_address']
@@ -1326,6 +1329,7 @@ class System(Wrappers):
 				details['institution_logo'] =institution.logo.name
 				details['institution_name'] =institution.name
 				details['institution_reg_number'] =institution.registration_number
+				details['institution_tax_pin'] = institution.tax_pin
 				details['institution_physical_address'] =institution.physical_address
 				details['institution_tagline'] =institution.tagline
 				details['institution_address'] =institution.address

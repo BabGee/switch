@@ -49,6 +49,7 @@ class Institution(models.Model):
 	secondary_color = models.CharField(max_length=100, blank=True, null=True)
 	accent_color = models.CharField(max_length=100, blank=True, null=True)
 	registration_number = models.CharField(max_length=200, blank=True, null=True)
+	tax_pin = models.CharField(max_length=100, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.name)
 	def gateway_list(self):

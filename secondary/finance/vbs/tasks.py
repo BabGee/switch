@@ -789,20 +789,29 @@ class Payments(System):
 
 	def loan_repayment(self, payload, node_info):
 		try:
-			savings_credit_manager = SavingsCreditManager.objects.get(account_manager__id=payload['account_manager_id'],\
+			savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'],\
 								credit_paid=False).order_by('date_created')
+
 			amount = Decimal(0)
 			for i in savings_credit_manager:
-				amount = amount (i.amount + i.charge)
-
+				amount = amount + (i.amount + i.charge)
 
 			credit_amount = Decimal(payload['amount'])
-			if amount <= credit_amount:
-				savings_credit_manager.update(credit_paid=True,paid=F('outstanding'),outstanding=Decimal(0))
+			if savings_credit_manager.exists() and amount <= credit_amount:
+				#Capture account manager prior to updates which will clear the query
 				account_manager = savings_credit_manager[0].account_manager
+
+				outstanding = Decimal(0)
+				savings_credit_manager.update(credit_paid=True,paid=F('outstanding'),outstanding=outstanding)
+
+				#Set paid on Account Manager
 				account_manager.credit_paid = True
 				account_manager.save()
-			else:
+
+				payload['response'] = 'Loan Repaid'
+				payload['response_status'] = '00'
+
+			elif savings_credit_manager.exists():
 				for i in savings_credit_manager:
 					if credit_amount > i.outstanding:
 						credit_amount = credit - i.outstanding
@@ -816,11 +825,14 @@ class Payments(System):
 
 					#save installment updates
 					i.save()
+				payload['response'] = 'Loan Repaid'
+				payload['response_status'] = '00'
+			else:
+
+				payload['response'] = 'No Loan Installment Found'
+				payload['response_status'] = '25'
 
 
-
-			payload['response'] = 'Loan Repaid'
-			payload['response_status'] = '00'
 		except Exception, e:
 			payload['response_status'] = '96'
 			lgr.info("Error on loan repayment: %s" % e)
@@ -930,23 +942,27 @@ class Payments(System):
 							account_manager__id=payload['account_manager_id']).\
 							order_by('-date_created')
 
-			due_date = savings_credit_manager[0].due_date.strftime("%d/%b/%Y")
-			account_type = savings_credit_manager[0].account_manager.dest_account.account_type
+			if savings_credit_manager.exists():
+				due_date = savings_credit_manager[0].due_date.strftime("%d/%b/%Y")
+				account_type = savings_credit_manager[0].account_manager.dest_account.account_type
 
-			amount = Decimal(0)
-			for i in savings_credit_manager:
-				amount = amount + i.outstanding
+				amount = Decimal(0)
+				for i in savings_credit_manager:
+					amount = amount + i.outstanding
 
-			payload['amount'] = amount
-			payload['due_date'] = due_date
-			product_item = account_type.product_item
-			payload['institution_id'] = product_item.institution.id
-			payload['product_item_id'] = product_item.id
-			#payload['till_number'] = product_item.product_type.institution_till.till_number
-			payload['currency'] = product_item.currency.code
+				payload['amount'] = amount
+				payload['due_date'] = due_date
+				product_item = account_type.product_item
+				payload['institution_id'] = product_item.institution.id
+				payload['product_item_id'] = product_item.id
+				#payload['till_number'] = product_item.product_type.institution_till.till_number
+				payload['currency'] = product_item.currency.code
 
-			payload['response'] = 'Captured'
-			payload['response_status'] = '00'
+				payload['response'] = 'Captured'
+				payload['response_status'] = '00'
+			else:
+				payload['response'] = 'Loan Installment not Found'
+				payload['response_status'] = '25'
 
 		except Exception, e:
 			payload['response_status'] = '96'
