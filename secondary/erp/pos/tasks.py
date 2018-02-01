@@ -946,7 +946,7 @@ class System(Wrappers):
 				if delivery.delivery_profile == gateway_profile:
 					if delivery.status.name == 'IN PROGRESS':
 						payload['trigger'] = 'accepted_by_me%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-					elif delivery.status.name == 'CREATED':
+					elif delivery.status.name == 'ASSIGNED':
 						payload['trigger'] = 'accepted_by_none%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
 			else:
 				if delivery.status.name =='WAITTING CONFIRMATION':
@@ -1036,7 +1036,7 @@ class System(Wrappers):
 			payload['response_status'] = '96'
 			lgr.info("Error Getting Delivery Details: %s" % e)
 		return payload
-
+	
 	def delivery_confirm(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
