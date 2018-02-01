@@ -871,11 +871,14 @@ class System(Wrappers):
 
 				delivery.schedule = scheduled_send
 
-				coordinates = payload['delivery_location']
-				longitude, latitude = coordinates.split(',', 1)
-				trans_point = Point(float(longitude), float(latitude))
+				if 'delivery_location_coord' in payload.keys():
+					coordinates = payload['delivery_location_coord']
+					longitude, latitude = coordinates.split(',', 1)
+					trans_point = Point(float(longitude), float(latitude))
+					delivery.destination_coord = trans_point
+
 				delivery.destination_name = payload['delivery_location_name']
-				delivery.destination_coord = trans_point
+
 
 				delivery.save()
 

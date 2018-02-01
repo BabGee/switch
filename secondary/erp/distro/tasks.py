@@ -54,7 +54,7 @@ class System(Wrappers):
 		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 		institution = Institution.objects.get(id=payload['institution_id'])
 		agent = Agent.objects.get(profile=gateway_profile.user.profile)
-		trading_institution_list = TradingInstitution.objects.filter(institution=institution)
+		trading_institution_list = TradingInstitution.objects.filter(institution=institution, agent=agent)
 		if trading_institution_list.exists():
 			trading_institution = trading_institution_list[0]
 		else:
