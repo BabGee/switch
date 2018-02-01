@@ -489,7 +489,7 @@ class System(Wrappers):
 				if gateway_profile_device_list.exists():
 					session_gateway_profile_device = gateway_profile_device_list[0]
 					salt = str(session_gateway_profile_device.gateway_profile.id)
-					salt = '0%' % salt if len(salt) < 2 else salt
+					salt = '0%s' % salt if len(salt) < 2 else salt
 					hash_pin = crypt.crypt(str(payload['one_time_code']), salt)
 					if hash_pin == session_gateway_profile_device.activation_code:
 						session_gateway_profile_device.device_id = payload['fingerprint']
@@ -528,7 +528,7 @@ class System(Wrappers):
 					rnd = random.SystemRandom()
 					pin = ''.join(rnd.choice(chars) for i in range(0,4))
 					salt = str(session_gateway_profile_device.gateway_profile.id)
-					salt = '0%' % salt if len(salt) < 2 else salt
+					salt = '0%s' % salt if len(salt) < 2 else salt
 
 					hash_pin = crypt.crypt(str(pin), salt)
 
@@ -622,7 +622,7 @@ class System(Wrappers):
 				if msisdn == change_msisdn.msisdn:
 					if change_msisdn.status.name == 'PROCESSED' and change_msisdn.expiry >= timezone.now():
 						salt = str(gateway_profile.id)
-						salt = '0%' % salt if len(salt) < 2 else salt
+						salt = '0%s' % salt if len(salt) < 2 else salt
 
 						hash_pin = crypt.crypt(str(payload['verification_code']), salt)
 
@@ -670,7 +670,7 @@ class System(Wrappers):
 				pin = ''.join(rnd.choice(chars) for i in range(0,4))
 
 				salt = str(gateway_profile.id)
-				salt = '0%' % salt if len(salt) < 2 else salt
+				salt = '0%s' % salt if len(salt) < 2 else salt
 
 				change_pin = crypt.crypt(str(pin), salt)
 				expiry = timezone.localtime(timezone.now())+timezone.timedelta(minutes=5)
@@ -783,7 +783,7 @@ class System(Wrappers):
 			if new_pin == payload['confirm_pin']:
 
 				salt = str(session_gateway_profile.id)
-				salt = '0%' % salt if len(salt) < 2 else salt
+				salt = '0%s' % salt if len(salt) < 2 else salt
 
 				hash_pin = crypt.crypt(str(new_pin), salt)
 				session_gateway_profile.pin = hash_pin
@@ -806,7 +806,7 @@ class System(Wrappers):
 			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 
 			salt = str(session_gateway_profile.id)
-			salt = '0%' % salt if len(salt) < 2 else salt
+			salt = '0%s' % salt if len(salt) < 2 else salt
 
 			hash_pin = crypt.crypt(str(payload['pin']), salt)
 
@@ -929,7 +929,7 @@ class System(Wrappers):
 			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 
 			salt = str(session_gateway_profile.id)
-			salt = '0%' % salt if len(salt) < 2 else salt
+			salt = '0%s' % salt if len(salt) < 2 else salt
 
 			hash_pin = crypt.crypt(str(payload['one_time_pin']), salt)
 
@@ -984,7 +984,7 @@ class System(Wrappers):
 
 
 			salt = str(session_gateway_profile.id)
-			salt = '0%' % salt if len(salt) < 2 else salt
+			salt = '0%s' % salt if len(salt) < 2 else salt
 
 			hash_pin = crypt.crypt(str(pin), salt)
 
@@ -1782,7 +1782,7 @@ class System(Wrappers):
 						session_gateway_profile = gateway_profile_device_list[0].gateway_profile
 		
 						salt = str(session_gateway_profile.id)
-						salt = '0%' % salt if len(salt) < 2 else salt
+						salt = '0%s' % salt if len(salt) < 2 else salt
 
 						hash_pin = crypt.crypt(str(payload['pin']), salt)
 						if hash_pin == session_gateway_profile.pin:
