@@ -69,6 +69,8 @@ class System(Wrappers):
 				for supplier in supplier_list: trading_institution.supplier.add(supplier)
 
 		payload['trading_institution_id'] = trading_institution.id
+		payload['trading_institution_name'] = trading_institution.name
+
 		payload['enrollment_type_id'] = trading_institution.trader_type.enrollment_type.id
 		payload['response'] = 'Institution Captured'
 		payload['response_status'] = '00'
