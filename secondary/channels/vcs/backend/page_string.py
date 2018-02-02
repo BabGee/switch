@@ -1365,7 +1365,7 @@ class PageString(ServiceCall, Wrappers):
 
 					if account_list.exists():
 		                                amount = '{0:,.2f}'.format(account_list[0].credit_limit) if account_list[0].credit_limit else 0
-						currency = account_list[0].credit_limit_currency
+						currency = account_list[0].account_type.product_item.currency.code
 						item = '%s %s\n' % (currency,amount)
 
 					lgr.info('Your List: %s' % item)

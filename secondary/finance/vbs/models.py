@@ -71,7 +71,6 @@ class InstitutionAccount(models.Model):
 	is_default = models.NullBooleanField(default=False)
 	account_status = models.ForeignKey(AccountStatus)	
 	credit_limit = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
-	credit_limit_currency = models.ForeignKey(Currency, null=True, blank=True)
 	account_type = models.ForeignKey(AccountType)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.institution, self.is_default, self.account_type)
@@ -83,7 +82,6 @@ class Account(models.Model):
 	is_default = models.NullBooleanField(default=False)
 	account_status = models.ForeignKey(AccountStatus)	
 	credit_limit = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
-	credit_limit_currency = models.ForeignKey(Currency, null=True, blank=True)
 	account_type = models.ForeignKey(AccountType)
 	profile = models.ForeignKey(Profile, null=True, blank=True) #Account Owner
 	def __unicode__(self):
