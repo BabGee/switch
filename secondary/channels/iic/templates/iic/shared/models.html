@@ -1,5 +1,5 @@
 {% load iic_extras %}
 
 {% for model in models %}
-<option>{{ model|to_class_name }}</option>
+<option {% if selected_model == model|to_l_class_name %}selected{% endif %}>{{ model|to_class_name }}</option>
 {% endfor %}

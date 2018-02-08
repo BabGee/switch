@@ -43,12 +43,14 @@
                     <div class="list-group-item list-group-item-action {% if page_l == page %}active{% endif %}">
                         {{ page_l.name }}
 
-                        <a class="float-right" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page_l.pk }}/">
-                        <span class="fa fa-info-circle" ></span>
+                        <a class="float-right"
+                           href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page_l.pk }}/">
+                            <span class="fa fa-info-circle"></span>
 
-                        <a class="float-right" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page_l.pk }}/">
-                            <span class="fa fa-caret-right"></span>
-                        </a>
+                            <a class="float-right"
+                               href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page_l.pk }}/">
+                                <span class="fa fa-caret-right"></span>
+                            </a>
 
                     </div>
 
@@ -68,12 +70,13 @@
 
                 {% for page_input_group_l in page_input_groups %}
                     <div class="list-group-item list-group-item-action {% if page_input_group_l == page_input_group %}active{% endif %}">
-                    {{ page_input_group_l.name }}
+                        {{ page_input_group_l.name }}
 
-                        <span class="fa fa-info-circle page-input-group" ></span>
-                    <a class="float-right" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page.pk }}/{{ page_input_group_l.pk }}/">
-                        <span class="fa fa-caret-right"></span>
-                    </a>
+                        <span class="fa fa-info-circle page-input-group"></span>
+                        <a class="float-right"
+                           href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page.pk }}/{{ page_input_group_l.pk }}/">
+                            <span class="fa fa-caret-right"></span>
+                        </a>
                     </div>
                 {% empty %}
                     <li>No items</li>
@@ -82,18 +85,72 @@
         </div>
         <div class="col-md-4">
 
-        <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/">View Detailed List</a>
+            <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/">View
+                Detailed List</a>
 
             <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/create/">Add
                 New</a>
 
             <ul class="list-group">
                 {% for page_input in page_inputs %}
-                    <li class="list-group-item list-group-item-{% if page_input.page_input_status.name == 'ACTIVE' %}{% else %}danger{% endif %}">
+                    <li class="list-group-item list-group-item-
+                            {% if page_input.page_input_status.name == 'ACTIVE' %}{% else %}danger{% endif %}">
                         {{ page_input.page_input }}
 
-                       <strong>{{ page_input.input_variable.variable_type }}</strong>
+                        <strong>{{ page_input.input_variable.variable_type }}</strong>
+
+
                         {{ page_input.input_variable.pk }}
+                        {% if page_input.channel.exists %}
+
+                            {% for channel in page_input.channel.all %}
+                                {% if channel.name == 'Android' %}
+                                    <span class="fa fa-mobile"></span>
+
+                                {% elif channel.name == 'WEB' %}
+                                    <span class="fa fa-desktop"></span>
+                                {% else %}
+                                    {% comment %} TODO do nothing for now {% endcomment %}
+                                {% endif %}
+
+                            {% endfor %}
+                        {% endif %}
+
+                        {% if page_input.trigger.exists %}
+                            <br>
+
+                            {% for trigger in page_input.trigger.all %}
+                                <span class="badge badge-dark">{{ trigger.name }}</span>
+                            {% endfor %}
+
+                        {% endif %}
+                        <br>
+
+                        {% if page_input.input_variable.variable_type.name == 'SHOPPING CART BTN' or page_input.input_variable.variable_type.name == 'HYPERLINK' %}
+
+                            <a target="_blank"
+                               href="/iic_editor/gateways/{{ gateway.pk }}/{{ page_input.input_variable.service.name }}/">
+                                Service <span class="fa fa-cogs"></span></a>
+                            <span style="width: 3px"></span>
+                            <a target="_blank"
+                               href="/iic_editor/gateways/{{ gateway.pk }}/{{ page_input.input_variable.service.name }}/interface/">
+                                Next <span class="fa fa-caret-right"></span></a>
+
+
+
+                        {% elif page_input.input_variable.variable_type.name == 'SUBMIT' %}
+
+                            <a target="_blank"
+                               href="/iic_editor/gateways/{{ gateway.pk }}/{{ page_input.page_input_group.input_variable.service.name }}/">
+                                Service <span class="fa fa-cogs"></span></a>
+                            <span style="width: 3px"></span>
+                            <a target="_blank"
+                               href="/iic_editor/gateways/{{ gateway.pk }}/{{ page_input.page_input_group.input_variable.service.name }}/interface/">
+                                Next <span class="fa fa-caret-right"></span></a>
+
+                        {% endif %}
+
+
                     </li>
                 {% empty %}
                     <li class="list-group-item">No items</li>

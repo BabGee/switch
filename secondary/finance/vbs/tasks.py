@@ -949,8 +949,9 @@ class Payments(System):
 				amount = Decimal(0)
 				for i in savings_credit_manager:
 					amount = amount + i.outstanding
-
-				payload['amount'] = amount
+				#If any amount is given for repayment, allow. If any amount is greater than the amount, pick outstanding amount
+				if 'amount' not in payload.keys()  or ('amount' in payload.keys() and Decimal(payload['amount']) > amount):
+					payload['amount'] = amount
 				payload['due_date'] = due_date
 				product_item = account_type.product_item
 				payload['institution_id'] = product_item.institution.id

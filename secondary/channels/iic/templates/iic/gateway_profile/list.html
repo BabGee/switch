@@ -5,6 +5,7 @@
                 <input class="form-control mr-sm-2"
                        type="search"
                        name="q"
+                       value="{% if request.GET.q %}{{ request.GET.q }}{% endif %}"
                        placeholder="Search {{ gateway_profiles.paginator.count }} Profiles" aria-label="Search">
 
             </form>

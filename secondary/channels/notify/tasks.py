@@ -399,6 +399,26 @@ class System(Wrappers):
 			lgr.info("Error on Init Notification: %s" % e)
 		return payload
 
+	def should_send_sms(self, payload, node_info):
+		'''
+		Adds a trigger `send_sms_notification` used on next service commands to run
+		is added if str(payload['send_sms']) == 'True'
+
+		'''
+		try:
+			if 'send_sms' in payload.keys() and str(payload['send_sms']) == 'True':
+				payload['trigger'] = 'send_sms_notification%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
+			else:
+				# TODO remove send_sms_notification trigger if exists
+				pass
+
+			payload['response_status'] = '00'
+			payload['response'] = 'Notification Initialized'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Init Notification: %s" % e)
+		return payload
+
 
 	def get_notification(self, payload, node_info):
 		try:

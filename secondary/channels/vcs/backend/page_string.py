@@ -693,7 +693,7 @@ class PageString(ServiceCall, Wrappers):
 
 					params = payload
 
-					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id']).\
+					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'], credit_paid=False).\
 									order_by('-date_created')
 
 					currency = savings_credit_manager[0].account_manager.dest_account.account_type.product_item.currency.code
@@ -712,13 +712,36 @@ class PageString(ServiceCall, Wrappers):
 					page_string = page_string.replace('['+v+']',item)
 
 
+				elif variable_key == 'any_installment_details':
+
+					from secondary.finance.vbs.models import SavingsCreditManager
+
+					params = payload
+
+					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'], credit_paid=False).\
+									order_by('-date_created')[:1]
+
+					account_type = savings_credit_manager[0].account_manager.dest_account.account_type.name
+					amount = Decimal(payload['amount'])
+
+					currency = savings_credit_manager[0].account_manager.dest_account.account_type.product_item.currency.code
+					due_date = savings_credit_manager[0].due_date
+					item = ''
+					amount = '{0:,.2f}'.format(amount)
+					item = '%s-%s %s %s' % (account_type, currency, amount,\
+									due_date.strftime("%d/%b/%Y"))
+
+					page_string = page_string.replace('['+v+']',item)
+
+
+
 				elif variable_key == 'one_installment_details':
 
 					from secondary.finance.vbs.models import SavingsCreditManager
 
 					params = payload
 
-					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id']).\
+					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'],credit_paid=False).\
 									order_by('-date_created')[:1]
 
 					account_type = savings_credit_manager[0].account_manager.dest_account.account_type.name
@@ -1405,6 +1428,25 @@ class PageString(ServiceCall, Wrappers):
 					page_string = page_string.replace('['+v+']',item)
 
 
+				elif variable_key == 'account_manager_amount_limit':
+					from secondary.finance.vbs.models import AccountManager, AccountCharge
+					params = payload
+
+					account_type = AccountManager.objects.get(id=params['account_manager_id']).dest_account.account_type
+
+					max_amount = account_type.product_item.unit_limit_max
+					max_amount = max_amount if max_amount > 0 else Decimal(0)
+	                                max_amount = '{0:,.2f}'.format(max_amount) 
+
+					min_amount = account_type.product_item.unit_limit_min
+					min_amount = min_amount if min_amount > 0 else Decimal(0)
+	                                min_amount = '{0:,.2f}'.format(min_amount) 
+					currency = account_type.product_item.currency.code
+					item = '\nMin:%s %s\nMax:%s %s\n' % (currency,min_amount,currency,max_amount)
+
+					page_string = page_string.replace('['+v+']',item)
+
+
 				elif variable_key == 'account_amount_limit':
 					from secondary.finance.vbs.models import AccountType, AccountCharge
 					params = payload
@@ -1494,6 +1536,16 @@ class PageString(ServiceCall, Wrappers):
 
 					page_string = page_string.replace('['+v+']',item)
 
+
+
+				elif variable_key == 'email':
+
+					item = ''
+
+					if navigator.session.gateway_profile:
+						item = navigator.session.gateway_profile.user.email
+
+					page_string = page_string.replace('['+v+']',item)
 
 
 				elif variable_key == 'national_id':

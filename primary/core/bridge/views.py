@@ -152,7 +152,10 @@ class ServiceProcessor:
 							lgr.info('This definitely has to be reversed surely: %s' % item.level)
 							reverse=True
 							level=item.level
-						response_tree['response'][item.command_function] = response
+						if item.command_function in response_tree['response'].keys():
+							response_tree['response'][item.command_function+str(item.level)] = response
+						else:
+							response_tree['response'][item.command_function] = response
 						break
 					else:
 						#Log command to transaction
@@ -164,7 +167,11 @@ class ServiceProcessor:
 							else:
 								transaction.next_command = None
 						response = payload['response']
-					response_tree['response'][item.command_function] = response
+					if item.command_function in response_tree['response'].keys():
+						response_tree['response'][item.command_function+str(item.level)] = response
+					else:
+						response_tree['response'][item.command_function] = response
+
 				else:
 					#No action
 					continue

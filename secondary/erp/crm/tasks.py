@@ -464,13 +464,14 @@ class System(Wrappers):
 	def add_product_type(self,payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			institution = gateway_profile.institution
 
-			try:
-				product_type = ShopProductType.objects.get(name=payload['product_type_name'])
-			except ShopProductType.DoesNotExist:
+			product_types = ShopProductType.objects.filter(name=payload['product_type_name'], institution=institution)
+			if product_types.exists:
+				product_type = product_types[0]
+			else:
 				product_type = ShopProductType()
 				product_type.name = payload['product_type_name']
-
 				try:
 					shop_product_category = ShopProductCategory.objects.get(name=payload['product_type_category'])
 				except ShopProductCategory.DoesNotExist:
@@ -483,7 +484,7 @@ class System(Wrappers):
 				product_type.shop_product_category = shop_product_category
 				product_type.description = payload['product_type_description']
 				product_type.status = ProductStatus.objects.get(name='ACTIVE')
-				product_type.institution = gateway_profile.institution
+				product_type.institution = institution
 
 				product_type.save()
 

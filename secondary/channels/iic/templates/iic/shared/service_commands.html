@@ -1,0 +1,7 @@
+{% for service_command in service_commands %}
+<option >
+    {{ service_command.command_function }} <br> {{ service_command.docstring }}
+
+
+</option>
+{% endfor %}

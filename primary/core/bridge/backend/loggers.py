@@ -125,8 +125,7 @@ class Loggers:
 					if key not in ['get_interface','get_section','login','get_institution_details','get_gateway_details','session']:
 						key = str(key[:30])
 						if count <= 20:
-							response_obj = {key: str(value)[:100]}
-							response_tree[count] = response_obj
+							response_tree[key] = str(value)[:100]
 						else:
 							break
 						count = count+1

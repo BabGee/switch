@@ -37,7 +37,18 @@ urlpatterns = [
         # url(r'^fields$', datalist_list),
         url(r'^(?P<data_name>[\w]+)/', include([
             url(r'^$', datalist_list_query_editor),
+            url(r'^duplicate$', datalist_duplicate),
         ])),
+    ]), name='dsc'),
+    url(r'node_systems/', include([
+
+        url(r'^service_commands/$', node_system_service_commands), # TODO move this below
+
+        url(r'^(?P<node_system_pk>\d+)/', include([
+            # url(r'^$', page_group_detail),
+            url(r'^service_commands/(?P<service_command_pk>\d+)/code$', node_system_service_commands_code),
+        ])),
+
     ]), name='dsc'),
     url(r'gateways/', include([
         url(r'^$', gateway_list),
@@ -73,7 +84,7 @@ urlpatterns = [
                 ])),
 
             ])),
-            url(r'^(?P<service>[\w\ ]+)/', include([
+            url(r'^(?P<service_name>[\w\ ]+)/', include([
                 url(r'^$', gateway_service), # todo detail view
                 url(r'^interface/', include([
                     url(r'^$', interface),

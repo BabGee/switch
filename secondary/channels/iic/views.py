@@ -29,7 +29,9 @@ from .forms import \
     PageOrderConfigForm, \
     PageInputOrderConfigForm, \
     PageInputGroupForm, \
-    PageGroupPageForm
+    PageGroupPageForm,\
+    DataListForm,\
+    DataListQueryForm
 
 from django.db.models import Q
 from primary.core.administration.models import Channel
@@ -70,13 +72,98 @@ def datalist_list(request):
 def module_models(request):
     from django.apps import apps
     module = request.GET.get('module').lower()
+    selected_model = request.GET.get('model').lower()
     app = module.split('.')[-1]
 
     app_models = apps.get_app_config(app).get_models()
     # for model in app_models:
     #     pass
 
-    return render(request, "iic/shared/models.html", {'models': app_models})
+    return render(request, "iic/shared/models.html", {'models': app_models,'selected_model':selected_model})
+
+
+import ast, os
+from django.conf import settings
+# this two are used in the next two views
+
+def node_system_service_commands(request): # todo update url and pass id in  view args
+    node_system = NodeSystem.objects.get(pk=request.GET.get('node_system_id'))
+    ast_filename = os.path.join(settings.BASE_DIR,node_system.URL.lower().replace('.','/'),'tasks.py')
+
+
+    with open(ast_filename) as fd:
+        file_contents = fd.read()
+
+    module = ast.parse(file_contents)
+    class_definitions = [node for node in module.body if isinstance(node, ast.ClassDef)]
+    service_commands = []
+
+    for class_def in class_definitions:
+
+        method_definitions = class_def.body
+        for f in method_definitions:
+            if isinstance(f, ast.FunctionDef):
+                service_commands.append(dict(
+                    command_function=f.name,
+                    docstring=ast.get_docstring(f)
+                ))
+
+    return render(request, "iic/shared/service_commands.html", {
+        'service_commands': service_commands
+    })
+
+
+def node_system_service_commands_code(request,node_system_pk,service_command_pk):
+    node_system = NodeSystem.objects.get(pk=node_system_pk)
+    service_command = ServiceCommand.objects.get(pk=service_command_pk)
+
+    ast_filename = os.path.join(settings.BASE_DIR,node_system.URL.lower().replace('.','/'),'tasks.py')
+
+    with open(ast_filename) as fd:
+        file_contents = fd.read()
+
+    module = ast.parse(file_contents)
+    class_definitions = [node for node in module.body if isinstance(node, ast.ClassDef)]
+
+    service_commands = []
+
+    start_line_contains = False
+    end_line_contains = None
+
+    class_node = None
+    for class_def in class_definitions:
+        method_definitions = class_def.body
+        for f in method_definitions:
+            if isinstance(f, ast.FunctionDef):
+                if not start_line_contains and f.name == service_command.command_function:
+                    start_line_contains = True
+                    continue
+
+                if start_line_contains and not end_line_contains:
+                    end_line_contains = f.name
+                    break
+
+    code = []
+    #### parse the code fragment
+    with open(ast_filename) as fd:
+        file_contents = fd.readlines()
+        in_block = False
+        for line in file_contents:
+            if (not in_block) and 'def' in line and service_command.command_function in line:
+                code.append(line)
+                in_block = True
+            elif (in_block) and ('class' in line or ('def' in line and end_line_contains in line)): # (class_node and (class_def is not class_node))
+                in_block = False
+                break
+
+            if in_block:
+                code.append(line)
+    # class_node = class_def
+    #### end parse code fragment
+
+    return render(request, "iic/shared/service_command_code.html", {
+        'fragment':''.join(code),
+    })
 
 
 def datalist_list_query_editor(request, data_name):
@@ -123,12 +210,41 @@ def datalist_list_query_editor(request, data_name):
         }
         links_objs.append(tmp)
 
+    usages = PageInput.objects.filter(
+        input_variable__service__name='DATA SOURCE',
+        input_variable__default_value__icontains=data_name
+    )
+
     return render(request, "iic/datalist/editor.html", {
         'data_list': data_list,
         'values': values_objs,
         'links': links_objs,
-        'modules': modules
+        'modules': modules,
+        'usages':usages
     })
+
+
+def datalist_duplicate(request, data_name):
+    # filter gateways
+    data_list = DataList.objects.get(data_name=data_name)
+    data_list_query = data_list.query
+
+    if request.method == 'POST':
+        data_list_form = DataListForm(instance=data_list)
+        new_data_list = data_list_form.save(commit=False)
+        new_data_list.pk = None
+        new_data_list.data_name = request.POST.get('new_data_name')
+
+        data_list_query_form = DataListQueryForm(instance=data_list_query)
+        new_data_list_query = data_list_query_form.save(commit=False)
+        new_data_list_query.name = new_data_list.data_name
+        new_data_list_query.pk = None
+        new_data_list_query.save()
+        new_data_list.query = new_data_list_query
+
+        new_data_list.save()
+
+        return redirect('/iic_editor/dsc/{}/'.format(new_data_list.data_name))
 
 
 def gateway_detail(request, gateway_pk):
@@ -189,24 +305,24 @@ def institution_detail(request, gateway_pk, institution_pk):
     })
 
 
-def page_group_list(request, gateway_pk, service):
+def page_group_list(request, gateway_pk, service_name):
     gateway = Gateway.objects.get(pk=gateway_pk)
     # page_groups = gateway.pagegroup_set.all()
 
-    page_inputs = query_page_inputs(gateway, service)
+    page_inputs = query_page_inputs(gateway, service_name)
 
     page_groups = PageGroup.objects.filter(page__pageinput__in=page_inputs).distinct().order_by('item_level')
     return render(request, "iic/page_group/list.html", {
         'gateway': gateway,
-        'service': service,
+        'service': service_name,
         'page_groups': page_groups
     })
 
 
-def interface(request, gateway_pk, service,page_group_pk=None,page_pk=None,page_input_group_pk=None):
+def interface(request, gateway_pk, service_name, page_group_pk=None, page_pk=None, page_input_group_pk=None):
     gateway = Gateway.objects.get(pk=gateway_pk)
 
-    page_inputs = query_page_inputs(gateway, service)
+    page_inputs = query_page_inputs(gateway, service_name)
 
     page_groups = PageGroup.objects.filter(page__pageinput__in=page_inputs).distinct().order_by('item_level')
 
@@ -238,7 +354,8 @@ def interface(request, gateway_pk, service,page_group_pk=None,page_pk=None,page_
     else:
         page_input_group = page_input_groups.first()
 
-    page_inputs = page_input_group.pageinput_set.extra(
+    # TODO optimization already queried page inputs above
+    page_inputs = page_input_group.pageinput_set.filter(Q(gateway=gateway) | Q(gateway=None)).extra(
         select={
             'item_level_int': 'CAST(item_level AS INTEGER)'
         }
@@ -248,7 +365,7 @@ def interface(request, gateway_pk, service,page_group_pk=None,page_pk=None,page_
 
     return render(request, "iic/page_group/interface.html", {
         'gateway': gateway,
-        'service': service,
+        'service': service_name,
         'page_groups': page_groups,
         'page_group': page_group,
         'pages': pages_with_inputs,
@@ -260,7 +377,7 @@ def interface(request, gateway_pk, service,page_group_pk=None,page_pk=None,page_
     })
 
 
-def page_group_create(request, gateway_pk, service):
+def page_group_create(request, gateway_pk, service_name):
     gateway = Gateway.objects.get(pk=gateway_pk)
     # page_groups = gateway.pagegroup_set.all()
 
@@ -273,7 +390,7 @@ def page_group_create(request, gateway_pk, service):
 
             page = form.save(commit=False)
             try:
-                service_obj = Service.objects.get(name=service)
+                service_obj = Service.objects.get(name=service_name)
             except Service.DoesNotExist:
                 return None
 
@@ -392,17 +509,17 @@ def page_group_create(request, gateway_pk, service):
 
             # http://localhost:8000/iic_editor/gateways/4/page_groups/30/pages/order/
             return redirect(
-                '/iic_editor/gateways/{}/{}/page_groups/'.format(gateway_pk, service)
+                '/iic_editor/gateways/{}/{}/page_groups/'.format(gateway_pk, service_name)
             )
     else:
         form = PageGroupPageForm()
-        form.fields['name'].initial = service.title()
+        form.fields['name'].initial = service_name.title()
         # form.fields['page_group'].initial = request.GET['page_group']
 
 
     return render(request, "iic/page_group/create.html", {
         'gateway': gateway,
-        'service': service,
+        'service': service_name,
         # 'page_groups': page_groups,
         'form': form,
     })
@@ -423,9 +540,13 @@ def institution_page_group_list(request, gateway_pk, institution_pk, service):
     })
 
 
-def gateway_service(request, gateway_pk, service):
+def gateway_service(request, gateway_pk, service_name):
     gateway = Gateway.objects.get(pk=gateway_pk)
     # page_groups = gateway.pagegroup_set.all()
+
+    service = Service.objects.get(name=service_name)
+
+    service_commands = service.servicecommand_set.all().order_by('level')
 
     # page_inputs = query_page_inputs(gateway,service)
     node_systems = NodeSystem.objects.filter(node_status__name='LOCAL')
@@ -434,6 +555,7 @@ def gateway_service(request, gateway_pk, service):
 
     return render(request, "iic/service/detail.html", {
         'service': Service.objects.get(name=service),
+        'service_commands': service_commands,
         'gateway': gateway,
         'page_input_groups': page_input_groups,
         # Extra
@@ -441,26 +563,26 @@ def gateway_service(request, gateway_pk, service):
     })
 
 
-def page_group_detail(request, gateway_pk, service, page_group_pk):
+def page_group_detail(request, gateway_pk, service_name, page_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
 
-    page_inputs = query_page_inputs(gateway, service)
+    page_inputs = query_page_inputs(gateway, service_name)
     page_groups = PageGroup.objects.filter(page__pageinput__in=page_inputs).distinct()
     page_group = page_groups.get(pk=page_group_pk)
 
     return render(request, "iic/page_group/detail.html", {
         'gateway': gateway,
-        'service': service,
+        'service': service_name,
         'page_group': page_group})
 
 
-def page_list(request, gateway_pk, service, page_group_pk):
+def page_list(request, gateway_pk, service_name, page_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     # todo use page-inputs to filter, remove pages without page-inputs
     pages = page_group.page_set.all().order_by('item_level')
 
-    page_inputs = query_page_inputs(gateway, service)
+    page_inputs = query_page_inputs(gateway, service_name)
     # todo user page to optimize query
     # query pages from page inputs
     pages_with_inputs = pages.filter(pageinput__in=page_inputs).distinct()
@@ -468,13 +590,13 @@ def page_list(request, gateway_pk, service, page_group_pk):
 
     return render(request, "iic/page/list.html", {
         'gateway': gateway,
-        'service': service,
+        'service': service_name,
         'pages': pages_with_inputs,
         'blank_pages': blank_pages,
         'page_group': page_group})
 
 
-def page_order(request, gateway_pk,service, page_group_pk):
+def page_order(request, gateway_pk,service_name, page_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     pages = page_group.page_set.all().order_by('item_level')
@@ -489,21 +611,21 @@ def page_order(request, gateway_pk,service, page_group_pk):
 
             # http://localhost:8000/iic_editor/gateways/4/page_groups/30/pages/order/
             return redirect(
-                '/iic_editor/gateways/{}/{}/page_groups/{}/pages/order/'.format(gateway_pk,service, page_group_pk)
+                '/iic_editor/gateways/{}/{}/page_groups/{}/pages/order/'.format(gateway_pk,service_name, page_group_pk)
             )
     else:
         form = PageOrderConfigForm()
 
     return render(request, "iic/page/order.html", {
         'gateway': gateway,
-        'service': service,
+        'service': service_name,
         'pages': pages,
         'form': form,
         'page_group': page_group
     })
 
 
-def page_create(request, gateway_pk, service, page_group_pk):
+def page_create(request, gateway_pk, service_name, page_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     pages = page_group.page_set.all().order_by('item_level')
@@ -514,7 +636,7 @@ def page_create(request, gateway_pk, service, page_group_pk):
             page = form.save(commit=False)
             description = form.cleaned_data.get('description')
             page.description = description if description else page.name
-            services = form.cleaned_data.get('services', [service])
+            services = form.cleaned_data.get('services', [service_name])
             # print(services)
             level = form.cleaned_data.get('item_level')
             if not level:
@@ -540,7 +662,7 @@ def page_create(request, gateway_pk, service, page_group_pk):
             page.service.add(*Service.objects.filter(name__in=services))
 
             return redirect(
-                '/iic_editor/gateways/{}/{}/page_groups/{}/pages/{}/'.format(gateway_pk, service, page_group_pk,
+                '/iic_editor/gateways/{}/{}/page_groups/{}/pages/{}/'.format(gateway_pk, service_name, page_group_pk,
                                                                              page.pk)
             )
     else:
@@ -548,7 +670,7 @@ def page_create(request, gateway_pk, service, page_group_pk):
 
     return render(request, "iic/page/create.html", {
         'gateway': gateway,
-        'service': service,
+        'service': service_name,
 
         'pages': pages,
         'form': form,
@@ -556,7 +678,7 @@ def page_create(request, gateway_pk, service, page_group_pk):
     })
 
 
-def page_detail(request, gateway_pk, service, page_group_pk, page_pk):
+def page_detail(request, gateway_pk, service_name, page_group_pk, page_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = page_group.page_set.get(pk=page_pk)
@@ -564,11 +686,11 @@ def page_detail(request, gateway_pk, service, page_group_pk, page_pk):
     return render(request, "iic/page/detail.html", {
         'gateway': gateway,
         'page': page,
-        'service': service,
+        'service': service_name,
         'page_group': page_group})
 
 
-def page_copy(request, gateway_pk, service, page_group_pk, page_pk):
+def page_copy(request, gateway_pk, service_name, page_group_pk, page_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = page_group.page_set.get(pk=page_pk)
@@ -588,18 +710,18 @@ def page_copy(request, gateway_pk, service, page_group_pk, page_pk):
     return render(request, "iic/page/create.html", {
         'gateway': gateway,
         'page': page,
-        'service': service,
+        'service': service_name,
         'form': form,
         'page_group': page_group
     })
 
 
-def page_input_group_list(request, gateway_pk, service, page_group_pk, page_pk):
+def page_input_group_list(request, gateway_pk, service_name, page_group_pk, page_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
 
-    page_inputs = query_page_inputs(gateway, service)
+    page_inputs = query_page_inputs(gateway, service_name)
     # todo user page to optimize query
     page_input_groups = PageInputGroup.objects.filter(pageinput__in=page_inputs, pageinput__page=page).distinct()
     blank_page_input_groups = PageInputGroup.objects \
@@ -615,13 +737,13 @@ def page_input_group_list(request, gateway_pk, service, page_group_pk, page_pk):
     return render(request, "iic/page_input_group/list.html", {
         'gateway': gateway,
         'page': page,
-        'service': service,
+        'service': service_name,
         'page_input_groups': page_input_groups,
         'blank_page_input_groups': blank_page_input_groups,
         'page_group': page_group})
 
 
-def page_input_group_detail(request, gateway_pk, service, page_group_pk, page_pk, page_input_group_pk):
+def page_input_group_detail(request, gateway_pk, service_name, page_group_pk, page_pk, page_input_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
@@ -637,7 +759,7 @@ def page_input_group_detail(request, gateway_pk, service, page_group_pk, page_pk
     return render(request, "iic/page_input_group/detail.html", {
         'gateway': gateway,
         'page': page,
-        'service': service,
+        'service': service_name,
         'page_input_group': page_input_group,
         'page_group': page_group,
         # Extra
@@ -645,7 +767,7 @@ def page_input_group_detail(request, gateway_pk, service, page_group_pk, page_pk
     })
 
 
-def page_input_group_create(request, gateway_pk, service, page_group_pk, page_pk):
+def page_input_group_create(request, gateway_pk, service_name, page_group_pk, page_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
@@ -712,18 +834,19 @@ def page_input_group_create(request, gateway_pk, service, page_group_pk, page_pk
 
             # todo this is duplicated
             try:
-                service = Service.objects.get(name=service_name)
+                service_name = Service.objects.get(name=service_name)
             except Service.DoesNotExist:
-                service = Service(name=service_name)
+                service_name = Service(name=service_name)
 
-                service.description = service_name.title()
-                service.product = Product.objects.get(name='SYSTEM')
-                service.status = ServiceStatus.objects.get(name='POLLER')
+                service_name.description = service_name.title()
+                service_name.product = Product.objects.get(name='SYSTEM')
+                service_name.status = ServiceStatus.objects.get(name='POLLER')
 
-                service.save()
+                # service.save() todo usefull in submitable sections
                 # service.access_level = None
 
-            input_variable.service = service
+            if False:
+                input_variable.service = service_name
             input_variable.save()
 
             page_input_group.input_variable = input_variable  # iic.models.InputVariable
@@ -738,6 +861,8 @@ def page_input_group_create(request, gateway_pk, service, page_group_pk, page_pk
                 *Gateway.objects.filter(name__in=form.cleaned_data.get('gateways', []))
             )
 
+            # todo update redirect page bread crumbs
+
             return redirect(
                 '/iic_editor/gateways/{}/page_groups/{}/pages/{}/page_input_groups/{}/'.format(
                     gateway_pk, page_group_pk, page_pk, page_input_group.pk
@@ -747,13 +872,13 @@ def page_input_group_create(request, gateway_pk, service, page_group_pk, page_pk
         form = PageInputGroupForm()
     return render(request, "iic/page_input_group/create.html", {
         'gateway': gateway,
-        'service': service,
+        'service': service_name,
         'page_group': page_group,
         'page': page,
         'form': form})
 
 
-def page_input_create(request, gateway_pk, service, page_group_pk, page_pk, page_input_group_pk):
+def page_input_create(request, gateway_pk, service_name, page_group_pk, page_pk, page_input_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
@@ -797,7 +922,7 @@ def page_input_create(request, gateway_pk, service, page_group_pk, page_pk, page
                 service_name = form.cleaned_data.get('input_variable_service')
                 if service_name:
                     try:
-                        service = Service.objects.get(name=service_name)
+                        service_name = Service.objects.get(name=service_name)
                     except Service.DoesNotExist:
                         raise
                         # service = Service(name=service_name)
@@ -809,7 +934,7 @@ def page_input_create(request, gateway_pk, service, page_group_pk, page_pk, page
                         # service.save()
                         # service.access_level = None
 
-                    input_variable.service = service
+                    input_variable.service = service_name
 
                 input_variable.save()
 
@@ -845,7 +970,7 @@ def page_input_create(request, gateway_pk, service, page_group_pk, page_pk, page
             page_input.channel.add(*Channel.objects.filter(name__in=default_channels))
             return redirect(
                 '/iic_editor/gateways/{}/{}/page_groups/{}/pages/{}/page_input_groups/{}/page_inputs/'.format(
-                    gateway_pk, service, page_group_pk, page_pk, page_input_group_pk
+                    gateway_pk, service_name, page_group_pk, page_pk, page_input_group_pk
                 )
             )
     else:
@@ -854,13 +979,13 @@ def page_input_create(request, gateway_pk, service, page_group_pk, page_pk, page
         'gateway': gateway,
         'page': page,
         'variable_types': VariableType.objects.all(),
-        'service': service,
+        'service': service_name,
         'form': form,
         'page_input_group': page_input_group,
         'page_group': page_group})
 
 
-def page_input_order(request, gateway_pk, service, page_group_pk, page_pk, page_input_group_pk):
+def page_input_order(request, gateway_pk, service_name, page_group_pk, page_pk, page_input_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
@@ -879,7 +1004,7 @@ def page_input_order(request, gateway_pk, service, page_group_pk, page_pk, page_
             return redirect(
                 '/iic_editor/gateways/{}/{}/page_groups/{}/pages/{}/page_input_groups/{}/page_inputs/'.format(
                     gateway_pk,
-                    service,
+                    service_name,
                     page_group_pk,
                     page_pk,
                     page_input_group_pk
@@ -890,7 +1015,7 @@ def page_input_order(request, gateway_pk, service, page_group_pk, page_pk, page_
 
     return render(request, "iic/page_input/order.html", {
         'gateway': gateway,
-        'service': service,
+        'service': service_name,
         'page': page,
         'form': form,
         'page_input_group': page_input_group,
@@ -898,7 +1023,7 @@ def page_input_order(request, gateway_pk, service, page_group_pk, page_pk, page_
         'page_group': page_group})
 
 
-def page_input_list(request, gateway_pk, service, page_group_pk, page_pk, page_input_group_pk):
+def page_input_list(request, gateway_pk, service_name, page_group_pk, page_pk, page_input_group_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
@@ -912,14 +1037,14 @@ def page_input_list(request, gateway_pk, service, page_group_pk, page_pk, page_i
     return render(request, "iic/page_input/list.html", {
         'gateway': gateway,
         'page': page,
-        'service': service,
+        'service': service_name,
         'page_input_group': page_input_group,
         'page_inputs': page_inputs,
         'page_group': page_group
     })
 
 
-def page_input_detail(request, gateway_pk, service, page_group_pk, page_pk, page_input_group_pk, page_input_pk):
+def page_input_detail(request, gateway_pk, service_name, page_group_pk, page_pk, page_input_group_pk, page_input_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)
@@ -943,7 +1068,7 @@ def page_input_detail(request, gateway_pk, service, page_group_pk, page_pk, page
             'page_group': page_group})
 
 
-def page_input_copy(request, gateway_pk, page_group_pk, page_pk, page_input_group_pk, page_input_pk):
+def page_input_copy(request, gateway_pk, service_name, page_group_pk, page_pk, page_input_group_pk, page_input_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     page_group = PageGroup.objects.get(pk=page_group_pk)
     page = Page.objects.get(pk=page_pk)

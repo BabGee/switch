@@ -2,14 +2,22 @@
 
 
   <ul id="list">
-
   {% for service_command in service_commands %}
-
-
     <li id="service_command-li-{{ service_command.pk }}">
-       {{ service_command.command_function }} {{ service_command.level }} {{ service_command.node_system }} {{ service_command.status }} {{ service_command.details }}
-    </li>
 
+    <span class="fa fa-hand-paper"></span>
+
+       {{ service_command.command_function }} {{ service_command.level }} {{ service_command.node_system }} {{ service_command.status }} {{ service_command.details }}
+        {% if service_command.trigger.exists %}
+            <br>
+            {% for trigger in service_command.trigger.all %}
+                <span class="badge badge-dark">{{ trigger.name }}</span>
+            {% endfor %}
+        {% endif %}
+
+    <span class="fa fa-code float-right view-code" data-node_system="{{service_command.node_system.pk}}" data-service_command="{{ service_command.pk }}"></span>
+
+    </li>
   {% endfor %}
 </ul>
 

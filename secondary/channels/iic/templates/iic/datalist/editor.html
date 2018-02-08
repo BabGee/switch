@@ -9,7 +9,23 @@
 
     <a href="/admin/dsc/datalist/{{ data_list.pk }}/change/" target="_blank">Datalist Edit</a>
     <a href="/admin/dsc/datalistquery/{{ data_list.query.pk }}/change/" target="_blank">Query Edit</a>
+
+    <button type="button"
+            class="btn btn-primary"
+            id="duplicate"
+            data-pk="{{ data_list.pk }}"
+            data-toggle="modal"
+            data-target="#duplicateDataListModal">
+            Duplicate
+    </button>
+
 <br>
+
+    <div class="row">
+
+    <div class="col-md-7">
+
+
     <!--
 
         Data List
@@ -33,7 +49,7 @@
     <input placeholder="Title" name="title" type="text"> <br>
 
 
-    <p>{{ data_list.query.module_name }} {{ data_list.query.model_name }}</p>
+{#    <p>{{ data_list.query.module_name }} {{ data_list.query.model_name }}</p>#}
 
     <label for="module">Module</label>
     <select id="module" name="module">
@@ -86,7 +102,79 @@
     </div>
 <button onclick="linkInputCreate()">Add</button>
 <button id="saveLinks">Save</button>
-<br>
+
+    </div>
+    <div class="col-md-5">
+    <h3>Page Inputs Usage</h3>
+        <ul class="list-group">
+                {% for page_input in usages %}
+                    <li class="list-group-item list-group-item-{% if page_input.page_input_status.name == 'ACTIVE' %}{% else %}danger{% endif %}">
+                        {{ page_input.page_input }}
+
+                       <strong>{{ page_input.input_variable.variable_type }}</strong>
+                        {{ page_input.input_variable.pk }}
+
+
+                        <a href="/iic_editor/gateways/{{ page_input.page.gateway.first.pk }}/{{ page_input.page.service.first.name }}/interface/{{ page_input.page.page_group.pk }}/{{ page_input.page.pk }}/{{ page_input.page_input_group.pk }}/">view</a>
+                        <br>
+
+                    {% for link in links %}
+            <div>
+
+
+                <a href="/iic_editor/gateways/{{ page_input.page.gateway.first.pk }}/{{ link.service }}/interface/">
+                    {{ link.label }} <span class="fa fa-caret-right"></span>
+                </a>
+
+
+            </div>
+            {% endfor %}
+
+
+
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">No items</li>
+                {% endfor %}
+
+            </ul>
+    </div>
+    </div>
+
+
+<div class="modal fade" id="duplicateDataListModal" tabindex="-1" role="dialog"
+     aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">New Name</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="/iic_editor/dsc/{{ data_list.data_name }}/duplicate" method="post">
+            {% csrf_token %}
+
+          <div class="form-group">
+            <label for="new_data_name" class="col-form-label">data_name</label>
+            <input type="text" class="form-control" value="{{ data_list.data_name }}" id="new_data_name" name="new_data_name" >
+          </div>
+          <div class="form-group">
+
+            <input class="form-control btn btn-primary" type="submit">
+          </div>
+        </form>
+      </div>
+{#      <div class="modal-footer">#}
+{#        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>#}
+{#        <button type="button" class="btn btn-primary">Send message</button>#}
+{#      </div>#}
+    </div>
+  </div>
+</div>
+
+
 {% endblock %}
 
 
@@ -111,8 +199,7 @@
 
         }
 
-
-            function loadModels(){
+        function loadModels(){
                 $.ajax({
                     url: "/iic_editor/dsc/models/",
                     beforeSend: function (xhr, settings) {
@@ -142,11 +229,14 @@
                         }
                         // todo btn.html('<img src="/static/loader.gif">');
                     },
-                    data: { module:$('select#module').val()},
+                    data: { module:$('select#module').val(),model:'{{ data_list.query.model_name }}'},
                     type: 'GET',
                     success: function (data) {
                        // console.log(data);
                         $('#model').html(data);
+
+                        // update selection
+
 
                     }
                 });

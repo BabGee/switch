@@ -2,6 +2,7 @@ from django.forms import ModelForm
 from django import forms
 from .models import Page, PageInput,PageInputGroup,PageGroup
 from primary.core.bridge.models import Service
+from secondary.channels.dsc.models import DataList,DataListQuery
 
 class PageOrderConfigForm(forms.Form):
     config = forms.CharField(widget = forms.HiddenInput(), required = True)
@@ -83,3 +84,14 @@ class PageInputVariableForm(ModelForm):
     class Meta:
         model = PageInput
         fields = ['page_input', 'item_level']
+
+
+class DataListForm(ModelForm):
+    class Meta:
+        model = DataList
+        exclude = []
+
+class DataListQueryForm(ModelForm):
+    class Meta:
+        model = DataListQuery
+        exclude = []

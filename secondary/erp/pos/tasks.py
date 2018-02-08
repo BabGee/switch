@@ -929,6 +929,9 @@ class System(Wrappers):
 			delivery.status = DeliveryStatus.objects.get(name='ASSIGNED')
 			delivery.save()
 
+			# used for sending notifications
+			payload['msisdn'] = delivery_profile.msisdn.phone_number
+
 			payload["response_status"] = "00"
 			payload["response"] = "Delivery Assigned"
 		except Exception, e:
