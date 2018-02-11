@@ -758,9 +758,45 @@ class PageString(ServiceCall, Wrappers):
 
 
 
+				elif variable_key == 'loan_installment_amount':
+
+					from secondary.finance.vbs.models import SavingsCreditManager
+
+					params = payload
+
+					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'],credit_paid=False).\
+									order_by('-date_created')[:1]
+
+
+					savings_credit_manager = savings_credit_manager[:10]
+					item = ''
+					item_list = []
+					count = 1
+					if savings_credit_manager.exists():
+						for i in savings_credit_manager:
+       		                                        amount = '{0:,.2f}'.format(i.outstanding)
+               		                                name = 'Days:%s %s %s - %s' % (i.installment_time, i.account_manager.dest_account.account_type.product_item.currency.code, amount, i.due_date.strftime("%d/%b/%Y"))
+
+							if navigator.session.channel.name == 'IVR':
+								item = '%s\nFor %s, press %s.' % (item, name, count)
+							elif navigator.session.channel.name == 'USSD':
+								item = '%s\n%s:%s' % (item, count, name)
+
+							item_list.append(str(i.outstanding))
+							count+=1
+						navigator.item_list = json.dumps(item_list)
+						navigator.save()
+					else:
+						item = 'No Record Available'
+
+					lgr.info('Your List: %s' % item)
+					page_string = page_string.replace('['+v+']',item)
+
+
+
 				elif variable_key == 'outstanding_loan':
 
-					from secondary.finance.vbs.models import AccountManager
+					from secondary.finance.vbs.models import AccountManager, SavingsCreditManager
 
 					params = payload
 
@@ -782,7 +818,13 @@ class PageString(ServiceCall, Wrappers):
 					count = 1
 					if account_manager.exists():
 						for i in account_manager:
-       		                                        amount = '{0:,.2f}'.format(i.amount)
+							savings_credit_manager = SavingsCreditManager.objects.filter(account_manager=i, credit_paid=False).order_by('-date_created')
+
+							amount = Decimal(0)
+							for a in savings_credit_manager:
+								amount = amount + a.outstanding
+
+       		                                        amount = '{0:,.2f}'.format(amount)
                		                                name = '%s %s %s - %s' % (i.dest_account.account_type.product_item.currency.code, i.dest_account.account_type.product_item.currency.code, amount, i.credit_due_date.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
@@ -948,7 +990,7 @@ class PageString(ServiceCall, Wrappers):
 					for i in loan:
 						amount = i.amount
 						given_amount = Decimal(0)
-						approved_loan = Loan.objects.filter(follow_on_loan=i,status__name='APPROVED')
+						approved_loan = Loan.objects.filter(follow_on_loan=i,loan_status__name='APPROVED')
 						for f in approved_loan:
 							given_amount = given_amount + f.amount
 

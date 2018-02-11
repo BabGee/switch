@@ -14,21 +14,27 @@
 
     </ol>
     <style>
-        #list {
-            margin: 0;
-            padding: 0;
-            list-style: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            user-select: none;
-        }
 
-        #list > li  {
+        span.grippy {
+              content: '......';
+            width: 16px;
+            height: 100%;
+            display: inline-block;
+            overflow: hidden;
+            line-height: 7px;
+            padding: 0 0px;
             cursor: move;
-            margin: 1px;
-            padding: 5px 20px;
-            font-size: 20px;
-            background-color: #ccc;
+            vertical-align: middle;
+            margin-top: 0;
+            margin-right: 0em;
+            font-size: 18px;
+            font-family: sans-serif;
+            letter-spacing: 4px;
+            color: #ffffff;
+            text-shadow: 1px 1px 1px black;
+        }
+        span.grippy::after {
+          content: '.. .. .. ..';
         }
 
         .ghost {
@@ -39,8 +45,16 @@
 
     <h4>{{ service.name }}</h4>
 
-        <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service.name }}/page_groups/"> Page Groups</a>
-        <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service.name }}/interface/"> Interface</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service.name }}/interface/"> Interface</a>
+
+
+    <div class="row">
+
+    <div class="col-md-8">
+
+        {% include 'iic/service_command/list.html' %}
+
+        <hr>
 
          <!-- Button trigger modal -->
         <button type="button" class="btn btn-primary"
@@ -50,17 +64,15 @@
             New Service Command
         </button>
 
+        <button type="button" class="btn btn-primary" id="save-order">Save Order Changes</button>
 
+        <hr>
+        <br>
+
+
+        <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service.name }}/page_groups/"> Page Groups</a>
         <a target="_blank" href="/admin/bridge/servicecommand/?o=3&q=&service__id__exact={{ service.pk }}"> Suit Admin View</a>
 
-
-    <div class="row">
-
-    <div class="col-md-8">
-
-        {% include 'iic/service_command/list.html' %}
-
-        <button type="button" class="btn btn-primary" id="save-order">Save Order Changes</button>
 
     </div>
     <div class="col-md-4">
@@ -95,6 +107,30 @@
                 </div>
                 <div class="modal-body" id="modal-body">
 
+
+
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                  <li class="nav-item">
+                    <a class="nav-link active"
+                       id="home-tab"
+                       data-toggle="tab"
+                       href="#home"
+                       role="tab"
+                       aria-controls="home"
+                       aria-selected="true">Choose Existing</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link"
+                       id="profile-tab"
+                       data-toggle="tab"
+                       href="#profile"
+                       role="tab"
+                       aria-controls="profile"
+                       aria-selected="false">Add New</a>
+                  </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                  <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
                       <form class=" my-2 my-lg-0">
 
                         <select id="node_system" class="form-control mr-sm-2">
@@ -102,20 +138,42 @@
                                 <option value="{{ node_system.pk }}">{{ node_system }}</option>
                             {% endfor %}
                         </select>
-                        <div class="input-group mb-3 form-inline">
+
+                          <div class="input-group mb-3 form-inline">
 
                         <select  class=" custom-select"
                                  id="command_function"
                                  name="command_function">
-                        </select></div>
+                        </select>
+                        <button class="btn btn-outline-success my-2 my-sm-0" id="add-command">Add </button>
+                        </div>
+                    </form>
+                  </div>
+                  <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                      <form class=" my-2 my-lg-0">
+
+                        <select id="node_systemN" class="form-control mr-sm-2">
+                            {% for node_system in node_systems %}
+                                <option value="{{ node_system.pk }}">{{ node_system }}</option>
+                            {% endfor %}
+                        </select>
+
+                      <div class="input-group mb-3 form-inline">
                         <input class="form-control mr-sm-2"
                                type="text"
                                id="new_command_function"
                                placeholder="New Command Function">
 
-
                         <button class="btn btn-outline-success my-2 my-sm-0" id="add-command">Add </button>
+                                              </div>
+
+
                     </form>
+                  </div>
+
+                </div>
+
+
 
                 </div>
 
@@ -158,8 +216,8 @@ script looks exactly like
 secondary/channels/iic/templates/iic/page_input_group/detail.html
 {% endcomment %}
 {% block script %}
-{#        <script src="//cdnjs.cloudflare.com/ajax/libs/prism/1.11.0/components/prism-python.min.js"></script>#}
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.11.0/prism.min.js" data-manual></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/prism/1.11.0/prism.min.js" data-manual></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/prism/1.11.0/components/prism-python.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
     <script type="text/javascript">
 
