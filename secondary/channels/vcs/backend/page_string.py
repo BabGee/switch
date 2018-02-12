@@ -1409,6 +1409,34 @@ class PageString(ServiceCall, Wrappers):
 					lgr.info('Your List: %s' % item)
 					page_string = page_string.replace('['+v+']',item)
 
+				elif variable_key == 'account_balance':
+					from secondary.finance.vbs.models import AccountManager
+					params = payload
+
+
+					session_gateway_profile = GatewayProfile.objects.filter(gateway=code[0].gateway, msisdn__phone_number=payload['msisdn'])
+
+					session_account_manager = AccountManager.objects.filter(dest_account__account_status__name='ACTIVE',\
+											dest_account__profile=session_gateway_profile[0].user.profile,\
+											dest_account__account_type__id=params['account_type_id']).\
+											order_by('-date_created')[:1]
+					account_balance = Decimal(0)
+					currency = 'KES'
+					if session_account_manager.exists():
+						account_balance = session_account_manager[0].balance_bf
+						currency = session_account_manager[0].dest_account.account_type.product_item.currency.code
+
+					item = ''
+					item_list = []
+					count = 1
+
+					amount = '{0:,.2f}'.format(account_balance)
+					item = '%s %s\n' % (currency,amount)
+
+					lgr.info('Your List: %s' % item)
+					page_string = page_string.replace('['+v+']',item)
+
+
 				elif variable_key == 'account_credit_limit':
 					from secondary.finance.vbs.models import Account
 					params = payload

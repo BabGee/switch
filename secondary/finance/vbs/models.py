@@ -142,6 +142,7 @@ class AccountManager(models.Model):
 	credit_overdue = models.ManyToManyField(CreditOverdue, blank=True)
 	updated = models.BooleanField(default=False, help_text="True for record that is not the last record")
 	credit_overdue_update = models.BooleanField(default=False, help_text="True for record that is not the last record")
+	details = models.CharField(max_length=1920, default=json.dumps({}))
 	def __unicode__(self):
 		return u'%s %s %s' % (self.id, self.credit, self.credit_paid)
 	def credit_overdue_list(self):
