@@ -511,7 +511,8 @@ class System(Wrappers):
 					source_account=session_account,dest_account=gl_acccount[0],\
 					amount=Decimal(payload['amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
-					balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
+					balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN),\
+					details=self.transaction_payload(payload))
 				gl_manager.save()
 
 				payload['account_manager_id'] = session_manager.id
@@ -800,6 +801,7 @@ class Payments(System):
 			if savings_credit_manager.exists() and amount <= credit_amount:
 				#Capture account manager prior to updates which will clear the query
 				account_manager = savings_credit_manager[0].account_manager
+				lgr.info('Credit Amount is Greater or equal to credit')
 
 				outstanding = Decimal(0)
 				savings_credit_manager.update(credit_paid=True,paid=F('outstanding'),outstanding=outstanding)
@@ -812,16 +814,19 @@ class Payments(System):
 				payload['response_status'] = '00'
 
 			elif savings_credit_manager.exists():
+				lgr.info('Credit Amount is less than credit')
 				for i in savings_credit_manager:
 					if credit_amount > i.outstanding:
-						credit_amount = credit - i.outstanding
+						lgr.info('Credit Amount is greater than outstanding')
+						credit_amount = credit_amount - i.outstanding
 						i.paid = i.outstanding
 						i.outstanding = 0
 						i.credit_paid = True
-					else:
-						credit_amount = credit_amount - credit_amount
+					elif credit_amount > Decimal(0):
+						lgr.info('Credit Amount is less than outstanding')
 						i.paid = credit_amount
 						i.outstanding = i.outstanding - credit_amount
+						credit_amount = Decimal(0)
 
 					#save installment updates
 					i.save()
@@ -945,6 +950,9 @@ class Payments(System):
 			if savings_credit_manager.exists():
 				due_date = savings_credit_manager[0].due_date.strftime("%d/%b/%Y")
 				account_type = savings_credit_manager[0].account_manager.dest_account.account_type
+
+				try:payload.update(json.loads(savings_credit_manager[0].account_manager.details))
+				except: pass
 
 				amount = Decimal(0)
 				for i in savings_credit_manager:
