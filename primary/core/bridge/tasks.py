@@ -137,6 +137,14 @@ class System(Wrappers):
 						lgr.info("Send Scheduled: %s" % scheduled_send)
 					else:
 						scheduled_send = timezone.now()+timezone.timedelta(seconds=1)
+				elif 'send_minutes_period' in payload.keys():
+					scheduled_send = timezone.now()+timezone.timedelta(minutes=(int(payload['send_minutes_period'])))
+				elif 'send_hours_period' in payload.keys():
+					scheduled_send = timezone.now()+timezone.timedelta(hours=(int(payload['send_hours_period'])))
+				elif 'send_days_period' in payload.keys():
+					scheduled_send = timezone.now()+timezone.timedelta(days=(int(payload['send_days_period'])))
+				elif 'send_years_period' in payload.keys():
+					scheduled_send = timezone.now()+timezone.timedelta(days=(365*int(payload['send_years_period'])))
 				else:
 					scheduled_send = timezone.now()+timezone.timedelta(seconds=1)
 
