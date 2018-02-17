@@ -1551,6 +1551,7 @@ class System(Wrappers):
 					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
 				
 				if user.email and self.validateEmail(user.email): payload['email'] = user.email
+				elif 'email' in payload.keys(): del payload['email']
 
 				payload['response_status'] = '00'
 				payload['response'] = 'Session Profile Captured'
@@ -1595,6 +1596,7 @@ class System(Wrappers):
 					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
 
 				if user.email and self.validateEmail(user.email): payload['email'] = user.email
+				elif 'email' in payload.keys(): del payload['email']
 
 				payload['response_status'] = '00'
 				payload['response'] = 'Session Profile Captured'
