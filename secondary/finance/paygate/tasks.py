@@ -465,10 +465,11 @@ class System(Wrappers):
 							outgoing.state = OutgoingState.objects.get(name='FAILED')
 							outgoing.response_status = ResponseStatus.objects.get(response='06')
 							payload['response_status'] = '06'
+
+						outgoing.save()	
 					else:
 						payload['response'] = 'Remittance Submitted'
 						payload['response_status'] = '00'
-					outgoing.save()	
 				else:
 					payload['response'] = 'Remittance product not found'
 					payload['response_status'] = '92'
