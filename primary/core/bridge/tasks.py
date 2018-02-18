@@ -59,7 +59,7 @@ class Wrappers:
 						break
 					count = count+1
 
-			payload = json.dumps(new_payload)
+			payload = json.dumps(new_payload) if isinstance(new_payload, dict) else payload
 		except Exception, e:
 
 			lgr.info('Error on Response Payload: %s' % e)
