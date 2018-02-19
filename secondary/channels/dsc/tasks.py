@@ -239,7 +239,7 @@ class Wrappers:
 			v = True if v not in ['',None,'False',False,'false'] else False
 		    elif len(v_list)>1:
 			v = v_list
-
+		    lgr.info('Values: %s' % v)
                     filter_data[k] = v if v not in ['',None] else None
                 if len(filter_data):
                     query = reduce(operator.and_, (Q(k) for k in filter_data.items()))
@@ -259,6 +259,7 @@ class Wrappers:
 			v = True if v not in ['',None,'False',False,'false'] else False
 		    elif len(v_list)>1:
 			v = v_list
+		    lgr.info('Values: %s' % v)
                     not_filter_data[k] = v if v not in ['',None] else None
                 if len(not_filter_data):
                     query = reduce(operator.and_, (~Q(k) for k in not_filter_data.items()))
