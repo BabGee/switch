@@ -451,7 +451,6 @@ class Wrappers:
                 report_list = report_list.filter(date_created__lte=end_date)
 
 
-	    lgr.info('Join Filter: %s' % report_list.count())
 	    join_model_class = None
 	    if data.query.join_module_name and data.query.join_model_name and (data.query.join_fields or \
 	     data.query.join_manytomany_fields or data.query.join_not_fields or join_manytomany_not_fields):
@@ -492,7 +491,6 @@ class Wrappers:
 
             		join_report_list = join_model_class.objects.all()
 
-			lgr.info('Join Filter: %s' % report_list.count())
 			if join_gateway_filters not in ['', None]:
 				for f in join_gateway_filters.split("|"):
 					if f not in ['',None]: join_gateway_filter_data[f] = gateway_profile.gateway
@@ -501,7 +499,6 @@ class Wrappers:
 					join_report_list = join_report_list.filter(join_gateway_query)
 
 
-			lgr.info('Join Filter: %s' % report_list.count())
 			if join_filters not in ['',None]:
 		                for i in join_filters.split("|"):
 		                    k,v = i.split('%')
@@ -518,7 +515,6 @@ class Wrappers:
 		                    join_report_list = join_report_list.filter(query)
 
 
-			lgr.info('Join Filter: %s' % report_list.count())
 			if join_not_filters not in ['',None]:
 		                for i in join_not_filters.split("|"):
 		                    k,v = i.split('%')
@@ -535,7 +531,6 @@ class Wrappers:
 		                    join_report_list = join_report_list.filter(query)
 
 
-			lgr.info('Join Filter: %s' % report_list.count())
 			if join_or_filters not in [None,'']:
 		                for f in join_or_filters.split("|"):
 				    of_list = f.split('%')
@@ -554,7 +549,6 @@ class Wrappers:
                 		    or_query = reduce(operator.or_, (Q(k) for k in join_or_filter_data.items()))
 		                    join_report_list = join_report_list.filter(or_query)
 
-			lgr.info('Join Filter: %s' % report_list.count())
 			if join_and_filters not in [None,'']:
 		                for f in join_and_filters.split("|"):
 				    af_list = f.split('%')
@@ -574,7 +568,6 @@ class Wrappers:
 		                    join_report_list = join_report_list.filter(and_query)
 
 
-			lgr.info('Join Filter: %s' % report_list.count())
             		if join_gateway_profile_filters not in ['', None]:
 				for f in join_gateway_profile_filters.split("|"):
 					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
@@ -586,7 +579,6 @@ class Wrappers:
 					gateway_profile_query = reduce(operator.and_, (Q(k) for k in join_gateway_profile_filter_data.items()))
 					join_report_list = join_report_list.filter(gateway_profile_query)
 
-			lgr.info('Join Filter: %s' % report_list.count())
 			if join_profile_filters not in ['', None]:
 				for f in join_profile_filters.split("|"):
 					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
@@ -598,7 +590,6 @@ class Wrappers:
 					profile_query = reduce(operator.and_, (Q(k) for k in join_profile_filter_data.items()))
 					join_report_list = join_report_list.filter(profile_query)
 
-			lgr.info('Join Filter: %s' % report_list.count())
 	    		if join_institution_filters not in ['',None]:
 		                for f in join_institution_filters.split("|"):
 		            	    if 'institution_id' in payload.keys() and payload['institution_id'] not in ['', None]:
@@ -616,7 +607,6 @@ class Wrappers:
 		                    join_report_list = join_report_list.filter(institution_query)
 
 
-			lgr.info('Join Filter: %s' % report_list.count())
         	    	if join_fields not in ['',None]:
                 		for i in join_fields.split("|"):
 	                	    k,v = i.split('%')
@@ -627,7 +617,6 @@ class Wrappers:
 	                	    query = reduce(operator.and_, (Q(k) for k in join_fields_data.items()))
                 		    report_list = report_list.filter(query)
 
-			lgr.info('Join Filter: %s' % report_list.count())
         	    	if join_manytomany_fields not in ['',None]:
                 		for i in join_manytomany_fields.split("|"):
 	                	    k,v = i.split('%')
@@ -637,7 +626,6 @@ class Wrappers:
 	                	    query = reduce(operator.and_, (Q(k) for k in join_manytomany_fields_data.items()))
                 		    report_list = report_list.filter(query)
 
-			lgr.info('Join Not Filter: %s' % report_list.count())
         	    	if join_not_fields not in ['',None]:
                 		for i in join_not_fields.split("|"):
 	                	    k,v = i.split('%')
@@ -647,7 +635,7 @@ class Wrappers:
         	        	if len(join_not_fields_data):
 	                	    query = reduce(operator.and_, (~Q(k) for k in join_not_fields_data.items()))
                 		    report_list = report_list.filter(query)
-			lgr.info('Join Not Filter: %s' % report_list.count())
+
         	    	if join_manytomany_not_fields not in ['',None]:
                 		for i in join_manytomany_not_fields.split("|"):
 	                	    k,v = i.split('%')
@@ -657,7 +645,6 @@ class Wrappers:
 	                	    query = reduce(operator.and_, (~Q(k) for k in join_manytomany_not_fields_data.items()))
                 		    report_list = report_list.filter(query)
 
-			lgr.info('Join Filter: %s' % report_list.count())
 	    #lgr.info('Report End Date')
 	    ############################################VALUES BLOCK
             args = []
