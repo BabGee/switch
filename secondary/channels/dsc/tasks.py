@@ -237,6 +237,9 @@ class Wrappers:
                     k,v = i.split('%')
 		    if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
 			v = True if v not in ['',None,'False',False,'false'] else False
+		    elif len(v_list)>1:
+			v = v_list
+
                     filter_data[k] = v if v not in ['',None] else None
                 if len(filter_data):
                     query = reduce(operator.and_, (Q(k) for k in filter_data.items()))
@@ -251,8 +254,11 @@ class Wrappers:
             if not_filters not in ['',None]:
                 for i in not_filters.split("|"):
                     k,v = i.split('%')
+		    v_list = v.split(',')
 		    if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
 			v = True if v not in ['',None,'False',False,'false'] else False
+		    elif len(v_list)>1:
+			v = v_list
                     not_filter_data[k] = v if v not in ['',None] else None
                 if len(not_filter_data):
                     query = reduce(operator.and_, (~Q(k) for k in not_filter_data.items()))
