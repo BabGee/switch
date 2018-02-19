@@ -51,6 +51,8 @@ class DataListQuery(models.Model):
 	join_profile_filters = models.CharField(max_length=512, blank=True, null=True)
 	join_fields = models.CharField(max_length=512, null=True, blank=True)
 	join_manytomany_fields = models.CharField(max_length=512, null=True, blank=True)
+	join_not_fields = models.CharField(max_length=512, null=True, blank=True)
+	join_manytomany_not_fields = models.CharField(max_length=512, null=True, blank=True)
 	links = models.CharField(max_length=512, blank=True, null=True) 
 	link_params = models.CharField(max_length=512, blank=True, null=True) 
 	last_balance = models.CharField(max_length=512, blank=True, null=True)

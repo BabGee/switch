@@ -454,7 +454,7 @@ class Wrappers:
 	    lgr.info('Join Filter: %s' % report_list.count())
 	    join_model_class = None
 	    if data.query.join_module_name and data.query.join_model_name and (data.query.join_fields or \
-	     data.query.join_manytomany_fields):
+	     data.query.join_manytomany_fields or data.query.join_not_fields or join_manytomany_not_fields):
 		try:join_model_class = apps.get_model(data.query.join_module_name, data.query.join_model_name)
 		except: pass
 		if join_model_class:
@@ -465,6 +465,8 @@ class Wrappers:
 			join_fields = data.query.join_fields
 	            	join_institution_filters = data.query.join_institution_filters
 			join_manytomany_fields = data.query.join_manytomany_fields
+			join_not_fields = data.query.join_fields
+			join_manytomany_not_fields = data.query.join_manytomany_fields
 
 			join_gateway_filters_data = {}
 			join_gateway_profile_filters_data  = {}
@@ -472,6 +474,8 @@ class Wrappers:
 			join_fields_data = {}
             		join_institution_filter_data = {}
 			join_manytomany_fields_data = {}
+			join_not_fields_data = {}
+			join_manytomany_not_fields_data = {}
 
             		join_report_list = join_model_class.objects.all()
 
@@ -540,20 +544,32 @@ class Wrappers:
         	    	if join_manytomany_fields not in ['',None]:
                 		for i in join_manytomany_fields.split("|"):
 	                	    k,v = i.split('%')
-
-				    lgr.info('Join Filter: %s' % report_list.count())
 				    record = join_report_list.values_list(v,flat=True).distinct()
-
-				    lgr.info('Join Filter: %s' % report_list.count())
 				    join_manytomany_fields_data[k+'__in'] = list(record)
-
-				    lgr.info('Join Filter: %s' % report_list.count())
         	        	if len(join_manytomany_fields_data):
-
-				    lgr.info('Join Filter: %s' % report_list.count())
 	                	    query = reduce(operator.and_, (Q(k) for k in join_manytomany_fields_data.items()))
                 		    report_list = report_list.filter(query)
-				    lgr.info('Join Filter: %s' % report_list.count())
+
+			lgr.info('Join Not Filter: %s' % report_list.count())
+        	    	if join_not_fields not in ['',None]:
+                		for i in join_not_fields.split("|"):
+	                	    k,v = i.split('%')
+				    record = join_report_list.values_list(v,flat=True)
+				    join_not_fields_data[k+'__in'] = list(record)
+
+        	        	if len(join_not_fields_data):
+	                	    query = reduce(operator.and_, (~Q(k) for k in join_not_fields_data.items()))
+                		    report_list = report_list.filter(query)
+
+			lgr.info('Join Not Filter: %s' % report_list.count())
+        	    	if join_manytomany_not_fields not in ['',None]:
+                		for i in join_manytomany_not_fields.split("|"):
+	                	    k,v = i.split('%')
+				    record = join_report_list.values_list(v,flat=True).distinct()
+				    join_manytomany_not_fields_data[k+'__in'] = list(record)
+        	        	if len(join_manytomany_not_fields_data):
+	                	    query = reduce(operator.and_, (~Q(k) for k in join_manytomany_not_fields_data.items()))
+                		    report_list = report_list.filter(query)
 
 
 	    #lgr.info('Report End Date')
