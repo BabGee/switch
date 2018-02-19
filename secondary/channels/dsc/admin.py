@@ -14,6 +14,7 @@ class DataListQueryAdmin(admin.ModelAdmin):
 			'month_year_values','avg_values','sum_values','count_values','filters','or_filters','and_filters',\
 			'not_filters','institution_filters','gateway_filters','gateway_profile_filters','profile_filters',\
 			'list_filters','date_filters','time_filters','token_filters','join_model_name','join_module_name',\
+			'join_filters','join_or_filters','join_and_filters','join_not_filters',\
 			'join_institution_filters','join_gateway_filters','join_gateway_profile_filters','join_profile_filters',\
 			'join_fields','join_manytomany_fields','join_not_fields','join_manytomany_not_fields',\
 			'links','link_params','last_balance','order','distinct',)
