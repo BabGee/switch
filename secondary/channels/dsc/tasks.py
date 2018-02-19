@@ -473,7 +473,7 @@ class Wrappers:
 	            	join_institution_filters = data.query.join_institution_filters
 			join_manytomany_fields = data.query.join_manytomany_fields
 			join_not_fields = data.query.join_fields
-			join_manytomany_not_fields = data.query.join_manytomany_fields
+			join_manytomany_not_fields = data.query.join_manytomany_not_fields
 
 			join_filter_data = {}
 
@@ -501,6 +501,7 @@ class Wrappers:
 					join_report_list = join_report_list.filter(join_gateway_query)
 
 
+			lgr.info('Join Filter: %s' % report_list.count())
 			if join_filters not in ['',None]:
 		                for i in join_filters.split("|"):
 		                    k,v = i.split('%')
@@ -517,6 +518,7 @@ class Wrappers:
 		                    join_report_list = join_report_list.filter(query)
 
 
+			lgr.info('Join Filter: %s' % report_list.count())
 			if join_not_filters not in ['',None]:
 		                for i in join_not_filters.split("|"):
 		                    k,v = i.split('%')
@@ -533,6 +535,7 @@ class Wrappers:
 		                    join_report_list = join_report_list.filter(query)
 
 
+			lgr.info('Join Filter: %s' % report_list.count())
 			if join_or_filters not in [None,'']:
 		                for f in join_or_filters.split("|"):
 				    of_list = f.split('%')
@@ -551,6 +554,7 @@ class Wrappers:
                 		    or_query = reduce(operator.or_, (Q(k) for k in join_or_filter_data.items()))
 		                    join_report_list = join_report_list.filter(or_query)
 
+			lgr.info('Join Filter: %s' % report_list.count())
 			if join_and_filters not in [None,'']:
 		                for f in join_and_filters.split("|"):
 				    af_list = f.split('%')
@@ -569,78 +573,6 @@ class Wrappers:
 		                    and_query = reduce(operator.and_, (Q(k) for k in join_and_filter_data.items()))
 		                    join_report_list = join_report_list.filter(and_query)
 
-
-
-
-
-
-
-			'''
-
-			    #lgr.info('Not Filters Report List Count: %s' % report_list.count())
-		            if date_filters not in ['',None]:
-			        #lgr.info('Date Filters')
-		                for i in date_filters.split("|"):
-		                    k,v = i.split('%')
-			    	    #lgr.info('Date %s| %s' % (k,v))
-				    try: date_filter_data[k] = (timezone.now()+timezone.timedelta(days=float(v))).date() if v not in ['',None] else None
-				    except Exception, e: lgr.info('Error on date filter: %s' % e)
-		                if len(date_filter_data):
-	    			    #lgr.info('Date Filter Data: %s' % date_filter_data)
-				    for k,v in date_filter_data.items(): 
-					try:lgr.info('Date Data: %s' % v.isoformat())
-					except: pass
-		                    query = reduce(operator.and_, (Q(k) for k in date_filter_data.items()))
-				    #lgr.info('Query: %s' % query)
-		                    report_list = report_list.filter(query)
-
-
-			    #lgr.info('Date Filters Report List Count: %s' % report_list.count())
-		            if time_filters not in ['',None]:
-		                for i in time_filters.split("|"):
-		                    k,v = i.split('%')
-				    try: time_filter_data[k] = timezone.now()+timezone.timedelta(hours=float(v)) if v not in ['',None] else None
-				    except Exception, e: lgr.info('Error on time filter: %s' % e)
-
-		                if len(time_filter_data):
-				    for k,v in time_filter_data.items(): 
-					try:lgr.info('Date Data: %s' % v.isoformat())
-					except: pass
-		                    query = reduce(operator.and_, (Q(k) for k in time_filter_data.items()))
-				    #lgr.info('Query: %s' % query)
-
-		                    report_list = report_list.filter(query)
-
-		            #q_list = [Q(**{f:q}) for f in field_lookups]
-
-			    #lgr.info('And Filters Report List Count: %s' % report_list.count())
-		            if token_filters not in ['',None]:
-		                for f in token_filters.split("|"):
-		            	    if 'csrfmiddlewaretoken' in payload.keys() and payload['csrfmiddlewaretoken'] not in ['', None]:
-		                    	if f not in ['',None]: token_filters_data[f + '__iexact'] = payload['csrfmiddlewaretoken']
-		            	    elif 'csrf_token' in payload.keys() and payload['csrf_token'] not in ['', None]:
-		                    	if f not in ['',None]: token_filters_data[f + '__iexact'] = payload['csrf_token']
-		            	    elif 'token' in payload.keys() and payload['token'] not in ['', None]:
-		                    	if f not in ['',None]: token_filters_data[f + '__iexact'] = payload['token']
-
-		                if len(token_filters_data):
-		                    query = reduce(operator.and_, (Q(k) for k in token_filters_data.items()))
-				    #lgr.info('Query: %s' % query)
-
-		                    report_list = report_list.filter(query)
-
-			    #lgr.info('Token Filters Report List Count: %s' % report_list.count())
-			    if list_filters not in [None,'']:
-		                for f in list_filters.split("|"):
-		            	    if 'q' in payload.keys() and payload['q'] not in ['', None]:
-		                    	if f not in ['',None]: list_filter_data[f + '__icontains'] = payload['q']
-		            	    if f in payload.keys():
-		                    	if f not in ['',None]: list_filter_data[f + '__iexact'] = payload[f]
-
-		                if len(list_filter_data):
-		                    and_query = reduce(operator.and_, (Q(k) for k in list_filter_data.items()))
-		                    report_list = report_list.filter(and_query)
-			'''
 
 			lgr.info('Join Filter: %s' % report_list.count())
             		if join_gateway_profile_filters not in ['', None]:
@@ -715,7 +647,6 @@ class Wrappers:
         	        	if len(join_not_fields_data):
 	                	    query = reduce(operator.and_, (~Q(k) for k in join_not_fields_data.items()))
                 		    report_list = report_list.filter(query)
-
 			lgr.info('Join Not Filter: %s' % report_list.count())
         	    	if join_manytomany_not_fields not in ['',None]:
                 		for i in join_manytomany_not_fields.split("|"):
@@ -726,7 +657,7 @@ class Wrappers:
 	                	    query = reduce(operator.and_, (~Q(k) for k in join_manytomany_not_fields_data.items()))
                 		    report_list = report_list.filter(query)
 
-
+			lgr.info('Join Filter: %s' % report_list.count())
 	    #lgr.info('Report End Date')
 	    ############################################VALUES BLOCK
             args = []

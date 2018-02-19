@@ -834,19 +834,19 @@ def page_input_group_create(request, gateway_pk, service_name, page_group_pk, pa
 
             # todo this is duplicated
             try:
-                service_name = Service.objects.get(name=service_name)
+                service = Service.objects.get(name=service_name)
             except Service.DoesNotExist:
-                service_name = Service(name=service_name)
+                service = Service(name=service_name)
 
-                service_name.description = service_name.title()
-                service_name.product = Product.objects.get(name='SYSTEM')
-                service_name.status = ServiceStatus.objects.get(name='POLLER')
+                service.description = service_name.title()
+                service.product = Product.objects.get(name='SYSTEM')
+                service.status = ServiceStatus.objects.get(name='POLLER')
 
                 # service.save() todo usefull in submitable sections
                 # service.access_level = None
 
             if False:
-                input_variable.service = service_name
+                input_variable.service = service
             input_variable.save()
 
             page_input_group.input_variable = input_variable  # iic.models.InputVariable
