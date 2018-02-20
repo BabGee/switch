@@ -63,7 +63,7 @@ class VariableType(models.Model):
 class InputVariable(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
+	name = models.CharField(max_length=200, unique=True)
 	variable_type = models.ForeignKey(VariableType)
 	validate_min = models.CharField(max_length=45)
 	validate_max = models.CharField(max_length=45)
