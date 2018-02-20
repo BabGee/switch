@@ -287,7 +287,7 @@ class System(Wrappers):
 				payload['trigger'] = 'national_id%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				payload['response'] = 'National ID Captured'
 				payload['response_status'] = '00'
-			elif re.search(r"([a-zA-Z]{1})(\d{7})", "A1234567"):
+			elif re.search(r"([a-zA-Z]{1})(\d{7})", document_number):
 				payload['national_id'] = document_number
 				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				payload['response'] = 'Passport Number Captured'
