@@ -61,6 +61,7 @@ class Wrappers:
 			profile = user.profile #User is a OneToOne field
 			if 'middle_name' in payload.keys() and profile.middle_name in [None,""]: profile.middle_name = payload['middle_name']
 			if 'national_id' in payload.keys() and profile.national_id in [None,""]: profile.national_id = payload['national_id']
+			if 'passport_number' in payload.keys() and profile.passport_number in [None,""]: profile.passport_number = payload['passport_number']
 			if 'physical_address' in payload.keys() and profile.physical_address in [None,""]: profile.physical_address = payload['physical_address']
 			if 'city' in payload.keys() and profile.city in [None,""]: profile.city = payload['city']
 			if 'region' in payload.keys() and profile.region in [None,""]: profile.region = payload['region']
@@ -98,6 +99,7 @@ class Wrappers:
 		profile = user.profile #User is a OneToOne field
 		if 'middle_name' in payload.keys(): profile.middle_name = payload['middle_name']
 		if 'national_id' in payload.keys(): profile.national_id = payload['national_id']
+		if 'passport_number' in payload.keys(): profile.passport_number = payload['passport_number']
 		if 'physical_address' in payload.keys(): profile.physical_address = payload['physical_address']
 		if 'city' in payload.keys(): profile.city = payload['city']
 		if 'region' in payload.keys(): profile.region = payload['region']
@@ -176,6 +178,9 @@ class Wrappers:
 					session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 		elif 'national_id' in payload.keys() and payload['national_id'] not in ["",None,"None"]:
 			session_gateway_profile = GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'],\
+					 gateway=gateway_profile.gateway)
+		elif 'passport_number' in payload.keys() and payload['passport_number'] not in ["",None,"None"]:
+			session_gateway_profile = GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'],\
 					 gateway=gateway_profile.gateway)
 		else:
 			session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
@@ -327,6 +332,7 @@ class System(Wrappers):
 			payload['last_name'] = user.last_name
 			payload['middle_name'] = profile.middle_name
 			payload['national_id'] = profile.national_id
+			payload['passport_number'] = profile.passport_number
 			payload['physical_address'] = profile.physical_address
 			payload['city'] = profile.city
 			payload['region'] = profile.region
@@ -1425,6 +1431,23 @@ class System(Wrappers):
 				payload['response_status'] = '63'
 
 
+			elif existing_gateway_profile.exists() and 'passport_number' in payload.keys() and\
+			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].strip(),\
+			 gateway=gateway_profile.gateway).exists() and existing_gateway_profile[0].user.profile.passport_number in [None,''] and\
+			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].strip(),\
+			 gateway=gateway_profile.gateway)[0].user <> existing_gateway_profile[0].user:
+				#check update passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
+				payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+
+			elif existing_gateway_profile.exists() == False and 'passport_number' in payload.keys() and\
+			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].strip(),\
+			 gateway=gateway_profile.gateway).exists():
+				#check create passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile.
+				payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+
+
 			elif existing_gateway_profile.exists():
 
 				payload['response'] = 'Profile Error: Gateway Profile Exists'
@@ -1447,6 +1470,8 @@ class System(Wrappers):
 
 				if 'national_id' in payload.keys():
 					username = createUsername(payload["national_id"])
+				elif 'passport_number' in payload.keys():
+					username = createUsername(payload["passport_number"])
 				elif 'email' in payload.keys() and self.validateEmail(payload["email"]):
 					username = createUsername(payload["email"].split('@')[0])
 				elif 'msisdn' in payload.keys() and self.get_msisdn(payload):
@@ -1530,7 +1555,8 @@ class System(Wrappers):
 
 			
 			if profile_error:
-				payload['response'] = 'Profile Error: Email exists. Please contact us'
+				#payload['response'] = 'Profile Error: Email exists. Please contact us'
+				payload['response'] = 'Profile Error: Email/Phone Number Exists in another profile. Please contact us'
 				payload['response_status'] = '63'
 
 			elif session_gateway_profile.exists():
@@ -1543,6 +1569,7 @@ class System(Wrappers):
 				payload['gender'] = user.profile.gender.code if user.profile.gender else None
 
 				payload['national_id'] = user.profile.national_id
+				payload['passport_number'] = user.profile.passport_number
 				payload['postal_address'] = user.profile.postal_address
 				payload['address'] = user.profile.address
 				payload['postal_code'] = user.profile.postal_code
@@ -1576,7 +1603,8 @@ class System(Wrappers):
 			session_gateway_profile, payload, profile_error = self.profile_capture(gateway_profile, payload, profile_error)
 
 			if profile_error:
-				payload['response'] = 'Profile Error: Email exists. Please contact us'
+				#payload['response'] = 'Profile Error: Email exists. Please contact us'
+				payload['response'] = 'Profile Error: Email/Phone Number Exists in another profile. Please contact us'
 				payload['response_status'] = '63'
 			elif session_gateway_profile.exists():
 				payload['session_gateway_profile_id'] = session_gateway_profile[0].id
@@ -1588,6 +1616,7 @@ class System(Wrappers):
 				payload['gender'] = user.profile.gender.code if user.profile.gender else None
 
 				payload['national_id'] = user.profile.national_id
+				payload['passport_number'] = user.profile.passport_number
 				payload['postal_address'] = user.profile.postal_address
 				payload['address'] = user.profile.address
 				payload['postal_code'] = user.profile.postal_code
@@ -1692,6 +1721,7 @@ class System(Wrappers):
 					profile = Profile.objects.get(user=user) #User is a OneToOne field
 					if 'middle_name' in payload.keys() and profile.middle_name in [None,""]: profile.middle_name = payload['middle_name']
 					if 'national_id' in payload.keys() and profile.national_id in [None,""]: profile.national_id = payload['national_id']
+					if 'passport_number' in payload.keys() and profile.passport_number in [None,""]: profile.passport_number = payload['passport_number']
 					if 'physical_address' in payload.keys() and profile.physical_address in [None,""]: profile.physical_address = payload['physical_address']
 					if 'city' in payload.keys() and profile.city in [None,""]: profile.city = payload['city']
 					if 'region' in payload.keys() and profile.region in [None,""]: profile.region = payload['region']
@@ -1716,6 +1746,7 @@ class System(Wrappers):
 
 				profile = Profile.objects.get(user=user) #User is a OneToOne field
 				payload['national_id'] = profile.national_id
+				payload['passport_number'] = profile.passport_number
 
 				payload['response_status'] = '00'
 				payload['response'] = 'Session Profile Captured'
