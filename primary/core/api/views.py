@@ -92,10 +92,13 @@ class Interface(Authorize, ServiceCall):
 				'''
 				payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value) ), un_payload.items()))
 
+
+				'''#RISK IN REVIEW
 				for key, value in un_payload.items():
 					#Remove any injected sensitive data
 					if 'session_gateway_profile_id' in payload.keys():
 						del payload['session_gateway_profile_id']
+				'''
                         except Exception, e:
                                 payload = {}
                                 lgr.info('Error on Post%s' % e)

@@ -69,6 +69,10 @@ urlpatterns = [
                 url(r'^$', gateway_institution_list),
                 url(r'^(?P<institution_pk>\d+)/', include([
                     url(r'^$', institution_detail),
+
+                    url(r'^institution_profiles/', include([
+                        url(r'^$', institution_profile_list),
+                    ])),
                     # url(r'^pages/', include(page_paterns)),
 
                     url(r'^(?P<service>[\w\ ]+)/', include([
@@ -81,6 +85,7 @@ urlpatterns = [
                             # ])),
                         ])),
                     ])),
+
                 ])),
 
             ])),

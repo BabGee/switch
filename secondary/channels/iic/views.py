@@ -279,6 +279,34 @@ def gateway_profile_list(request, gateway_pk):
     })
 
 
+def institution_profile_list(request, gateway_pk,institution_pk):
+
+    gateway = Gateway.objects.get(pk=gateway_pk)
+    institution = gateway.institution_set.get(pk=institution_pk)
+
+    # page_groups = gateway.pagegroup_set.all()
+
+    gateway_profiles = GatewayProfile.objects.filter(gateway=gateway,institution=institution).order_by('-id')
+    page = request.GET.get('page', 1)
+
+    q = request.GET.get('q',None)
+    if q:
+        gateway_profiles = gateway_profiles.filter(msisdn__phone_number__icontains=q)
+
+    paginator = Paginator(gateway_profiles, 50)
+    try:
+        gateway_profiles = paginator.page(page)
+    except PageNotAnInteger:
+        gateway_profiles = paginator.page(1)
+    except EmptyPage:
+        gateway_profiles = paginator.page(paginator.num_pages)
+
+    return render(request, "iic/gateway_profile/list.html", {
+        'gateway': gateway,
+        'gateway_profiles': gateway_profiles
+    })
+
+
 def gateway_institution_list(request, gateway_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     # page_groups = gateway.pagegroup_set.all()
