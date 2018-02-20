@@ -198,7 +198,7 @@ class Wrappers:
 			id_passport = str(id_passport)
 		else:
 			id_passport = None
-
+		lgr.info('Simple ID/Passport: %s' % id_passport)
 		return id_passport
 
 
