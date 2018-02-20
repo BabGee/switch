@@ -275,6 +275,33 @@ class Wrappers:
 
 
 class System(Wrappers):
+	def capture_identity_document(self, payload, node_info):
+		try:
+			document_number = payload['document_number'].strip()
+
+			try: document_number = int(document_number)
+			except: pass
+
+			if isinstance(document_number, int) and len(document_number) >=6 and len(document_number)<=10:
+				payload['national_id'] = document_number
+				payload['trigger'] = 'national_id%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'National ID Captured'
+				payload['response_status'] = '00'
+			elif re.search(r"([a-zA-Z]{1})(\d{7})", "A1234567"):
+				payload['national_id'] = document_number
+				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'Passport Number Captured'
+				payload['response_status'] = '00'
+			else:
+				payload['response'] = 'Identity Document not found'
+				payload['response_status'] = '25'
+		except Exception, e:
+			lgr.info('Error on capture_identity_document: %s' % e)
+			payload['response_status'] = '96'
+
+		return payload
+
+
 	def session(self, payload, node_info):
 		try:
 			#CREATE SIGN UP SESSION, GET SESSION_ID (To expire within - 24 - 48hrs) VCSSystem().session(payload, node_info)
