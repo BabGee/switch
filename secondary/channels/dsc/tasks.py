@@ -611,7 +611,7 @@ class Wrappers:
         	    	if join_fields not in ['',None]:
                 		for i in join_fields.split("|"):
 	                	    k,v = i.split('%')
-				    record = join_report_list.values_list(v,flat=True)
+				    record = join_report_list.values_list(v,flat=True).distinct()
 				    join_fields_data[k+'__in'] = list(record)
 
         	        	if len(join_fields_data):
@@ -634,7 +634,7 @@ class Wrappers:
         	    	if join_not_fields not in ['',None]:
                 		for i in join_not_fields.split("|"):
 	                	    k,v = i.split('%')
-				    record = join_report_list.values_list(v,flat=True)
+				    record = join_report_list.values_list(v,flat=True).distinct()
 				    join_not_fields_data[k+'__in'] = list(record)
 
         	        	if len(join_not_fields_data):
