@@ -192,7 +192,7 @@ class Wrappers:
 		try: id_passport = int(id_passport)
 		except: pass
 
-		if isinstance(id_passport, int) and len(id_passport) >=6 and len(id_passport)<=10:
+		if isinstance(id_passport, int) and len(str(id_passport)) >=6 and len(str(id_passport))<=10:
 			id_passport = str(id_passport)
 		elif re.search(r"([a-zA-Z]{1})(\d{7})", id_passport):
 			id_passport = str(id_passport)
@@ -297,7 +297,7 @@ class System(Wrappers):
 			try: document_number = int(document_number)
 			except: pass
 
-			if isinstance(document_number, int) and len(document_number) >=6 and len(document_number)<=10:
+			if isinstance(document_number, int) and len(str(document_number)) >=6 and len(str(document_number))<=10:
 				payload['national_id'] = document_number
 				payload['trigger'] = 'national_id%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				payload['response'] = 'National ID Captured'
