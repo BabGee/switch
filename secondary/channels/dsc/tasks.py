@@ -472,7 +472,7 @@ class Wrappers:
 			join_fields = data.query.join_fields
 	            	join_institution_filters = data.query.join_institution_filters
 			join_manytomany_fields = data.query.join_manytomany_fields
-			join_not_fields = data.query.join_fields
+			join_not_fields = data.query.join_not_fields
 			join_manytomany_not_fields = data.query.join_manytomany_not_fields
 
 			join_filter_data = {}
