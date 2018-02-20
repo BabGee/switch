@@ -288,7 +288,15 @@ class System(Wrappers):
 				payload['response'] = 'National ID Captured'
 				payload['response_status'] = '00'
 			elif re.search(r"([a-zA-Z]{1})(\d{7})", document_number):
-				payload['national_id'] = document_number
+				payload['passport_number'] = document_number
+				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'Passport Number Captured'
+				payload['response_status'] = '00'
+			elif 'national_id' in payload.keys():
+				payload['trigger'] = 'national_id%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'National ID Captured'
+				payload['response_status'] = '00'
+			elif 'passport_number' in payload.keys():
 				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				payload['response'] = 'Passport Number Captured'
 				payload['response_status'] = '00'
@@ -1595,11 +1603,11 @@ class System(Wrappers):
 				payload['last_name'] = payload['last_name'] if 'last_name' in payload.keys()  else user.last_name
 				payload['gender'] = user.profile.gender.code if user.profile.gender else None
 
-				payload['national_id'] = user.profile.national_id
-				payload['passport_number'] = user.profile.passport_number
-				payload['postal_address'] = user.profile.postal_address
-				payload['address'] = user.profile.address
-				payload['postal_code'] = user.profile.postal_code
+				if user.profile.national_id: payload['national_id'] = user.profile.national_id
+				if user.profile.passport_number: payload['passport_number'] = user.profile.passport_number
+				if user.profile.postal_address: payload['postal_address'] = user.profile.postal_address
+				if user.profile.address: payload['address'] = user.profile.address
+				if user.profile.postal_code: payload['postal_code'] = user.profile.postal_code
 
 				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
 					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
@@ -1642,11 +1650,12 @@ class System(Wrappers):
 				payload['last_name'] = payload['last_name'] if 'last_name' in payload.keys()  else user.last_name
 				payload['gender'] = user.profile.gender.code if user.profile.gender else None
 
-				payload['national_id'] = user.profile.national_id
-				payload['passport_number'] = user.profile.passport_number
-				payload['postal_address'] = user.profile.postal_address
-				payload['address'] = user.profile.address
-				payload['postal_code'] = user.profile.postal_code
+				if user.profile.national_id: payload['national_id'] = user.profile.national_id
+				if user.profile.passport_number: payload['passport_number'] = user.profile.passport_number
+				if user.profile.postal_address: payload['postal_address'] = user.profile.postal_address
+				if user.profile.address: payload['address'] = user.profile.address
+				if user.profile.postal_code: payload['postal_code'] = user.profile.postal_code
+
 
 				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
 					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
