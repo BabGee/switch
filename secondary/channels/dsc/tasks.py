@@ -615,6 +615,8 @@ class Wrappers:
 
         	        	if len(join_fields_data):
 	                	    query = reduce(operator.and_, (Q(k) for k in join_fields_data.items()))
+
+				    lgr.info('%s Fields Applied: %s' % (data.query.name,query))
                 		    report_list = report_list.filter(query)
 
         	    	if join_manytomany_fields not in ['',None]:
@@ -624,6 +626,8 @@ class Wrappers:
 				    join_manytomany_fields_data[k+'__in'] = list(record)
         	        	if len(join_manytomany_fields_data):
 	                	    query = reduce(operator.and_, (Q(k) for k in join_manytomany_fields_data.items()))
+
+				    lgr.info('%s Many Fields Applied: %s' % (data.query.name,query))
                 		    report_list = report_list.filter(query)
 
         	    	if join_not_fields not in ['',None]:
@@ -634,6 +638,8 @@ class Wrappers:
 
         	        	if len(join_not_fields_data):
 	                	    query = reduce(operator.and_, (~Q(k) for k in join_not_fields_data.items()))
+
+				    lgr.info('%s Not Fields Applied: %s' % (data.query.name,query))
                 		    report_list = report_list.filter(query)
 
         	    	if join_manytomany_not_fields not in ['',None]:
@@ -643,6 +649,8 @@ class Wrappers:
 				    join_manytomany_not_fields_data[k+'__in'] = list(record)
         	        	if len(join_manytomany_not_fields_data):
 	                	    query = reduce(operator.and_, (~Q(k) for k in join_manytomany_not_fields_data.items()))
+
+				    lgr.info('%s Many Not Fields Applied: %s' % (data.query.name,query))
                 		    report_list = report_list.filter(query)
 
 	    #lgr.info('Report End Date')
