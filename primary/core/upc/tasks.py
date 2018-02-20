@@ -65,7 +65,15 @@ class Wrappers:
 			if 'physical_address' in payload.keys() and profile.physical_address in [None,""]: profile.physical_address = payload['physical_address']
 			if 'city' in payload.keys() and profile.city in [None,""]: profile.city = payload['city']
 			if 'region' in payload.keys() and profile.region in [None,""]: profile.region = payload['region']
-			if 'postal_address' in payload.keys() and profile.postal_address in [None,""]: profile.postal_address = payload['postal_address']
+			if 'postal_address' in payload.keys() and profile.postal_address in [None,""]: 
+				postal_address = payload['postal_address']
+				postal_address_list = str(postal_address).split('-')
+				if len(postal_address_list)>1 and 'postal_code' not in payload.keys():
+					profile.postal_address = postal_address_list[0]
+					payload['postal_code'] = postal_address_list[1]
+				else:
+					profile.postal_address = postal_address
+
 			if 'postal_code' in payload.keys() and profile.postal_code in [None,""]: profile.postal_code = payload['postal_code']
 			if 'country' in payload.keys() and profile.country in [None,""]: profile.country = Country.objects.get(iso2=payload['country'])
 			if 'address' in payload.keys() and profile.address in [None,""]: profile.address = payload['address']
@@ -103,7 +111,15 @@ class Wrappers:
 		if 'physical_address' in payload.keys(): profile.physical_address = payload['physical_address']
 		if 'city' in payload.keys(): profile.city = payload['city']
 		if 'region' in payload.keys(): profile.region = payload['region']
-		if 'postal_address' in payload.keys(): profile.postal_address = payload['postal_address']
+		if 'postal_address' in payload.keys():
+			postal_address = payload['postal_address']
+			postal_address_list = str(postal_address).split('-')
+			if len(postal_address_list)>1 and 'postal_code' not in payload.keys():
+				profile.postal_address = postal_address_list[0]
+				payload['postal_code'] = postal_address_list[1]
+			else:
+				profile.postal_address = postal_address
+
 		if 'postal_code' in payload.keys(): profile.postal_code = payload['postal_code']
 		if 'country' in payload.keys(): profile.country = Country.objects.get(iso2=payload['country'])
 		if 'address' in payload.keys(): profile.address = payload['address']
