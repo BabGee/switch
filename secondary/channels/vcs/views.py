@@ -242,7 +242,8 @@ class VAS:
 				len(self.payload['input'])<=int(self.nav.menu.input_variable.validate_max) and \
 				((self.nav.menu.input_variable.variable_type.variable == 'email' and self.validateEmail(self.payload['input'])) or \
 				(self.nav.menu.input_variable.variable_type.variable == 'msisdn' and UPCWrappers.simple_get_msisdn(self.payload['input'],self.payload)) or \
-				(self.nav.menu.input_variable.variable_type.variable not in ['msisdn','email'] and \
+				(self.nav.menu.input_variable.variable_type.variable == 'id_passport' and UPCWrappers.simple_id_passport(self.payload['input'])) or \
+				(self.nav.menu.input_variable.variable_type.variable not in ['msisdn','email','id_passport'] and \
 				isinstance(globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable](self.payload['input']), \
 				globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable])) or \
 				(allowed_input_list and self.payload['input'] in allowed_input_list.split(','))):

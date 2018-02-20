@@ -60,8 +60,8 @@ class Wrappers:
 
 			profile = user.profile #User is a OneToOne field
 			if 'middle_name' in payload.keys() and profile.middle_name in [None,""]: profile.middle_name = payload['middle_name']
-			if 'national_id' in payload.keys() and profile.national_id in [None,""]: profile.national_id = payload['national_id']
-			if 'passport_number' in payload.keys() and profile.passport_number in [None,""]: profile.passport_number = payload['passport_number']
+			if 'national_id' in payload.keys() and profile.national_id in [None,""]: profile.national_id = payload['national_id'].replace(' ','').strip()
+			if 'passport_number' in payload.keys() and profile.passport_number in [None,""]: profile.passport_number = payload['passport_number'].replace(' ','').strip()
 			if 'physical_address' in payload.keys() and profile.physical_address in [None,""]: profile.physical_address = payload['physical_address']
 			if 'city' in payload.keys() and profile.city in [None,""]: profile.city = payload['city']
 			if 'region' in payload.keys() and profile.region in [None,""]: profile.region = payload['region']
@@ -98,8 +98,8 @@ class Wrappers:
 
 		profile = user.profile #User is a OneToOne field
 		if 'middle_name' in payload.keys(): profile.middle_name = payload['middle_name']
-		if 'national_id' in payload.keys(): profile.national_id = payload['national_id']
-		if 'passport_number' in payload.keys(): profile.passport_number = payload['passport_number']
+		if 'national_id' in payload.keys(): profile.national_id = payload['national_id'].replace(' ','').strip()
+		if 'passport_number' in payload.keys(): profile.passport_number = payload['passport_number'].replace(' ','').strip()
 		if 'physical_address' in payload.keys(): profile.physical_address = payload['physical_address']
 		if 'city' in payload.keys(): profile.city = payload['city']
 		if 'region' in payload.keys(): profile.region = payload['region']
@@ -177,15 +177,30 @@ class Wrappers:
 					del payload['msisdn']
 					session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 		elif 'national_id' in payload.keys() and payload['national_id'] not in ["",None,"None"]:
-			session_gateway_profile = GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'],\
+			session_gateway_profile = GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].replace(' ','').strip(),\
 					 gateway=gateway_profile.gateway)
 		elif 'passport_number' in payload.keys() and payload['passport_number'] not in ["",None,"None"]:
-			session_gateway_profile = GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'],\
+			session_gateway_profile = GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
 					 gateway=gateway_profile.gateway)
 		else:
 			session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 
 		return session_gateway_profile, payload, profile_error
+
+	def simple_id_passport(self, id_passport):
+		id_passport = str(id_passport).replace(' ','').strip()
+		try: id_passport = int(id_passport)
+		except: pass
+
+		if isinstance(id_passport, int) and len(id_passport) >=6 and len(id_passport)<=10:
+			id_passport = str(id_passport)
+		elif re.search(r"([a-zA-Z]{1})(\d{7})", id_passport):
+			id_passport = str(id_passport)
+		else:
+			id_passport = None
+
+		return id_passport
+
 
 	def simple_get_msisdn(self, msisdn, payload={}):
 		lng = payload['lng'] if 'lng' in payload.keys() else 0.0
@@ -277,7 +292,7 @@ class Wrappers:
 class System(Wrappers):
 	def capture_identity_document(self, payload, node_info):
 		try:
-			document_number = payload['document_number'].strip()
+			document_number = payload['document_number'].replace(' ','').strip()
 
 			try: document_number = int(document_number)
 			except: pass
@@ -1450,9 +1465,9 @@ class System(Wrappers):
 				create_gateway_profile = None
 
 			elif existing_gateway_profile.exists() and 'national_id' in payload.keys() and\
-			 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].strip(),\
+			 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].replace(' ','').strip(),\
 			 gateway=gateway_profile.gateway).exists() and existing_gateway_profile[0].user.profile.national_id in [None,''] and\
-			 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].strip(),\
+			 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].replace(' ','').strip(),\
 			 gateway=gateway_profile.gateway)[0].user <> existing_gateway_profile[0].user:
 				#check update national_id profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
 				payload['response'] = 'Profile Error: National ID exists in another profile. Please contact us'
@@ -1467,16 +1482,16 @@ class System(Wrappers):
 
 
 			elif existing_gateway_profile.exists() and 'passport_number' in payload.keys() and\
-			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].strip(),\
+			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
 			 gateway=gateway_profile.gateway).exists() and existing_gateway_profile[0].user.profile.passport_number in [None,''] and\
-			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].strip(),\
+			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
 			 gateway=gateway_profile.gateway)[0].user <> existing_gateway_profile[0].user:
 				#check update passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
 				payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
 				payload['response_status'] = '63'
 
 			elif existing_gateway_profile.exists() == False and 'passport_number' in payload.keys() and\
-			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].strip(),\
+			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
 			 gateway=gateway_profile.gateway).exists():
 				#check create passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile.
 				payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
@@ -1504,9 +1519,9 @@ class System(Wrappers):
 				username = ''
 
 				if 'national_id' in payload.keys():
-					username = createUsername(payload["national_id"])
+					username = createUsername(payload["national_id"].replace(' ','').strip())
 				elif 'passport_number' in payload.keys():
-					username = createUsername(payload["passport_number"])
+					username = createUsername(payload["passport_number"].replace(' ','').strip())
 				elif 'email' in payload.keys() and self.validateEmail(payload["email"]):
 					username = createUsername(payload["email"].split('@')[0])
 				elif 'msisdn' in payload.keys() and self.get_msisdn(payload):
@@ -1756,8 +1771,8 @@ class System(Wrappers):
 
 					profile = Profile.objects.get(user=user) #User is a OneToOne field
 					if 'middle_name' in payload.keys() and profile.middle_name in [None,""]: profile.middle_name = payload['middle_name']
-					if 'national_id' in payload.keys() and profile.national_id in [None,""]: profile.national_id = payload['national_id']
-					if 'passport_number' in payload.keys() and profile.passport_number in [None,""]: profile.passport_number = payload['passport_number']
+					if 'national_id' in payload.keys() and profile.national_id in [None,""]: profile.national_id = payload['national_id'].replace(' ','').strip()
+					if 'passport_number' in payload.keys() and profile.passport_number in [None,""]: profile.passport_number = payload['passport_number'].replace(' ','').strip()
 					if 'physical_address' in payload.keys() and profile.physical_address in [None,""]: profile.physical_address = payload['physical_address']
 					if 'city' in payload.keys() and profile.city in [None,""]: profile.city = payload['city']
 					if 'region' in payload.keys() and profile.region in [None,""]: profile.region = payload['region']
