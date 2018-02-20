@@ -292,7 +292,8 @@ class Wrappers:
 class System(Wrappers):
 	def capture_identity_document(self, payload, node_info):
 		try:
-			document_number = str(payload['document_number']).replace(' ','').strip()
+
+			document_number = str(payload['document_number']).replace(' ','').strip() if 'document_number' in payload.keys() else None
 
 			try: document_number = int(document_number)
 			except: pass
