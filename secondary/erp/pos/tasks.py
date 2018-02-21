@@ -1073,6 +1073,47 @@ class Payments(System):
 
 
 @app.task(ignore_result=True)
+def order_background_service_call(order):
+	lgr = get_task_logger(__name__)
+	from primary.core.bridge.tasks import Wrappers as BridgeWrappers
+	try:
+		o = PurchaseOrder.objects.get(id=order)
+		lgr.info('Captured Order: %s' % o)
+		cart_item = o.cart_item.all()
+		for c in cart_item:
+			lgr.info('Captured Cart Item: %s' % c)
+			product_item = c.product_item
+			payload = json.loads(c.details)	
+
+			gateway_profile = c.gateway_profile
+			service = c.product_item.product_type.service
+
+			payload['cart_item_id'] = c.id
+			payload['purchase_order_id'] = o.id
+			payload['product_item_id'] = c.product_item.id
+			payload['item'] = c.product_item.name
+			payload['product_type'] = c.product_item.product_type.name
+			payload['quantity'] = c.quantity
+			payload['currency'] = c.currency.code
+			payload['amount'] = c.total
+			payload['reference'] = o.reference
+			#payload['institution_id'] = c.product_item.institution.id
+			payload['chid'] = c.channel.id
+			payload['ip_address'] = '127.0.0.1'
+			payload['gateway_host'] = '127.0.0.1'
+
+			payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
+
+			payload = BridgeWrappers().background_service_call(service, gateway_profile, payload)
+			lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
+	except Exception, e:
+		payload['response_status'] = '96'
+		lgr.info('Unable to make service call: %s' % e)
+	return payload
+
+
+
+@app.task(ignore_result=True)
 def order_service_call(order):
 	lgr = get_task_logger(__name__)
 	from primary.core.api.views import ServiceCall
@@ -1144,50 +1185,8 @@ def process_paid_order():
 
 		processing = orig_order.filter(id__in=order).update(cart_processed=True, date_modified=timezone.now())
 		for od in order:
-			order_service_call.delay(od)
+			#order_service_call.delay(od)
+			order_background_service_call.delay(od)
 	except Exception, e: lgr.info('Error on process paid order')
 
 
-
-	'''
-	order = PurchaseOrder.objects.select_for_update().filter(status__name='PAID',cart_processed=False,\
-		 date_modified__lte=timezone.now()-timezone.timedelta(seconds=10))[:10]
-
-	for o in order:
-		try:
-			o.cart_processed = True
-			o.save()
-			lgr.info('Captured Order: %s' % o)
-			cart_item = o.cart_item.filter(status__name='PAID')
-			for c in cart_item:
-				lgr.info('Captured Cart Item: %s' % c)
-				product_item = c.product_item
-				payload = json.loads(c.details)	
-
-				service = c.product_item.product_type.service
-				payload['service_id'] = service.id
-				payload['purchase_order_id'] = o.id
-				payload['product_item_id'] = c.product_item.id
-				payload['item'] = c.product_item.name
-				payload['product_type'] = c.product_item.product_type.name
-				payload['gateway_profile_id'] = c.gateway_profile.id
-				payload['quantity'] = c.quantity
-				payload['currency'] = c.currency.code
-				payload['amount'] = c.total
-				payload['reference'] = o.reference
-				#payload['institution_id'] = c.product_item.institution.id
-				payload['chid'] = c.channel.id
-				payload['ip_address'] = '127.0.0.1'
-				payload['gateway_host'] = '127.0.0.1'
-
-	    			payload = json.dumps(payload, cls=DjangoJSONEncoder)
-				
-				lgr.info('Product Item: %s | Payload: %s' % (product_item, payload))
-				if service is None:
-					lgr.info('No Service to process for product: %s' % product_item)
-				else:
-					try:service_call(payload)
-					except Exception, e: lgr.info('Error on Service Call: %s' % e)
-		except Exception, e:
-			lgr.info('Error processing paid order item: %s | %s' % (o,e))
-	'''

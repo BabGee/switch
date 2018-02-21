@@ -29,18 +29,6 @@ import logging
 lgr = logging.getLogger('bridge')
 
 class Wrappers:
-	@app.task(ignore_result=True)
-	def service_call(self, service, gateway_profile, payload):
-		lgr = get_task_logger(__name__)
-		from primary.core.api.views import ServiceCall
-		try:
-			payload = ServiceCall().api_service_call(service, gateway_profile, payload)
-			lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
-		except Exception, e:
-			payload['response_status'] = '96'
-			lgr.info('Unable to make service call: %s' % e)
-		return payload
-
 	def response_payload(self, payload):
 
 		lgr.info('Response Payload: %s' % payload)
@@ -92,6 +80,73 @@ class Wrappers:
 		return json.dumps(new_payload)
 
 
+
+	@app.task(ignore_result=True)
+	def service_call(self, service, gateway_profile, payload):
+		lgr = get_task_logger(__name__)
+		from primary.core.api.views import ServiceCall
+		try:
+			payload = ServiceCall().api_service_call(service, gateway_profile, payload)
+			lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info('Unable to make service call: %s' % e)
+		return payload
+
+	def background_service_call(self, service, gateway_profile, payload):
+		try:
+			status = TransactionStatus.objects.get(name='CREATED')
+			response_status = ResponseStatus.objects.get(response='DEFAULT')
+
+			channel = Channel.objects.get(id=int(payload['chid']))
+			currency_code = payload['currency'] if 'currency' in payload.keys() and payload['currency']!='' else None
+			currency = Currency.objects.get(code=currency_code) if currency_code is not None  else None
+			amount = payload['amount'] if 'amount' in payload.keys() and payload['amount']!='' else None
+			charges = payload['charges'] if 'charges' in payload.keys() and payload['charges']!='' else None
+
+			activity = BackgroundServiceActivity(service=.service, status=status, \
+					gateway_profile=gateway_profile,request=self.transaction_payload(payload),\
+					channel=channel, response_status=response_status, currency = currency,\
+					amount = amount, charges = charges, gateway=gateway_profile.gateway,\
+					sends=0)
+
+			activity.transaction_reference = payload['bridge__transaction_id'] if 'bridge__transaction_id' in payload.keys() else None
+
+			if 'scheduled_send' in payload.keys() and payload['scheduled_send'] not in ["",None]:
+				try:date_obj = datetime.strptime(payload["scheduled_send"], '%d/%m/%Y %I:%M %p')
+				except: date_obj = None
+				if date_obj is not None:		
+					profile_tz = pytz.timezone(gateway_profile.profile.timezone)
+					scheduled_send = pytz.timezone(gateway_profile.profile.timezone).localize(date_obj)
+					lgr.info("Send Scheduled: %s" % scheduled_send)
+				else:
+					scheduled_send = timezone.now()+timezone.timedelta(seconds=1)
+			elif 'send_minutes_period' in payload.keys():
+				scheduled_send = timezone.now()+timezone.timedelta(minutes=(int(payload['send_minutes_period'])))
+			elif 'send_hours_period' in payload.keys():
+				scheduled_send = timezone.now()+timezone.timedelta(hours=(int(payload['send_hours_period'])))
+			elif 'send_days_period' in payload.keys():
+				scheduled_send = timezone.now()+timezone.timedelta(days=(int(payload['send_days_period'])))
+			elif 'send_years_period' in payload.keys():
+				scheduled_send = timezone.now()+timezone.timedelta(days=(365*int(payload['send_years_period'])))
+			else:
+				scheduled_send = timezone.now()+timezone.timedelta(seconds=1)
+
+			activity.scheduled_send = scheduled_send
+
+			if 'ext_outbound_id' in payload.keys() and payload['ext_outbound_id'] not in ["",None]:
+				activity.ext_outbound_id = payload['ext_outbound_id']
+
+			if 'institution_id' in payload.keys():
+				activity.institution = Institution.objects.get(id=payload['institution_id'])
+
+			activity.save()
+			payload['response'] = "Activity Logged. Wait to Process"
+			payload['response_status'] = '00'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Background Service Call: %s" % e)
+		return payload
 
 
 class System(Wrappers):
