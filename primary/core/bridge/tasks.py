@@ -225,7 +225,6 @@ def process_pending_transactions():
                         lgr.info('Error processing file upload: %s | %s' % (u,e))
 '''
 
-
 @app.task(ignore_result=True)
 def background_service_call(background):
 	from celery.utils.log import get_task_logger
@@ -234,7 +233,7 @@ def background_service_call(background):
 	try:
 		i = BackgroundServiceActivity.objects.get(id=background)
 
-		payload = json.loads(i.request)
+		try:payload = json.loads(i.request)
 		except:pass
 		payload['chid'] = i.channel.id
 		payload['ip_address'] = '127.0.0.1'

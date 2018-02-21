@@ -191,7 +191,6 @@ class BackgroundServiceActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	service = models.ForeignKey(Service)
-	background_service = models.ForeignKey(BackgroundService, null=True, blank=True)
 	status = models.ForeignKey(TransactionStatus)
 	gateway_profile = models.ForeignKey(GatewayProfile)
 	request = models.CharField(max_length=1920)
@@ -209,6 +208,6 @@ class BackgroundServiceActivity(models.Model):
 	sends = models.IntegerField()
 	ext_outbound_id = models.CharField(max_length=200, blank=True, null=True)
 	def __unicode__(self):
-		return u'%s %s' % (self.background_service, self.gateway_profile)
+		return u'%s %s' % (self.service, self.gateway_profile)
 
 
