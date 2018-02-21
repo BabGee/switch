@@ -190,8 +190,8 @@ class BackgroundService(models.Model):
 class BackgroundServiceActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	service = models.ForeignKey(Service, null=True, blank=True)
-	background_service = models.ForeignKey(BackgroundService)
+	service = models.ForeignKey(Service)
+	background_service = models.ForeignKey(BackgroundService, null=True, blank=True)
 	status = models.ForeignKey(TransactionStatus)
 	gateway_profile = models.ForeignKey(GatewayProfile)
 	request = models.CharField(max_length=1920)

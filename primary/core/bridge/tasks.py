@@ -118,10 +118,12 @@ class System(Wrappers):
 				amount = payload['amount'] if 'amount' in payload.keys() and payload['amount']!='' else None
 				charges = payload['charges'] if 'charges' in payload.keys() and payload['charges']!='' else None
 
+				request = payload.copy()
+				try: request.update(json.loads(background_service[0].details))
+				except: pass
 
-
-				activity = BackgroundServiceActivity(background_service=background_service[0], status=status, \
-						gateway_profile=session_gateway_profile,request=self.transaction_payload(payload),\
+				activity = BackgroundServiceActivity(service=background_service[0].service, status=status, \
+						gateway_profile=session_gateway_profile,request=self.transaction_payload(request),\
 						channel=channel, response_status=response_status, currency = currency,\
 						amount = amount, charges = charges, gateway=session_gateway_profile.gateway,\
 						sends=0)
@@ -232,8 +234,7 @@ def background_service_call(background):
 	try:
 		i = BackgroundServiceActivity.objects.get(id=background)
 
-		payload = json.loads(i.background_service.details)
-		try:payload.update(json.loads(i.request))
+		payload = json.loads(i.request)
 		except:pass
 		payload['chid'] = i.channel.id
 		payload['ip_address'] = '127.0.0.1'
@@ -245,7 +246,7 @@ def background_service_call(background):
 		if i.amount:
 			payload['amount'] = i.amount
 
-		service = i.background_service.service
+		service = i.service
 		gateway_profile = i.gateway_profile
 
 		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
@@ -267,7 +268,7 @@ def background_service_call(background):
 
 		#Set for failed retries in every 6 hours within 24 hours
 		if payload['response_status'] <> '00':
-			if i.background_service.cut_off_command and i.current_command and i.current_command.level > i.background_service.cut_off_command.level:
+			if i.service.cut_off_command and i.current_command and i.current_command.level > i.service.cut_off_command.level:
 				pass
 			elif  i.sends > 3:
 				pass
