@@ -144,16 +144,18 @@ def node_system_service_commands_code(request,node_system_pk,service_command_pk)
                     break
 
     code = []
+
+    # code.append(end_line_contains)
+
     #### parse the code fragment
     with open(ast_filename) as fd:
         file_contents = fd.readlines()
         in_block = False
         for line in file_contents:
             if (not in_block) and 'def' in line and service_command.command_function in line:
-                code.append(line)
+                code.append('\n')
                 in_block = True
             elif (in_block) and ('class' in line or ('def' in line and end_line_contains in line)): # (class_node and (class_def is not class_node))
-                in_block = False
                 break
 
             if in_block:

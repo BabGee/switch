@@ -117,6 +117,15 @@ class ServiceCommand(models.Model):
 	def __unicode__(self):
 		return u'%s %s %s' % (self.command_function, self.status.name, self.access_level_list())
 
+class ServiceCutOff(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	service = models.OneToOneField(Service)
+	cut_off_command = models.ForeignKey(ServiceCommand, null=True, blank=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s %s' % (self.id, self.service)  
+
 #This expalains the state of a transaction. Whether Processed or pending
 class TransactionStatus(models.Model):
 	name = models.CharField(max_length=50)
@@ -181,6 +190,7 @@ class BackgroundService(models.Model):
 class BackgroundServiceActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
+	service = models.ForeignKey(Service, null=True, blank=True)
 	background_service = models.ForeignKey(BackgroundService)
 	status = models.ForeignKey(TransactionStatus)
 	gateway_profile = models.ForeignKey(GatewayProfile)

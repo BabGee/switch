@@ -49,6 +49,11 @@ class ServiceCommandAdmin(admin.ModelAdmin):
 		search_fields = ('command_function','service__name','reverse_function','trigger__name',)
 admin.site.register(ServiceCommand, ServiceCommandAdmin)
 
+class ServiceCutOffAdmin(admin.ModelAdmin):
+		list_display = ('service','cut_off_command','description')
+admin.site.register(ServiceCutOff, ServiceCutOffAdmin)
+
+
 class TransactionStatusAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description','date_modified','date_created')
 admin.site.register(TransactionStatus, TransactionStatusAdmin)
@@ -71,7 +76,7 @@ class BackgroundServiceAdmin(admin.ModelAdmin):
 admin.site.register(BackgroundService, BackgroundServiceAdmin)
 
 class BackgroundServiceActivityAdmin(admin.ModelAdmin):
-	list_display = ('id','background_service','status','gateway_profile','request','channel',\
+	list_display = ('id','service','background_service','status','gateway_profile','request','channel',\
 			'response_status','transaction_reference','gateway','institution','current_command',\
 			'scheduled_send','message','sends','ext_outbound_id',)
 admin.site.register(BackgroundServiceActivity, BackgroundServiceActivityAdmin)
