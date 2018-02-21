@@ -309,7 +309,10 @@ class System(Wrappers):
 	def capture_identity_document(self, payload, node_info):
 		try:
 
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			document_number = str(payload['document_number']).replace(' ','').strip() if 'document_number' in payload.keys() else None
+
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id']) if 'session_gateway_profile_id' in payload.keys() else None
 
 			try: document_number = int(document_number)
 			except: pass
@@ -329,6 +332,27 @@ class System(Wrappers):
 				payload['response'] = 'National ID Captured'
 				payload['response_status'] = '00'
 			elif 'passport_number' in payload.keys():
+				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'Passport Number Captured'
+				payload['response_status'] = '00'
+			elif session_gateway_profile and session_gateway_profile.user.profile.national_id:
+				payload['national_id'] = str(session_gateway_profile.user.profile.national_id)
+				payload['trigger'] = 'national_id%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'National ID Captured'
+				payload['response_status'] = '00'
+			elif session_gateway_profile and session_gateway_profile.user.profile.passport_number:
+				payload['passport_number'] = str(session_gateway_profile.user.profile.passport_number)
+				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'Passport Number Captured'
+				payload['response_status'] = '00'
+
+			elif gateway_profile and gateway_profile.user.profile.national_id:
+				payload['national_id'] = str(gateway_profile.user.profile.national_id)
+				payload['trigger'] = 'national_id%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'National ID Captured'
+				payload['response_status'] = '00'
+			elif gateway_profile and gateway_profile.user.profile.passport_number:
+				payload['passport_number'] = str(gateway_profile.user.profile.passport_number)
 				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				payload['response'] = 'Passport Number Captured'
 				payload['response_status'] = '00'
