@@ -1071,12 +1071,11 @@ class Trade(System):
 class Payments(System):
 	pass
 
-
 @app.task(ignore_result=True)
 def order_background_service_call(order):
 	lgr = get_task_logger(__name__)
-	from primary.core.bridge.tasks import Wrappers as BridgeWrappers
 	try:
+		from primary.core.bridge.tasks import Wrappers as BridgeWrappers
 		o = PurchaseOrder.objects.get(id=order)
 		lgr.info('Captured Order: %s' % o)
 		cart_item = o.cart_item.all()
@@ -1110,8 +1109,6 @@ def order_background_service_call(order):
 		payload['response_status'] = '96'
 		lgr.info('Unable to make service call: %s' % e)
 	return payload
-
-
 
 @app.task(ignore_result=True)
 def order_service_call(order):

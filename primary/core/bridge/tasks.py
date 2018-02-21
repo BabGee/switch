@@ -104,7 +104,7 @@ class Wrappers:
 			amount = payload['amount'] if 'amount' in payload.keys() and payload['amount']!='' else None
 			charges = payload['charges'] if 'charges' in payload.keys() and payload['charges']!='' else None
 
-			activity = BackgroundServiceActivity(service=.service, status=status, \
+			activity = BackgroundServiceActivity(service=service, status=status,\
 					gateway_profile=gateway_profile,request=self.transaction_payload(payload),\
 					channel=channel, response_status=response_status, currency = currency,\
 					amount = amount, charges = charges, gateway=gateway_profile.gateway,\
