@@ -347,6 +347,12 @@ class System(Wrappers):
 				if 'national_id' in payload.keys():
 					payload['original_national_id'] = payload['national_id']
 					del payload['national_id']
+				if 'document_number' in payload.keys():
+					payload['original_document_number'] = payload['document_number']
+					del payload['document_number']
+				if 'passport_number' in payload.keys():
+					payload['original_passport_number'] = payload['passport_number']
+					del payload['passport_number']
 				if 'first_name' in payload.keys():
 					payload['original_first_name'] = payload['first_name']
 					del payload['first_name']
@@ -370,6 +376,12 @@ class System(Wrappers):
 				msisdn = UPCWrappers().get_msisdn(payload)
 				if 'recipient_national_id' in payload.keys():
 					payload['national_id'] = payload['recipient_national_id']
+				if 'recipient_document_number' in payload.keys():
+					payload['document_number'] = payload['recipient_document_number']
+				if 'recipient_passport_number' in payload.keys():
+					payload['passport_number'] = payload['recipient_passport_number']
+
+
 
 				if msisdn is not None:
 					payload['msisdn'] = msisdn
