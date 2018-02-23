@@ -21,25 +21,13 @@ class InputVariable(models.Model):
 	variable_type = models.ForeignKey(VariableType)
 	validate_min = models.CharField(max_length=45)
 	validate_max = models.CharField(max_length=45)
+	required = models.BooleanField(default=False)
 	default_value = models.CharField(max_length=12800, null=True, blank=True)
 	variable_kind = models.CharField(max_length=45, null=True, blank=True)
 	description = models.CharField(max_length=200, null=True, blank=True)
 	service = models.ForeignKey(Service, null=True, blank=True)	
 	def __unicode__(self):
 		return u'%s %s %s' % (self.id, self.name, self.variable_type)		
-
-'''		
-class InputVariable(models.Model):
-	name = models.CharField(max_length=45)
-	variable_type = models.ForeignKey(VariableType)
-	validate_min = models.CharField(max_length=45)
-	validate_max = models.CharField(max_length=45)
-	default_value = models.CharField(max_length=600, null=True, blank=True)
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
-		return u'%s %s' % (self.name, self.variable_type)		
-'''
 
 class PageGroup(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)

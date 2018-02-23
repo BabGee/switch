@@ -466,22 +466,20 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			institution = gateway_profile.institution
 
-			product_types = ShopProductType.objects.filter(name=payload['product_type_name'], institution=institution)
-			if product_types.exists:
-				product_type = product_types[0]
+			product_types = ShopProductType.objects.filter(
+				name=payload['product_type_name'],
+				institution=institution,
+				shop_product_category = payload['shop_product_category_id']
+			)
+
+			if product_types.exists():
+				pass
+				# product_type = product_types[0]
 			else:
 				product_type = ShopProductType()
 				product_type.name = payload['product_type_name']
-				try:
-					shop_product_category = ShopProductCategory.objects.get(name=payload['product_type_category'])
-				except ShopProductCategory.DoesNotExist:
-					shop_product_category = ShopProductCategory()
-					shop_product_category.name = payload['product_type_category']
-					shop_product_category.description = payload['product_type_category_description']
-					shop_product_category.status = ProductStatus.objects.get(name='ACTIVE')
-					shop_product_category.save()
 
-				product_type.shop_product_category = shop_product_category
+				product_type.shop_product_category_id = payload['shop_product_category_id']
 				product_type.description = payload['product_type_description']
 				product_type.status = ProductStatus.objects.get(name='ACTIVE')
 				product_type.institution = institution

@@ -148,7 +148,7 @@ class Generator:
                     this_page[menu_page_group_level][input_page.item_level][input_page.name][
                         input.page_input_group.item_level][input.page_input_group.name][input.item_level] = \
                         [input.page_input, var.variable_type.variable, var.validate_min, var.validate_max, var.name,
-                         var.default_value, input_icon, input.section_size, var.variable_kind, True, input.style,
+                         var.default_value, input_icon, input.section_size, var.variable_kind, var.required, input.style,
                          var_service, input.section_height, None]
 
                 try:
