@@ -60,6 +60,8 @@ class ServiceProcessor:
 
 					elif node_system.node_status.name == 'LOCAL' and item.reverse_function <> 'no_reverse':
 						payload = Wrappers().call_local(item, item.reverse_function, payload)
+					elif node_system.node_status.name == 'BLANK' and item.reverse_function <> 'no_reverse':
+						pass
 					elif item.reverse_function == 'no_reverse':
 						break
 
@@ -70,7 +72,7 @@ class ServiceProcessor:
 						reverse_response_tree['response'][item.reverse_function] = response
 						break
 					else:
-						response = payload['response']
+						response = item.response if item.response not in [None,''] else payload['response'] 
 					reverse_response_tree['response_status'] = payload['response_status']
 					lgr.info('Captured Response: %s' % str(response)[:100])
 					reverse_response_tree['response'][item.reverse_function] = response
@@ -141,7 +143,8 @@ class ServiceProcessor:
 							payload['response'] = str(payload_ext['response'])
 						if 'ext_transaction_id' in payload_ext.keys():
 							payload['ext_transaction_id'] = str(payload_ext['ext_transaction_id'])
-
+					elif node_system.node_status.name == 'BLANK':	
+						pass
 					elif node_system.node_status.name == 'LOCAL':	
 						payload = Wrappers().call_local(item, item.command_function, payload)
 					if payload['response_status'] <> '00':
@@ -166,7 +169,7 @@ class ServiceProcessor:
 								transaction.next_command = all_commands[0]
 							else:
 								transaction.next_command = None
-						response = payload['response']
+						response = item.response if item.response not in [None,''] else payload['response'] 
 					if item.command_function in response_tree['response'].keys():
 						response_tree['response'][item.command_function+str(item.level)] = response
 					else:
@@ -186,7 +189,10 @@ class ServiceProcessor:
 		response_tree['action_id'] = payload['action_id'] if 'action_id' in payload.keys() else 0
 		response_tree['response_status'] = payload['response_status']
 		response_tree['overall_status']	= payload['response_status']
-		response_tree['last_response'] = response
+		if payload['response_status'] <> 00:
+			response_tree['last_response'] = service.failed_last_response if service.failed_last_response not in [None,''] else response
+		else:
+			response_tree['last_response'] = service.success_last_response if service.success_last_response not in [None,''] else response
 
 		if reverse:
 			lgr.info('Service Script Processing Reversal')

@@ -55,13 +55,15 @@ class ServiceStatus(models.Model):
 		return u'%s' % (self.name)
 
 class Service(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)	
 	name = models.CharField(max_length=50, unique=True)
 	product = models.ForeignKey(Product)
 	description = models.CharField(max_length=100)
 	status = models.ForeignKey(ServiceStatus) # Whether Poller or Other
+	success_last_response = models.CharField(max_length=256, null=True, blank=True)
+	failed_last_response = models.CharField(max_length=256, null=True, blank=True)
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)	
 	def __unicode__(self):
 		return u'%s' % (self.name)
 	def access_level_list(self):
@@ -96,6 +98,7 @@ class ServiceCommand(models.Model):
 	reverse_function = models.CharField(max_length=50, null=True, blank=True)
 	description = models.CharField(max_length=100)
 	details = models.CharField(max_length=512, default=json.dumps({}))
+	response = models.CharField(max_length=256, null=True, blank=True)
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	profile_status = models.ManyToManyField(ProfileStatus, blank=True)
 	channel = models.ManyToManyField(Channel, blank=True)
