@@ -112,12 +112,11 @@ class Wrappers:
 		profile = user.profile #User is a OneToOne field
 		if 'middle_name' in payload.keys(): profile.middle_name = payload['middle_name']
 		if 'national_id' in payload.keys(): profile.national_id = payload['national_id'].replace(' ','').strip()
-		if 'passport_number' in payload.keys(): profile.passport_number = payload['passport_number'].replace(' ','').strip()
-			if 'passport_number' in payload.keys(): 
-				profile.passport_number = payload['passport_number'].replace(' ','').strip()
-				if 'passport_expiry_date' in payload.keys():
-					try: profile.passport_expiry_date = datetime.strptime(payload['passport_expiry_date'], '%Y-%m-%d').date()
-					except Exception, e: lgr.info('Error on Passport Expiry Date: %s' % e)
+		if 'passport_number' in payload.keys(): 
+			profile.passport_number = payload['passport_number'].replace(' ','').strip()
+			if 'passport_expiry_date' in payload.keys():
+				try: profile.passport_expiry_date = datetime.strptime(payload['passport_expiry_date'], '%Y-%m-%d').date()
+				except Exception, e: lgr.info('Error on Passport Expiry Date: %s' % e)
 
 		if 'physical_address' in payload.keys(): profile.physical_address = payload['physical_address']
 		if 'city' in payload.keys(): profile.city = payload['city']
