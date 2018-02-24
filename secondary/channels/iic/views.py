@@ -1,7 +1,7 @@
 from django.http import JsonResponse, HttpResponse
 
 from primary.core.administration.models import Gateway, Icon, AccessLevel
-from primary.core.upc.models import GatewayProfile, Institution
+from primary.core.upc.models import GatewayProfile, Institution,ProfileStatus
 from primary.core.bridge.models import Service, Product, ServiceStatus,ServiceCommand,CommandStatus
 
 # data list editor
@@ -1207,9 +1207,24 @@ def input_variable_put(request):
 
 def gateway_profile_put(request):
     data = request.POST
-    access_level = AccessLevel.objects.get(pk=data.get('value'))
+    gateway_profile = GatewayProfile.objects.get(pk=data.get('pk'))
+    field = data.get('name')
+    value = data.get('value')
+    if field == 'access_level':
+        access_level = AccessLevel.objects.get(pk=value)
+        gateway_profile.access_level=access_level
 
-    GatewayProfile.objects.filter(pk=data.get('pk')).update(access_level=access_level)
+    elif field == 'status':
+        status = ProfileStatus.objects.get(pk=value)
+        gateway_profile.status=status
+
+    elif field == 'pin_retries':
+        gateway_profile.pin_retries=value
+
+    elif field == 'institution':
+        gateway_profile.institution_id =value
+        
+    gateway_profile.save()
     return HttpResponse(status=200)
 
 

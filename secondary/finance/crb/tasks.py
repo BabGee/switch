@@ -152,9 +152,13 @@ class System(Wrappers):
 					count+=1
 
 				if 'dateOfBirth' in profile.keys() and profile['dateOfBirth'] not in ['',None,"None"]:
-					dob = str(profile['dateOfBirth']).split(' ')[0].split('-')
-					payload['dob']= '%s/%s/%s' % (dob[2],dob[1],dob[0])
-					dob = datetime.strptime(payload['dob'], '%d/%m/%Y').date()
+					#dob = str(profile['dateOfBirth']).split(' ')[0].split('-')
+					#payload['dob']= '%s/%s/%s' % (dob[2],dob[1],dob[0])
+					#dob = datetime.strptime(payload['dob'], '%d/%m/%Y').date()
+
+					dob = str(profile['dateOfBirth']).split(' ')[0]
+					dob = datetime.strptime(dob, '%Y-%m-%d').date()
+					payload['dob'] = dob.isoformat()
 					reference_data['date_of_birth'] = dob
 
 

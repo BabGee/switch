@@ -31,7 +31,7 @@ class ProductCategory(models.Model):
 	def __unicode__(self):
 		return u'%s %s' % (self.name, self.industry)
 
-class ShopProductCategory(models.Model):
+class ShopProductCategory(models.Model): #Doesn't need institution as categories need to be controlled
 	date_modified = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)

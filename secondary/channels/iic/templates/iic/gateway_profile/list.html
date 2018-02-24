@@ -37,9 +37,31 @@
                 email : {{ page_group.user.email }}
                 institution : {{ page_group.institution }}
 
-                status : {{ page_group.status.name }} PIN RETRIES : {{ page_group.pin_retries }}
+                    <strong class="editableT"
+                                 data-type="text"
+                                 data-name="institution"
+                                 data-pk="{{ page_group.pk }}"
+                                 data-url="/iic_editor/gateway_profiles/">{{ page_group.institution.pk }}</strong>
 
-                    <strong class="editable"
+
+
+                     status : <strong class="editable status"
+                                         data-type="select"
+                                         data-name="status"
+                                         data-pk="{{ page_group.pk }}"
+                                         data-value="{{ page_group.status.pk }}"
+                                         data-url="/iic_editor/gateway_profiles/">{{ page_group.status.name }}</strong>
+
+
+                     PIN RETRIES : <strong class="editableT"
+                                 data-type="text"
+                                 data-name="pin_retries"
+                                 data-pk="{{ page_group.pk }}"
+                                 data-url="/iic_editor/gateway_profiles/">{{ page_group.pin_retries }}</strong>
+
+
+
+                    <strong class="editable access_level"
                                          data-type="select"
                                          data-name="access_level"
                                          data-pk="{{ page_group.pk }}"
@@ -123,7 +145,7 @@
         };
 
         $(document).ready(function () {
-            $('.editable').editable({
+            $('.access_level').editable({
                 source: [
                     {value: 1, text: 'CUSTOMER'},
                     {value: 3, text: 'SYSTEM'},
@@ -139,6 +161,23 @@
                     {value: 20, text: 'SUPER AGENT'}
                 ]
             });
+
+            $('.status').editable({
+                source: [
+                    {value: 1, text: 'ACTIVATED'},
+                    {value: 2, text: 'DEACTIVATED'},
+                    {value: 3, text: 'ONE TIME PIN'},
+                    {value: 4, text: 'DELETED'},
+                    {value: 5, text: 'REGISTERED'},
+                    {value: 6, text: 'LOCKED'},
+                    {value: 7, text: 'ONE TIME PASSWORD'},
+                    {value: 8, text: 'FIRST ACCESS'}
+                ]
+            });
+
+            $('.editableT').editable();
+
+
         });
     </script>
 {% endblock %}

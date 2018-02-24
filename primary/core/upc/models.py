@@ -86,6 +86,7 @@ class Profile(models.Model):
 	address = models.CharField(max_length=200, blank=True, null=True, help_text="Address 2/Postal Address")
 	postal_code = models.CharField(max_length=200, blank=True, null=True)
 	passport_number = models.CharField(max_length=45, blank=True, null=True)
+	passport_expiry_date = models.DateField(blank=True, null=True)
 	postal_address = models.CharField(max_length=200, blank=True, null=True)
 	def __unicode__(self):
 		return '%s %s %s %s %s' % (self.user.username, self.user.first_name, self.user.last_name, self.national_id, self.user.email)

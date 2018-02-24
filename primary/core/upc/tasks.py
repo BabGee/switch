@@ -61,7 +61,12 @@ class Wrappers:
 			profile = user.profile #User is a OneToOne field
 			if 'middle_name' in payload.keys() and profile.middle_name in [None,""]: profile.middle_name = payload['middle_name']
 			if 'national_id' in payload.keys() and profile.national_id in [None,""]: profile.national_id = payload['national_id'].replace(' ','').strip()
-			if 'passport_number' in payload.keys() and profile.passport_number in [None,""]: profile.passport_number = payload['passport_number'].replace(' ','').strip()
+			if 'passport_number' in payload.keys() and profile.passport_number in [None,""]: 
+				profile.passport_number = payload['passport_number'].replace(' ','').strip()
+				if 'passport_expiry_date' in payload.keys() and profile.passport_expiry_date in [None,""]: 
+					try: profile.passport_expiry_date = datetime.strptime(payload['passport_expiry_date'], '%Y-%m-%d').date()
+					except Exception, e: lgr.info('Error on Passport Expiry Date: %s' % e)
+
 			if 'physical_address' in payload.keys() and profile.physical_address in [None,""]: profile.physical_address = payload['physical_address']
 			if 'city' in payload.keys() and profile.city in [None,""]: profile.city = payload['city']
 			if 'region' in payload.keys() and profile.region in [None,""]: profile.region = payload['region']
@@ -81,7 +86,7 @@ class Wrappers:
 				try: gender = Gender.objects.get(code=payload['gender']); profile.gender = gender
 				except Exception, e: lgr.info('Error on Gender: %s' % e)
 			if 'dob' in payload.keys() and profile.dob in [None,""]: 
-				try: profile.dob = datetime.strptime(payload['dob'], '%d/%m/%Y').date()
+				try: profile.dob = datetime.strptime(payload['dob'], '%Y-%m-%d').date()
 				except Exception, e: lgr.info('Error on DOB: %s' % e)
 
 			profile.save()
@@ -108,6 +113,12 @@ class Wrappers:
 		if 'middle_name' in payload.keys(): profile.middle_name = payload['middle_name']
 		if 'national_id' in payload.keys(): profile.national_id = payload['national_id'].replace(' ','').strip()
 		if 'passport_number' in payload.keys(): profile.passport_number = payload['passport_number'].replace(' ','').strip()
+			if 'passport_number' in payload.keys(): 
+				profile.passport_number = payload['passport_number'].replace(' ','').strip()
+				if 'passport_expiry_date' in payload.keys():
+					try: profile.passport_expiry_date = datetime.strptime(payload['passport_expiry_date'], '%Y-%m-%d').date()
+					except Exception, e: lgr.info('Error on Passport Expiry Date: %s' % e)
+
 		if 'physical_address' in payload.keys(): profile.physical_address = payload['physical_address']
 		if 'city' in payload.keys(): profile.city = payload['city']
 		if 'region' in payload.keys(): profile.region = payload['region']
@@ -127,7 +138,7 @@ class Wrappers:
 			try: gender = Gender.objects.get(code=payload['gender']); profile.gender = gender
 			except Exception, e: lgr.info('Error on Gender: %s' % e)
 		if 'dob' in payload.keys():
-			try: profile.dob = datetime.strptime(payload['dob'], '%d/%m/%Y').date()
+			try: profile.dob = datetime.strptime(payload['dob'], '%Y-%m-%d').date()
 			except Exception, e: lgr.info('Error on DOB: %s' % e)
 
 		if 'photo' in payload.keys():
@@ -424,6 +435,7 @@ class System(Wrappers):
 			payload['middle_name'] = profile.middle_name
 			payload['national_id'] = profile.national_id
 			payload['passport_number'] = profile.passport_number
+			payload['passport_expiry_date'] = profile.passport_expiry_date.date().isoformat()
 			payload['physical_address'] = profile.physical_address
 			payload['city'] = profile.city
 			payload['region'] = profile.region
@@ -1676,12 +1688,14 @@ class System(Wrappers):
 				payload['gender'] = user.profile.gender.code if user.profile.gender else None
 
 				if user.profile.national_id: payload['national_id'] = user.profile.national_id
-				if user.profile.passport_number: payload['passport_number'] = user.profile.passport_number
+				if user.profile.passport_number: 
+					payload['passport_number'] = user.profile.passport_number
+					if user.profile.passport_expiry_date: payload['passport_expiry_date'] = user.profile.passport_expiry_date.date().isoformat()
 				if user.profile.postal_address: payload['postal_address'] = user.profile.postal_address
 				if user.profile.address: payload['address'] = user.profile.address
 				if user.profile.postal_code: payload['postal_code'] = user.profile.postal_code
 
-				if user.profile.dob: payload['dob'] = user.profile.dob.isoformat()
+				if user.profile.dob: payload['dob'] = user.profile.dob.date().isoformat()
 
 
 				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
@@ -1726,11 +1740,13 @@ class System(Wrappers):
 				payload['gender'] = user.profile.gender.code if user.profile.gender else None
 
 				if user.profile.national_id: payload['national_id'] = user.profile.national_id
-				if user.profile.passport_number: payload['passport_number'] = user.profile.passport_number
+				if user.profile.passport_number: 
+					payload['passport_number'] = user.profile.passport_number
+					if user.profile.passport_expiry_date: payload['passport_expiry_date'] = user.profile.passport_expiry_date.date().isoformat()
 				if user.profile.postal_address: payload['postal_address'] = user.profile.postal_address
 				if user.profile.address: payload['address'] = user.profile.address
 				if user.profile.postal_code: payload['postal_code'] = user.profile.postal_code
-
+				if user.profile.dob: payload['dob'] = user.profile.dob.date().isoformat()
 
 				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
 					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
@@ -1832,7 +1848,12 @@ class System(Wrappers):
 					profile = Profile.objects.get(user=user) #User is a OneToOne field
 					if 'middle_name' in payload.keys() and profile.middle_name in [None,""]: profile.middle_name = payload['middle_name']
 					if 'national_id' in payload.keys() and profile.national_id in [None,""]: profile.national_id = payload['national_id'].replace(' ','').strip()
-					if 'passport_number' in payload.keys() and profile.passport_number in [None,""]: profile.passport_number = payload['passport_number'].replace(' ','').strip()
+					if 'passport_number' in payload.keys() and profile.passport_number in [None,""]: 
+						profile.passport_number = payload['passport_number'].replace(' ','').strip()
+						if 'passport_expiry_date' in payload.keys() and profile.passport_expiry_date in [None,""]: 
+							try: profile.passport_expiry_date = datetime.strptime(payload['passport_expiry_date'], '%Y-%m-%d').date()
+							except Exception, e: lgr.info('Error on Passport Expiry Date: %s' % e)
+
 					if 'physical_address' in payload.keys() and profile.physical_address in [None,""]: profile.physical_address = payload['physical_address']
 					if 'city' in payload.keys() and profile.city in [None,""]: profile.city = payload['city']
 					if 'region' in payload.keys() and profile.region in [None,""]: profile.region = payload['region']
@@ -1844,7 +1865,7 @@ class System(Wrappers):
 						try: gender = Gender.objects.get(code=payload['gender']); profile.gender = gender
 						except Exception, e: lgr.info('Error on Gender: %s' % e)
 					if 'dob' in payload.keys() and profile.dob in [None,""]: 
-						try: profile.dob = datetime.strptime(payload['dob'], '%d/%m/%Y').date()
+						try: profile.dob = datetime.strptime(payload['dob'], '%Y-%m-%d').date()
 						except Exception, e: lgr.info('Error on DOB: %s' % e)
 
 
@@ -1858,6 +1879,7 @@ class System(Wrappers):
 				profile = Profile.objects.get(user=user) #User is a OneToOne field
 				payload['national_id'] = profile.national_id
 				payload['passport_number'] = profile.passport_number
+				payload['passport_expiry_date'] = profile.passport_expiry_date.date().isoformat()
 
 				payload['response_status'] = '00'
 				payload['response'] = 'Session Profile Captured'
