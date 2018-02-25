@@ -163,7 +163,12 @@ class Wrappers:
 				del payload['msisdn']
 		try: 
 			details = json.loads(item.details)
-			if isinstance(details,dict): payload.update(details)
+			if isinstance(details,dict): 
+				for k,v in details.keys():
+					if k == 'trigger':
+						payload['trigger'] = '%s%s' % (details['trigger'],','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					else:
+						payload[k] = v
 		except: pass
 
                 return payload
