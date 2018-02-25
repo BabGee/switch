@@ -73,7 +73,7 @@ class Generator:
                 # Eliminate none matching trigger list
                 for i in this_page_inputs:
                     if i.trigger.all().exists():
-                        if False in [trigger_list.filter(id=t.id).exists() for t in i.trigger.all()]:
+                        if False in [i.trigger.filter(id=t.id).exists() for t in trigger_list.all()]:
                             this_page_inputs = this_page_inputs.filter(~Q(id=i.id))
 
             else:
