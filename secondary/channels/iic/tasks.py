@@ -68,7 +68,7 @@ class Generator:
             if 'trigger' in payload.keys():
                 triggers = str(payload['trigger'].strip()).split(',')
                 lgr.info('Triggers: %s' % triggers)
-                trigger_list = Trigger.objects.filter(name__in=triggers)
+                trigger_list = Trigger.objects.filter(name__in=triggers).distinct()
                 this_page_inputs = this_page_inputs.filter(Q(trigger__in=trigger_list) | Q(trigger=None))
                 # Eliminate none matching trigger list
                 for i in this_page_inputs:

@@ -35,7 +35,7 @@ class ServiceProcessor:
 					if 'trigger' in payload.keys():
 						triggers = str(payload['trigger'].strip()).split(',')
 						lgr.info('Reverse Command Triggers: %s' % triggers)
-						trigger_list = Trigger.objects.filter(name__in=triggers)
+						trigger_list = Trigger.objects.filter(name__in=triggers).distinct()
 						#Ensure matches all existing triggers for action
 						if False in [trigger_list.filter(id=t.id).exists() for t in item.trigger.all()]:
 							continue # Do not process command
@@ -109,7 +109,7 @@ class ServiceProcessor:
 					if 'trigger' in payload.keys():
 						triggers = str(payload['trigger'].strip()).split(',')
 						lgr.info('Command Triggers: %s' % triggers)
-						trigger_list = Trigger.objects.filter(name__in=triggers)
+						trigger_list = Trigger.objects.filter(name__in=triggers).distinct()
 						#Ensure matches all existing triggers for action
 						if False in [trigger_list.filter(id=t.id).exists() for t in item.trigger.all()]:
 							continue #Do not process command
