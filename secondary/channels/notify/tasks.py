@@ -52,11 +52,14 @@ class Wrappers:
 			triggers = str(payload['trigger'].strip()).split(',')
 			lgr.info('Triggers: %s' % triggers)
 			trigger_list = Trigger.objects.filter(name__in=triggers)
-			notification_template = notification_template.filter(Q(trigger__in=trigger_list)|Q(trigger=None))
+			notification_template = notification_template.filter(Q(trigger__in=trigger_list)|Q(trigger=None)).distinct()
 			#Eliminate none matching trigger list
 			for i in notification_template:
 				if i.trigger.all().exists():
-					if False in [trigger_list.filter(id=t.id).exists() for t in i.trigger.all()]:
+					if i.trigger.all().count() == trigger_list.count():
+						if False in [i.trigger.filter(id=t.id).exists() for t in trigger_list.all()]:
+							notification_template = notification_template.filter(~Q(id=i.id))
+					else:
 						notification_template = notification_template.filter(~Q(id=i.id))
 		else:
 			notification_template = notification_template.filter(Q(trigger=None))
