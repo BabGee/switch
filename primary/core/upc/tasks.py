@@ -434,7 +434,7 @@ class System(Wrappers):
 			payload['middle_name'] = profile.middle_name
 			payload['national_id'] = profile.national_id
 			payload['passport_number'] = profile.passport_number
-			payload['passport_expiry_date'] = profile.passport_expiry_date.date().isoformat()
+			payload['passport_expiry_date'] = profile.passport_expiry_date.isoformat()
 			payload['physical_address'] = profile.physical_address
 			payload['city'] = profile.city
 			payload['region'] = profile.region
@@ -1689,12 +1689,12 @@ class System(Wrappers):
 				if user.profile.national_id: payload['national_id'] = user.profile.national_id
 				if user.profile.passport_number: 
 					payload['passport_number'] = user.profile.passport_number
-					if user.profile.passport_expiry_date: payload['passport_expiry_date'] = user.profile.passport_expiry_date.date().isoformat()
+					if user.profile.passport_expiry_date: payload['passport_expiry_date'] = user.profile.passport_expiry_date.isoformat()
 				if user.profile.postal_address: payload['postal_address'] = user.profile.postal_address
 				if user.profile.address: payload['address'] = user.profile.address
 				if user.profile.postal_code: payload['postal_code'] = user.profile.postal_code
 
-				if user.profile.dob: payload['dob'] = user.profile.dob.date().isoformat()
+				if user.profile.dob: payload['dob'] = user.profile.dob.isoformat()
 
 
 				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
@@ -1741,11 +1741,11 @@ class System(Wrappers):
 				if user.profile.national_id: payload['national_id'] = user.profile.national_id
 				if user.profile.passport_number: 
 					payload['passport_number'] = user.profile.passport_number
-					if user.profile.passport_expiry_date: payload['passport_expiry_date'] = user.profile.passport_expiry_date.date().isoformat()
+					if user.profile.passport_expiry_date: payload['passport_expiry_date'] = user.profile.passport_expiry_date.isoformat()
 				if user.profile.postal_address: payload['postal_address'] = user.profile.postal_address
 				if user.profile.address: payload['address'] = user.profile.address
 				if user.profile.postal_code: payload['postal_code'] = user.profile.postal_code
-				if user.profile.dob: payload['dob'] = user.profile.dob.date().isoformat()
+				if user.profile.dob: payload['dob'] = user.profile.dob.isoformat()
 
 				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
 					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
@@ -1878,7 +1878,7 @@ class System(Wrappers):
 				profile = Profile.objects.get(user=user) #User is a OneToOne field
 				payload['national_id'] = profile.national_id
 				payload['passport_number'] = profile.passport_number
-				payload['passport_expiry_date'] = profile.passport_expiry_date.date().isoformat()
+				payload['passport_expiry_date'] = profile.passport_expiry_date.isoformat()
 
 				payload['response_status'] = '00'
 				payload['response'] = 'Session Profile Captured'
