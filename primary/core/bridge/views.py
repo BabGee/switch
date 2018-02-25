@@ -34,13 +34,16 @@ class ServiceProcessor:
 					#Check if trigger Exists
 					if 'trigger' in payload.keys():
 						triggers = str(payload['trigger'].strip()).split(',')
-						lgr.info('Reverse Command Triggers: %s' % triggers)
 						trigger_list = Trigger.objects.filter(name__in=triggers)
+
+						lgr.info('Reverse Command Triggers: %s' % trigger_list)
 						#Ensure matches all existing triggers for action
 						if item.trigger.all().count() == trigger_list.count():
 							if False in [item.trigger.filter(id=t.id).exists() for t in trigger_list.all()]:
+								lgr.info('Non Matching: %s' % item)
 								continue # Do not process command
 						else:
+							lgr.info('Non Matching: %s' % item)
 							continue
 				if node_system.node_status.name == 'LOCAL API'  and item.reverse_function <> 'no_reverse':
 					payload = Wrappers().call_api(item, item.reverse_function, payload)
@@ -111,13 +114,16 @@ class ServiceProcessor:
 					#Check if trigger Exists
 					if 'trigger' in payload.keys():
 						triggers = str(payload['trigger'].strip()).split(',')
-						lgr.info('Command Triggers: %s' % triggers)
 						trigger_list = Trigger.objects.filter(name__in=triggers)
+
+						lgr.info('Command Triggers: %s' % trigger_list)
 						#Ensure matches all existing triggers for action
 						if item.trigger.all().count() == trigger_list.count():
 							if False in [item.trigger.filter(id=t.id).exists() for t in trigger_list.all()]:
+								lgr.info('Non Matching: %s' % item)
 								continue # Do not process command
 						else:
+							lgr.info('Non Matching: %s' % item)
 							continue
 				#process action
 				if node_system.node_status.name == 'LOCAL API':

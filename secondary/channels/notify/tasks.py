@@ -50,16 +50,18 @@ class Wrappers:
 		#Check if trigger Exists
 		if 'trigger' in payload.keys():
 			triggers = str(payload['trigger'].strip()).split(',')
-			lgr.info('Triggers: %s' % triggers)
 			trigger_list = Trigger.objects.filter(name__in=triggers)
+			lgr.info('Triggers: %s' % trigger_list)
 			notification_template = notification_template.filter(Q(trigger__in=trigger_list)|Q(trigger=None)).distinct()
 			#Eliminate none matching trigger list
 			for i in notification_template:
 				if i.trigger.all().exists():
 					if i.trigger.all().count() == trigger_list.count():
 						if False in [i.trigger.filter(id=t.id).exists() for t in trigger_list.all()]:
+							lgr.info('Non Matching: %s' % i)
 							notification_template = notification_template.filter(~Q(id=i.id))
 					else:
+						lgr.info('Non Matching: %s' % i)
 						notification_template = notification_template.filter(~Q(id=i.id))
 		else:
 			notification_template = notification_template.filter(Q(trigger=None))
