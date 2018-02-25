@@ -166,10 +166,8 @@ class Wrappers:
 			if isinstance(details,dict): 
 				for k,v in details.items():
 					if k == 'trigger':
-						lgr.info('Got Triggers' )
 						payload['trigger'] = '%s%s' % (details['trigger'],','+payload['trigger'] if 'trigger' in payload.keys() else '')
 					else:
-						lgr.info('No Triggers' )
 						payload[k] = v
 		except Exception, e: lgr.info('Error on Add details: %s' % e)
                 return payload
