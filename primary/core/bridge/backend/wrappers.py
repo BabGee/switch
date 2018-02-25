@@ -164,7 +164,7 @@ class Wrappers:
 		try: 
 			details = json.loads(item.details)
 			if isinstance(details,dict): 
-				for k,v in details.keys():
+				for k,v in details.items():
 					if k == 'trigger':
 						lgr.info('Got Triggers' )
 						payload['trigger'] = '%s%s' % (details['trigger'],','+payload['trigger'] if 'trigger' in payload.keys() else '')
