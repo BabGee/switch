@@ -170,7 +170,6 @@ class Wrappers:
 					else:
 						payload[k] = v
 		except: pass
-
                 return payload
 
 	def call_ext_api(self, item, function, payload):

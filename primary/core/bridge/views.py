@@ -27,6 +27,8 @@ class ServiceProcessor:
 			status = item.status
 			node_system = item.node_system
 			payload = Wrappers().create_payload(item, gateway_profile, payload)
+
+			lgr.info('Payload: '%s) % payload
 			try:
 
 				#Check if triggerable action
@@ -34,7 +36,7 @@ class ServiceProcessor:
 					#Check if trigger Exists
 					if 'trigger' in payload.keys():
 						triggers = str(payload['trigger'].strip()).split(',')
-						lgr.info('Triggers: %s' % triggers)
+						lgr.info('Command Triggers: %s' % triggers)
 						trigger_list = Trigger.objects.filter(name__in=triggers)
 						#Ensure matches all existing triggers for action
 						if False in [trigger_list.filter(id=t.id).exists() for t in item.trigger.all()]:
