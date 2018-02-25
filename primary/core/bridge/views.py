@@ -38,7 +38,7 @@ class ServiceProcessor:
 						trigger_list = Trigger.objects.filter(name__in=triggers)
 						#Ensure matches all existing triggers for action
 						if False in [trigger_list.filter(id=t.id).exists() for t in item.trigger.all()]:
-							continue # Do not process service
+							continue # Do not process command
 				if node_system.node_status.name == 'LOCAL API'  and item.reverse_function <> 'no_reverse':
 					payload = Wrappers().call_api(item, item.reverse_function, payload)
 				elif node_system.node_status.name == 'EXT API'  and item.reverse_function <> 'no_reverse':	
@@ -112,7 +112,7 @@ class ServiceProcessor:
 						trigger_list = Trigger.objects.filter(name__in=triggers)
 						#Ensure matches all existing triggers for action
 						if False in [trigger_list.filter(id=t.id).exists() for t in item.trigger.all()]:
-							continue #Do not process service
+							continue #Do not process command
 				#process action
 				if node_system.node_status.name == 'LOCAL API':
 					payload = Wrappers().call_api(item, item.command_function, payload)
