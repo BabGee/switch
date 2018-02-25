@@ -28,7 +28,7 @@ class ServiceProcessor:
 			node_system = item.node_system
 			payload = Wrappers().create_payload(item, gateway_profile, payload)
 
-			lgr.info('Reverse Payload: %s') % payload
+			lgr.info('Reverse Payload: %s' % payload)
 			try:
 
 				#Check if triggerable action
@@ -115,7 +115,7 @@ class ServiceProcessor:
 			node_system = item.node_system
 			payload = Wrappers().create_payload(item, gateway_profile, payload)
 
-			lgr.info('Payload: %s') % payload
+			lgr.info('Payload: %s' % payload)
 			try:
 
 				#Check if triggerable action
