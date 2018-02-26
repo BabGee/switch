@@ -1,5 +1,5 @@
 from django.db.models import Q
-import re
+import re, json
 from django.utils.encoding import smart_str
 from xml.sax.saxutils import escape, unescape
 
