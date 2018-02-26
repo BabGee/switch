@@ -1618,12 +1618,14 @@ class PageString(ServiceCall, Wrappers):
 					page_string = page_string.replace('['+v+']',item)
 
 
-				elif variable_key == 'national_id':
+				elif variable_key == 'document_number':
 
 					item = ''
 
-					if navigator.session.gateway_profile and navigator.session.gateway_profile.user.profile:
+					if navigator.session.gateway_profile and navigator.session.gateway_profile.user.profile.national_id:
 						item = navigator.session.gateway_profile.user.profile.national_id
+					elif navigator.session.gateway_profile and navigator.session.gateway_profile.user.profile.passport_number:
+						item = navigator.session.gateway_profile.user.profile.passport_number
 
 					page_string = page_string.replace('['+v+']',item)
 
