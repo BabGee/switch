@@ -18,10 +18,19 @@ class Wrappers:
 			variables = re.findall("\[(.*?)\]", default_value5)
 			lgr.info("Found Variables: %s" % variables)
 			for v in variables:
-				if v in payload.keys():
+				not_json = True
+				try: 
+					p = '['+v+']'
+					json.loads(p)
+					not_json = False
+				except Exception, e: lgr.info('Default Value not JSON: %s' % default_value5)
+
+
+				if v in payload.keys() and not_json:
 					default_value5 = default_value5.replace('['+v+']',str(payload[v]))
-				else:
+				elif not_json:
 					default_value5 = default_value5.replace('['+v+']',"")
+				else: pass
 
 
 
@@ -45,7 +54,7 @@ class Wrappers:
 					p = '['+v+']'
 					json.loads(p)
 					not_json = False
-				except: pass
+				except Exception, e: lgr.info('Default Value not JSON: %s' % default_value8)
 
 				if v in payload.keys() and not_json:
 					default_value8 = default_value8.replace('['+v+']',str(payload[v]))
