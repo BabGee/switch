@@ -373,6 +373,13 @@ class System(Wrappers):
 				if 'email' in payload.keys():
 					payload['original_email'] = payload['email']
 					del payload['email']
+				if 'postal_address' in payload.keys():
+					payload['original_postal_address'] = payload['postal_address']
+					del payload['postal_address']
+				if 'postal_code' in payload.keys():
+					payload['original_postal_code'] = payload['postal_code']
+					del payload['postal_code']
+
 				if 'session_gateway_profile_id' in payload.keys():
 					payload['original_session_gateway_profile_id'] = payload['session_gateway_profile_id']
 					del payload['session_gateway_profile_id']
@@ -385,8 +392,10 @@ class System(Wrappers):
 					payload['document_number'] = payload['recipient_document_number']
 				if 'recipient_passport_number' in payload.keys():
 					payload['passport_number'] = payload['recipient_passport_number']
-
-
+				if 'recipient_postal_address' in payload.keys():
+					payload['postal_address'] = payload['recipient_postal_address']
+				if 'recipient_postal_code' in payload.keys():
+					payload['postal_code'] = payload['recipient_postal_code']
 
 				if msisdn is not None:
 					payload['msisdn'] = msisdn
