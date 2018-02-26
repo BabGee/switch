@@ -589,6 +589,17 @@ class PageString(ServiceCall, Wrappers):
 					page_string = page_string.replace('['+v+']',item)
 
 
+				elif variable_key == 'i_invest.profile.occupation':
+					from thirdparty.i_invest.models import InvestmentProfile
+
+					item = ''
+
+					if navigator.session.gateway_profile and navigator.session.gateway_profile.user.profile.investmentprofile and navigator.session.gateway_profile.user.profile.investmentprofile.occupation:
+						item = navigator.session.gateway_profile.user.profile.investmentprofile.occupation.name
+
+					page_string = page_string.replace('['+v+']',item)
+
+
 				elif variable_key == 'i_invest.occupation':
 					from thirdparty.i_invest.models import Occupation
 
