@@ -251,15 +251,84 @@ class Wrappers:
 
 
 	    #lgr.info('Report List Count: %s' % report_list.count())
+	    if or_filters not in [None,'']:
+                for f in or_filters.split("|"):
+		    of_list = f.split('%')
+		    if len(of_list)==2:
+			if 'q' in payload.keys() and payload['q'] not in ['', None] and getattr(model_class, of_list[1], False):
+				if f not in ['',None]: or_filter_data[of_list[1] + '__icontains'] = payload['q']
+
+			if of_list[0] in payload.keys() and getattr(model_class, of_list[1], False):
+				if f not in ['',None]: or_filter_data[of_list[1] + '__icontains'] = payload[of_list[0]]
+
+			elif getattr(model_class, of_list[0], False):
+                    		k,v = of_list
+				v_list = v.split(',')
+				if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
+					v = True if v not in ['',None,'False',False,'false'] else False
+				elif len(v_list)>1:
+					v = v_list
+				or_filter_data[k] = v if v not in ['',None] else None
+		    elif getattr(model_class, f, False):
+			if 'q' in payload.keys() and payload['q'] not in ['', None]:
+				if f not in ['',None]: or_filter_data[f + '__icontains'] = payload['q']
+			if f in payload.keys():
+				if f not in ['',None]: or_filter_data[f + '__icontains'] = payload[f]
+
+                if len(or_filter_data):
+                    or_query = reduce(operator.or_, (Q(k) for k in or_filter_data.items()))
+                    report_list = report_list.filter(or_query)
+
+	    #lgr.info('Or Filters Report List Count: %s' % report_list.count())
+	    if and_filters not in [None,'']:
+                for f in and_filters.split("|"):
+		    af_list = f.split('%')
+		    if len(af_list)==2:
+			if 'q' in payload.keys() and payload['q'] not in ['', None] and getattr(model_class, af_list[1], False):
+				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload['q']
+			if af_list[0] in payload.keys() and getattr(model_class, af_list[1], False):
+				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload[af_list[0]]
+			elif getattr(model_class, af_list[0], False):
+                    		k,v = af_list
+				v_list = v.split(',')
+				if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
+					v = True if v not in ['',None,'False',False,'false'] else False
+				elif len(v_list)>1:
+					v = v_list
+				and_filter_data[k] = v if v not in ['',None] else None
+		    elif getattr(model_class, f, False):
+			if 'q' in payload.keys() and payload['q'] not in ['', None]:
+				if f not in ['',None]: and_filter_data[f + '__icontains'] = payload['q']
+			if f in payload.keys():
+				if f not in ['',None]: and_filter_data[f + '__icontains'] = payload[f]
+
+                if len(and_filter_data):
+                    and_query = reduce(operator.and_, (Q(k) for k in and_filter_data.items()))
+                    report_list = report_list.filter(and_query)
+
+	    #lgr.info('And Filters Report List Count: %s' % report_list.count())
             if not_filters not in ['',None]:
-                for i in not_filters.split("|"):
-                    k,v = i.split('%')
-		    v_list = v.split(',')
-		    if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
-			v = True if v not in ['',None,'False',False,'false'] else False
-		    elif len(v_list)>1:
-			v = v_list
-                    not_filter_data[k] = v if v not in ['',None] else None
+                for f in not_filters.split("|"):
+		    nf_list = f.split('%')
+		    if len(nf_list)==2:
+			if 'q' in payload.keys() and payload['q'] not in ['', None] and getattr(model_class, nf_list[1], False):
+				if f not in ['',None]: not_filter_data[nf_list[1] + '__icontains'] = payload['q']
+			if nf_list[0] in payload.keys() and getattr(model_class, nf_list[1], False):
+				if f not in ['',None]: not_filter_data[nf_list[1] + '__icontains'] = payload[nf_list[0]]
+			elif getattr(model_class, nf_list[0], False):
+                    		k,v = nf_list
+				v_list = v.split(',')
+				if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
+					v = True if v not in ['',None,'False',False,'false'] else False
+				elif len(v_list)>1:
+					v = v_list
+				not_filter_data[k] = v if v not in ['',None] else None
+		    elif getattr(model_class, f, False):
+			if 'q' in payload.keys() and payload['q'] not in ['', None]:
+				if f not in ['',None]: not_filter_data[f + '__icontains'] = payload['q']
+			if f in payload.keys():
+				if f not in ['',None]: not_filter_data[f + '__icontains'] = payload[f]
+
                 if len(not_filter_data):
                     query = reduce(operator.and_, (~Q(k) for k in not_filter_data.items()))
 
@@ -306,44 +375,6 @@ class Wrappers:
             #q_list = [Q(**{f:q}) for f in field_lookups]
 
 	    #lgr.info('Time Filters Report List Count: %s' % report_list.count())
-	    if or_filters not in [None,'']:
-                for f in or_filters.split("|"):
-		    of_list = f.split('%')
-		    if len(of_list)==2:
-			if 'q' in payload.keys() and payload['q'] not in ['', None]:
-				if f not in ['',None]: or_filter_data[of_list[1] + '__icontains'] = payload['q']
-			if of_list[0] in payload.keys():
-				if f not in ['',None]: or_filter_data[of_list[1] + '__icontains'] = payload[of_list[0]]
-		    else:
-			if 'q' in payload.keys() and payload['q'] not in ['', None]:
-				if f not in ['',None]: or_filter_data[f + '__icontains'] = payload['q']
-			if f in payload.keys():
-				if f not in ['',None]: or_filter_data[f + '__icontains'] = payload[f]
-
-                if len(or_filter_data):
-                    or_query = reduce(operator.or_, (Q(k) for k in or_filter_data.items()))
-                    report_list = report_list.filter(or_query)
-
-	    #lgr.info('Or Filters Report List Count: %s' % report_list.count())
-	    if and_filters not in [None,'']:
-                for f in and_filters.split("|"):
-		    af_list = f.split('%')
-		    if len(af_list)==2:
-			if 'q' in payload.keys() and payload['q'] not in ['', None]:
-				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload['q']
-			if af_list[0] in payload.keys():
-				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload[af_list[0]]
-		    else:
-			if 'q' in payload.keys() and payload['q'] not in ['', None]:
-				if f not in ['',None]: and_filter_data[f + '__icontains'] = payload['q']
-			if f in payload.keys():
-				if f not in ['',None]: and_filter_data[f + '__icontains'] = payload[f]
-
-                if len(and_filter_data):
-                    and_query = reduce(operator.and_, (Q(k) for k in and_filter_data.items()))
-                    report_list = report_list.filter(and_query)
-
-	    #lgr.info('And Filters Report List Count: %s' % report_list.count())
             if token_filters not in ['',None]:
                 for f in token_filters.split("|"):
             	    if 'csrfmiddlewaretoken' in payload.keys() and payload['csrfmiddlewaretoken'] not in ['', None]:
@@ -515,36 +546,17 @@ class Wrappers:
 				    lgr.info('%s Join Filters Applied: %s' % (data.query.name,query))
 		                    join_report_list = join_report_list.filter(query)
 
-
-			if join_not_filters not in ['',None]:
-		                for i in join_not_filters.split("|"):
-		                    k,v = i.split('%')
-				    v_list = v.split(',')
-				    if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
-					v = True if v not in ['',None,'False',False,'false'] else False
-				    elif len(v_list)>1:
-					v = v_list
-		                    join_not_filter_data[k] = v if v not in ['',None] else None
-		                if len(join_not_filter_data):
-		                    query = reduce(operator.and_, (~Q(k) for k in join_not_filter_data.items()))
-
-				    lgr.info('%s Not Join Filters Applied: %s' % (data.query.name,query))
-		                    join_report_list = join_report_list.filter(query)
-
-
 			if join_or_filters not in [None,'']:
 		                for f in join_or_filters.split("|"):
 				    of_list = f.split('%')
-				    if len(of_list)==2:
-					if 'q' in payload.keys() and payload['q'] not in ['', None]:
-						if f not in ['',None]: join_or_filter_data[of_list[1] + '__icontains'] = payload['q']
-					if of_list[0] in payload.keys():
-						if f not in ['',None]: join_or_filter_data[of_list[1] + '__icontains'] = payload[of_list[0]]
-				    else:
-					if 'q' in payload.keys() and payload['q'] not in ['', None]:
-						if f not in ['',None]: join_or_filter_data[f + '__icontains'] = payload['q']
-					if f in payload.keys():
-						if f not in ['',None]: join_or_filter_data[f + '__icontains'] = payload[f]
+				    if len(of_list)==2 and getattr(model_class, of_list[0], False):
+	                    		k,v = of_list
+					v_list = v.split(',')
+					if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
+						v = True if v not in ['',None,'False',False,'false'] else False
+					elif len(v_list)>1:
+						v = v_list
+					join_or_filter_data[k] = v if v not in ['',None] else None
 
 		                if len(join_or_filter_data):
                 		    or_query = reduce(operator.or_, (Q(k) for k in join_or_filter_data.items()))
@@ -553,21 +565,38 @@ class Wrappers:
 			if join_and_filters not in [None,'']:
 		                for f in join_and_filters.split("|"):
 				    af_list = f.split('%')
-				    if len(af_list)==2:
-					if 'q' in payload.keys() and payload['q'] not in ['', None]:
-						if f not in ['',None]: join_and_filter_data[af_list[1] + '__icontains'] = payload['q']
-					if af_list[0] in payload.keys():
-						if f not in ['',None]: join_and_filter_data[af_list[1] + '__icontains'] = payload[af_list[0]]
-				    else:
-					if 'q' in payload.keys() and payload['q'] not in ['', None]:
-						if f not in ['',None]: join_and_filter_data[f + '__icontains'] = payload['q']
-					if f in payload.keys():
-						if f not in ['',None]: join_and_filter_data[f + '__icontains'] = payload[f]
+				    if len(af_list)==2 and getattr(model_class, af_list[0], False):
+	                    		k,v = af_list
+					v_list = v.split(',')
+					if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
+						v = True if v not in ['',None,'False',False,'false'] else False
+					elif len(v_list)>1:
+						v = v_list
+					join_and_filter_data[k] = v if v not in ['',None] else None
 
 		                if len(join_and_filter_data):
 		                    and_query = reduce(operator.and_, (Q(k) for k in join_and_filter_data.items()))
 		                    join_report_list = join_report_list.filter(and_query)
 
+
+
+			if join_not_filters not in ['',None]:
+		                for f in join_not_filters.split("|"):
+				    nf_list = f.split('%')
+				    if len(nf_list)==2 and getattr(model_class, nf_list[0], False):
+	                    		k,v = nf_list
+					v_list = v.split(',')
+					if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
+						v = True if v not in ['',None,'False',False,'false'] else False
+					elif len(v_list)>1:
+						v = v_list
+					join_not_filter_data[k] = v if v not in ['',None] else None
+
+		                if len(join_not_filter_data):
+		                    query = reduce(operator.and_, (~Q(k) for k in join_not_filter_data.items()))
+
+				    lgr.info('%s Not Join Filters Applied: %s' % (data.query.name,query))
+		                    join_report_list = join_report_list.filter(query)
 
             		if join_gateway_profile_filters not in ['', None]:
 				for f in join_gateway_profile_filters.split("|"):
