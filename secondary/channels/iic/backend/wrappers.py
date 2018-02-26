@@ -33,19 +33,25 @@ class Wrappers:
 			#new vaiable 5 value
 			input_variable[5] = default_value5
 
-
-
 		default_value8 = input_variable[8]
 		if default_value8:
 			#if input_variable[8] in payload.keys():
 			variables = re.findall("\[(.*?)\]", default_value8)
 			lgr.info("Found Variables: %s" % variables)
-			for v in variables:
-				if v in payload.keys():
-					default_value8 = default_value8.replace('['+v+']',str(payload[v]))
-				else:
-					default_value8 = default_value8.replace('['+v+']',"")
 
+			for v in variables:
+				not_json = True
+				try: 
+					p = '['+v+']'
+					json.loads(p)
+					not_json = False
+				except: pass
+
+				if v in payload.keys() and not_json:
+					default_value8 = default_value8.replace('['+v+']',str(payload[v]))
+				elif not_json:
+					default_value8 = default_value8.replace('['+v+']',"")
+				else: pass
 
 			#Escape html entities
 			#default_value8 = unescape(default_value8)
@@ -54,7 +60,6 @@ class Wrappers:
 
 			#new vaiable 5 value
 			input_variable[8] = default_value8
-	
 		
 		return input_variable
 
