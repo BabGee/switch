@@ -308,7 +308,7 @@ def background_service_call(background):
 
 		lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
 
-		i.transaction_reference = payload['bridge__transaction_id'] if 'bridge__transaction_id' in payload.keys() else None
+		i.transaction_reference = '%s,%s' % (i.transaction_reference, payload['transaction_reference']) if 'transaction_reference' in payload.keys() else i.transaction_reference
 		i.current_command = ServiceCommand.objects.get(id=payload['action_id']) if 'action_id' in payload.keys() else None
 
 		if 'last_response' in payload.keys():i.message = Wrappers().response_payload(payload['last_response'])[:3839]

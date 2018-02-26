@@ -27,6 +27,8 @@ class ServiceCall:
 			payload['last_response'] = response['last_response']
 			payload['response'] = response['response']
 			payload['response_status'] = response['response_status']
+			if 'transaction_reference' in response.keys(): payload['transaction_reference'] = response['transaction_reference']
+			if 'timestamp' in response.keys(): payload['timestamp'] = response['timestamp']
 		except Exception, e:
 			payload['response_status'] = '96'
 			lgr.info("Service Processing Failed: %s" % e)

@@ -201,18 +201,19 @@ class ServiceProcessor:
 		try:
 			lgr.info('Service: %s, Service Status: %s, Access Level: %s' % (service.name, service.status.name, service.access_level_list()))
 			def transact(transaction, service, payload):
+				transaction_object = transaction['transaction']
+				profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
+				timestamp = profile_tz.normalize(transaction_object.date_modified.astimezone(profile_tz)).isoformat()
 				if 'response_status' in transaction.keys() and transaction['response_status'] == '00':
-					transaction = transaction['transaction']
-					payload['bridge__transaction_id'] = transaction.id
+					payload['bridge__transaction_id'] = transaction_object.id
 
-					profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
 					#payload['transaction_timestamp'] = transaction.date_created.isoformat()
 					#payload['transaction_timestamp'] = transaction.date_created.strftime("%Y-%m-%dT%H:%M:%SZ")
 					#payload['transaction_timestamp'] = profile_tz.normalize(transaction.date_modified.astimezone(profile_tz)).strftime("%Y-%m-%dT%H:%M:%SZ")
-					payload['transaction_timestamp'] = profile_tz.normalize(transaction.date_modified.astimezone(profile_tz)).isoformat()
+					payload['transaction_timestamp'] = timestamp 
 
-					response_tree = self.action_exec(service, gateway_profile, payload, transaction) 
-					if Loggers().update_transaction(transaction, payload, response_tree) is False:
+					response_tree = self.action_exec(service, gateway_profile, payload, transaction_object) 
+					if Loggers().update_transaction(transaction_object, payload, response_tree) is False:
 						lgr.critical('Transaction Update Failed')
 						response_tree['response_status'] = '96'
 					else:
@@ -226,6 +227,8 @@ class ServiceProcessor:
 					lgr.info("No Response Status in Response Tree")
 					response_status = Wrappers().process_responsestatus(response_tree['response_status'],payload)
 
+				response_tree['timestamp'] = timestamp
+				response_tree['transaction_reference'] = transaction_object.id
 				return response_tree
 
 			if 'transaction_auth' in payload.keys() and payload['transaction_auth'] not in [None,'']:
