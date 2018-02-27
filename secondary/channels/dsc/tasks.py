@@ -267,7 +267,6 @@ class Wrappers:
 		    af_list = f.split('%')
 		    if len(af_list)==2:
 
-			lgr.info('Got Here 1 %s | %s' % (getattr(model_class, af_list[0].split('__')[0], False), getattr(model_class, af_list[1].split('__')[0], False)))
 			if 'q' in payload.keys() and payload['q'] not in ['', None] and getattr(model_class, af_list[1].split('__')[0], False):
 				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload['q']
 
