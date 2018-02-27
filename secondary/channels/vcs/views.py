@@ -112,50 +112,85 @@ class VAS:
 				return ''
 
 		if len(self.menu)>0:
+
+			self.payload['page_string'] = self.menu[0].page_string
+			new_navigator = Navigator(session=self.session, menu=self.menu[0], pin_auth=self.pin_auth, level=self.level, group_select=self.group_select)
+			new_navigator.input_select = self.payload['input']
+
+			new_navigator.nav_step = self.nav_step
+			new_navigator.code = self.code[0]
+			#new_navigator.transaction = self.transaction
+			if len(self.item_list)>0:
+				new_navigator.item_list = json.dumps(self.item_list)
+			new_navigator.save()
+
+			#Process Page String
+			try: self.payload =  PageString().pagestring(new_navigator, self.payload, self.code)
+			except Exception, e: lgr.info('Error on Processing Page String: %s' % e)
+
 			menuitems = menuitems.filter(menu=self.menu[0])
-			page_string = '%s%s' % (self.menu[0].page_string, get_menu_items(menuitems))
+			page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
 			session_state = self.menu[0].session_state.name
 			input_type = self.menu[0].input_variable.variable_type.variable
 			input_min = self.menu[0].input_variable.validate_min
 			input_max = self.menu[0].input_variable.validate_max
-			new_navigator = Navigator(session=self.session, menu=self.menu[0], pin_auth=self.pin_auth, level=self.level, group_select=self.group_select)
-			new_navigator.input_select = self.payload['input']
 		elif self.nav and len(self.menu)<1:
-			menuitems = menuitems.filter(menu=self.nav.menu)
+			page_string = self.nav.menu.page_string
 			if len(self.navigator)<2 and self.nav.menu.level == 0:
-				page_string = '%s%s' % (self.nav.menu.page_string, get_menu_items(menuitems))
+				page_string = '%s' % page_string
 			else:
-				page_string = 'Invalid input! %s%s' % (self.nav.menu.page_string, get_menu_items(menuitems))
+				page_string = 'Invalid input! %s' % page_string
+
+			self.payload['page_string'] = page_string
+
+			new_navigator = Navigator(session=self.session, menu=self.nav.menu, pin_auth=self.pin_auth, level=self.level, group_select=self.group_select)
+			new_navigator.input_select = self.nav.input_select
+
+			new_navigator.nav_step = self.nav_step
+			new_navigator.code = self.code[0]
+			#new_navigator.transaction = self.transaction
+			if len(self.item_list)>0:
+				new_navigator.item_list = json.dumps(self.item_list)
+			new_navigator.save()
+
+			#Process Page String
+			try: self.payload =  PageString().pagestring(new_navigator, self.payload, self.code)
+			except Exception, e: lgr.info('Error on Processing Page String: %s' % e)
+
+			menuitems = menuitems.filter(menu=self.nav.menu)
+			page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
+
 			#page_string = re.sub(r'\[.+?\]\s?','',page_string) #Replace square bracket variables
 			session_state = self.nav.menu.session_state.name
 			input_type = self.nav.menu.input_variable.variable_type.variable
 			input_min = self.nav.menu.input_variable.validate_min
 			input_max = self.nav.menu.input_variable.validate_max
 
-			new_navigator = Navigator(session=self.session, menu=self.nav.menu, pin_auth=self.pin_auth, level=self.level, group_select=self.group_select)
-			new_navigator.input_select = self.nav.input_select
-
 		else:
 			new_navigator = Navigator(session=self.session, level=self.level, group_select=self.group_select)
+			new_navigator.input_select = self.payload['input']
+
+			new_navigator.nav_step = self.nav_step
+			new_navigator.code = self.code[0]
+			#new_navigator.transaction = self.transaction
+			if len(self.item_list)>0:
+				new_navigator.item_list = json.dumps(self.item_list)
+			new_navigator.save()
+
 			page_string = 'Sorry, no Menu Found!'
 			input_type = None
 			input_min = 0
 			input_max = 0
 			session_state = 'END'
-			new_navigator.input_select = self.payload['input']
 
-		new_navigator.nav_step = self.nav_step
-		new_navigator.code = self.code[0]
-		#new_navigator.transaction = self.transaction
-		if len(self.item_list)>0:
-			new_navigator.item_list = json.dumps(self.item_list)
-		new_navigator.save()
-
+		'''
+		self.payload['page_string'] = page_string
 		#Process Page String
 		if new_navigator is not None and new_navigator.menu is not None:
-			try: page_string =  PageString().pagestring(new_navigator, page_string, self.payload, self.code)
-			except Exception, e: lgr.info('Error on Processing Page String: %s' % e)
 
+			try: self.payload =  PageString().pagestring(new_navigator, self.payload, self.code)
+			except Exception, e: lgr.info('Error on Processing Page String: %s' % e)
+		'''
 		#import goslate
 		#gs = goslate.Goslate()
 		#page_string = gs.translate(page_string, 'sw')

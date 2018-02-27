@@ -119,10 +119,10 @@ class PageString(ServiceCall, Wrappers):
 		lgr.info('Nav: %s' % nav)
 		return nav
 
-	def pagestring(self, navigator, page_string, payload, code):
+	def pagestring(self, navigator, payload, code):
 		#Find Variable
 		#Process Submit and input not in ['0','00']
-
+		page_string = payload['page_string']
 
 		payload.update(self.get_nav(navigator))
 
@@ -2369,6 +2369,7 @@ class PageString(ServiceCall, Wrappers):
 					page_string = page_string.replace('['+v+']',item)
 
 
-		return page_string
+		payload['page_string'] = page_string
 
+		return payload
 
