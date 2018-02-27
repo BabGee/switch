@@ -175,7 +175,6 @@ class Wrappers:
             model_class = apps.get_model(data.query.module_name, data.query.model_name)
             # model_class = globals()[data.query.model_name]
 
-            filters = data.query.filters
             date_filters = data.query.date_filters
             time_filters = data.query.time_filters
             token_filters = data.query.token_filters
@@ -198,7 +197,6 @@ class Wrappers:
 	    distinct = data.query.distinct
 
 	    values_data = {}
-            filter_data = {}
             date_filter_data = {}
             time_filter_data = {}
             token_filters_data = {}
@@ -230,26 +228,6 @@ class Wrappers:
 		    #lgr.info('Gateway Query: %s' % gateway_query)
                     report_list = report_list.filter(gateway_query)
 
-
-	    #lgr.info('Report List Count: %s' % report_list.count())
-            if filters not in ['',None]:
-                for i in filters.split("|"):
-                    k,v = i.split('%')
-		    v_list = v.split(',')
-		    if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
-			v = True if v not in ['',None,'False',False,'false'] else False
-		    elif len(v_list)>1:
-			v = v_list
-                    filter_data[k] = v if v not in ['',None] else None
-                if len(filter_data):
-                    query = reduce(operator.and_, (Q(k) for k in filter_data.items()))
-
-		    #lgr.info('Report List: %s' % report_list.count())
-		    lgr.info('%s Filters Applied: %s' % (data.query.name,query))
-                    report_list = report_list.filter(query)
-		    #lgr.info('Report List: %s' % report_list.count())
-
-
 	    #lgr.info('Report List Count: %s' % report_list.count())
 	    if or_filters not in [None,'']:
                 for f in or_filters.split("|"):
@@ -277,6 +255,7 @@ class Wrappers:
 
                 if len(or_filter_data):
                     or_query = reduce(operator.or_, (Q(k) for k in or_filter_data.items()))
+		    lgr.info('Or Query: %s' % or_query)
                     report_list = report_list.filter(or_query)
 
 	    #lgr.info('Or Filters Report List Count: %s' % report_list.count())
@@ -304,6 +283,7 @@ class Wrappers:
 
                 if len(and_filter_data):
                     and_query = reduce(operator.and_, (Q(k) for k in and_filter_data.items()))
+		    lgr.info('AndQuery: %s' % and_query)
                     report_list = report_list.filter(and_query)
 
 	    #lgr.info('And Filters Report List Count: %s' % report_list.count())
@@ -492,8 +472,6 @@ class Wrappers:
 
 			join_gateway_filters = data.query.join_gateway_filters
 
-			join_filters = data.query.join_filters
-
 			join_not_filters = data.query.join_not_filters
 			join_or_filters = data.query.join_or_filters
 			join_and_filters = data.query.join_and_filters
@@ -505,8 +483,6 @@ class Wrappers:
 			join_manytomany_fields = data.query.join_manytomany_fields
 			join_not_fields = data.query.join_not_fields
 			join_manytomany_not_fields = data.query.join_manytomany_not_fields
-
-			join_filter_data = {}
 
 			join_not_filter_data = {}
 			join_or_filter_data = {}
@@ -530,22 +506,6 @@ class Wrappers:
 					join_gateway_query = reduce(operator.and_, (Q(k) for k in gateway_filter_data.items()))
 					join_report_list = join_report_list.filter(join_gateway_query)
 
-
-			if join_filters not in ['',None]:
-		                for i in join_filters.split("|"):
-		                    k,v = i.split('%')
-				    v_list = v.split(',')
-				    if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
-					v = True if v not in ['',None,'False',False,'false'] else False
-				    elif len(v_list)>1:
-					v = v_list
-		                    join_filter_data[k] = v if v not in ['',None] else None
-		                if len(join_filter_data):
-		                    query = reduce(operator.and_, (Q(k) for k in join_filter_data.items()))
-
-				    lgr.info('%s Join Filters Applied: %s' % (data.query.name,query))
-		                    join_report_list = join_report_list.filter(query)
-
 			if join_or_filters not in [None,'']:
 		                for f in join_or_filters.split("|"):
 				    of_list = f.split('%')
@@ -560,6 +520,7 @@ class Wrappers:
 
 		                if len(join_or_filter_data):
                 		    or_query = reduce(operator.or_, (Q(k) for k in join_or_filter_data.items()))
+		    		    lgr.info('Join Or Query: %s' % or_query)
 		                    join_report_list = join_report_list.filter(or_query)
 
 			if join_and_filters not in [None,'']:
@@ -576,6 +537,7 @@ class Wrappers:
 
 		                if len(join_and_filter_data):
 		                    and_query = reduce(operator.and_, (Q(k) for k in join_and_filter_data.items()))
+		    		    lgr.info('Join And Query: %s' % and_query)
 		                    join_report_list = join_report_list.filter(and_query)
 
 
