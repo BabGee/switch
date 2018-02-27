@@ -219,7 +219,7 @@ class Wrappers:
 
 
 	    #Gateway Filter is a default Filter
-	    lgr.info('Gateway Filters Report List Count: %s' % report_list.count())
+	    #lgr.info('Gateway Filters Report List Count: %s' % report_list.count())
             if gateway_filters not in ['', None]:
                 for f in gateway_filters.split("|"):
                     if f not in ['',None]: gateway_filter_data[f] = gateway_profile.gateway
@@ -228,7 +228,7 @@ class Wrappers:
 		    #lgr.info('Gateway Query: %s' % gateway_query)
                     report_list = report_list.filter(gateway_query)
 
-	    lgr.info('Report List Count: %s' % report_list.count())
+	    #lgr.info('Report List Count: %s' % report_list.count())
 	    if or_filters not in [None,'']:
                 for f in or_filters.split("|"):
 		    of_list = f.split('%')
@@ -255,26 +255,18 @@ class Wrappers:
 
                 if len(or_filter_data):
                     or_query = reduce(operator.or_, (Q(k) for k in or_filter_data.items()))
-		    lgr.info('Or Query: %s' % or_query)
+		    #lgr.info('Or Query: %s' % or_query)
                     report_list = report_list.filter(or_query)
 
-	    lgr.info('Or Filters Report List Count: %s' % report_list.count())
+	    #lgr.info('Or Filters Report List Count: %s' % report_list.count())
 	    if and_filters not in [None,'']:
-		lgr.info('Got Here')
                 for f in and_filters.split("|"):
-
-		    lgr.info('Got Here')
 		    af_list = f.split('%')
 		    if len(af_list)==2:
-
 			if 'q' in payload.keys() and payload['q'] not in ['', None] and getattr(model_class, af_list[1].split('__')[0], False):
 				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload['q']
-
-				lgr.info('Got Here 1.1')
 			if af_list[0] in payload.keys() and getattr(model_class, af_list[1].split('__')[0], False):
 				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload[af_list[0]]
-
-				lgr.info('Got Here 1.2')
 			elif getattr(model_class, af_list[0].split('__')[0], False):
                     		k,v = af_list
 				v_list = v.split(',')
@@ -283,27 +275,17 @@ class Wrappers:
 				elif len(v_list)>1:
 					v = v_list
 				and_filter_data[k] = v if v not in ['',None] else None
-
-				lgr.info('Got Here 1.3')
 		    elif getattr(model_class, f.split('__')[0], False):
-
-			lgr.info('Got Here 2')
 			if 'q' in payload.keys() and payload['q'] not in ['', None]:
 				if f not in ['',None]: and_filter_data[f + '__icontains'] = payload['q']
-
-				lgr.info('Got Here 2.1')
 			if f in payload.keys():
 				if f not in ['',None]: and_filter_data[f + '__icontains'] = payload[f]
-
-				lgr.info('Got Here 2.2')
-
-		lgr.info('Got Here %s ' % and_filter_data)
                 if len(and_filter_data):
                     and_query = reduce(operator.and_, (Q(k) for k in and_filter_data.items()))
-		    lgr.info('AndQuery: %s' % and_query)
+		    #lgr.info('AndQuery: %s' % and_query)
                     report_list = report_list.filter(and_query)
 
-	    lgr.info('And Filters Report List Count: %s' % report_list.count())
+	    #lgr.info('And Filters Report List Count: %s' % report_list.count())
             if not_filters not in ['',None]:
                 for f in not_filters.split("|"):
 		    nf_list = f.split('%')
@@ -335,7 +317,7 @@ class Wrappers:
 		    #lgr.info('Report List: %s' % report_list.count())
 
 
-	    lgr.info('Not Filters Report List Count: %s' % report_list.count())
+	    #lgr.info('Not Filters Report List Count: %s' % report_list.count())
             if date_filters not in ['',None]:
 	        #lgr.info('Date Filters')
                 for i in date_filters.split("|"):
@@ -353,7 +335,7 @@ class Wrappers:
                     report_list = report_list.filter(query)
 
 
-	    lgr.info('Date Filters Report List Count: %s' % report_list.count())
+	    #lgr.info('Date Filters Report List Count: %s' % report_list.count())
             if time_filters not in ['',None]:
                 for i in time_filters.split("|"):
                     k,v = i.split('%')
@@ -537,7 +519,7 @@ class Wrappers:
 
 		                if len(join_or_filter_data):
                 		    or_query = reduce(operator.or_, (Q(k) for k in join_or_filter_data.items()))
-		    		    lgr.info('Join Or Query: %s' % or_query)
+		    		    #lgr.info('Join Or Query: %s' % or_query)
 		                    join_report_list = join_report_list.filter(or_query)
 
 			if join_and_filters not in [None,'']:
@@ -554,7 +536,7 @@ class Wrappers:
 
 		                if len(join_and_filter_data):
 		                    and_query = reduce(operator.and_, (Q(k) for k in join_and_filter_data.items()))
-		    		    lgr.info('Join And Query: %s' % and_query)
+		    		    #lgr.info('Join And Query: %s' % and_query)
 		                    join_report_list = join_report_list.filter(and_query)
 
 
