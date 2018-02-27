@@ -260,13 +260,22 @@ class Wrappers:
 
 	    #lgr.info('Or Filters Report List Count: %s' % report_list.count())
 	    if and_filters not in [None,'']:
+		lgr.info('Got Here')
                 for f in and_filters.split("|"):
+
+		    lgr.info('Got Here')
 		    af_list = f.split('%')
 		    if len(af_list)==2:
+
+			lgr.info('Got Here 1')
 			if 'q' in payload.keys() and payload['q'] not in ['', None] and getattr(model_class, af_list[1], False):
 				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload['q']
+
+				lgr.info('Got Here 1.1')
 			if af_list[0] in payload.keys() and getattr(model_class, af_list[1], False):
 				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload[af_list[0]]
+
+				lgr.info('Got Here 1.2')
 			elif getattr(model_class, af_list[0], False):
                     		k,v = af_list
 				v_list = v.split(',')
@@ -275,12 +284,21 @@ class Wrappers:
 				elif len(v_list)>1:
 					v = v_list
 				and_filter_data[k] = v if v not in ['',None] else None
+
+				lgr.info('Got Here 1.3')
 		    elif getattr(model_class, f, False):
+
+			lgr.info('Got Here 2')
 			if 'q' in payload.keys() and payload['q'] not in ['', None]:
 				if f not in ['',None]: and_filter_data[f + '__icontains'] = payload['q']
+
+				lgr.info('Got Here 2.1')
 			if f in payload.keys():
 				if f not in ['',None]: and_filter_data[f + '__icontains'] = payload[f]
 
+				lgr.info('Got Here 2.2')
+
+		lgr.info('Got Here %s ' % and_filter_data)
                 if len(and_filter_data):
                     and_query = reduce(operator.and_, (Q(k) for k in and_filter_data.items()))
 		    lgr.info('AndQuery: %s' % and_query)
