@@ -233,13 +233,13 @@ class Wrappers:
                 for f in or_filters.split("|"):
 		    of_list = f.split('%')
 		    if len(of_list)==2:
-			if 'q' in payload.keys() and payload['q'] not in ['', None] and getattr(model_class, of_list[1], False):
+			if 'q' in payload.keys() and payload['q'] not in ['', None] and getattr(model_class, of_list[1].split('__')[0], False):
 				if f not in ['',None]: or_filter_data[of_list[1] + '__icontains'] = payload['q']
 
-			if of_list[0] in payload.keys() and getattr(model_class, of_list[1], False):
+			if of_list[0] in payload.keys() and getattr(model_class, of_list[1].split('__')[0], False):
 				if f not in ['',None]: or_filter_data[of_list[1] + '__icontains'] = payload[of_list[0]]
 
-			elif getattr(model_class, of_list[0], False):
+			elif getattr(model_class, of_list[0].split('__')[0], False):
                     		k,v = of_list
 				v_list = v.split(',')
 				if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
@@ -247,7 +247,7 @@ class Wrappers:
 				elif len(v_list)>1:
 					v = v_list
 				or_filter_data[k] = v if v not in ['',None] else None
-		    elif getattr(model_class, f, False):
+		    elif getattr(model_class, f.split('__')[0], False):
 			if 'q' in payload.keys() and payload['q'] not in ['', None]:
 				if f not in ['',None]: or_filter_data[f + '__icontains'] = payload['q']
 			if f in payload.keys():
@@ -267,16 +267,16 @@ class Wrappers:
 		    af_list = f.split('%')
 		    if len(af_list)==2:
 
-			lgr.info('Got Here 1 %s | %s' % (getattr(model_class, af_list[0], False), getattr(model_class, af_list[1], False)))
-			if 'q' in payload.keys() and payload['q'] not in ['', None] and getattr(model_class, af_list[1], False):
+			lgr.info('Got Here 1 %s | %s' % (getattr(model_class, af_list[0].split('__')[0], False), getattr(model_class, af_list[1].split('__')[0], False)))
+			if 'q' in payload.keys() and payload['q'] not in ['', None] and getattr(model_class, af_list[1].split('__')[0], False):
 				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload['q']
 
 				lgr.info('Got Here 1.1')
-			if af_list[0] in payload.keys() and getattr(model_class, af_list[1], False):
+			if af_list[0] in payload.keys() and getattr(model_class, af_list[1].split('__')[0], False):
 				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload[af_list[0]]
 
 				lgr.info('Got Here 1.2')
-			elif getattr(model_class, af_list[0], False):
+			elif getattr(model_class, af_list[0].split('__')[0], False):
                     		k,v = af_list
 				v_list = v.split(',')
 				if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
@@ -286,7 +286,7 @@ class Wrappers:
 				and_filter_data[k] = v if v not in ['',None] else None
 
 				lgr.info('Got Here 1.3')
-		    elif getattr(model_class, f, False):
+		    elif getattr(model_class, f.split('__')[0], False):
 
 			lgr.info('Got Here 2')
 			if 'q' in payload.keys() and payload['q'] not in ['', None]:
@@ -309,11 +309,11 @@ class Wrappers:
                 for f in not_filters.split("|"):
 		    nf_list = f.split('%')
 		    if len(nf_list)==2:
-			if 'q' in payload.keys() and payload['q'] not in ['', None] and getattr(model_class, nf_list[1], False):
+			if 'q' in payload.keys() and payload['q'] not in ['', None] and getattr(model_class, nf_list[1].split('__')[0], False):
 				if f not in ['',None]: not_filter_data[nf_list[1] + '__icontains'] = payload['q']
-			if nf_list[0] in payload.keys() and getattr(model_class, nf_list[1], False):
+			if nf_list[0] in payload.keys() and getattr(model_class, nf_list[1].split('__')[0], False):
 				if f not in ['',None]: not_filter_data[nf_list[1] + '__icontains'] = payload[nf_list[0]]
-			elif getattr(model_class, nf_list[0], False):
+			elif getattr(model_class, nf_list[0].split('__')[0], False):
                     		k,v = nf_list
 				v_list = v.split(',')
 				if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
@@ -321,7 +321,7 @@ class Wrappers:
 				elif len(v_list)>1:
 					v = v_list
 				not_filter_data[k] = v if v not in ['',None] else None
-		    elif getattr(model_class, f, False):
+		    elif getattr(model_class, f.split('__')[0], False):
 			if 'q' in payload.keys() and payload['q'] not in ['', None]:
 				if f not in ['',None]: not_filter_data[f + '__icontains'] = payload['q']
 			if f in payload.keys():
@@ -527,7 +527,7 @@ class Wrappers:
 			if join_or_filters not in [None,'']:
 		                for f in join_or_filters.split("|"):
 				    of_list = f.split('%')
-				    if len(of_list)==2 and getattr(model_class, of_list[0], False):
+				    if len(of_list)==2 and getattr(model_class, of_list[0].split('__')[0], False):
 	                    		k,v = of_list
 					v_list = v.split(',')
 					if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
@@ -544,7 +544,7 @@ class Wrappers:
 			if join_and_filters not in [None,'']:
 		                for f in join_and_filters.split("|"):
 				    af_list = f.split('%')
-				    if len(af_list)==2 and getattr(model_class, af_list[0], False):
+				    if len(af_list)==2 and getattr(model_class, af_list[0].split('__')[0], False):
 	                    		k,v = af_list
 					v_list = v.split(',')
 					if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
@@ -563,7 +563,7 @@ class Wrappers:
 			if join_not_filters not in ['',None]:
 		                for f in join_not_filters.split("|"):
 				    nf_list = f.split('%')
-				    if len(nf_list)==2 and getattr(model_class, nf_list[0], False):
+				    if len(nf_list)==2 and getattr(model_class, nf_list[0].split('__')[0], False):
 	                    		k,v = nf_list
 					v_list = v.split(',')
 					if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
