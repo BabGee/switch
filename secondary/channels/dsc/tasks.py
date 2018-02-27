@@ -219,7 +219,7 @@ class Wrappers:
 
 
 	    #Gateway Filter is a default Filter
-	    #lgr.info('Gateway Filters Report List Count: %s' % report_list.count())
+	    lgr.info('Gateway Filters Report List Count: %s' % report_list.count())
             if gateway_filters not in ['', None]:
                 for f in gateway_filters.split("|"):
                     if f not in ['',None]: gateway_filter_data[f] = gateway_profile.gateway
@@ -228,7 +228,7 @@ class Wrappers:
 		    #lgr.info('Gateway Query: %s' % gateway_query)
                     report_list = report_list.filter(gateway_query)
 
-	    #lgr.info('Report List Count: %s' % report_list.count())
+	    lgr.info('Report List Count: %s' % report_list.count())
 	    if or_filters not in [None,'']:
                 for f in or_filters.split("|"):
 		    of_list = f.split('%')
@@ -258,7 +258,7 @@ class Wrappers:
 		    lgr.info('Or Query: %s' % or_query)
                     report_list = report_list.filter(or_query)
 
-	    #lgr.info('Or Filters Report List Count: %s' % report_list.count())
+	    lgr.info('Or Filters Report List Count: %s' % report_list.count())
 	    if and_filters not in [None,'']:
 		lgr.info('Got Here')
                 for f in and_filters.split("|"):
@@ -303,7 +303,7 @@ class Wrappers:
 		    lgr.info('AndQuery: %s' % and_query)
                     report_list = report_list.filter(and_query)
 
-	    #lgr.info('And Filters Report List Count: %s' % report_list.count())
+	    lgr.info('And Filters Report List Count: %s' % report_list.count())
             if not_filters not in ['',None]:
                 for f in not_filters.split("|"):
 		    nf_list = f.split('%')
@@ -335,7 +335,7 @@ class Wrappers:
 		    #lgr.info('Report List: %s' % report_list.count())
 
 
-	    #lgr.info('Not Filters Report List Count: %s' % report_list.count())
+	    lgr.info('Not Filters Report List Count: %s' % report_list.count())
             if date_filters not in ['',None]:
 	        #lgr.info('Date Filters')
                 for i in date_filters.split("|"):
@@ -353,7 +353,7 @@ class Wrappers:
                     report_list = report_list.filter(query)
 
 
-	    #lgr.info('Date Filters Report List Count: %s' % report_list.count())
+	    lgr.info('Date Filters Report List Count: %s' % report_list.count())
             if time_filters not in ['',None]:
                 for i in time_filters.split("|"):
                     k,v = i.split('%')
