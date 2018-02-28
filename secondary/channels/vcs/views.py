@@ -327,34 +327,26 @@ class VAS:
 							self.service = es[0].service
 
 					elif 'Select' in self.nav.menu.input_variable.name: 
-						lgr.info('Got Here')
 						if self.nav.menu.input_variable.name in ['Select','Strict Select'] or 'Select for' in self.nav.menu.input_variable.name:
 							self.group_select = self.payload['input']
 
-						lgr.info('Got Here')
 						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
 
-						lgr.info('Got Here')
 						if override_level and isinstance(override_level, int): self.level = override_level
 
-						lgr.info('Got Here')
 						if override_service and isinstance(override_service, int): self.service = override_service
 
-						lgr.info('Got Here')
 						if init_nav_step: self.nav_step = (self.navigator[0].nav_step + 1) if self.navigator.exists() else 0
 
-						lgr.info('Got Here')
 						#Comes after overrides
 						if 'Product of Select' in self.nav.menu.input_variable.name:
 							self.group_select = str(int(self.payload['input'])*int(override_group_select)) if override_group_select and \
 										isinstance(override_group_select, int) else self.payload['input']
 
-						lgr.info('Got Here')
 						#Matches Saved List to Input
 						try:item_list = json.loads(self.nav.item_list)
 						except:item_list = []
 
-						lgr.info('Got Here|NoList:%s' % item_list)
 						try: item_list[int(self.payload['input'])-1]; nolist=False
 						except: 
 							if allowed_input_list and self.payload['input'] in allowed_input_list.split(','): nolist=False
@@ -362,10 +354,8 @@ class VAS:
 						#if len(item_list)<1 or nolist:
 						if nolist:
 							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
-							else: 
-								self.group_select = 96  #Fail menu as list not matching
+							else: self.group_select = 96  #Fail menu as list not matching
 
-								lgr.info('Got Here Error')
 							if error_level and isinstance(error_level, int): self.level = error_level
 							else: pass
 						else:

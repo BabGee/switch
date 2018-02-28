@@ -84,6 +84,7 @@ class Menu(models.Model):
 	page_string = models.CharField(max_length=320)
 	access_level = models.ManyToManyField(AccessLevel)
 	session_state = models.ForeignKey(SessionState)
+	failed_session_state = models.ForeignKey(SessionState, blank=True, null=True, related_name='failed_session_state')
 	code = models.ManyToManyField(Code)
 	profile_status = models.ManyToManyField(ProfileStatus, blank=True)
 	service = models.ForeignKey(Service, null=True, blank=True)
