@@ -1078,6 +1078,19 @@ class Wrappers:
             lgr.info('Error on purchases: %s' % e)
         return params
 
+    def bid_ranking(self,payload,gateway_profile,profile_tz,data):
+	params = {}
+	params['rows'] = []
+	params['cols'] = [
+	    {"label":"index","type":"string"}
+	]
+	try:
+	    from thirdparty.bidfather.models import Bid
+	    bid = Bid.objects.get(pk=payload['bid_id'])
+	    params['rows'] = bid.app_rankings(gateway_profile.institution,gateway_profile)
+	except Exception as e:
+	    lgr.info('Error on bid rankings: %s',e)
+	return params
 
     def purchases(self, payload, gateway_profile, profile_tz, data):
         params = {}
