@@ -471,6 +471,10 @@ class System(Wrappers):
 								amount=transacting_amount,\
 								balance_bf=Decimal(balance_bf).quantize(Decimal('.01'), rounding=ROUND_DOWN))
 						bill_manager.payment_method = PaymentMethod.objects.get(name=payload['payment_method'])
+
+						if 'paygate_incoming_id' in payload.keys():
+							bill_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
+
 						bill_manager.save()
 
 
