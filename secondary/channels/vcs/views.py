@@ -372,9 +372,6 @@ class VAS:
 						self.level = '0'
 
 					elif self.nav.menu.input_variable.name in ['Validated Pin','Validated Pin Con']:
-						#Validated Pin last as initialize create menu with input 00 changes self.nave to None
-						if self.nav.menu.input_variable.name == 'Validated Pin':
-							self.group_select = 0
 
 						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
 
@@ -392,7 +389,10 @@ class VAS:
 								session_gateway_profile.pin_retries = 0
 								session_gateway_profile.save()
 								self.pin_auth = True
-								self.level = '0'
+								#Validated Pin last as initialize create menu with input 00 changes self.nave to None
+								if self.nav.menu.input_variable.name == 'Validated Pin':
+									self.group_select = 0
+									self.level = '0'
 							else:
 								if session_gateway_profile.pin_retries >= 3:
 									session_gateway_profile.status = ProfileStatus.objects.get(name='LOCKED')
