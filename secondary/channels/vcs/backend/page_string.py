@@ -123,6 +123,7 @@ class PageString(ServiceCall, Wrappers):
 		#Find Variable
 		#Process Submit and input not in ['0','00']
 		page_string = payload['page_string']
+		del payload['page_string']
 
 		payload.update(self.get_nav(navigator))
 
