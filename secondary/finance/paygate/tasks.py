@@ -280,6 +280,7 @@ class System(Wrappers):
 
 					incoming.save()
 
+					payload['paygate_incoming_id'] = incoming.id
 					payload['response_status'] = '00'
 					payload['response'] = 'Payment Received'
 			else:
