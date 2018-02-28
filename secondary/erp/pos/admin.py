@@ -52,7 +52,7 @@ admin.site.register(PurchaseOrder, PurchaseOrderAdmin)
 
 class BillManagerAdmin(admin.ModelAdmin):
 		list_display = ('id','credit','transaction_reference','action_reference',\
-				'order','amount','balance_bf','payment_method','date_modified','date_created',)
+				'order','amount','balance_bf','payment_method','incoming_payment','date_modified','date_created',)
 		search_fields = ('order__gateway_profile__msisdn__phone_number','order__cart_item__product_item__name','order__reference',)
 		list_filter = ('order__cart_item__product_item__institution','order__cart_item__product_item__product_type',)
 admin.site.register(BillManager, BillManagerAdmin)

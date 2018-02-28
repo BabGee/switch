@@ -1,6 +1,6 @@
 from django.contrib.gis.db import models
 from secondary.erp.crm.models import *
-
+from secondary.finance.paygate.models import *
 
 class SaleContactType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -147,6 +147,7 @@ class BillManager(models.Model):
 	amount = models.DecimalField(max_digits=19, decimal_places=2)
 	balance_bf = models.DecimalField(max_digits=19, decimal_places=2)
 	payment_method = models.ForeignKey(PaymentMethod, null=True, blank=True)
+	incoming_payment = models.ForeignKey(Incoming, null=True, blank=True)
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
 	def __unicode__(self):
