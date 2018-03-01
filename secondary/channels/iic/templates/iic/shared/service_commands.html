@@ -1,5 +1,5 @@
 {% for service_command in service_commands %}
-<option >
+<option value="{{ service_command.command_function }}">
     {{ service_command.command_function }} <br> {{ service_command.docstring }}
 
 

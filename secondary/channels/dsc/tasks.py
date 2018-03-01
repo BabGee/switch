@@ -183,6 +183,7 @@ class Wrappers:
             or_filters = data.query.or_filters
             and_filters = data.query.and_filters
             institution_filters = data.query.institution_filters
+            institution_not_filters = data.query.institution_not_filters
             gateway_filters = data.query.gateway_filters
             gateway_profile_filters = data.query.gateway_profile_filters
             profile_filters = data.query.profile_filters
@@ -205,6 +206,7 @@ class Wrappers:
             or_filter_data = {}
             and_filter_data = {}
             institution_filter_data = {}
+            institution_not_filter_data = {}
             gateway_filter_data = {}
             gateway_profile_filter_data = {}
             profile_filter_data = {}
@@ -402,6 +404,27 @@ class Wrappers:
 		    #lgr.info('Institution Query: %s' % institution_query)
                     report_list = report_list.filter(institution_query)
 
+
+	    #lgr.info('Institution Filters Report List Count: %s' % report_list.count())
+	    if institution_not_filters not in ['',None]:
+                for f in institution_not_filters.split("|"):
+                    #if f not in ['',None]: institution_none_filter[f] = None
+            	    if 'institution_id' in payload.keys() and payload['institution_id'] not in ['', None]:
+                    	if f not in ['',None]: institution_not_filter_data[f + '__id'] = payload['institution_id']
+            	    elif gateway_profile.institution not in ['', None]:
+                    	if f not in ['',None]: institution_not_filter_data[f] = gateway_profile.institution
+		    else:
+			#MQTT doesn't filter institution for push notifications
+			if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+				pass
+			else:
+	                    	if f not in ['',None]: institution_not_filter_data[f] = None
+
+                if len(institution_not_filter_data):
+                    institution_query = reduce(operator.and_, (~Q(k) for k in institution_not_filter_data.items()))
+		    #lgr.info('Institution Query: %s' % institution_query)
+                    report_list = report_list.filter(institution_query)
+
 	    #lgr.info('Gateway Profile Filters Report List Count: %s' % report_list.count())
             if gateway_profile_filters not in ['', None]:
                 for f in gateway_profile_filters.split("|"):
@@ -481,6 +504,7 @@ class Wrappers:
 			join_profile_filters = join.join_profile_filters
 			join_fields = join.join_fields
 	            	join_institution_filters = join.join_institution_filters
+	            	join_institution_not_filters = join.join_institution_not_filters
 			join_manytomany_fields = join.join_manytomany_fields
 			join_not_fields = join.join_not_fields
 			join_manytomany_not_fields = join.join_manytomany_not_fields
@@ -494,6 +518,7 @@ class Wrappers:
 			join_profile_filter_data = {}
 			join_fields_data = {}
             		join_institution_filter_data = {}
+            		join_institution_not_filter_data = {}
 			join_manytomany_fields_data = {}
 			join_not_fields_data = {}
 			join_manytomany_not_fields_data = {}
@@ -597,6 +622,23 @@ class Wrappers:
 
 		                if len(join_institution_filter_data):
 		                    institution_query = reduce(operator.and_, (Q(k) for k in join_institution_filter_data.items()))
+		                    join_report_list = join_report_list.filter(institution_query)
+
+
+	    		if join_institution_not_filters not in ['',None]:
+		                for f in join_institution_not_filters.split("|"):
+		            	    if 'institution_id' in payload.keys() and payload['institution_id'] not in ['', None]:
+		                    	if f not in ['',None]: join_institution_not_filter_data[f + '__id'] = payload['institution_id']
+		            	    elif gateway_profile.institution not in ['', None]:
+		                    	if f not in ['',None]: join_institution_not_filter_data[f] = gateway_profile.institution
+				    else:
+					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+						pass
+					else:
+			                    	if f not in ['',None]: join_institution_not_filter_data[f] = None
+
+		                if len(join_institution_not_filter_data):
+		                    institution_query = reduce(operator.and_, (~Q(k) for k in join_institution_not_filter_data.items()))
 		                    join_report_list = join_report_list.filter(institution_query)
 
 
