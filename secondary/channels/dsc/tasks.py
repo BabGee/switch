@@ -462,26 +462,28 @@ class Wrappers:
 
 
 	    lgr.info('Report List Count: %s' % report_list.count())
-	    join_model_class = None
-	    if data.query.join_module_name and data.query.join_model_name and (data.query.join_fields or \
-	     data.query.join_manytomany_fields or data.query.join_not_fields or join_manytomany_not_fields):
-		try:join_model_class = apps.get_model(data.query.join_module_name, data.query.join_model_name)
-		except: pass
-		if join_model_class:
 
-			join_gateway_filters = data.query.join_gateway_filters
 
-			join_not_filters = data.query.join_not_filters
-			join_or_filters = data.query.join_or_filters
-			join_and_filters = data.query.join_and_filters
 
-			join_gateway_profile_filters = data.query.join_gateway_profile_filters
-			join_profile_filters = data.query.join_profile_filters
-			join_fields = data.query.join_fields
-	            	join_institution_filters = data.query.join_institution_filters
-			join_manytomany_fields = data.query.join_manytomany_fields
-			join_not_fields = data.query.join_not_fields
-			join_manytomany_not_fields = data.query.join_manytomany_not_fields
+	    join_query = DataListJoinQuery.objects.filter(query=data.query)
+
+	    for join in join_query:
+		if join.join_fields or join.join_manytomany_fields or join.join_not_fields or join.join_manytomany_not_fields:
+
+			join_model_class = apps.get_model(join.join_module_name, join.join_model_name)
+			join_gateway_filters = join.join_gateway_filters
+
+			join_not_filters = join.join_not_filters
+			join_or_filters = join.join_or_filters
+			join_and_filters = join.join_and_filters
+
+			join_gateway_profile_filters = join.join_gateway_profile_filters
+			join_profile_filters = join.join_profile_filters
+			join_fields = join.join_fields
+	            	join_institution_filters = join.join_institution_filters
+			join_manytomany_fields = join.join_manytomany_fields
+			join_not_fields = join.join_not_fields
+			join_manytomany_not_fields = join.join_manytomany_not_fields
 
 			join_not_filter_data = {}
 			join_or_filter_data = {}
@@ -643,7 +645,6 @@ class Wrappers:
 
 				    lgr.info('%s Join Many Not Fields Applied: %s' % (data.query.name,query))
                 		    report_list = report_list.filter(query)
-
 
 	    lgr.info('Report List Count: %s' % report_list.count())
 	    #lgr.info('Report End Date')
@@ -1082,12 +1083,17 @@ class Wrappers:
 	params = {}
 	params['rows'] = []
 	params['cols'] = [
-	    {"label":"index","type":"string"}
+	    {"label":"index","value":"index","type":"string"},
+		{"label": "position","value": "position", "type": "string"},
+	    {"label":"name","value":"name","type":"string"},
+	    {"label":"total_price","value":"total_price","type":"string"}
 	]
 	try:
 	    from thirdparty.bidfather.models import Bid
 	    bid = Bid.objects.get(pk=payload['bid_id'])
-	    params['rows'] = bid.app_rankings(gateway_profile.institution,gateway_profile)
+	    rows = bid.app_rankings(gateway_profile.institution,gateway_profile)
+	    lgr.info(rows)
+	    params['rows'] = rows
 	except Exception as e:
 	    lgr.info('Error on bid rankings: %s',e)
 	return params

@@ -980,11 +980,11 @@ class System(Wrappers):
 			purchase_order = delivery.order
 			payload['purchase_order_id'] = purchase_order.pk
 
-			coordinates = payload['delivery_origin']
-			longitude, latitude = coordinates.split(',', 1)
-			trans_point = Point(float(longitude), float(latitude))
-			delivery.origin_name = coordinates
-			delivery.origin_coord = trans_point
+			#coordinates = payload['delivery_origin']
+			#longitude, latitude = coordinates.split(',', 1)
+			#trans_point = Point(float(longitude), float(latitude))
+			#delivery.origin_name = coordinates
+			#delivery.origin_coord = trans_point
 			delivery.status =  DeliveryStatus.objects.get(name='IN PROGRESS')
 			delivery.save()
 

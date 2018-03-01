@@ -42,8 +42,20 @@ class DataListQuery(models.Model):
 	date_filters = models.CharField(max_length=512, blank=True, null=True)
 	time_filters = models.CharField(max_length=512, blank=True, null=True)
 	token_filters = models.CharField(max_length=512, null=True, blank=True)
-	join_model_name = models.CharField(max_length=100, null=True, blank=True) 
-	join_module_name = models.CharField(max_length=100, null=True, blank=True) 
+	links = models.CharField(max_length=512, blank=True, null=True) 
+	link_params = models.CharField(max_length=512, blank=True, null=True) 
+	last_balance = models.CharField(max_length=512, blank=True, null=True)
+	order = models.CharField(max_length=512, blank=True, null=True)
+	distinct = models.CharField(max_length=512, blank=True, null=True)
+	def __unicode__(self):
+		return u'%s %s' % (self.id, self.name)  
+
+class DataListJoinQuery(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	query = models.ForeignKey(DataListQuery)
+	join_model_name = models.CharField(max_length=100)
+	join_module_name = models.CharField(max_length=100) 
 	join_or_filters = models.CharField(max_length=512, blank=True, null=True)
 	join_and_filters = models.CharField(max_length=512, blank=True, null=True)
 	join_not_filters = models.CharField(max_length=512, blank=True, null=True)
@@ -55,13 +67,9 @@ class DataListQuery(models.Model):
 	join_manytomany_fields = models.CharField(max_length=512, null=True, blank=True)
 	join_not_fields = models.CharField(max_length=512, null=True, blank=True)
 	join_manytomany_not_fields = models.CharField(max_length=512, null=True, blank=True)
-	links = models.CharField(max_length=512, blank=True, null=True) 
-	link_params = models.CharField(max_length=512, blank=True, null=True) 
-	last_balance = models.CharField(max_length=512, blank=True, null=True)
-	order = models.CharField(max_length=512, blank=True, null=True)
-	distinct = models.CharField(max_length=512, blank=True, null=True)
 	def __unicode__(self):
-		return u'%s' % (self.name)  
+		return u'%s %s' % (self.id, self.query)  
+
 
 class PushAction(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
