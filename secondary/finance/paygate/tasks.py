@@ -98,8 +98,7 @@ class Wrappers:
 
 
 	def response_payload(self, payload):
-
-		lgr.info('Response Payload: %s' % payload)
+		#lgr.info('Response Payload: %s' % payload)
 		try:
 			payload = payload if isinstance(payload, dict)  else json.loads(payload)
 			new_payload, transaction, count = {}, None, 1
@@ -116,9 +115,9 @@ class Wrappers:
 					count = count+1
 
 			payload = json.dumps(new_payload)
-		except Exception, e:
-
-			lgr.info('Error on Response Payload: %s' % e)
+		except Exception, e: 
+			pass
+			#lgr.info('Error on Response Payload: %s' % e)
 		return payload
 
 
