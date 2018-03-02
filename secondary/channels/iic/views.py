@@ -854,21 +854,21 @@ def page_input_group_create(request, gateway_pk, service_name, page_group_pk, pa
             # input_variable.default_value = page_input_group_config.get('service')
 
             # todo create configured service and commands
-            service_name = form.cleaned_data.get('input_variable_service')
-            if service_name:
+            input_variable_service = form.cleaned_data.get('input_variable_service')
+            if input_variable_service:
                 pass
             else:
-                service_name = name.upper()
+                input_variable_service = name.upper()
 
             # todo input_variable.service = service_name
 
             # todo this is duplicated
             try:
-                service = Service.objects.get(name=service_name)
+                service = Service.objects.get(name=input_variable_service)
             except Service.DoesNotExist:
-                service = Service(name=service_name)
+                service = Service(name=input_variable_service)
 
-                service.description = service_name.title()
+                service.description = input_variable_service.title()
                 service.product = Product.objects.get(name='SYSTEM')
                 service.status = ServiceStatus.objects.get(name='POLLER')
 
@@ -894,8 +894,8 @@ def page_input_group_create(request, gateway_pk, service_name, page_group_pk, pa
             # todo update redirect page bread crumbs
 
             return redirect(
-                '/iic_editor/gateways/{}/page_groups/{}/pages/{}/page_input_groups/{}/'.format(
-                    gateway_pk, page_group_pk, page_pk, page_input_group.pk
+                '/iic_editor/gateways/{}/{}/page_groups/{}/pages/{}/page_input_groups/{}/'.format(
+                    gateway_pk,service_name, page_group_pk, page_pk, page_input_group.pk
                 )
             )
     else:
@@ -949,10 +949,10 @@ def page_input_create(request, gateway_pk, service_name, page_group_pk, page_pk,
                 input_variable.default_value = form.cleaned_data['input_variable_default_value']
                 # input_variable.variable_kind = None
 
-                service_name = form.cleaned_data.get('input_variable_service')
-                if service_name:
+                input_variable_service = form.cleaned_data.get('input_variable_service')
+                if input_variable_service:
                     try:
-                        service_name = Service.objects.get(name=service_name)
+                        service = Service.objects.get(name=input_variable_service)
                     except Service.DoesNotExist:
                         raise
                         # service = Service(name=service_name)
@@ -964,7 +964,7 @@ def page_input_create(request, gateway_pk, service_name, page_group_pk, page_pk,
                         # service.save()
                         # service.access_level = None
 
-                    input_variable.service = service_name
+                    input_variable.service = service
 
                 input_variable.save()
 
@@ -1223,7 +1223,7 @@ def gateway_profile_put(request):
 
     elif field == 'institution':
         gateway_profile.institution_id =value
-        
+
     gateway_profile.save()
     return HttpResponse(status=200)
 

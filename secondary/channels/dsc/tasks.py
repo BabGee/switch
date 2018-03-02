@@ -1125,7 +1125,7 @@ class Wrappers:
 	params = {}
 	params['rows'] = []
 	params['cols'] = [
-	    {"label":"index","value":"index","type":"string"},
+	    {"label":"id","value":"id","type":"string"},
 		{"label": "position","value": "position", "type": "string"},
 	    {"label":"name","value":"name","type":"string"},
 	    {"label":"total_price","value":"total_price","type":"string"}

@@ -508,8 +508,8 @@ class System(Wrappers):
 			product.institution = gateway_profile.institution
 			product.currency = Currency.objects.get(code=payload['product_currency']) # KES
 			product.product_display = ProductDisplay.objects.get(name=payload['product_display']) # DEFAULT
-
-			product.vat = payload['product_vat']
+			if str(payload['is_vat_inclusive']) == 'True':
+				product.vat = payload['product_vat']
 			product.discount = payload['product_discount']
 			
 			if 'product_barcode' in payload.keys():
@@ -553,8 +553,8 @@ class System(Wrappers):
 			product.institution = gateway_profile.institution
 			product.currency = Currency.objects.get(code=payload['product_currency']) # KES
 			product.product_display = ProductDisplay.objects.get(name=payload['product_display']) # DEFAULT
-
-			product.vat = payload['product_vat']
+			if str(payload['is_vat_inclusive']) == 'True':
+				product.vat = payload['product_vat']
 			product.discount = payload['product_discount']
 
 			if 'product_barcode' in payload.keys():
