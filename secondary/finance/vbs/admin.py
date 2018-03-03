@@ -52,7 +52,7 @@ admin.site.register(CreditOverdue, CreditOverdueAdmin)
      
 class InstitutionAccountManagerAdmin(admin.ModelAdmin):
 	list_display = ('id','credit','transaction_reference','is_reversal','source_account','dest_account',\
-			'amount','charge','balance_bf','date_created','updated',)
+			'amount','charge','balance_bf','date_modified','date_created','updated',)
 	list_filter = ('credit','updated',)
         search_fields = ('id','transaction_reference',)
 admin.site.register(InstitutionAccountManager, InstitutionAccountManagerAdmin)  
@@ -61,7 +61,7 @@ admin.site.register(InstitutionAccountManager, InstitutionAccountManagerAdmin)
 class AccountManagerAdmin(admin.ModelAdmin):
 	list_display = ('id','credit','transaction_reference','is_reversal','source_account','dest_account',\
 			'amount','charge','balance_bf','credit_paid','credit_time',\
-			'credit_due_date','credit_overdue_list','date_created','updated','details',)
+			'credit_due_date','credit_overdue_list','date_modified','date_created','updated','details',)
 	list_filter = ('credit','source_account__account_type__gateway','dest_account__account_type__gateway',\
 			'source_account__account_type','dest_account__account_type','credit_paid','credit_overdue','updated',)
         search_fields = ('id','transaction_reference','source_account__profile__user__username',\

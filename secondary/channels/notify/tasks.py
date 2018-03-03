@@ -403,11 +403,11 @@ class System(Wrappers):
 					payload["response_status"] = "00"
 			                payload['trigger'] = 'recipient_to_msisdn%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				else:
-					payload['response_status'] = '25'
+					payload['response_status'] = '00'
 					payload['response'] = 'No Recipient Found'
 
 			else:
-				payload['response_status'] = '25'
+				payload['response_status'] = '00'
 				payload['response'] = 'No Recipient Found'
 		except Exception, e:
 			payload['response_status'] = '96'

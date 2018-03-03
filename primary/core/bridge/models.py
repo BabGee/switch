@@ -213,4 +213,89 @@ class BackgroundServiceActivity(models.Model):
 	def __unicode__(self):
 		return u'%s %s' % (self.service, self.gateway_profile)
 
+class ActivityStatus(models.Model):
+	name = models.CharField(max_length=50)
+	description = models.CharField(max_length=200)	
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
+class Activity(models.Model):
+        date_modified  = models.DateTimeField(auto_now=True)
+        date_created = models.DateTimeField(auto_now_add=True)
+        name = models.CharField(max_length=45, unique=True)
+        description = models.CharField(max_length=100)
+        status = models.ForeignKey(ActivityStatus)
+        ext_service_id = models.CharField(max_length=250)
+        ext_service_username = models.CharField(max_length=320, null=True, blank=True, help_text='Optional')
+        ext_service_password = models.CharField(max_length=320, null=True, blank=True, help_text='Optional')
+        ext_service_details = models.CharField(max_length=1920, null=True, blank=True)
+        service = models.ForeignKey(Service, null=True, blank=True) #Service for processing outgoing tasks
+        gateway = models.ManyToManyField(Gateway, blank=True)
+        def __unicode__(self):
+                return u'%s %s' % (self.name, self.ext_service_id)
+        def gateway_list(self):
+                return "\n".join([a.name for a in self.gateway.all()])
+
+class ActivityEndpoint(models.Model):
+        date_modified  = models.DateTimeField(auto_now=True)
+        date_created = models.DateTimeField(auto_now_add=True)
+        name = models.CharField(max_length=45, unique=True)
+        description = models.CharField(max_length=100)
+        request = models.CharField(max_length=1920, null=True, blank=True)
+        url = models.CharField(max_length=640)
+        account_id = models.CharField(max_length=512, null=True, blank=True)
+        username = models.CharField(max_length=128, null=True, blank=True)
+        password = models.CharField(max_length=1024, null=True, blank=True)
+        def __unicode__(self):
+                return u'%s' % (self.name)
+
+class ActivityProduct(models.Model):
+        date_modified  = models.DateTimeField(auto_now=True)
+        date_created = models.DateTimeField(auto_now_add=True)
+        name = models.CharField(max_length=45)
+        description = models.CharField(max_length=100)
+        activity = models.ForeignKey(Activity)
+        ext_product_id = models.CharField(max_length=250, null=True, blank=True)
+        endpoint = models.ForeignKey(ActivityEndpoint, null=True, blank=True)
+        service = models.ManyToManyField(Service, blank=True)
+        details = models.CharField(max_length=512, default=json.dumps({}))
+        realtime = models.BooleanField(default=False)
+        show_message = models.BooleanField(default=False)
+        payment_method = models.ManyToManyField(PaymentMethod, blank=True)
+        currency = models.ManyToManyField(Currency, blank=True) #Allowed Currencies
+        trigger = models.ManyToManyField(Trigger, blank=True)
+        def __unicode__(self):
+                return u'%s %s' % (self.name, self.investment)
+        def service_list(self):
+                return "\n".join([a.name for a in self.service.all()])
+        def payment_method_list(self):
+                return "\n".join([a.name for a in self.payment_method.all()])
+        def currency_list(self):
+                return "\n".join([a.code for a in self.currency.all()])
+        def trigger_list(self):
+                return "\n".join([a.name for a in self.trigger.all()])
+
+
+class ActivityTransaction(models.Model):
+        date_modified  = models.DateTimeField(auto_now=True)
+        date_created = models.DateTimeField(auto_now_add=True)
+        activity_product = models.ForeignKey(ActivityProduct)
+        status = models.ForeignKey(TransactionStatus)
+        gateway_profile = models.ForeignKey(GatewayProfile)
+        request = models.CharField(max_length=1920)
+        channel = models.ForeignKey(Channel)
+        response_status = models.ForeignKey(ResponseStatus)
+        transaction_reference = models.CharField(max_length=45, null=True, blank=True) #Transaction ID
+        currency = models.ForeignKey(Currency, null=True, blank=True)
+        amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+        charges = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+        gateway = models.ForeignKey(Gateway)
+        institution = models.ForeignKey(Institution, null=True, blank=True)
+        message = models.CharField(max_length=3840, blank=True, null=True)
+        sends = models.IntegerField()
+        ext_outbound_id = models.CharField(max_length=200, blank=True, null=True)
+        def __unicode__(self):
+                return u'%s %s' % (self.activity_product, self.gateway_profile)
 

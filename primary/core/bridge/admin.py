@@ -83,3 +83,34 @@ class BackgroundServiceActivityAdmin(admin.ModelAdmin):
 admin.site.register(BackgroundServiceActivity, BackgroundServiceActivityAdmin)
 
 
+class ActivityStatusAdmin(admin.ModelAdmin):
+        list_display = ('name','description',)
+admin.site.register(ActivityStatus, ActivityStatusAdmin)
+
+
+class ActivityAdmin(admin.ModelAdmin):
+        list_display = ('id','name','description','status','ext_service_id','ext_service_username',\
+                        'ext_service_password','ext_service_details',\
+                        'service','gateway_list',)
+admin.site.register(Activity, ActivityAdmin)
+
+class ActivityEndpointAdmin(admin.ModelAdmin):
+        list_display = ('id','name','description','request','url','account_id','username','password',)
+admin.site.register(ActivityEndpoint, ActivityEndpointAdmin)
+
+
+class ActivityProductAdmin(admin.ModelAdmin):
+        list_display = ('id','name','description','activity','ext_product_id','endpoint',\
+                        'service_list','details','realtime','show_message',\
+                        'payment_method_list','currency_list','trigger_list',)
+        list_filter = ('activity','service','payment_method',)
+admin.site.register(ActivityProduct, ActivityProductAdmin)
+
+class ActivityTransactionAdmin(admin.ModelAdmin):
+        list_display = ('id','activity_product','status','gateway_profile','request','channel','response_status',\
+                        'transaction_reference','currency','amount','charges','gateway','institution',\
+                        'message','sends','ext_outbound_id',)
+admin.site.register(ActivityTransaction, ActivityTransactionAdmin)
+
+
+
