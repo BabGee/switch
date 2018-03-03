@@ -46,7 +46,7 @@ def query_page_inputs(gateway, service='HOME', institution=None):
                 # Q(Q(profile_status=gateway_profile.status) | Q(profile_status=None)),
                 # Q(Q(page__profile_status=gateway_profile.status) | Q(page__profile_status=None)), Q(channel__id=payload['chid']),
                 # ~Q(page__item_level=0),
-                Q(page__page_group__gateway=gateway) | Q(page__page_group__gateway=None),
+                # Q(page__page_group__gateway=gateway) | Q(page__page_group__gateway=None),
                 Q(page_input_group__gateway=gateway) | Q(page_input_group__gateway=None),
                 Q(page__gateway=gateway) | Q(page__gateway=None),
                 Q(gateway=gateway) | Q(gateway=None)

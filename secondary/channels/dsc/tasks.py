@@ -1128,7 +1128,8 @@ class Wrappers:
 	    {"label":"id","value":"id","type":"string"},
 		{"label": "position","value": "position", "type": "string"},
 	    {"label":"name","value":"name","type":"string"},
-	    {"label":"total_price","value":"total_price","type":"string"}
+	    {"label":"total_price","value":"total_price","type":"string"},
+		{"type":"href","label":"Actions","links":{"Unit Prices":{"service":"VIEW REQUIREMENT APPLICATIONS","icon":"icons:home","params":{"bid_app_id":"id"}}}}
 	]
 	try:
 	    from thirdparty.bidfather.models import Bid

@@ -11,7 +11,10 @@
 
     </ol>
 
-    <img src="{{ institution.logo.url }}" alt="Logo" class="img-thumbnail">
+    <img src="{% if institution.logo %}{{ institution.logo.url }}{% endif %}"
+         alt="Institution Logo"
+         style="max-width: 200px"
+         class="img-thumbnail">
 
     <h4>{{ institution.name }}</h4>
 <span

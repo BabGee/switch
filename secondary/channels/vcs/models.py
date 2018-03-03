@@ -119,6 +119,7 @@ class MenuItem(models.Model):
 	access_level = models.ManyToManyField(AccessLevel)
 	profile_status = models.ManyToManyField(ProfileStatus, blank=True)
 	item_level = models.IntegerField()
+	item_order = models.IntegerField()
 	menu = models.ForeignKey(Menu)	
 	status = models.ForeignKey(MenuStatus)
 	enrollment_type_included = models.ManyToManyField(EnrollmentType, blank=True)
