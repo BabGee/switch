@@ -122,6 +122,7 @@ class MenuItem(models.Model):
 	item_order = models.IntegerField()
 	menu = models.ForeignKey(Menu)	
 	status = models.ForeignKey(MenuStatus)
+	success_session_exclude = models.BooleanField(default=False)
 	failed_session_exclude = models.BooleanField(default=False)
 	enrollment_type_included = models.ManyToManyField(EnrollmentType, blank=True)
 	enrollment_type_excluded = models.ManyToManyField(EnrollmentType, blank=True, related_name='menuitem_enrollment_type_excluded')

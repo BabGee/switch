@@ -103,8 +103,9 @@ class VAS:
 
 		def get_menu_items(menuitems):
 			if len(menuitems)>0:
+				success_session_exclude = True if 'response_status' in self.payload.keys() and  self.payload['response_status'] == '00' else False
 				failed_session_exclude = True if 'response_status' in self.payload.keys() and  self.payload['response_status'] <> '00' else False
-				menuitems = menuitems.filter(failed_session_exclude=failed_session_exclude)
+				menuitems = menuitems.filter(failed_session_exclude=failed_session_exclude, success_session_exclude=success_session_exclude)
 				menuitems = menuitems.order_by('item_order').values('menu_item','item_level')
 				self.item_list = ['%s' % (item['menu_item']) for item in menuitems.filter(~Q(item_level=0))] #Escape 0 for back and main in navigator entry to avoid validation issues
 				this_item_list = ['%s%s' % (str(item['item_level'])+':' if item['item_level']>0 else '',item['menu_item']) for item in menuitems] #Zero 0 entries to not show number/item_level
