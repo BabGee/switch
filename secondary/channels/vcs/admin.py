@@ -55,9 +55,9 @@ class MenuAdmin(admin.ModelAdmin):
 admin.site.register(Menu, MenuAdmin)
 
 class MenuItemAdmin(admin.ModelAdmin):
-	list_display = ('menu_item', 'access_level_list', 'profile_status_list', 'item_level', 'item_order', 'menu', 'status','success_session_exclude',\
-			'failed_session_exclude','enrollment_type_included_list','enrollment_type_excluded_list',)
-	list_filter = ('menu__code','menu', 'menu__service', 'status','failed_session_exclude',)
+	list_display = ('menu_item', 'access_level_list', 'profile_status_list', 'item_level', 'item_order', 'menu', 'status',\
+			'failed_session_include','enrollment_type_included_list','enrollment_type_excluded_list',)
+	list_filter = ('menu__code','menu', 'menu__service', 'status','failed_session_include',)
 	search_fields = ('menu_item', 'item_level', 'item_order',)
 admin.site.register(MenuItem, MenuItemAdmin)
 
