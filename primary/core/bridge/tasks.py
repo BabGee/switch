@@ -70,7 +70,7 @@ class Wrappers:
 			 'merchant_data' not in key and 'signedpares' not in key and \
 			 key <> 'gpid' and key <> 'sec' and  key <> 'fingerprint' and \
 			 key not in ['ext_product_id','vpc_securehash','currency','amount'] and \
-			 'institution_id' not in key and key <> 'response' and key <> 'input':
+			 'institution_id' not in key and key <> 'response' and key <> 'input' and key <> 'trigger':
 				if count <= 30:
 					new_payload[str(k)[:30] ] = str(v)[:500]
 				else:
