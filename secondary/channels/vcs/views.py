@@ -371,7 +371,7 @@ class VAS:
 						self.group_select = 0
 						self.level = '0'
 
-					elif self.nav.menu.input_variable.name in ['Validated Pin','Validated Pin Con']:
+					elif 'Validated Pin' in self.nav.menu.input_variable.name:
 
 						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
 
