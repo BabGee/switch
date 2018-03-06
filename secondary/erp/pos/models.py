@@ -177,7 +177,7 @@ class Delivery(models.Model):
 	order = models.ForeignKey(PurchaseOrder)
 	status = models.ForeignKey(DeliveryStatus)
 
-	schedule = models.DateTimeField(auto_now=True)
+	schedule = models.DateTimeField(default=timezone.now)
 	delivery_profile = models.ForeignKey(GatewayProfile,null=True)
 
 	origin_name = models.CharField(max_length=200,blank=True,null=True)

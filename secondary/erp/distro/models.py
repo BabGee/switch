@@ -45,7 +45,7 @@ class TradingInstitution(models.Model):
 	institution = models.OneToOneField(Institution)
 	status = models.ForeignKey(TradingInstitutionStatus)
 	agent = models.ForeignKey(Agent)
-	supplier = models.ManyToManyField('self', blank=True)
+	supplier = models.ManyToManyField('self', symmetrical=False, blank=True)
 	def __unicode__(self):
 		return '%s %s %s' % (self.trader_type, self.institution, self.status)
 	def supplier_list(self):

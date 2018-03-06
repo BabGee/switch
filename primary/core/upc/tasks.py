@@ -434,13 +434,13 @@ class System(Wrappers):
 			payload['middle_name'] = profile.middle_name
 			payload['national_id'] = profile.national_id
 			payload['passport_number'] = profile.passport_number
-			payload['passport_expiry_date'] = profile.passport_expiry_date.isoformat()
+			if profile.passport_expiry_date: payload['passport_expiry_date'] = profile.passport_expiry_date.isoformat()
 			payload['physical_address'] = profile.physical_address
 			payload['city'] = profile.city
 			payload['region'] = profile.region
 			payload['postal_address'] = profile.postal_address
 			payload['postal_code'] = profile.postal_code
-			payload['country'] = profile.country.iso2
+			if profile.country:payload['country'] = profile.country.iso2
 			payload['address'] = profile.address
 
 			payload['response'] = 'Profile Details Captured'

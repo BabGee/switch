@@ -864,16 +864,11 @@ class System(Wrappers):
 				try:
 					date_string = payload['scheduled_date'] + ' ' + payload['scheduled_time']
 					date_obj = datetime.strptime(date_string, '%d/%m/%Y %I:%M %p')
-				except:
-					date_obj = None
-
-				if date_obj is not None:
-					# profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
 					scheduled_send = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
-				else:
-					scheduled_send = timezone.now()
+					delivery.schedule = scheduled_send
 
-				delivery.schedule = scheduled_send
+				except:pass
+				lgr.info("Delivery schedule : {}".format(delivery.schedule))
 
 				if 'delivery_location_coord' in payload.keys():
 					coordinates = payload['delivery_location_coord']
