@@ -150,6 +150,6 @@ class Navigator(models.Model):
 	session = models.ForeignKey(Session, null=True, blank=True)
 	level = models.IntegerField()
 	group_select = models.IntegerField(null=True, blank=True)
-	valid = models.BooleanField(default=True)
+	invalid = models.BooleanField(default=False)
 	def __unicode__(self):
 		return u'%s %s %s %s' % (self.id, self.session, self.menu, self.nav_step)

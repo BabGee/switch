@@ -152,7 +152,7 @@ class VAS:
 
 			self.payload['page_string'] = page_string
 			
-			new_navigator = Navigator(session=self.session, menu=self.nav.menu, pin_auth=self.pin_auth, level=self.level, group_select=self.group_select,valid=False)
+			new_navigator = Navigator(session=self.session, menu=self.nav.menu, pin_auth=self.pin_auth, level=self.level, group_select=self.group_select,invalid=True)
 			new_navigator.input_select = self.nav.input_select
 
 			new_navigator.nav_step = self.nav_step
