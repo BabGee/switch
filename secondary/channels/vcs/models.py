@@ -151,4 +151,4 @@ class Navigator(models.Model):
 	level = models.IntegerField()
 	group_select = models.IntegerField(null=True, blank=True)		
 	def __unicode__(self):
-		return u'%s %s %s' % (self.session, self.menu, self.nav_step)
+		return u'%s %s %s %s' % (self.id, self.session, self.menu, self.nav_step)

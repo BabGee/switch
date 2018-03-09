@@ -1716,8 +1716,6 @@ class System(Wrappers):
 			lgr.info("Error on getting session gateway Profile: %s" % e)
 		return payload
 
-
-
 	def get_update_profile(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
@@ -1767,118 +1765,48 @@ class System(Wrappers):
 		return payload
 
 
-	def get_profile_deprecated(self, payload, node_info):
+	def get_change_identity_profile(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			profile_error = None
-			if ('email' in payload.keys() and self.validateEmail(payload["email"]) ) and \
-			('msisdn' in payload.keys() and self.get_msisdn(payload)):
-
-				msisdn_session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.get_msisdn(payload)),Q(gateway=gateway_profile.gateway))
-				email_session_gateway_profile = GatewayProfile.objects.filter(Q(user__email=payload["email"]),Q(gateway=gateway_profile.gateway))
-
-				if msisdn_session_gateway_profile.exists() and email_session_gateway_profile.exists():
-					if msisdn_session_gateway_profile[0] == email_session_gateway_profile[0]:
-						session_gateway_profile = msisdn_session_gateway_profile
-					else:
-						profile_error = email_session_gateway_profile[0]
-						session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
-				elif msisdn_session_gateway_profile.exists():
-					session_gateway_profile = msisdn_session_gateway_profile
-				elif email_session_gateway_profile.exists():
-					session_gateway_profile = email_session_gateway_profile
-				else:
-					session_gateway_profile = msisdn_session_gateway_profile
-
-
-			elif 'email' in payload.keys() and self.validateEmail(payload["email"]):
-				session_gateway_profile = GatewayProfile.objects.filter(user__email=payload["email"],\
-						 gateway=gateway_profile.gateway)
-			elif 'msisdn' in payload.keys() and self.get_msisdn(payload):
-				session_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=self.get_msisdn(payload),\
-						 gateway=gateway_profile.gateway)
-			elif 'session_gateway_profile_id' in payload.keys():
-				session_gateway_profile = GatewayProfile.objects.filter(id=payload['session_gateway_profile_id'])
-			elif 'reference' in payload.keys():
-				if 'reference' in payload.keys() and self.validateEmail(payload["reference"]):
-					session_gateway_profile = GatewayProfile.objects.filter(user__email=payload["reference"],\
-							 gateway=gateway_profile.gateway)
-				else:
-					payload['msisdn'] = payload['reference']
-					msisdn = self.get_msisdn(payload)
-					if msisdn:
-						session_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=msisdn,\
-								 gateway=gateway_profile.gateway)
-					else:
-						del payload['msisdn']
-						session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
-			else:
-				session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
-
-			'''
-			elif session_gateway_profile.exists() and session_gateway_profile[0].access_level.name == 'SYSTEM':
-				payload['response'] = 'System User Not Allowed'
-				payload['response_status'] = '63'
-			'''
+			session_gateway_profile, payload, profile_error = self.profile_capture(gateway_profile, payload, profile_error)
 
 			if profile_error:
-				payload['response'] = 'Profile Error: Email exists. Please contact us'
+				#payload['response'] = 'Profile Error: Email exists. Please contact us'
+				payload['response'] = 'Profile Error: Email/Phone Number Exists in another profile. Please contact us'
 				payload['response_status'] = '63'
 			elif session_gateway_profile.exists():
 				payload['session_gateway_profile_id'] = session_gateway_profile[0].id
-				user = session_gateway_profile[0].user
 
-				if 'full_names' in payload.keys():
-					full_names = payload["full_names"].split(" ")
-					if len(full_names) == 1:
-						payload['first_name'] = full_names[0]
-					if len(full_names) == 2:
-						payload['first_name'],payload['last_name'] = full_names
-					elif len(full_names) == 3:
-						payload['first_name'],payload['middle_name'],payload['last_name'] = full_names
+				#Delete Any Exisiting Identity Info
+				profile = session_gateway_profile[0].user.profile
+				profile.passport_number = ''
+				profile.passport_expiry_date = None
+				profile.national_id = ''
+				profile.save()
 
-				if 'chid' in payload.keys() and int(payload["chid"]) in [4,5,11]: #Allow auto profile update on USSD/SMS/INTEGRATOR only
-					if 'email' in payload.keys() and user.email in [None,""] and self.validateEmail(payload["email"]):user.email = payload["email"]
-					if 'first_name' in payload.keys() and user.first_name in [None,""]: user.first_name = payload['first_name']
-					if 'last_name' in payload.keys() and user.last_name in [None,""]: user.last_name = payload['last_name']
-					user.save()
-
-					profile = Profile.objects.get(user=user) #User is a OneToOne field
-					if 'middle_name' in payload.keys() and profile.middle_name in [None,""]: profile.middle_name = payload['middle_name']
-					if 'national_id' in payload.keys() and profile.national_id in [None,""]: profile.national_id = payload['national_id'].replace(' ','').strip()
-					if 'passport_number' in payload.keys() and profile.passport_number in [None,""]: 
-						profile.passport_number = payload['passport_number'].replace(' ','').strip()
-						if 'passport_expiry_date' in payload.keys() and profile.passport_expiry_date in [None,""]: 
-							try: profile.passport_expiry_date = datetime.strptime(payload['passport_expiry_date'], '%Y-%m-%d').date()
-							except Exception, e: lgr.info('Error on Passport Expiry Date: %s' % e)
-
-					if 'physical_address' in payload.keys() and profile.physical_address in [None,""]: profile.physical_address = payload['physical_address']
-					if 'city' in payload.keys() and profile.city in [None,""]: profile.city = payload['city']
-					if 'region' in payload.keys() and profile.region in [None,""]: profile.region = payload['region']
-					if 'postal_address' in payload.keys() and profile.postal_address in [None,""]: profile.postal_address = payload['postal_address']
-					if 'postal_code' in payload.keys() and profile.postal_code in [None,""]: profile.postal_code = payload['postal_code']
-					if 'country' in payload.keys() and profile.country in [None,""]: profile.country = Country.objects.get(iso2=payload['country'])
-					if 'address' in payload.keys() and profile.address in [None,""]: profile.address = payload['address']
-					if 'gender' in payload.keys() and profile.gender in [None,""]:
-						try: gender = Gender.objects.get(code=payload['gender']); profile.gender = gender
-						except Exception, e: lgr.info('Error on Gender: %s' % e)
-					if 'dob' in payload.keys() and profile.dob in [None,""]: 
-						try: profile.dob = datetime.strptime(payload['dob'], '%Y-%m-%d').date()
-						except Exception, e: lgr.info('Error on DOB: %s' % e)
-
-
-					profile.save()
-
+				user, payload = self.profile_update(session_gateway_profile[0].user, payload)
 
 				payload['username'] = user.username 
-				payload['first_name'] = payload['first_name'] if 'first_name' in payload.keys() and payload['first_name'] not in ['',None] else user.first_name
-				payload['last_name'] = payload['last_name'] if 'last_name' in payload.keys() and payload['last_name'] not in ['',None] else user.last_name
+				payload['first_name'] = payload['first_name'] if 'first_name' in payload.keys()  else user.first_name
+				payload['last_name'] = payload['last_name'] if 'last_name' in payload.keys()  else user.last_name
+				payload['gender'] = user.profile.gender.code if user.profile.gender else None
 
-				profile = Profile.objects.get(user=user) #User is a OneToOne field
-				payload['national_id'] = profile.national_id
-				payload['passport_number'] = profile.passport_number
-				payload['passport_expiry_date'] = profile.passport_expiry_date.isoformat()
+				if user.profile.national_id: payload['national_id'] = user.profile.national_id
+				if user.profile.passport_number: 
+					payload['passport_number'] = user.profile.passport_number
+					if user.profile.passport_expiry_date: payload['passport_expiry_date'] = user.profile.passport_expiry_date.isoformat()
+				if user.profile.postal_address: payload['postal_address'] = user.profile.postal_address
+				if user.profile.address: payload['address'] = user.profile.address
+				if user.profile.postal_code: payload['postal_code'] = user.profile.postal_code
+				if user.profile.dob: payload['dob'] = user.profile.dob.isoformat()
+
+				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
+					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
+
+				if user.email and self.validateEmail(user.email): payload['email'] = user.email
+				elif 'email' in payload.keys(): del payload['email']
 
 				payload['response_status'] = '00'
 				payload['response'] = 'Session Profile Captured'

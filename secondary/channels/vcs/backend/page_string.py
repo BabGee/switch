@@ -82,12 +82,14 @@ class PageString(ServiceCall, Wrappers):
 					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
 				nav[value.menu.menu_description] = input_nav
 		'''
-
+		'''
 		for value in navigator_list:
 			if value.input_select in ['00'] or value.level == 0: #Ensure that if menu level is 0, captures data but ends capture(level 0=main menu)
 				item[value.id] = value
 				break
 			elif value.input_select in ['0'] or value.id in item.keys(): #Ensure that any input select to back is not included & Existing keys not replaced[mostly with back 0]
+				continue
+			elif value.menu in [v.menu for v in item.values()]:
 				continue
 			else:
 				item[value.id] = value
@@ -100,21 +102,76 @@ class PageString(ServiceCall, Wrappers):
 			except: pass
 
 			if value.menu.selection_preview == True:
+
+				lgr.info('Key: %s | Val: %s' % (key,value))
 				item_val = navigator_list.filter(id__gt=value.id).last()
+				lgr.info('Item Val: %s' % item_val)
 				item_level = item_val.id if item_val else 0
+				lgr.info('Item Level: %s' % item_level)
 				try:item_list = json.loads(value.item_list)
 				except: item_list = []
+				lgr.info('Item List: %s' % item_list)
 				lgr.info('variable: %s' % value.menu.menu_description)
 				if len(item_list) > 0:
 					lgr.info('Item List not None: %s|Item Level: %s' % (item_list,item_level) )
-					try: input_nav = item_list[int(item[item_level].input_select) - 1]
+					try: 
+						lgr.info("Item: %s" % item)
+						input_nav = item_list[int(item[item_level].input_select) - 1]
+						lgr.info('Input Nav: %s' % input_nav)
 					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
 				else:
 					lgr.info('Item List None')
 					try:input_nav = item[item_level].input_select 
 					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
 				if input_nav: nav[value.menu.menu_description] = input_nav
+		'''
 
+		def gen_payload(nav, navigator_list, value):
+			#add menu details
+			try: 
+				details = json.loads(value.menu.details)
+				if isinstance(details,dict): nav.update(details)
+			except: pass
+
+			if value.menu.selection_preview == True:
+
+				lgr.info('Key: %s | Val: %s' % (value.id,value))
+				lgr.info('NAvigator: %s' % navigator_list)
+				item_val = navigator_list.filter(id__gt=value.id).last()
+				lgr.info('Item Val: %s' % item_val)
+				item_level = item_val.id if item_val else 0
+				lgr.info('Item Level: %s' % item_level)
+				try:item_list = json.loads(value.item_list)
+				except: item_list = []
+				lgr.info('Item List: %s' % item_list)
+				lgr.info('variable: %s' % value.menu.menu_description)
+				if len(item_list) > 0:
+					lgr.info('Item List not None: %s|Item Level: %s' % (item_list,item_level) )
+					try: 
+						input_nav = item_list[int(navigator_list.get(id=item_level).input_select) - 1]
+						lgr.info('Input Nav: %s' % input_nav)
+					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
+				else:
+					lgr.info('Item List None')
+					try:input_nav = navigator_list.get(id=item_level).input_select 
+					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
+				if input_nav: nav[value.menu.menu_description] = input_nav
+			return nav
+
+		for value in navigator_list:
+			if value.input_select in ['00'] or value.level == 0: #Ensure that if menu level is 0, captures data but ends capture(level 0=main menu)
+				navigator_list = navigator_list.filter(~Q(id__lt=value.id))
+				nav = gen_payload(nav,navigator_list,value)
+				break
+			elif value.input_select in ['0'] or value.id in item.keys(): #Ensure that any input select to back is not included & Existing keys not replaced[mostly with back 0]
+				navigator_list = navigator_list.filter(~Q(Q(menu=value.menu),~Q(id=value.id)))
+				continue
+			elif value.menu in [v.menu for v in item.values()]:
+				navigator_list = navigator_list.filter(~Q(id__lt=value.id))
+				lgr.info('Menu: %s | List: %s' % (value.menu, [v.menu for v in item.values()]))
+				continue
+			else:
+				nav = gen_payload(nav,navigator_list,value)
 
 		lgr.info('Nav: %s' % nav)
 		return nav
