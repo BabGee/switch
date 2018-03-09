@@ -376,6 +376,43 @@ class System(Wrappers):
 		return payload
 
 
+	def capture_identity_document_strict(self, payload, node_info):
+		try:
+
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			document_number = str(payload['document_number']).replace(' ','').strip() if 'document_number' in payload.keys() else None
+
+			try: document_number = int(document_number)
+			except: pass
+
+			if isinstance(document_number, int) and len(str(document_number)) >=6 and len(str(document_number))<=10:
+				payload['national_id'] = str(document_number)
+				payload['trigger'] = 'national_id%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'National ID Captured'
+				payload['response_status'] = '00'
+			elif re.search(r"([a-zA-Z]{1})(\d{7}$)", str(document_number)):
+				payload['passport_number'] = str(document_number)
+				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'Passport Number Captured'
+				payload['response_status'] = '00'
+			elif 'national_id' in payload.keys():
+				payload['trigger'] = 'national_id%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'National ID Captured'
+				payload['response_status'] = '00'
+			elif 'passport_number' in payload.keys():
+				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'Passport Number Captured'
+				payload['response_status'] = '00'
+			else:
+				payload['response'] = 'Identity Document not found'
+				payload['response_status'] = '25'
+		except Exception, e:
+			lgr.info('Error on capture_identity_document strict: %s' % e)
+			payload['response_status'] = '96'
+
+		return payload
+
+
 	def session(self, payload, node_info):
 		try:
 			#CREATE SIGN UP SESSION, GET SESSION_ID (To expire within - 24 - 48hrs) VCSSystem().session(payload, node_info)
