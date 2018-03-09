@@ -488,7 +488,7 @@ class Wrappers:
 
 
 
-	    join_query = DataListJoinQuery.objects.filter(query=data.query)
+	    join_query = DataListJoinQuery.objects.filter(query=data.query,join_inactive=False)
 
 	    for join in join_query:
 		if join.join_fields or join.join_manytomany_fields or join.join_not_fields or join.join_manytomany_not_fields:
