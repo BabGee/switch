@@ -337,13 +337,18 @@ class System(Wrappers):
 				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				payload['response'] = 'Passport Number Captured'
 				payload['response_status'] = '00'
-			elif 'national_id' in payload.keys():
+			elif 'national_id' in payload.keys()  and len(str(payload['national_id'])) >=6 and len(str(payload['national_id']))<=10:
 				payload['trigger'] = 'national_id%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				payload['response'] = 'National ID Captured'
 				payload['response_status'] = '00'
-			elif 'passport_number' in payload.keys():
+			elif 'passport_number' in payload.keys() and re.search(r"([a-zA-Z]{1})(\d{7}$)", str(payload['passport_number'])):
 				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				payload['response'] = 'Passport Number Captured'
+				payload['response_status'] = '00'
+			elif 'national_id' in payload.keys()  and len(str(payload['national_id'])) >=6 and len(str(payload['national_id']))<=10 and \
+			'passport_number' in payload.keys() and re.search(r"([a-zA-Z]{1})(\d{7}$)", str(payload['passport_number'])):
+				payload['trigger'] = 'national_id,passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'ID & Passport Number Captured'
 				payload['response_status'] = '00'
 			elif session_gateway_profile and session_gateway_profile.user.profile.national_id:
 				payload['national_id'] = str(session_gateway_profile.user.profile.national_id)
@@ -355,7 +360,6 @@ class System(Wrappers):
 				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				payload['response'] = 'Passport Number Captured'
 				payload['response_status'] = '00'
-
 			elif gateway_profile and gateway_profile.user.profile.national_id:
 				payload['national_id'] = str(gateway_profile.user.profile.national_id)
 				payload['trigger'] = 'national_id%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
@@ -365,6 +369,12 @@ class System(Wrappers):
 				payload['passport_number'] = str(gateway_profile.user.profile.passport_number)
 				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				payload['response'] = 'Passport Number Captured'
+				payload['response_status'] = '00'
+			elif gateway_profile and gateway_profile.user.profile.national_id and gateway_profile.user.profile.passport_number:
+				payload['national_id'] = str(gateway_profile.user.profile.national_id)
+				payload['passport_number'] = str(gateway_profile.user.profile.passport_number)
+				payload['trigger'] = 'national_id,passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'ID & Passport Number Captured'
 				payload['response_status'] = '00'
 			else:
 				payload['response'] = 'Identity Document not found'
@@ -395,13 +405,18 @@ class System(Wrappers):
 				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				payload['response'] = 'Passport Number Captured'
 				payload['response_status'] = '00'
-			elif 'national_id' in payload.keys():
+			elif 'national_id' in payload.keys()  and len(str(payload['national_id'])) >=6 and len(str(payload['national_id']))<=10:
 				payload['trigger'] = 'national_id%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				payload['response'] = 'National ID Captured'
 				payload['response_status'] = '00'
-			elif 'passport_number' in payload.keys():
+			elif 'passport_number' in payload.keys() and re.search(r"([a-zA-Z]{1})(\d{7}$)", str(payload['passport_number'])):
 				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				payload['response'] = 'Passport Number Captured'
+				payload['response_status'] = '00'
+			elif 'national_id' in payload.keys()  and len(str(payload['national_id'])) >=6 and len(str(payload['national_id']))<=10 and \
+			'passport_number' in payload.keys() and re.search(r"([a-zA-Z]{1})(\d{7}$)", str(payload['passport_number'])):
+				payload['trigger'] = 'national_id,passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'ID & Passport Number Captured'
 				payload['response_status'] = '00'
 			else:
 				payload['response'] = 'Identity Document not found'
