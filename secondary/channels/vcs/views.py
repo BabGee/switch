@@ -119,7 +119,7 @@ class VAS:
 		if len(self.menu)>0:
 
 			self.payload['page_string'] = self.menu[0].page_string
-			new_navigator = Navigator(session=self.session, menu=self.menu[0], pin_auth=self.pin_auth, level=self.level, group_select=self.group_select)
+			new_navigator = Navigator(session=self.session, menu=self.menu[0], pin_auth=self.pin_auth, level=self.level, group_select=self.group_select,invalid=self.menu[0].invalid)
 			new_navigator.input_select = self.payload['input']
 
 			new_navigator.nav_step = self.nav_step
