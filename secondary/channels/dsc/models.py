@@ -69,6 +69,7 @@ class DataListJoinQuery(models.Model):
 	join_manytomany_fields = models.CharField(max_length=512, null=True, blank=True)
 	join_not_fields = models.CharField(max_length=512, null=True, blank=True)
 	join_manytomany_not_fields = models.CharField(max_length=512, null=True, blank=True)
+	join_inactive = models.BooleanField(default=False)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.query)  
 
