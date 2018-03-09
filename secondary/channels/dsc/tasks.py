@@ -3375,13 +3375,11 @@ def process_push_notification():
 		gateway_profile_list = GatewayProfile.objects.filter(access_level__name='SYSTEM',status__name='ACTIVATED',user__username='MQTTUser')
 		for gateway_profile in gateway_profile_list:
 			profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
-
-
 			data_list = DataList.objects.filter(Q(status__name='ACTIVE'),Q(pn_data=True),\
 						Q(Q(gateway=gateway_profile.gateway) | Q(gateway=None))).order_by('level')
 
-
 			if data_list.exists():
+				lgr.info('push notification datalists : %s' % data_list)
 
 				from secondary.channels.notify.mqtt import MqttServerClient
 

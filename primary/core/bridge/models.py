@@ -179,6 +179,7 @@ class BackgroundService(models.Model):
 	service = models.ForeignKey(Service, related_name='background_service')
 	details = models.CharField(max_length=1920, default=json.dumps({}))
 	cut_off_command = models.ForeignKey(ServiceCommand, null=True, blank=True)
+	trigger = models.ManyToManyField(Trigger, blank=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.service)  
 	def institution_list(self):
@@ -189,6 +190,8 @@ class BackgroundService(models.Model):
 		return "\n".join([a.name for a in self.access_level.all()])
 	def trigger_service_list(self):
 		return "\n".join([a.name for a in self.trigger_service.all()])
+        def trigger_list(self):
+                return "\n".join([a.name for a in self.trigger.all()])
 
 class BackgroundServiceActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)

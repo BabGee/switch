@@ -73,7 +73,7 @@ admin.site.register(Transaction, TransactionAdmin)
 
 class BackgroundServiceAdmin(admin.ModelAdmin):
 	list_display = ('id','institution_list','gateway_list','access_level_list','trigger_service_list',\
-			'service','details','cut_off_command',)
+			'service','details','cut_off_command','trigger_list',)
 admin.site.register(BackgroundService, BackgroundServiceAdmin)
 
 class BackgroundServiceActivityAdmin(admin.ModelAdmin):

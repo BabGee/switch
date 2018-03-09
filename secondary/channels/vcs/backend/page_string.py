@@ -53,7 +53,7 @@ class PageString(ServiceCall, Wrappers):
 		self._registry = {} # model_class class -> admin_class instance
 	def get_nav(self, navigator, attrs={}):
 		navigator_list = Navigator.objects.filter(Q(session=navigator.session), Q(nav_step=navigator.nav_step),\
-			~Q(input_select__in=['']),Q(invalid=False)).order_by('-date_created','-menu__level')
+			~Q(input_select__in=['','0']),Q(invalid=False)).order_by('-date_created','-menu__level')
 		item = {}
 		nav = {}
 
