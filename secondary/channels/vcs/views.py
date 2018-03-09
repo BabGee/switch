@@ -151,7 +151,7 @@ class VAS:
 				page_string = 'Invalid input! %s' % page_string
 
 			self.payload['page_string'] = page_string
-
+			'''
 			new_navigator = Navigator(session=self.session, menu=self.nav.menu, pin_auth=self.pin_auth, level=self.level, group_select=self.group_select)
 			#new_navigator.input_select = self.nav.input_select
 
@@ -160,9 +160,9 @@ class VAS:
 			new_navigator.code = self.code[0]
 			#new_navigator.transaction = self.transaction
 			new_navigator.save()
-
+			'''
 			#Process Page String
-			try: self.payload =  PageString().pagestring(new_navigator, self.payload, self.code)
+			try: self.payload =  PageString().pagestring(self.nav, self.payload, self.code)
 			except Exception, e: lgr.info('Error on Processing Page String: %s' % e)
 
 			menuitems = menuitems.filter(menu=self.nav.menu)
