@@ -53,8 +53,8 @@ class PageString(ServiceCall, Wrappers):
 		self._registry = {} # model_class class -> admin_class instance
 	def get_nav(self, navigator, attrs={}):
 		navigator_list = Navigator.objects.filter(Q(session=navigator.session), Q(nav_step=navigator.nav_step),\
-			~Q(input_select__in=['','0']),Q(invalid=False)).order_by('-date_created','-menu__level')
-		item = {}
+			~Q(input_select__in=['']),Q(invalid=False)).order_by('-date_created','-menu__level')
+
 		nav = {}
 
 		'''
@@ -150,12 +150,16 @@ class PageString(ServiceCall, Wrappers):
 					try: 
 						input_nav = item_list[int(navigator_list.get(id=item_level).input_select) - 1]
 						lgr.info('Input Nav: %s' % input_nav)
-					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
+					except Exception, e:
+						lgr.info('Error on item_list: %s' % e);
+						input_nav = None
 				else:
 					lgr.info('Item List None')
 					try:input_nav = navigator_list.get(id=item_level).input_select 
-					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
-				if input_nav: nav[value.menu.menu_description] = input_nav
+					except Exception, e:
+						lgr.info('Error on item_list: %s' % e);
+						input_nav = None
+				if input_nav and value.menu.menu_description not in nav.keys(): nav[value.menu.menu_description] = input_nav
 			return nav
 
 		for value in navigator_list:
@@ -163,12 +167,9 @@ class PageString(ServiceCall, Wrappers):
 				navigator_list = navigator_list.filter(~Q(id__lt=value.id))
 				nav = gen_payload(nav,navigator_list,value)
 				break
-			elif value.input_select in ['0'] or value.id in item.keys(): #Ensure that any input select to back is not included & Existing keys not replaced[mostly with back 0]
+			elif value.input_select in ['0']: #Ensure that any input select to back is not included & Existing keys not replaced[mostly with back 0]
 				navigator_list = navigator_list.filter(~Q(Q(menu=value.menu),~Q(id=value.id)))
-				continue
-			elif value.menu in [v.menu for v in item.values()]:
-				navigator_list = navigator_list.filter(~Q(id__lt=value.id))
-				lgr.info('Menu: %s | List: %s' % (value.menu, [v.menu for v in item.values()]))
+				#nav = gen_payload(nav,navigator_list,value)
 				continue
 			else:
 				nav = gen_payload(nav,navigator_list,value)
