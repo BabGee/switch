@@ -54,7 +54,7 @@ class Wrappers:
 		return payload
 
 
-	def transaction_payload(self, payload):
+	def background_activity_payload(self, payload):
 		new_payload, transaction, count = {}, None, 1
 		for k, v in payload.items():
 			key = k.lower()
@@ -70,7 +70,8 @@ class Wrappers:
 			 'merchant_data' not in key and 'signedpares' not in key and \
 			 key <> 'gpid' and key <> 'sec' and  key <> 'fingerprint' and \
 			 key not in ['ext_product_id','vpc_securehash','currency','amount'] and \
-			 'institution_id' not in key and key <> 'response' and key <> 'input' and key <> 'trigger':
+			 'institution_id' not in key and key <> 'response' and key <> 'input' and key <> 'trigger' and \
+			 key not in ['send_minutes_period','send_hours_period','send_days_period','send_years_period']:
 				if count <= 30:
 					new_payload[str(k)[:30] ] = str(v)[:500]
 				else:
@@ -105,7 +106,7 @@ class Wrappers:
 			charges = payload['charges'] if 'charges' in payload.keys() and payload['charges']!='' else None
 
 			activity = BackgroundServiceActivity(service=service, status=status,\
-					gateway_profile=gateway_profile,request=self.transaction_payload(payload),\
+					gateway_profile=gateway_profile,request=self.background_activity_payload(payload),\
 					channel=channel, response_status=response_status, currency = currency,\
 					amount = amount, charges = charges, gateway=gateway_profile.gateway,\
 					sends=0)
@@ -195,7 +196,7 @@ class System(Wrappers):
 				except: pass
 
 				activity = BackgroundServiceActivity(service=background_service[0].service, status=status, \
-						gateway_profile=session_gateway_profile,request=self.transaction_payload(request),\
+						gateway_profile=session_gateway_profile,request=self.background_activity_payload(request),\
 						channel=channel, response_status=response_status, currency = currency,\
 						amount = amount, charges = charges, gateway=session_gateway_profile.gateway,\
 						sends=0)
