@@ -154,14 +154,31 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
 			background_service = BackgroundService.objects.filter(Q(trigger_service__name=payload['SERVICE']),\
 										Q(gateway=gateway_profile.gateway)|Q(gateway=None))
-
 			if 'institution_id' in payload.keys():
 				background_service = background_service.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
 
-
-			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			#Check if trigger Exists
+			if 'trigger' in payload.keys():
+				triggers = str(payload['trigger'].strip()).split(',')
+				lgr.info('BackgroundService Triggers: %s' % triggers)
+				trigger_list = Trigger.objects.filter(name__in=triggers)
+				background_service = background_service.filter(Q(trigger__in=trigger_list)|Q(trigger=None)).distinct()
+				#Eliminate none matching trigger list
+				for i in background_service:
+					if i.trigger.all().exists():
+						if i.trigger.all().count() == trigger_list.count():
+							if False in [i.trigger.filter(id=t.id).exists() for t in trigger_list.all()]:
+								lgr.info('Non Matching: %s' % i)
+								background_service = background_service.filter(~Q(id=i.id))
+						else:
+							lgr.info('Non Matching: %s' % i)
+							background_service = background_service.filter(~Q(id=i.id))
+			else:
+				background_service = background_service.filter(Q(trigger=None))
 
 			if background_service.exists():
 				status = TransactionStatus.objects.get(name='CREATED')
