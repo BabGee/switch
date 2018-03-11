@@ -224,8 +224,12 @@ class PageString(ServiceCall, Wrappers):
 
 			lgr.info('\n\n\n\n Variable Found: Key:%s|Val: %s\n\n\n\n' % (variable_key, variable_val))
 			if variable_key is not None:
+
+				if variable_key in payload.keys():
+
+					page_string = page_string.replace('['+variable_key+']',str(payload[variable_key]))
 					
-				if variable_key == 'RESPONSE_SUMMARY':
+				elif variable_key == 'RESPONSE_SUMMARY':
 					from primary.core.administration.models import ResponseStatus
 					SUCCESS,ERROR = variable_val.split("|")
 					item = ''
