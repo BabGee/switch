@@ -608,6 +608,9 @@ class PageString(ServiceCall, Wrappers):
 					from thirdparty.i_invest.models import InvestmentFund
 
 					investmentfund = InvestmentFund.objects.filter(status__name='ENABLED').order_by('id')
+					if 'from_investmentfund' in payload.keys():
+						investmentfund = investmentfund.filter(~Q(name=payload['from_investmentfund']))
+
 					item = ''
 					item_list = []
 					count = 1
