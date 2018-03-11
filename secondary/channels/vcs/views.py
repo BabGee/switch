@@ -8,6 +8,7 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 import base64, re, pytz
 from primary.core.upc.tasks import Wrappers as UPCWrappers
+from decimal import Decimal
 
 import logging
 lgr = logging.getLogger('vcs')
@@ -313,6 +314,24 @@ class VAS:
 						else: self.group_select = 96 #Fail menu as list not matching
 						if error_level and isinstance(error_level, int): self.level = error_level
 						else: pass
+
+					elif 'Amount' in self.nav.menu.input_variable.name and (self.nav.menu.input_variable.min_amount or self.nav.menu.input_variable.max_amount):
+						try: val = Decimal(self.payload['input'])
+						except: val = None
+
+						if val and self.nav.menu.input_variable.min_amount and val >= self.nav.menu.input_variable.min_amount: pass
+						else:
+							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
+							else: self.group_select = 96 #Fail menu as list not matching
+							if error_level and isinstance(error_level, int): self.level = error_level
+							else: pass
+
+						if val and self.nav.menu.input_variable.max_amount and val <= self.nav.menu.input_variable.max_amount: pass
+						else:
+							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
+							else: self.group_select = 96 #Fail menu as list not matching
+							if error_level and isinstance(error_level, int): self.level = error_level
+							else: pass
 
 					elif self.nav.menu.input_variable.name == 'Business Number':
 						try: institution = Institution.objects.filter(business_number=str(self.payload['input'])[:6], status__name='ACTIVE')

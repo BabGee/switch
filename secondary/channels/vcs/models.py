@@ -75,6 +75,8 @@ class InputVariable(models.Model):
 	override_service = models.ForeignKey(Service, blank=True, null=True, related_name='override_service')
 	error_service = models.ForeignKey(Service, blank=True, null=True, related_name='error_service')
 	init_nav_step = models.BooleanField(default=False)
+	min_amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	max_amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)		
 
