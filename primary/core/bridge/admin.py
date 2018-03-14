@@ -78,7 +78,8 @@ admin.site.register(BackgroundService, BackgroundServiceAdmin)
 
 class BackgroundServiceActivityAdmin(admin.ModelAdmin):
 	list_display = ('id','service','status','gateway_profile','request','channel',\
-			'response_status','transaction_reference','gateway','institution','current_command',\
+			'response_status','transaction_reference','currency','amount','charges',\
+			'gateway','institution','current_command',\
 			'scheduled_send','message','sends','ext_outbound_id',)
 admin.site.register(BackgroundServiceActivity, BackgroundServiceActivityAdmin)
 

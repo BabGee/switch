@@ -481,9 +481,9 @@ class System(Wrappers):
 			profile = user.profile
 
 			payload["email"] = user.email
-			payload['first_name'] = user.first_name
-			payload['last_name'] = user.last_name
-			payload['middle_name'] = profile.middle_name
+			payload['first_name'] = user.first_name if user.first_name else ''
+			payload['last_name'] = user.last_name if user.last_name else ''
+			payload['middle_name'] = profile.middle_name if profile.middle_name else ''
 			payload['national_id'] = profile.national_id
 			payload['passport_number'] = profile.passport_number
 			if profile.passport_expiry_date: payload['passport_expiry_date'] = profile.passport_expiry_date.isoformat()
@@ -494,6 +494,7 @@ class System(Wrappers):
 			payload['postal_code'] = profile.postal_code
 			if profile.country:payload['country'] = profile.country.iso2
 			payload['address'] = profile.address
+			payload['msisdn'] = gateway_profile.msisdn.phone_number
 
 			payload['response'] = 'Profile Details Captured'
 			payload['response_status'] = '00'

@@ -957,7 +957,7 @@ class System(Wrappers):
 				if delivery.status.name =='WAITTING CONFIRMATION':
 					payload['trigger'] = 'should_confirm%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
 
-
+			payload['delivery_status'] = delivery.status.name
 			payload["response_status"] = "00"
 			payload["response"] = "Got Purchase Order Details"
 		except Exception, e:

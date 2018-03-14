@@ -944,8 +944,14 @@ class Wrappers:
 			#report_list_groups = original_report_list.filter(~Q(Q(**{data.pn_id_field: None})|Q(**{data.pn_id_field: ''}))).\
 			#					filter(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30)).\
 			#					values(data.pn_id_field).annotate(Count(data.pn_id_field))
-			report_list_groups = report_list.filter(~Q(Q(**{data.pn_id_field: None})|Q(**{data.pn_id_field: ''}))).\
-								filter(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30)).\
+
+			if model_class._meta.get_field(data.pn_id_field).get_internal_type() in ['AutoField','IntegerField','BigAutoField','BinaryField','DecimalField','SmallIntegerField']:
+				report_list_groups = report_list.filter(~Q(**{data.pn_id_field: None}),\
+								Q(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30))).\
+								values(data.pn_id_field).annotate(Count(data.pn_id_field))
+			else:
+				report_list_groups = report_list.filter(~Q(Q(**{data.pn_id_field: None})|Q(**{data.pn_id_field: ''})),\
+								Q(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30))).\
 								values(data.pn_id_field).annotate(Count(data.pn_id_field))
 
 			#lgr.info('Report List Group: %s | %s' % (data.data_name,report_list_groups))
@@ -1032,7 +1038,9 @@ class Wrappers:
 			params['rows'] = report_list
 
         except Exception, e:
+	    #import traceback
             lgr.info('Error on report: %s' % e)
+	    #lgr.info(traceback.format_exc())
         return params,max_id,min_id,ct,mqtt
 
 
@@ -1139,6 +1147,66 @@ class Wrappers:
 	    params['rows'] = rows
 	except Exception as e:
 	    lgr.info('Error on bid rankings: %s',e)
+	return params
+
+    def industries_categories(self,payload,gateway_profile,profile_tz,data):
+        r = []
+	iss = IndustrySection.objects.all()
+	'''
+	for i in iss:
+	    cl = {
+        	'name':i.isic_code,
+		'id':i.pk,
+	        'description':i.description,
+        	'divisions':[
+                     {
+                	'name':division.isic_code,
+			'id':division.pk,
+	                'description': division.description,
+        	        'groups':[
+                	    {
+                        	'name':group.isic_code,
+				'id':group.pk,
+	                        'description': group.description,
+        	                'classes':[
+                	            {
+                        	        'name': industry_class.isic_code,
+					'id':industry_class.pk,
+                                	'description': industry_class.description,
+	                            } for industry_class in group.industryclass_set.all()
+                        	]
+                    	    } for group in division.industrygroup_set.all()
+                	]
+            	    } for division in i.industrydivision_set.all()
+        	]
+
+    	    }
+	    r.append(cl)
+	#lgr.info(r)
+	params = dict(
+		data=r
+	)
+
+	'''
+
+	c = [{"label": "name", "type": "string"}, {"label": "id", "type": "number"},
+                          {"label": "description", "type": "string"}, {"label": "level", "type": "object"}]
+
+	def _class(industryclass_set):
+		return [[industry_class.isic_code,industry_class.pk,industry_class.description] for industry_class in industryclass_set]
+	def _group(industrygroup_set): 
+		return [[group.isic_code,group.pk,group.description, _class(group.industryclass_set.all())] for group in industrygroup_set]
+	def _division(industrydivision_set):	
+		return [[division.isic_code,division.pk,division.description, _group(division.industrygroup_set.all())] for division in industrydivision_set]
+
+	for i in iss:
+	    r.append([i.isic_code,i.pk,i.description, _division(i.industrydivision_set.all())])
+
+	#lgr.info(r)
+	params = dict(
+		rows=r,
+		cols=c
+	)
 	return params
 
     def purchases(self, payload, gateway_profile, profile_tz, data):
@@ -3387,10 +3455,10 @@ def process_push_notification():
 				payload['push_notification'] = True
 				cols, rows, groups, data, min_id, max_id, t_count, mqtt = Wrappers().process_data_list(data_list, payload, gateway_profile, profile_tz, data)
 
-				#lgr.info("MQTT task: %s" % mqtt)
+				lgr.info("MQTT task: %s" % mqtt)
 
 				for key,value in mqtt.items():
-					#lgr.info("%s PN: %s" % (key,value))
+					lgr.info("%s PN: %s" % (key,value))
 					if len(value):
 						msc = MqttServerClient()
 						for k,v in value.items():

@@ -511,8 +511,7 @@ class System(Wrappers):
 					source_account=session_account,dest_account=gl_acccount[0],\
 					amount=Decimal(payload['amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
-					balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN),\
-					details=self.transaction_payload(payload))
+					balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
 				gl_manager.save()
 
 				payload['account_manager_id'] = session_manager.id
@@ -950,9 +949,6 @@ class Payments(System):
 			if savings_credit_manager.exists():
 				due_date = savings_credit_manager[0].due_date.strftime("%d/%b/%Y")
 				account_type = savings_credit_manager[0].account_manager.dest_account.account_type
-
-				try:payload.update(json.loads(savings_credit_manager[0].account_manager.details))
-				except: pass
 
 				amount = Decimal(0)
 				for i in savings_credit_manager:
