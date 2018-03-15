@@ -129,7 +129,7 @@ class Generator:
                                                   input.page_input_group.section_size, group_var.variable_kind,
                                                   input.page_input_group.auto_submit, input.page_input_group.style,
                                                   group_var_service, input.page_input_group.section_height,
-                                                  bind_position]
+                                                  bind_position, json.loads(group_var.details)]
 
                     this_page[menu_page_group_level][input_page.item_level][input_page.name][
                         input.page_input_group.item_level] = {input.page_input_group.name: {
@@ -147,11 +147,13 @@ class Generator:
                             input.page_input_group.item_level][input.page_input_group.name].keys():
                     var_service = var.service.name if var.service else None
                     input_icon = input.icon.icon if input.icon else None
+
+                    input_bind_position = input.bind_position.name if input.bind_position else None
                     this_page[menu_page_group_level][input_page.item_level][input_page.name][
                         input.page_input_group.item_level][input.page_input_group.name][input.item_level] = \
                         [input.page_input, var.variable_type.variable, var.validate_min, var.validate_max, var.name,
                          var.default_value, input_icon, input.section_size, var.variable_kind, var.required, input.style,
-                         var_service, input.section_height, None]
+                         var_service, input.section_height, input_bind_position, json.loads(input.details)]
 
                 try:
                     this_page[menu_page_group_level][input_page.item_level][input_page.name][

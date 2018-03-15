@@ -136,6 +136,7 @@ class PageInput(models.Model):
 	style = models.TextField(blank=True)
 	section_height = models.IntegerField(null=True, blank=True)
 	icon = models.ForeignKey(Icon, null=True, blank=True)
+	bind_position = models.ForeignKey(BindPosition, null=True, blank=True)
         payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	enrollment_type_included = models.ManyToManyField(EnrollmentType, blank=True)
 	enrollment_type_excluded = models.ManyToManyField(EnrollmentType, blank=True, related_name='pageinput_enrollment_type_excluded')

@@ -56,8 +56,8 @@ class PageInputAdmin(admin.ModelAdmin):
 		list_display = ('id','page_input','icon','section_size','item_level',\
 				'trigger_list','access_level_list','profile_status_list',\
 				'institution_list','input_variable','page_input_group', 'page_input_status','page',\
-				'gateway_list','product_type_list','channel_list','style','section_height','payment_method_list',\
-				'enrollment_type_included_list','enrollment_type_excluded_list',)
+				'gateway_list','product_type_list','channel_list','style','section_height','bind_position',\
+				'payment_method_list','enrollment_type_included_list','enrollment_type_excluded_list',)
 	        list_filter = ('page_input_group','page','channel','institution','gateway','payment_method','page__service')
 	        search_fields = ('id','page_input','input_variable__name','trigger__name')
 
