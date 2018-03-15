@@ -122,6 +122,8 @@ class Generator:
                     group_var_service = group_var.service.name if group_var.service else None
                     page_input_group_icon = input.page_input_group.icon.icon if input.page_input_group.icon else None
                     bind_position = input.page_input_group.bind_position.name if input.page_input_group.bind_position else None
+		    try: group_var_details = json.loads(group_var.details)
+		    except: group_var_details = None
                     # page_input_group_input_var = [group_var.name, group_var.variable_type.variable, group_var.validate_min, group_var.validate_max, group_var.variable_kind, group_var.default_value, input.page_input_group.style, input.page_input_group.section_size, input.page_input_group.icon,input.page_input_group.auto_submit, False, input.page_input_group.section_height, group_var_service]
                     page_input_group_input_var = [input.page_input_group.name, group_var.variable_type.variable,
                                                   group_var.validate_min, group_var.validate_max, group_var.name,
@@ -147,13 +149,14 @@ class Generator:
                             input.page_input_group.item_level][input.page_input_group.name].keys():
                     var_service = var.service.name if var.service else None
                     input_icon = input.icon.icon if input.icon else None
-
                     input_bind_position = input.bind_position.name if input.bind_position else None
+		    try: var_details = json.loads(var.details)
+		    except: var_details = None
                     this_page[menu_page_group_level][input_page.item_level][input_page.name][
                         input.page_input_group.item_level][input.page_input_group.name][input.item_level] = \
                         [input.page_input, var.variable_type.variable, var.validate_min, var.validate_max, var.name,
                          var.default_value, input_icon, input.section_size, var.variable_kind, var.required, input.style,
-                         var_service, input.section_height, input_bind_position, json.loads(input.details)]
+                         var_service, input.section_height, input_bind_position, var_details]
 
                 try:
                     this_page[menu_page_group_level][input_page.item_level][input_page.name][
