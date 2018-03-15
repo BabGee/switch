@@ -26,6 +26,7 @@ class InputVariable(models.Model):
 	variable_kind = models.CharField(max_length=45, null=True, blank=True)
 	description = models.CharField(max_length=200, null=True, blank=True)
 	service = models.ForeignKey(Service, null=True, blank=True)	
+        details = models.CharField(max_length=512, default=json.dumps({}))
 	def __unicode__(self):
 		return u'%s %s %s' % (self.id, self.name, self.variable_type)		
 
