@@ -1193,14 +1193,14 @@ class Wrappers:
                           {"label": "description", "type": "string"}, {"label": "level", "type": "object"}]
 
 	def _class(industryclass_set):
-		return [[industry_class.isic_code,industry_class.pk,industry_class.description] for industry_class in industryclass_set]
+		return [[industry_class.pk,industry_class.isic_code,industry_class.description] for industry_class in industryclass_set]
 	def _group(industrygroup_set): 
-		return [[group.isic_code,group.pk,group.description, _class(group.industryclass_set.all())] for group in industrygroup_set]
+		return [[group.pk,group.isic_code,group.description, _class(group.industryclass_set.all())] for group in industrygroup_set]
 	def _division(industrydivision_set):	
-		return [[division.isic_code,division.pk,division.description, _group(division.industrygroup_set.all())] for division in industrydivision_set]
+		return [[division.pk,division.isic_code,division.description, _group(division.industrygroup_set.all())] for division in industrydivision_set]
 
 	for i in iss:
-	    r.append([i.isic_code,i.pk,i.description, _division(i.industrydivision_set.all())])
+	    r.append([i.pk,i.isic_code,i.description, _division(i.industrydivision_set.all())])
 
 	#lgr.info(r)
 	params = dict(

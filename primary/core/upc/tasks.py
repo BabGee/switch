@@ -44,6 +44,8 @@ class Wrappers:
 
 
 	def profile_state(self, session_gateway_profile, payload, profile_error):
+
+		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 		if profile_error:
 			#payload['response'] = 'Profile Error: Email exists. Please contact us'
 			payload['response'] = 'Profile Error: Email/Phone Number Exists in another profile. Please contact us'
