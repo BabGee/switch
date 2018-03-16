@@ -1735,6 +1735,39 @@ class System(Wrappers):
 				payload['response'] = 'Profile Error: Email/Phone Number Exists in another profile. Please contact us'
 				payload['response_status'] = '63'
 
+			elif session_gateway_profile.exists() and 'national_id' in payload.keys() and\
+			 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].replace(' ','').strip(),\
+			 gateway=gateway_profile.gateway).exists() and session_gateway_profile[0].user.profile.national_id in [None,''] and\
+			 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].replace(' ','').strip(),\
+			 gateway=gateway_profile.gateway)[0].user <> session_gateway_profile[0].user:
+				#check update national_id profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
+				payload['response'] = 'Profile Error: National ID exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+
+			elif session_gateway_profile.exists() == False and 'national_id' in payload.keys() and\
+			 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].strip(),\
+			 gateway=gateway_profile.gateway).exists():
+				#check create national_id profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile.
+				payload['response'] = 'Profile Error: National ID exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+
+
+			elif session_gateway_profile.exists() and 'passport_number' in payload.keys() and\
+			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
+			 gateway=gateway_profile.gateway).exists() and session_gateway_profile[0].user.profile.passport_number in [None,''] and\
+			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
+			 gateway=gateway_profile.gateway)[0].user <> session_gateway_profile[0].user:
+				#check update passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
+				payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+
+			elif session_gateway_profile.exists() == False and 'passport_number' in payload.keys() and\
+			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
+			 gateway=gateway_profile.gateway).exists():
+				#check create passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile.
+				payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+
 			elif session_gateway_profile.exists():
 				payload['session_gateway_profile_id'] = session_gateway_profile[0].id
 				user, payload = self.profile_update_if_null(session_gateway_profile[0].user, payload)
@@ -1785,6 +1818,40 @@ class System(Wrappers):
 				#payload['response'] = 'Profile Error: Email exists. Please contact us'
 				payload['response'] = 'Profile Error: Email/Phone Number Exists in another profile. Please contact us'
 				payload['response_status'] = '63'
+
+			elif session_gateway_profile.exists() and 'national_id' in payload.keys() and\
+			 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].replace(' ','').strip(),\
+			 gateway=gateway_profile.gateway).exists() and session_gateway_profile[0].user.profile.national_id in [None,''] and\
+			 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].replace(' ','').strip(),\
+			 gateway=gateway_profile.gateway)[0].user <> session_gateway_profile[0].user:
+				#check update national_id profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
+				payload['response'] = 'Profile Error: National ID exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+
+			elif session_gateway_profile.exists() == False and 'national_id' in payload.keys() and\
+			 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].strip(),\
+			 gateway=gateway_profile.gateway).exists():
+				#check create national_id profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile.
+				payload['response'] = 'Profile Error: National ID exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+
+
+			elif session_gateway_profile.exists() and 'passport_number' in payload.keys() and\
+			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
+			 gateway=gateway_profile.gateway).exists() and session_gateway_profile[0].user.profile.passport_number in [None,''] and\
+			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
+			 gateway=gateway_profile.gateway)[0].user <> session_gateway_profile[0].user:
+				#check update passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
+				payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+
+			elif session_gateway_profile.exists() == False and 'passport_number' in payload.keys() and\
+			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
+			 gateway=gateway_profile.gateway).exists():
+				#check create passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile.
+				payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+
 			elif session_gateway_profile.exists():
 				payload['session_gateway_profile_id'] = session_gateway_profile[0].id
 				user, payload = self.profile_update(session_gateway_profile[0].user, payload)
@@ -1834,6 +1901,40 @@ class System(Wrappers):
 				#payload['response'] = 'Profile Error: Email exists. Please contact us'
 				payload['response'] = 'Profile Error: Email/Phone Number Exists in another profile. Please contact us'
 				payload['response_status'] = '63'
+
+			elif session_gateway_profile.exists() and 'national_id' in payload.keys() and\
+			 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].replace(' ','').strip(),\
+			 gateway=gateway_profile.gateway).exists() and session_gateway_profile[0].user.profile.national_id in [None,''] and\
+			 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].replace(' ','').strip(),\
+			 gateway=gateway_profile.gateway)[0].user <> session_gateway_profile[0].user:
+				#check update national_id profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
+				payload['response'] = 'Profile Error: National ID exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+
+			elif session_gateway_profile.exists() == False and 'national_id' in payload.keys() and\
+			 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].strip(),\
+			 gateway=gateway_profile.gateway).exists():
+				#check create national_id profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile.
+				payload['response'] = 'Profile Error: National ID exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+
+
+			elif session_gateway_profile.exists() and 'passport_number' in payload.keys() and\
+			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
+			 gateway=gateway_profile.gateway).exists() and session_gateway_profile[0].user.profile.passport_number in [None,''] and\
+			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
+			 gateway=gateway_profile.gateway)[0].user <> session_gateway_profile[0].user:
+				#check update passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
+				payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+
+			elif session_gateway_profile.exists() == False and 'passport_number' in payload.keys() and\
+			 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
+			 gateway=gateway_profile.gateway).exists():
+				#check create passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile.
+				payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
+				payload['response_status'] = '63'
+
 			elif session_gateway_profile.exists():
 				payload['session_gateway_profile_id'] = session_gateway_profile[0].id
 
