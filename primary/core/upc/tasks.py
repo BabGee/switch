@@ -1318,6 +1318,10 @@ class System(Wrappers):
 			institution.geometry = trans_point
 
 			institution.save()
+
+			if 'industry_class_id' in payload.keys():
+				institution.industries.add(IndustryClass.objects.get(id=payload['industry_class_id']))
+
 			institution.gateway.add(gateway_profile.gateway)
 			institution.currency.add(Currency.objects.get(code=payload['institution_currency']))
 
@@ -1481,6 +1485,7 @@ class System(Wrappers):
 				details['profile']['first_name'] = gateway_profile.user.first_name
 				details['profile']['last_name'] = gateway_profile.user.last_name
 				details['profile']['access_level'] = gateway_profile.access_level.name
+				details['profile']['notification_channel'] = '{}/notifications/{}'.format(gateway.pk, gateway_profile.pk)
 
 			institution = None
 			if 'institution_id' in payload.keys() and payload['institution_id'] not in ["",None,'None']:

@@ -178,7 +178,7 @@ class ServiceProcessor:
 		response_tree['action_id'] = payload['action_id'] if 'action_id' in payload.keys() else 0
 		response_tree['response_status'] = payload['response_status']
 		response_tree['overall_status']	= payload['response_status']
-		if payload['response_status'] <> 00:
+		if payload['response_status'] <> '00':
 			response_tree['last_response'] = service.failed_last_response if service.failed_last_response not in [None,''] else response
 		else:
 			response_tree['last_response'] = service.success_last_response if service.success_last_response not in [None,''] else response
