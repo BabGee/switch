@@ -223,13 +223,8 @@ class PageString(ServiceCall, Wrappers):
                 		variable_key = v
 
 			lgr.info('\n\n\n\n Variable Found: Key:%s|Val: %s\n\n\n\n' % (variable_key, variable_val))
-			if variable_key is not None:
-
-				if variable_key in payload.keys():
-
-					page_string = page_string.replace('['+variable_key+']',str(payload[variable_key]))
-					
-				elif variable_key == 'RESPONSE_SUMMARY':
+			if variable_key is not None:		
+				if variable_key == 'RESPONSE_SUMMARY':
 					from primary.core.administration.models import ResponseStatus
 					SUCCESS,ERROR = variable_val.split("|")
 					item = ''
@@ -2433,6 +2428,59 @@ class PageString(ServiceCall, Wrappers):
 
 					lgr.info('Your List: %s' % item)
 					page_string = page_string.replace('['+v+']',item)
+
+				elif variable_key in payload.keys():
+					page_string = page_string.replace('['+variable_key+']',str(payload[variable_key]))
+				else:
+					from secondary.channels.dsc.tasks import System as DSCSystem
+					payload['data_name'] = variable_key
+					if variable_val:
+						payload[str(variable_key)] = variable_val
+
+					gateway_profile = navigator.session.gateway_profile
+					if gateway_profile is None: #If profile is unexistent
+						gateway_profile_list = GatewayProfile.objects.filter(gateway =code[0].gateway,user__username='System@User', status__name__in=['ACTIVATED'])
+		                	        if len(gateway_profile_list) > 0 and gateway_profile_list[0].user.is_active:
+							gateway_profile = gateway_profile_list[0]
+
+					payload['gateway_profile_id'] = gateway_profile.id
+					payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
+					payload = DSCSystem().data_source(payload, {})
+					if 'response_status' in payload.keys() and payload['response_status'] == '00':
+						data_source = payload['response']['data_source'][:20]
+						
+						item = ''
+						item_list = []
+						count = 1
+
+						if 'cols' in data_source.keys() and len(data_source['cols']):
+							for i in data_source['cols']:
+                	        	                        name = '%s' % (i[1])
+								if navigator.session.channel.name == 'IVR':
+									item = '%s\nFor %s, press %s.' % (item, name, count)
+								elif navigator.session.channel.name == 'USSD':
+									item = '%s\n%s:%s' % (item, count, name)
+
+								item_list.append(i[0])
+								count+=1
+
+
+						elif 'data' in data_source.keys() and len(data_source['data']):
+							for i in data_source['data']:
+                	        	                        name = '%s' % (i['name'])
+								if navigator.session.channel.name == 'IVR':
+									item = '%s\nFor %s, press %s.' % (item, name, count)
+								elif navigator.session.channel.name == 'USSD':
+									item = '%s\n%s:%s' % (item, count, name)
+
+								item_list.append(i['id'])
+								count+=1
+
+						navigator.item_list = json.dumps(item_list)
+						navigator.save()
+
+						lgr.info('Your List: %s' % item)
+						page_string = page_string.replace('['+v+']',item)
 
 
 		payload['page_string'] = page_string

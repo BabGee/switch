@@ -1529,7 +1529,7 @@ class System(Wrappers):
 				details['profile']['first_name'] = gateway_profile.user.first_name
 				details['profile']['last_name'] = gateway_profile.user.last_name
 				details['profile']['access_level'] = gateway_profile.access_level.name
-				details['profile']['notification_channel'] = '{}/notifications/{}'.format(gateway.pk, gateway_profile.pk)
+				details['profile']['notification_channel'] = '{}/notifications/{}'.format(gateway.pk, gateway_profile.user.profile.pk)
 
 			institution = None
 			if 'institution_id' in payload.keys() and payload['institution_id'] not in ["",None,'None']:
