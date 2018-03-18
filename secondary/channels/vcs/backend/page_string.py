@@ -2490,7 +2490,7 @@ class PageString(ServiceCall, Wrappers):
 							navigator.save()
 
 						elif 'lines' in data_source.keys() and len(data_source['lines']):
-							item = '%s' % ' '.join(data_source['lines'])
+							item = '%s' % ' '.join(data_source['lines'][0])
 
 
 						lgr.info('Your List: %s' % item)
