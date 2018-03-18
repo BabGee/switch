@@ -2490,12 +2490,15 @@ class PageString(ServiceCall, Wrappers):
 							navigator.save()
 
 						elif 'lines' in data_source.keys() and len(data_source['lines']):
-							item = '%s' % ' '.join(data_source['lines'][0])
-
+							lgr.info('Lines')
+							lines = data_source['lines']
+							lgr.info('Lines: %s' % lines)
+							lines = lines[0]
+							lgr.info('Lines: %s' % lines)
+							item = '%s' % ' '.join(lines)
 
 						lgr.info('Your List: %s' % item)
 						page_string = page_string.replace('['+v+']',item)
-
 
 		payload['page_string'] = page_string
 
