@@ -2433,6 +2433,7 @@ class PageString(ServiceCall, Wrappers):
 					page_string = page_string.replace('['+variable_key+']',str(payload[variable_key]))
 				else:
 					from secondary.channels.dsc.tasks import System as DSCSystem
+					lgr.info('DSC query')
 					payload['data_name'] = variable_key
 					if variable_val:
 						payload[str(variable_key)] = variable_val
@@ -2445,10 +2446,16 @@ class PageString(ServiceCall, Wrappers):
 
 					payload['gateway_profile_id'] = gateway_profile.id
 					payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
+
+
+					lgr.info('Request Payload: %s' % payload)
 					payload = DSCSystem().data_source(payload, {})
+					lgr.info('Response Payload: %s' % payload)
 					if 'response_status' in payload.keys() and payload['response_status'] == '00':
+
 						data_source = payload['response']['data_source']
-						
+	
+						lgr.info('Data Source : %s' % data_source)
 						item = ''
 						item_list = []
 						count = 1
