@@ -760,9 +760,12 @@ class Wrappers:
 
 	    '''
 
-	    if data.data_response:
+	    if data.data_response_type and data.data_response_type.name == 'DATA':
 		    #Values
         	    report_list = report_list.values(*args)
+	    elif data.data_response_type and data.data_response_type.name == 'LIST':
+		    #Values List
+        	    report_list = report_list.values_list(*args)
 	    else:
 		    #Values List
         	    report_list = report_list.values_list(*args)
@@ -884,9 +887,13 @@ class Wrappers:
 
 	    ###########################################################################
 
-	    if data.data_response:
+	    if data.data_response_type and data.data_response_type.name == 'DATA':
 		    #Values
         	    report_list = report_list.values(*args)
+
+	    if data.data_response_type and data.data_response_type.name == 'LIST':
+		    #Values List
+        	    report_list = report_list.values_list(*args)
 	    else:
 		    #Values List
         	    report_list = report_list.values_list(*args)
@@ -983,10 +990,15 @@ class Wrappers:
 					#lgr.info('Sending MQTT: %s' % channel)
 					#filtered_report_list_for_update = original_filtered_report_list
 
-					if data.data_response:
+	    				if data.data_response_type and data.data_response_type.name == 'DATA':
 						#lgr.info("#IF values_list is not used")
 						#Set Data
 						params['data'] = report_list
+	    				if data.data_response_type and data.data_response_type.name == 'LIST':
+						#lgr.info("#IF values_list is used")
+						report_list = np.asarray(report_list).tolist()
+						#Set Data
+						params['rows']= report_list
 					else:
 						#lgr.info("#IF values_list is used")
 						report_list = np.asarray(report_list).tolist()
@@ -1028,9 +1040,15 @@ class Wrappers:
 
 
 
-		if data.data_response:
+		if data.data_response_type and data.data_response_type.name == 'DATA':
 			#Set Data
 			params['data'] = report_list
+
+		if data.data_response_type and data.data_response_type.name == 'LIST':
+			#IF values_list is used
+			report_list = np.asarray(report_list).tolist()
+			#Set Data
+			params['rows'] = report_list
 		else:
 			#IF values_list is used
 			report_list = np.asarray(report_list).tolist()
