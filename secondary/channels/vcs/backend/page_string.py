@@ -2459,8 +2459,8 @@ class PageString(ServiceCall, Wrappers):
 						item = ''
 						item_list = []
 						count = 1
-
 						if 'cols' in data_source.keys() and len(data_source['cols']):
+							lgr.info('Cols')
 							for i in data_source['cols']:
                 	        	                        name = '%s' % (' '.join(i[1:]))
 								if navigator.session.channel.name == 'IVR':
@@ -2474,8 +2474,8 @@ class PageString(ServiceCall, Wrappers):
 							navigator.item_list = json.dumps(item_list)
 							navigator.save()
 
-
 						elif 'data' in data_source.keys() and len(data_source['data']):
+							lgr.info('Data')
 							for i in data_source['data']:
                 	        	                        name = '%s' % (i['name'])
 								if navigator.session.channel.name == 'IVR':
@@ -2495,7 +2495,7 @@ class PageString(ServiceCall, Wrappers):
 							lgr.info('Lines: %s' % lines)
 							lines = lines[0]
 							lgr.info('Lines: %s' % lines)
-							item = '%s' % ' '.join(lines)
+							item = '%s' % (' '.join(lines))
 
 						lgr.info('Your List: %s' % item)
 						page_string = page_string.replace('['+v+']',item)
