@@ -2459,9 +2459,9 @@ class PageString(ServiceCall, Wrappers):
 						item = ''
 						item_list = []
 						count = 1
-						if 'cols' in data_source.keys() and len(data_source['cols']):
-							lgr.info('Cols')
-							for i in data_source['cols']:
+						if 'rows' in data_source.keys() and len(data_source['rows']):
+							lgr.info('Rows')
+							for i in data_source['rows']:
                 	        	                        name = '%s' % (' '.join(i[1:]))
 								if navigator.session.channel.name == 'IVR':
 									item = '%s\nFor %s, press %s.' % (item, name, count)
