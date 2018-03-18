@@ -2447,7 +2447,7 @@ class PageString(ServiceCall, Wrappers):
 					payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
 					payload = DSCSystem().data_source(payload, {})
 					if 'response_status' in payload.keys() and payload['response_status'] == '00':
-						data_source = payload['response']['data_source'][:20]
+						data_source = payload['response']['data_source']
 						
 						item = ''
 						item_list = []
