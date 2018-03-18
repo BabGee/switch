@@ -164,6 +164,7 @@ class Wrappers:
 
         params['rows'] = []
         params['data'] = []
+        params['lines'] = []
 
         max_id = 0
         min_id = 0
@@ -999,6 +1000,11 @@ class Wrappers:
 						report_list = np.asarray(report_list).tolist()
 						#Set Data
 						params['rows']= report_list
+	    				elif data.data_response_type.name == 'STRING':
+						#lgr.info("#IF values_list is used")
+						report_list = np.asarray(report_list).tolist()
+						#Set Data
+						params['lines']= report_list
 					else:
 						#lgr.info("#IF values_list is used")
 						report_list = np.asarray(report_list).tolist()
@@ -1043,12 +1049,16 @@ class Wrappers:
 		if data.data_response_type.name == 'DATA':
 			#Set Data
 			params['data'] = report_list
-
 		elif data.data_response_type.name == 'LIST':
 			#IF values_list is used
 			report_list = np.asarray(report_list).tolist()
 			#Set Data
 			params['rows'] = report_list
+		elif data.data_response_type.name == 'STRING':
+			#IF values_list is used
+			report_list = np.asarray(report_list).tolist()
+			#Set Data
+			params['lines'] = report_list
 		else:
 			#IF values_list is used
 			report_list = np.asarray(report_list).tolist()
@@ -1570,6 +1580,7 @@ class Wrappers:
 	#lgr.info("Wrapper process_data_list")
 	cols = []
 	rows = []
+	lines = []
 	groups = []
 	data = []
 	min_id = 0
@@ -1588,6 +1599,7 @@ class Wrappers:
 			    cols = params['cols'] if 'cols' in params.keys() else []
 			    rowsParams = params['rows'] if 'rows' in params.keys() else []
                             dataParams = params['data'] if 'data' in params.keys() else []
+                            linesParams = params['lines'] if 'lines' in params.keys() else []
                             for item in rowsParams:
                                 if d.group is not None:
                                     if d.group.name not in collection.keys():
@@ -1605,6 +1617,15 @@ class Wrappers:
                                         collection[d.group.name].append(item)
                                 else:
                                     data.append(item)
+                            for item in linesParams:
+                                if d.group is not None:
+                                    if d.group.name not in collection.keys():
+                                        collection[d.group.name] = [item]
+                                    else:
+                                        collection[d.group.name].append(item)
+                                else:
+                                    lines.append(item)
+
                         except Exception, e:
                             lgr.info('Error on Data List Function: %s' % e)
 
@@ -1615,6 +1636,7 @@ class Wrappers:
                             cols = params['cols'] if 'cols' in params.keys() else []
                             rowsParams = params['rows'] if 'rows' in params.keys() else []
                             dataParams = params['data'] if 'data' in params.keys() else []
+                            linesParams = params['lines'] if 'lines' in params.keys() else []
                             for item in rowsParams:
                                 if d.group is not None:
                                     if d.group.name not in collection.keys():
@@ -1632,6 +1654,16 @@ class Wrappers:
                                         collection[d.group.name].append(item)
                                 else:
                                     data.append(item)
+                            for item in linesParams:
+                                if d.group is not None:
+                                    if d.group.name not in collection.keys():
+                                        collection[d.group.name] = [item]
+                                    else:
+                                        collection[d.group.name].append(item)
+                                else:
+                                    lines.append(item)
+
+
                         except Exception, e:
                             lgr.info('Error on Data List Query: %s' % e)
                     else:
@@ -1652,7 +1684,7 @@ class Wrappers:
         except Exception, e:
             lgr.info('Error on process_data_list: %s' % e)
 
-	return cols,rows,groups,data,min_id,max_id,t_count, mqtt
+	return cols,rows,lines,groups,data,min_id,max_id,t_count, mqtt
 
 
 class System(Wrappers):
@@ -1694,7 +1726,7 @@ class System(Wrappers):
                 data_list = data_list.filter(institution=None)
 
             if data_list.exists():
-		cols, rows, groups, data, min_id, max_id, t_count, mqtt = self.process_data_list(data_list, payload, gateway_profile, profile_tz, data)
+		cols, rows, lines, groups, data, min_id, max_id, t_count, mqtt = self.process_data_list(data_list, payload, gateway_profile, profile_tz, data)
             else:
                 lgr.info('Not a Data List')
                 if 'survey' in data_name:
@@ -3260,6 +3292,7 @@ class System(Wrappers):
             payload['response'] = {
                 'cols': cols,
                 'rows': rows,
+                'lines': lines,
                 'groups': groups,
                 'data': data,
                 'min_id': min_id,
@@ -3471,7 +3504,7 @@ def process_push_notification():
 
 				payload = {}
 				payload['push_notification'] = True
-				cols, rows, groups, data, min_id, max_id, t_count, mqtt = Wrappers().process_data_list(data_list, payload, gateway_profile, profile_tz, data)
+				cols, rows, lines, groups, data, min_id, max_id, t_count, mqtt = Wrappers().process_data_list(data_list, payload, gateway_profile, profile_tz, data)
 
 				lgr.info("MQTT task: %s" % mqtt)
 
