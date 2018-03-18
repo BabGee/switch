@@ -2455,7 +2455,7 @@ class PageString(ServiceCall, Wrappers):
 
 						if 'cols' in data_source.keys() and len(data_source['cols']):
 							for i in data_source['cols']:
-                	        	                        name = '%s' % (i[1])
+                	        	                        name = '%s' % (' '.join(i[1:]))
 								if navigator.session.channel.name == 'IVR':
 									item = '%s\nFor %s, press %s.' % (item, name, count)
 								elif navigator.session.channel.name == 'USSD':
@@ -2463,6 +2463,9 @@ class PageString(ServiceCall, Wrappers):
 
 								item_list.append(i[0])
 								count+=1
+
+							navigator.item_list = json.dumps(item_list)
+							navigator.save()
 
 
 						elif 'data' in data_source.keys() and len(data_source['data']):
@@ -2476,8 +2479,12 @@ class PageString(ServiceCall, Wrappers):
 								item_list.append(i['id'])
 								count+=1
 
-						navigator.item_list = json.dumps(item_list)
-						navigator.save()
+							navigator.item_list = json.dumps(item_list)
+							navigator.save()
+
+						elif 'lines' in data_source.keys() and len(data_source['lines']):
+							item = '%s' % ' '.join(data_source['lines'])
+
 
 						lgr.info('Your List: %s' % item)
 						page_string = page_string.replace('['+v+']',item)
