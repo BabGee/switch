@@ -2453,7 +2453,7 @@ class PageString(ServiceCall, Wrappers):
 					lgr.info('Response Payload: %s' % payload)
 					if 'response_status' in payload.keys() and payload['response_status'] == '00':
 
-						data_source = payload['response']['data_source']
+						data_source = payload['response']
 	
 						lgr.info('Data Source : %s' % data_source)
 						item = ''
