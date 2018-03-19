@@ -493,6 +493,29 @@ class System(Wrappers):
 			lgr.info("Error on Add Product Type: %s" % e)
 		return payload
 
+	def add_delivery_product(self,payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			product = ProductItem()
+			product.name = payload['delivery_name']
+			product.description = payload['delivery_description']
+			product.status =  ProductStatus.objects.get(name='ACTIVE') # ACTIVE
+                        product.product_type_id = 106
+			product.unit_cost = 1
+			product.institution = gateway_profile.institution
+			product.currency = Currency.objects.get(code='KES') # KES
+			product.product_display = ProductDisplay.objects.get(name='DEFAULT') # DEFAULT
+			product.save()
+
+			payload['response_status'] = '00'
+			payload['response'] = 'Delivery Product Added Succefully'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Add Product: %s" % e)
+		return payload
+
+
 	def add_product(self,payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
