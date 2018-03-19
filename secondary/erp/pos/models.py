@@ -5,8 +5,8 @@ from secondary.finance.paygate.models import *
 class SaleChargeType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
+	name = models.CharField(max_length=50, unique=True)
+	description = models.CharField(max_length=256)
 	product_item = models.ForeignKey(ProductItem) #ProductItem Institution can be different from the institution exerting the charge
 	def __unicode__(self):
 		return u'%s' % (self.name)
@@ -23,7 +23,7 @@ class SaleCharge(models.Model):
 	charge_value = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	base_charge = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	is_percentage = models.BooleanField(default=False)
-	description = models.CharField(max_length=200, null=True, blank=True)
+	description = models.CharField(max_length=256, null=True, blank=True)
 	main_location = models.PointField(srid=4326,blank=True,null=True)
 	min_distance = models.IntegerField(null=True, blank=True)
 	max_distance = models.IntegerField(null=True, blank=True)

@@ -217,6 +217,48 @@ class Wrappers:
 
 
 class System(Wrappers):
+	def create_sale_charge(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			product_item = ProductItem.objects.get(id=payload['product_item_id'])
+
+			sale_charge_type = SaleChargeType(name=product_item.name, description=product_item.description,\
+							product_item=product_item)
+			sale_charge_type.save()
+
+			sale_charge = SaleCharge(sale_charge_type=sale_charge_type)
+			if 'credit' in payload.keys and payload['credit']:
+				sale_charge_bill_entry.credit = True
+
+			sale_charge.min_amount = payload['min_amount'] if 'min_amount' in payload.keys() else 0
+			sale_charge.max_amount = payload['max_amount'] if 'max_amount' in payload.keys() else 999999
+			sale_charge.charge_value = payload['charge_value'] if 'charge_value' in payload.keys() else 0
+			sale_charge.base_charge = payload['base_charge'] if 'base_charge' in payload.keys() else 0
+
+			if 'is_percentage' in payload.keys() and payload['is_percentage']:
+				sale_charge.is_percentage = True
+			if 'main_location' in payload.keys():
+				coordinates = payload['main_location']
+				longitude, latitude = coordinates.split(',', 1)
+				trans_point = Point(float(longitude), float(latitude))
+				sale_charge.main_location = trans_point
+
+			if 'min_distance' in payload.keys(): sale_charge.min_distance = payload['min_distance']
+			if 'max_distance' in payload.keys(): sale_charge.max_distance = payload['max_distance']
+			if 'charge_per_km' in payload.keys(): sale_charge.charge_per_km = payload['charge_per_km']
+			if 'per_item' in payload.keys() and payload['per_item']:
+				sale_charge.max_distance = payload['max_distance']
+
+			sale_charge.save()
+
+			payload["response_status"] = "00"
+			payload["response"] = "Sale Charge Created"
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Creating Sale Charge: %s" % e)
+		return payload
+
+
 	def delete_cart_item_details(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])

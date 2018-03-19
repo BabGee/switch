@@ -508,6 +508,8 @@ class System(Wrappers):
 			product.product_display = ProductDisplay.objects.get(name='DEFAULT') # DEFAULT
 			product.save()
 
+			payload['product_item_id'] = product.id
+
 			payload['response_status'] = '00'
 			payload['response'] = 'Delivery Product Added Succefully'
 		except Exception, e:
