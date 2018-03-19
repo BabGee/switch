@@ -1,23 +1,14 @@
 from django.contrib import admin
 from secondary.erp.pos.models import *
 
-class SaleContactTypeAdmin(admin.ModelAdmin):
-		list_display = ('id','name','description','institution')
-admin.site.register(SaleContactType, SaleContactTypeAdmin)
-
-class SaleContactAdmin(admin.ModelAdmin):
-	list_display = ('name','description','sale_contact_type','location',\
-		'geometry','sale_contact_number','institution',\
-		'primary_contact_profile','comment','details')
-admin.site.register(SaleContact, SaleContactAdmin)
-
 class SaleChargeTypeAdmin(admin.ModelAdmin):
 	list_display = ('name','description','product_item')
 admin.site.register(SaleChargeType, SaleChargeTypeAdmin)
 
 class SaleChargeAdmin(admin.ModelAdmin):
-	list_display = ('sale_charge_type','credit','expiry','min_amount','max_amount','charge_value','is_percentage','description',\
-				'payment_method_list','product_type_list','institution_list','gateway_list')
+	list_display = ('sale_charge_type','credit','expiry','min_amount','max_amount','charge_value','base_charge',\
+			'is_percentage','description','min_distance','max_distance','per_item','payment_method_list',\
+			'product_type_list','institution_list','gateway_list',)
 
 admin.site.register(SaleCharge, SaleChargeAdmin)
 

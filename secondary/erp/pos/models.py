@@ -2,33 +2,6 @@ from django.contrib.gis.db import models
 from secondary.erp.crm.models import *
 from secondary.finance.paygate.models import *
 
-class SaleContactType(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	institution = models.ForeignKey(Institution)
-	def __unicode__(self):
-		return u'%s' % (self.name)
-
-class SaleContact(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45)
-	description = models.CharField(max_length=100)	
-	sale_contact_type = models.ForeignKey(SaleContactType)
-	location = models.CharField(max_length=200, blank=True, null=True)
-	geometry = models.PointField(srid=4326)
-	objects = models.GeoManager()
-	sale_contact_number = models.IntegerField()
-	institution = models.ForeignKey(Institution)
-	primary_contact_profile = models.ForeignKey(Profile)
-	comment = models.CharField(max_length=256, null=True, blank = True)
-	details = models.CharField(max_length=1280)
-	created_by = models.ForeignKey(GatewayProfile, related_name="salecontact_created_by")
-	def __unicode__(self):
-		return u'%s' % (self.name)
-
 class SaleChargeType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
