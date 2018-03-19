@@ -225,18 +225,15 @@ class System(Wrappers):
 			sale_charge_type = SaleChargeType(name=product_item.name, description=product_item.description,\
 							product_item=product_item)
 			sale_charge_type.save()
-			lgr.info('Got Here')
-			sale_charge = SaleCharge(sale_charge_type=sale_charge_type)
+			sale_charge = SaleCharge(sale_charge_type=sale_charge_type,description=product_item.description)
 			if 'credit' in payload.keys() and payload['credit']:
 				sale_charge_bill_entry.credit = True
 
-			lgr.info('Got Here')
 			sale_charge.min_amount = payload['min_amount'] if 'min_amount' in payload.keys() else 0
 			sale_charge.max_amount = payload['max_amount'] if 'max_amount' in payload.keys() else 999999
 			sale_charge.charge_value = payload['charge_value'] if 'charge_value' in payload.keys() else 0
 			sale_charge.base_charge = payload['base_charge'] if 'base_charge' in payload.keys() else 0
 
-			lgr.info('Got Here')
 			if 'is_percentage' in payload.keys() and payload['is_percentage']:
 				sale_charge.is_percentage = True
 			if 'main_location' in payload.keys():
@@ -245,17 +242,19 @@ class System(Wrappers):
 				trans_point = Point(float(longitude), float(latitude))
 				sale_charge.main_location = trans_point
 
-			lgr.info('Got Here')
 			if 'min_distance' in payload.keys(): sale_charge.min_distance = payload['min_distance']
 			if 'max_distance' in payload.keys(): sale_charge.max_distance = payload['max_distance']
 			if 'charge_per_km' in payload.keys(): sale_charge.charge_per_km = payload['charge_per_km']
 			if 'per_item' in payload.keys() and payload['per_item']:
 				sale_charge.max_distance = payload['max_distance']
 
-			lgr.info('Got Here')
 			sale_charge.save()
 
-			lgr.info('Got Here')
+			sale_charge.product_display.add(ProductDisplay.objects.get(name='SHOP'))
+			sale_charge.product_type.add(ProductType.objects.get(id=111))
+			sale_charge.institution.add(gateway_profile.institution)
+			sale_charge.gateway.add(gateway_profile.gateway)
+
 			payload["response_status"] = "00"
 			payload["response"] = "Sale Charge Created"
 		except Exception, e:

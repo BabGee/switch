@@ -29,12 +29,15 @@ class SaleCharge(models.Model):
 	max_distance = models.IntegerField(null=True, blank=True)
 	charge_per_km = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	per_item = models.BooleanField(default=False)
+	product_display = models.ManyToManyField(ProductDisplay, blank=True)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	product_type = models.ManyToManyField(ProductType, blank=True)
 	institution = models.ManyToManyField(Institution, blank=True)
 	gateway = models.ManyToManyField(Gateway, blank=True)
         def __unicode__(self):
                 return u'%s %s %s' % (self.id, self.sale_charge_type, self.charge_value)
+	def product_display_list(self):
+		return "\n".join([a.name for a in self.product_display.all()])
 	def payment_method_list(self):
 		return "\n".join([a.name for a in self.payment_method.all()])
 	def product_type_list(self):
