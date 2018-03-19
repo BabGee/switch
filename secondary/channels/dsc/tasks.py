@@ -3500,7 +3500,7 @@ def process_push_notification():
 						Q(Q(gateway=gateway_profile.gateway) | Q(gateway=None))).order_by('level')
 
 			if data_list.exists():
-				lgr.info('push notification datalists : %s' % data_list)
+				#lgr.info('push notification datalists : %s' % data_list)
 
 				from secondary.channels.notify.mqtt import MqttServerClient
 
@@ -3508,10 +3508,10 @@ def process_push_notification():
 				payload['push_notification'] = True
 				cols, rows, lines, groups, data, min_id, max_id, t_count, mqtt = Wrappers().process_data_list(data_list, payload, gateway_profile, profile_tz, data)
 
-				lgr.info("MQTT task: %s" % mqtt)
+				#lgr.info("MQTT task: %s" % mqtt)
 
 				for key,value in mqtt.items():
-					lgr.info("%s PN: %s" % (key,value))
+					#lgr.info("%s PN: %s" % (key,value))
 					if len(value):
 						msc = MqttServerClient()
 						for k,v in value.items():
