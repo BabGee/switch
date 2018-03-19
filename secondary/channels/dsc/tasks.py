@@ -315,7 +315,7 @@ class Wrappers:
                     query = reduce(operator.and_, (~Q(k) for k in not_filter_data.items()))
 
 		    #lgr.info('Report List: %s' % report_list.count())
-		    lgr.info('%s Not Filters Applied: %s' % (data.query.name,query))
+		    #lgr.info('%s Not Filters Applied: %s' % (data.query.name,query))
                     report_list = report_list.filter(query)
 		    #lgr.info('Report List: %s' % report_list.count())
 
