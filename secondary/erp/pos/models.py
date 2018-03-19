@@ -5,7 +5,7 @@ from secondary.finance.paygate.models import *
 class SaleChargeType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=50, unique=True)
+	name = models.CharField(max_length=50)
 	description = models.CharField(max_length=256)
 	product_item = models.ForeignKey(ProductItem) #ProductItem Institution can be different from the institution exerting the charge
 	def __unicode__(self):
