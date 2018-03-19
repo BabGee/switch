@@ -1693,6 +1693,7 @@ class System(Wrappers):
             lgr.info('DSC Data %s Payload: %s' % (('data_name' in payload.keys()), payload))
             cols = []
             rows = []
+	    lines = []
             groups = []
             data = []
             min_id = 0
@@ -3485,6 +3486,7 @@ def process_push_notification():
 		lgr = get_task_logger(__name__)
 		cols = []
 		rows = []
+		lines = []
 		groups = []
 		data = []
 		min_id = 0
