@@ -127,7 +127,7 @@ class Wrappers:
 				longitude, latitude = coordinates.split(',', 1)
 				trans_point = Point(float(longitude), float(latitude))
 				distance = sc.main_location.distance(trans_point)
-				distance_in_km = distance * 100
+				distance_in_km = Decimal(distance) * Decimal(100)
 				if sc.min_distance<=distance_in_km and sc.max_distance>distance_in_km:
 					charge = (sc.charge_per_km * distance_in_km) + sc.charge_value
 
@@ -1138,14 +1138,15 @@ def order_background_service_call(order):
 		from primary.core.bridge.tasks import Wrappers as BridgeWrappers
 		o = PurchaseOrder.objects.get(id=order)
 		lgr.info('Captured Order: %s' % o)
-		cart_item = o.cart_item.all()
+		cart_item = o.cart_item.filter(Q(status__name='PAID'), ~Q(product_item__product_type__service=None))
+		lgr.info('Cart Item: %s' % cart_item)
 		for c in cart_item:
-			lgr.info('Captured Cart Item: %s' % c)
+			lgr.info('Captured Cart Item: %s | %s' % (c,c.product_item.product_type.service))
 			product_item = c.product_item
 			payload = json.loads(c.details)	
 
 			gateway_profile = c.gateway_profile
-			service = c.product_item.product_type.service
+			service = product_item.product_type.service
 
 			payload['cart_item_id'] = c.id
 			payload['purchase_order_id'] = o.id
@@ -1179,7 +1180,7 @@ def order_service_call(order):
 		lgr.info('Captured Order: %s' % o)
 		cart_item = o.cart_item.all()
 		for c in cart_item:
-			lgr.info('Captured Cart Item: %s' % c)
+			lgr.info('Captured Cart Item: %s | %s' % (c,c.product_item.product_type.service))
 			product_item = c.product_item
 			payload = json.loads(c.details)	
 
@@ -1235,15 +1236,17 @@ def service_call(payload):
 def process_paid_order():
 	lgr = get_task_logger(__name__)
 	try:
-		orig_order = PurchaseOrder.objects.select_for_update().filter(Q(status__name='PAID'),Q(cart_processed=False),\
-					Q(cart_item__status__name='PAID'),~Q(cart_item__product_item__product_type__service=None),\
-					Q(date_modified__lte=timezone.now()-timezone.timedelta(seconds=1)))
+		orig_order = PurchaseOrder.objects.select_for_update(nowait=True).filter(Q(status__name='PAID'),Q(cart_processed=False))
 		order = list(orig_order.values_list('id',flat=True)[:500])
 
 		processing = orig_order.filter(id__in=order).update(cart_processed=True, date_modified=timezone.now())
 		for od in order:
-			#order_service_call.delay(od)
-			order_background_service_call.delay(od)
-	except Exception, e: lgr.info('Error on process paid order')
+			lgr.info('Order: %s' % od)
+			transaction.on_commit(lambda: order_background_service_call.delay(od))
+
+	except DatabaseError, e:
+		transaction.set_rollback(True)
+
+	except Exception, e: lgr.info('Error on process paid order: %s' % e)
 
 
