@@ -1746,6 +1746,7 @@ class System(Wrappers):
 				payload['first_name'] = payload['first_name'] if 'first_name' in payload.keys()  else user.first_name
 				payload['last_name'] = payload['last_name'] if 'last_name' in payload.keys()  else user.last_name
 				payload['gender'] = user.profile.gender.code if user.profile.gender else None
+				payload['middle_name'] = payload['middle_name'] if 'middle_name' in payload.keys()  else user.profile.middle_name
 
 				if user.profile.national_id: payload['national_id'] = user.profile.national_id
 				if user.profile.passport_number: 
@@ -1794,6 +1795,7 @@ class System(Wrappers):
 				payload['first_name'] = payload['first_name'] if 'first_name' in payload.keys()  else user.first_name
 				payload['last_name'] = payload['last_name'] if 'last_name' in payload.keys()  else user.last_name
 				payload['gender'] = user.profile.gender.code if user.profile.gender else None
+				payload['middle_name'] = payload['middle_name'] if 'middle_name' in payload.keys()  else user.profile.middle_name
 
 				if user.profile.national_id: payload['national_id'] = user.profile.national_id
 				if user.profile.passport_number: 
@@ -1849,6 +1851,7 @@ class System(Wrappers):
 				payload['first_name'] = payload['first_name'] if 'first_name' in payload.keys()  else user.first_name
 				payload['last_name'] = payload['last_name'] if 'last_name' in payload.keys()  else user.last_name
 				payload['gender'] = user.profile.gender.code if user.profile.gender else None
+				payload['middle_name'] = payload['middle_name'] if 'middle_name' in payload.keys()  else user.profile.middle_name
 
 				if user.profile.national_id: payload['national_id'] = user.profile.national_id
 				if user.profile.passport_number: 
