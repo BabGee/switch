@@ -21,7 +21,6 @@ class SaleCharge(models.Model):
 	min_amount = models.IntegerField()
 	max_amount = models.IntegerField()
 	charge_value = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
-	base_charge = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	is_percentage = models.BooleanField(default=False)
 	description = models.CharField(max_length=256, null=True, blank=True)
 	main_location = models.PointField(srid=4326,blank=True,null=True)

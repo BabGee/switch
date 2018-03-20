@@ -113,24 +113,26 @@ class Wrappers:
 	def sale_charge_item(self, balance_bf, item, payload, gateway):
 		#Sale Charge Item Bill entry
 		sale_charge_item = None
-		distance_in_km = None
 		sale_charge = SaleCharge.objects.filter(Q(min_amount__lt=balance_bf,max_amount__gt=balance_bf,credit=False),\
 						Q(Q(product_display=item.product_item.product_display)|Q(product_display=None)),\
 						Q(Q(product_type=item.product_item.product_type)|Q(product_type=None)),\
 						Q(Q(institution=item.product_item.institution)|Q(institution=None)),\
 						Q(Q(gateway=gateway)|Q(gateway=None)))
-
-		if 'delivery_location_coord' in payload.keys():
-			coordinates = payload['delivery_location_coord']
-			longitude, latitude = coordinates.split(',', 1)
-			trans_point = Point(float(longitude), float(latitude))
-			distance = p1.distance(p2)
-			distance_in_km = distance * 100
-			sale_charge = sale_charge.filter(min_distance__lte=distance_in_km,max_distance__gt=distance_in_km)
-
 		for sc in sale_charge:
+
+			charge = Decimal(0)
+
+			if 'delivery_location_coord' in payload.keys():
+				coordinates = payload['delivery_location_coord']
+				longitude, latitude = coordinates.split(',', 1)
+				trans_point = Point(float(longitude), float(latitude))
+				distance = sc.main_location.distance(trans_point)
+				distance_in_km = distance * 100
+				if sc.min_distance<=distance_in_km and sc.max_distance>distance_in_km:
+					charge = (sc.charge_per_km * distance_in_km) + sc.charge_value
+
 			product_item = sc.sale_charge_type.product_item
-			charge = sc.charge_per_km*distance_in_km if distance_in_km else Decimal(0)
+
 			if sc.is_percentage:
 				charge = charge + ((sc.charge_value/100)*Decimal(item.total))
 			else:
@@ -244,7 +246,6 @@ class System(Wrappers):
 			sale_charge.min_amount = payload['min_amount'] if 'min_amount' in payload.keys() else 0
 			sale_charge.max_amount = payload['max_amount'] if 'max_amount' in payload.keys() else 999999
 			sale_charge.charge_value = payload['charge_value'] if 'charge_value' in payload.keys() else 0
-			sale_charge.base_charge = payload['base_charge'] if 'base_charge' in payload.keys() else 0
 
 			if 'is_percentage' in payload.keys() and payload['is_percentage']:
 				sale_charge.is_percentage = True
@@ -726,6 +727,7 @@ class System(Wrappers):
 			payload["response_status"] = "00"
 			payload["response"] = "Product Added to Cart"
 		except Exception, e:
+			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on Adding product to cart: %s" % e)
 		return payload
@@ -796,6 +798,7 @@ class System(Wrappers):
 					break
 
 		except Exception, e:
+			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on Creating Sale Order: %s" % e)
 		return payload
