@@ -127,6 +127,13 @@ class System(Wrappers):
 				payload['product_item_name'] = product_item[0].name
 				payload['product_item_description'] = product_item[0].description
 				payload['product_item_kind'] = product_item[0].kind
+				payload['product_item_shop_product_type_id'] = product_item[0].shop_product_type.id
+				payload['product_item_barcode'] = product_item[0].barcode
+				payload['product_item_buying_cost'] = product_item[0].buying_cost
+				payload['product_item_vat'] = product_item[0].vat
+				payload['product_item_discount'] = product_item[0].discount
+				# payload['product_item_discount'] = product_item[0].discount
+
 				payload['product_item_image'] = product_item[0].default_image if product_item[0].default_image else ''
 				#payload['institution_id'] = product_item[0].institution.id
 				#payload['till_number'] = product_item[0].product_type.institution_till.till_number
@@ -570,14 +577,14 @@ class System(Wrappers):
 			product = ProductItem.objects.get(pk=payload['product_item_id'])
 			product.name = payload['product_name']
 			product.description = payload['product_description']
-			product.status =  ProductStatus.objects.get(name=payload['product_status']) # ACTIVE
+			# product.status =  ProductStatus.objects.get(name=payload['product_status']) # ACTIVE
 			product.shop_product_type_id = payload['shop_product_type']
                         product.product_type_id = payload['product_type_id']
 			product.buying_cost = payload['product_buying_cost']
 			product.unit_cost = payload['product_selling_cost']
-			product.institution = gateway_profile.institution
-			product.currency = Currency.objects.get(code=payload['product_currency']) # KES
-			product.product_display = ProductDisplay.objects.get(name=payload['product_display']) # DEFAULT
+			# product.institution = gateway_profile.institution
+			# product.currency = Currency.objects.get(code=payload['product_currency']) # KES
+			# product.product_display = ProductDisplay.objects.get(name=payload['product_display']) # DEFAULT
 			if str(payload['is_vat_inclusive']) == 'True':
 				product.vat = payload['product_vat']
 			product.discount = payload['product_discount']

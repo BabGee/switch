@@ -47,6 +47,12 @@
 
     <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service.name }}/interface/"> Interface</a>
 
+    <div>
+
+    <strong>Success</strong>: {{ service.success_last_response }}
+    <strong>Error</strong>: {{ service.failed_last_response }}
+
+    </div>
 
     <div class="row">
 
@@ -71,7 +77,8 @@
 
 
         <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service.name }}/page_groups/"> Page Groups</a>
-        <a target="_blank" href="/admin/bridge/servicecommand/?o=3&q=&service__id__exact={{ service.pk }}"> Suit Admin View</a>
+        <a target="_blank" href="/admin/bridge/service/{{ service.pk }}/change/"> Service</a>
+        <a target="_blank" href="/admin/bridge/servicecommand/?o=3&q=&service__id__exact={{ service.pk }}"> Service Commands</a>
 
 
     </div>
