@@ -99,7 +99,7 @@ class System(Wrappers):
 		except Exception, e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
-			lgr.info("Error on product item details: %s" % e)
+			lgr.info("Error on bulk product item details: %s" % e)
 		return payload
 
 
@@ -127,7 +127,7 @@ class System(Wrappers):
 				payload['product_item_name'] = product_item[0].name
 				payload['product_item_description'] = product_item[0].description
 				payload['product_item_kind'] = product_item[0].kind
-				payload['product_item_shop_product_type_id'] = product_item[0].shop_product_type.id
+				if product_item[0].shop_product_type: payload['product_item_shop_product_type_id'] = product_item[0].shop_product_type.id
 				payload['product_item_barcode'] = product_item[0].barcode
 				payload['product_item_buying_cost'] = product_item[0].buying_cost
 				payload['product_item_vat'] = product_item[0].vat
@@ -579,7 +579,7 @@ class System(Wrappers):
 			product.description = payload['product_description']
 			# product.status =  ProductStatus.objects.get(name=payload['product_status']) # ACTIVE
 			product.shop_product_type_id = payload['shop_product_type']
-                        product.product_type_id = payload['product_type_id']
+			# product.product_type_id = payload['product_type_id']
 			product.buying_cost = payload['product_buying_cost']
 			product.unit_cost = payload['product_selling_cost']
 			# product.institution = gateway_profile.institution
