@@ -49,6 +49,22 @@ class System(Wrappers):
             lgr.info("Error on register agent: %s" % e)
         return payload
 
+    def get_trading_institution_details(self, payload, node_info):
+        try:
+            institution = Institution.objects.get(id=payload['institution_id'])
+            trading_institution_list = TradingInstitution.objects.filter(institution=institution)
+            if trading_institution_list.exists():
+                trading_institution = trading_institution_list[0]
+                payload['suppliers'] = ','.join([str(x.institution.id) for x in trading_institution.supplier.all()])
+                payload['trader_type'] = trading_institution.trader_type.name
+
+            payload['response'] = 'Got Trading institution details'
+            payload['response_status'] = '00'
+        except Exception, e:
+            payload['response_status'] = '96'
+            lgr.info("Error Getting Trading institution details: %s" % e)
+        return payload
+
     def get_trading_institution(self, payload, node_info):
         try:
 		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])

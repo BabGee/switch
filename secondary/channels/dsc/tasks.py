@@ -236,9 +236,6 @@ class Wrappers:
                 for f in or_filters.split("|"):
 		    of_list = f.split('%')
 		    if len(of_list)==2:
-			if 'q' in payload.keys() and payload['q'] not in ['', None] and getattr(model_class, of_list[1].split('__')[0], False):
-				if f not in ['',None]: or_filter_data[of_list[1] + '__icontains'] = payload['q']
-
 			if of_list[0] in payload.keys() and getattr(model_class, of_list[1].split('__')[0], False):
 				if f not in ['',None]: or_filter_data[of_list[1] + '__icontains'] = payload[of_list[0]]
 
@@ -251,10 +248,10 @@ class Wrappers:
 					v = v_list
 				or_filter_data[k] = v if v not in ['',None] else None
 		    elif getattr(model_class, f.split('__')[0], False):
-			if 'q' in payload.keys() and payload['q'] not in ['', None]:
-				if f not in ['',None]: or_filter_data[f + '__icontains'] = payload['q']
 			if f in payload.keys():
 				if f not in ['',None]: or_filter_data[f + '__icontains'] = payload[f]
+			elif 'q' in payload.keys() and payload['q'] not in ['', None]:
+				if f not in ['',None]: or_filter_data[f + '__icontains'] = payload['q']
 
                 if len(or_filter_data):
                     or_query = reduce(operator.or_, (Q(k) for k in or_filter_data.items()))
@@ -266,8 +263,6 @@ class Wrappers:
                 for f in and_filters.split("|"):
 		    af_list = f.split('%')
 		    if len(af_list)==2:
-			if 'q' in payload.keys() and payload['q'] not in ['', None] and getattr(model_class, af_list[1].split('__')[0], False):
-				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload['q']
 			if af_list[0] in payload.keys() and getattr(model_class, af_list[1].split('__')[0], False):
 				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload[af_list[0]]
 			elif getattr(model_class, af_list[0].split('__')[0], False):
@@ -279,10 +274,12 @@ class Wrappers:
 					v = v_list
 				and_filter_data[k] = v if v not in ['',None] else None
 		    elif getattr(model_class, f.split('__')[0], False):
-			if 'q' in payload.keys() and payload['q'] not in ['', None]:
-				if f not in ['',None]: and_filter_data[f + '__icontains'] = payload['q']
 			if f in payload.keys():
 				if f not in ['',None]: and_filter_data[f + '__icontains'] = payload[f]
+			elif 'q' in payload.keys() and payload['q'] not in ['', None]:
+				if f not in ['',None]: and_filter_data[f + '__icontains'] = payload['q']
+
+
                 if len(and_filter_data):
                     and_query = reduce(operator.and_, (Q(k) for k in and_filter_data.items()))
 		    #lgr.info('AndQuery: %s' % and_query)
@@ -293,8 +290,6 @@ class Wrappers:
                 for f in not_filters.split("|"):
 		    nf_list = f.split('%')
 		    if len(nf_list)==2:
-			if 'q' in payload.keys() and payload['q'] not in ['', None] and getattr(model_class, nf_list[1].split('__')[0], False):
-				if f not in ['',None]: not_filter_data[nf_list[1] + '__icontains'] = payload['q']
 			if nf_list[0] in payload.keys() and getattr(model_class, nf_list[1].split('__')[0], False):
 				if f not in ['',None]: not_filter_data[nf_list[1] + '__icontains'] = payload[nf_list[0]]
 			elif getattr(model_class, nf_list[0].split('__')[0], False):
@@ -306,10 +301,10 @@ class Wrappers:
 					v = v_list
 				not_filter_data[k] = v if v not in ['',None] else None
 		    elif getattr(model_class, f.split('__')[0], False):
-			if 'q' in payload.keys() and payload['q'] not in ['', None]:
-				if f not in ['',None]: not_filter_data[f + '__icontains'] = payload['q']
 			if f in payload.keys():
 				if f not in ['',None]: not_filter_data[f + '__icontains'] = payload[f]
+			elif 'q' in payload.keys() and payload['q'] not in ['', None]:
+				if f not in ['',None]: not_filter_data[f + '__icontains'] = payload['q']
 
                 if len(not_filter_data):
                     query = reduce(operator.and_, (~Q(k) for k in not_filter_data.items()))
@@ -375,10 +370,10 @@ class Wrappers:
 	    #lgr.info('Token Filters Report List Count: %s' % report_list.count())
 	    if list_filters not in [None,'']:
                 for f in list_filters.split("|"):
-            	    if 'q' in payload.keys() and payload['q'] not in ['', None]:
-                    	if f not in ['',None]: list_filter_data[f + '__icontains'] = payload['q']
             	    if f in payload.keys():
                     	if f not in ['',None]: list_filter_data[f + '__iexact'] = payload[f]
+            	    elif 'q' in payload.keys() and payload['q'] not in ['', None]:
+                    	if f not in ['',None]: list_filter_data[f + '__icontains'] = payload['q']
 
                 if len(list_filter_data):
                     and_query = reduce(operator.and_, (Q(k) for k in list_filter_data.items()))
