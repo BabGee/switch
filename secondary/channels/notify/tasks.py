@@ -685,6 +685,11 @@ class System(Wrappers):
 							outbound.recipient = payload['email']
 						else:
 							outbound.recipient = new_contact.gateway_profile.user.email
+					elif new_contact.product.notification.code.channel.name == 'MQTT':
+						if 'pn_notification_id' in payload.keys() and payload['pn_notification_id'] not in ['',None]:
+							outbound.recipient = payload['pn_notification_id']
+						else:
+							outbound.recipient = new_contact.gateway_profile.user.profile.id
 
 					if 'notification_template_id' in payload.keys():
 						template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
@@ -858,6 +863,11 @@ class System(Wrappers):
 						outbound.recipient = payload['email']
 					else:
 						outbound.recipient = new_contact.gateway_profile.user.email
+				elif new_contact.product.notification.code.channel.name == 'MQTT':
+					if 'pn_notification_id' in payload.keys() and payload['pn_notification_id'] not in ['',None]:
+						outbound.recipient = payload['pn_notification_id']
+					else:
+						outbound.recipient = new_contact.gateway_profile.user.profile.id
 
 				if 'notification_template_id' in payload.keys():
 					notification_template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
@@ -1353,6 +1363,8 @@ def outbound_bulk_logger(payload, contact_list, scheduled_send):
 				outbound.recipient = contact.gateway_profile.msisdn.phone_number
 			elif contact.product.notification.code.channel.name == 'EMAIL' and self.validateEmail(contact.gateway_profile.user.email):
 				outbound.recipient = contact.gateway_profile.user.email
+			elif contact.product.notification.code.channel.name == 'MQTT':
+				outbound.recipient = contact.gateway_profile.user.profile.id
 			else:
 				lgr.info('Contact not matched to email or sms: %s' % contact)
 
