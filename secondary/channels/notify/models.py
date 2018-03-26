@@ -214,6 +214,11 @@ class Outbound(models.Model):
 	inst_num_tries = models.IntegerField(null=True,blank=True)
 	attachment = models.ManyToManyField(NotificationAttachment, blank=True)
 	recipient = models.CharField(max_length=200, blank=True, null=True)
+
+	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
+	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False,
+								 help_text="Push Notification Acknowledged")
+
 	def __unicode__(self):
 		return u'%s %s %s' % (self.contact, self.heading, self.message)
 	def attachment_list(self):
