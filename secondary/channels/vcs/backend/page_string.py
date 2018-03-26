@@ -2451,14 +2451,15 @@ class PageString(ServiceCall, Wrappers):
 					lgr.info('Request Payload: %s' % payload)
 					payload = DSCSystem().data_source(payload, {})
 					lgr.info('Response Payload: %s' % payload)
+
+					item = ''
+					item_list = []
+					count = 1
 					if 'response_status' in payload.keys() and payload['response_status'] == '00':
 
 						data_source = payload['response']
 	
 						lgr.info('Data Source : %s' % data_source)
-						item = ''
-						item_list = []
-						count = 1
 						if 'rows' in data_source.keys() and len(data_source['rows']):
 							lgr.info('Rows')
 							for i in data_source['rows']:
@@ -2497,8 +2498,8 @@ class PageString(ServiceCall, Wrappers):
 							lgr.info('Lines: %s' % lines)
 							item = '%s' % (' '.join(lines))
 
-						lgr.info('Your List: %s' % item)
-						page_string = page_string.replace('['+v+']',item)
+					lgr.info('Your List: %s' % item)
+					page_string = page_string.replace('['+v+']',item)
 
 		payload['page_string'] = page_string
 
