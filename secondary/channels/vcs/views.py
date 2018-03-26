@@ -308,7 +308,10 @@ class VAS:
 					msisdn__phone_number=UPCWrappers().simple_get_msisdn(self.payload['input'].strip(),self.payload)).exists()) or \
 					('Non-Existing Passport/National ID' in self.nav.menu.input_variable.name and \
 					GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
-					user__profile__passport_number=self.payload['input'].strip()).exists()):
+					user__profile__passport_number=self.payload['input'].strip()).exists()) or \
+					('Non-Existing EMAIL' in self.nav.menu.input_variable.name and \
+					GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
+					user__email=self.payload['input'].strip()).exists()):
 						#Variables with an error page
 						if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
 						else: self.group_select = 96 #Fail menu as list not matching
