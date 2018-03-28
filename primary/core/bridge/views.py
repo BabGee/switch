@@ -130,6 +130,10 @@ class ServiceProcessor:
 						else:
 							lgr.info('Non Matching: %s' % item)
 							continue
+
+					else:
+						continue
+
 				#process action
 				lgr.info('#process action')
 				if node_system.node_status.name == 'LOCAL API':
