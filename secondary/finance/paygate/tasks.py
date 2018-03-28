@@ -503,6 +503,9 @@ class System(Wrappers):
 			if 'product_item_id' in payload.keys():
 				product_item = ProductItem.objects.get(id=payload['product_item_id'])
 				float_type = float_type.filter(product_type=product_item.product_type)
+			elif 'float_product_type_id' in payload.keys():
+				float_type = float_type.filter(product_type__id=payload['float_product_type_id'])
+
 			elif 'product_type_id' in payload.keys():
 				float_type = float_type.filter(product_type__id=payload['product_type_id'])
 			elif 'product_type' in payload.keys():
@@ -530,6 +533,8 @@ class System(Wrappers):
 					if 'product_item_id' in payload.keys():
 						product_item = ProductItem.objects.get(id=payload['product_item_id'])
 						charge_list = charge_list.filter(product_type=product_item.product_type)
+					elif 'float_product_type_id' in payload.keys():
+						charge_list = charge_list.filter(product_type__id=payload['float_product_type_id'])
 					elif 'product_type_id' in payload.keys():
 						charge_list = charge_list.filter(product_type__id=payload['product_type_id'])
 					elif 'product_type' in payload.keys():
@@ -613,6 +618,8 @@ class System(Wrappers):
 			if 'product_item_id' in payload.keys():
 				product_item = ProductItem.objects.get(id=payload['product_item_id'])
 				float_type = float_type.filter(product_type=product_item.product_type)
+			elif 'float_product_type_id' in payload.keys():
+				float_type = float_type.filter(product_type__id=payload['float_product_type_id'])
 			elif 'product_type_id' in payload.keys():
 				float_type = float_type.filter(product_type__id=payload['product_type_id'])
 			elif 'product_type' in payload.keys():
@@ -639,6 +646,9 @@ class System(Wrappers):
 					if 'product_item_id' in payload.keys():
 						product_item = ProductItem.objects.get(id=payload['product_item_id'])
 						charge_list = charge_list.filter(product_type=product_item.product_type)
+					elif 'float_product_type_id' in payload.keys():
+						charge_list = charge_list.filter(product_type__id=payload['float_product_type_id'])
+
 					elif 'product_type_id' in payload.keys():
 						charge_list = charge_list.filter(product_type__id=payload['product_type_id'])
 					elif 'product_type' in payload.keys():
@@ -816,7 +826,7 @@ class System(Wrappers):
 					else:
 						if 'institution_id' in payload.keys(): del payload['institution_id'] #User gateway Float if exists, if not, fail
 
-					payload['product_type_id'] = notification_product.notification.product_type.id
+					payload['float_product_type_id'] = notification_product.notification.product_type.id
 					payload = self.debit_float(payload, node_info)
 					response = '%s | %s' % (response,payload['response'])
 
@@ -927,7 +937,7 @@ class System(Wrappers):
 					else:
 						if 'institution_id' in payload.keys(): del payload['institution_id'] #User gateway Float if exists, if not, fail
 
-					payload['product_type_id'] = notification_product.notification.product_type.id
+					payload['float_product_type_id'] = notification_product.notification.product_type.id
 					payload = self.debit_float(payload, node_info)
 					response = '%s | %s' % (response,payload['response'])
 
