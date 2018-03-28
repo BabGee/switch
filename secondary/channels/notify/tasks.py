@@ -432,11 +432,17 @@ class System(Wrappers):
 
 		'''
 		try:
+			lgr.info(payload['send_sms'])
 			if 'send_sms' in payload.keys() and str(payload['send_sms']) == 'True':
 				payload['trigger'] = 'send_sms_notification%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
 			else:
 				# TODO remove send_sms_notification trigger if exists
 				pass
+
+			if 'trigger' in payload.keys():
+				lgr.info(payload['trigger'])
+			else:
+				lgr.info('no trigger added')
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Notification Initialized'

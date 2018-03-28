@@ -1000,11 +1000,34 @@ class System(Wrappers):
 
 		return payload
 
+	def order_has_delivery(self, payload, node_info):
+		'''
+		Adds a trigger `has_delivery` if the purchaser_order has a Delivery
+		'''
+		try:
+			if Delivery.objects.filter(order_id=payload['purchase_order_id']).exists():
+				payload['trigger'] = 'has_delivery%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
+			else:
+				# TODO remove has_delivery trigger if exists
+				pass
+			payload['response_status'] = '00'
+			payload['response'] = 'Checked Delivery'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Checking Delivery: %s" % e)
+		return payload
+
 
 	def order_status(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			delivery = Delivery.objects.get(id=payload['delivery_id'])
+			if 'delivery_id' in payload.keys():
+				delivery = Delivery.objects.get(id=payload['delivery_id'])
+			elif 'purchase_order_id' in payload.keys():
+				purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
+				delivery = Delivery.objects.filter(order=purchase_order).first()
+			# delivery = Delivery.objects.get(id=payload['delivery_id'])
+
 			purchase_order = delivery.order
 			payload['purchase_order_id'] = purchase_order.pk
 			if gateway_profile.access_level == AccessLevel.objects.get(name='DELIVERY'):
@@ -1072,7 +1095,12 @@ class System(Wrappers):
 	def delivery_details(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			delivery = Delivery.objects.get(id=payload['delivery_id'])
+			if 'delivery_id' in payload.keys():
+				delivery = Delivery.objects.get(id=payload['delivery_id'])
+
+			elif 'purchase_order_id' in payload.keys():
+				purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
+				delivery = Delivery.objects.filter(order=purchase_order).first()
 
 			purchase_order = delivery.order
 			payload['purchase_order_id'] = purchase_order.pk

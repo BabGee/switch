@@ -45,6 +45,10 @@ class ServiceProcessor:
 						else:
 							lgr.info('Non Matching: %s' % item)
 							continue
+					else:
+						lgr.info('No Trigger in Payload so skip: %s' % item)
+						continue
+
 				if node_system.node_status.name == 'LOCAL API'  and item.reverse_function <> 'no_reverse':
 					payload = Wrappers().call_api(item, item.reverse_function, payload)
 				elif node_system.node_status.name == 'EXT API'  and item.reverse_function <> 'no_reverse':	
@@ -108,11 +112,12 @@ class ServiceProcessor:
 			node_system = item.node_system
 			payload = Wrappers().create_payload(item, gateway_profile, payload)
 			try:
-
+				lgr.info("if item.trigger.all(): %s" % item.trigger.all())
 				#Check if triggerable action
 				if item.trigger.all().exists():
 					#Check if trigger Exists
 					if 'trigger' in payload.keys():
+						lgr.info("payload['trigger'] : %s"%payload['trigger'])
 						triggers = str(payload['trigger'].strip()).split(',')
 						trigger_list = Trigger.objects.filter(name__in=triggers)
 
@@ -126,6 +131,7 @@ class ServiceProcessor:
 							lgr.info('Non Matching: %s' % item)
 							continue
 				#process action
+				lgr.info('#process action')
 				if node_system.node_status.name == 'LOCAL API':
 					payload = Wrappers().call_api(item, item.command_function, payload)
 				elif node_system.node_status.name == 'EXT API':	

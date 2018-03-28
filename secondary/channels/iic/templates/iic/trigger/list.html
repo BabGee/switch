@@ -1,0 +1,28 @@
+{% extends 'iic/base.html' %}
+{% block content %}
+
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item active">Triggers</li>
+    </ol>
+
+    <ul>
+        {% for gateway in triggers %}
+
+            <li>
+            {{ gateway.name }} |
+            {{ gateway.description }} |
+            {{ gateway.date_created|date }}
+
+            <a href="/admin/bridge/trigger/{{ gateway.pk }}/change/" target="_blank">Edit</a>
+
+            </li>
+
+        {% empty %}
+            <li>No items</li>
+        {% endfor %}
+
+    </ul>
+
+    <a href="/admin/bridge/trigger/add/" target="_blank">New</a>
+
+{% endblock %}

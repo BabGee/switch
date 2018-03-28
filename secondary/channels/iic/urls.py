@@ -40,6 +40,10 @@ urlpatterns = [
             url(r'^duplicate$', datalist_duplicate),
         ])),
     ]), name='dsc'),
+    url(r'triggers/', include([
+        url(r'^$', trigger_list),
+
+    ]), name='dsc'),
     url(r'node_systems/', include([
 
         url(r'^service_commands/$', node_system_service_commands), # TODO move this below

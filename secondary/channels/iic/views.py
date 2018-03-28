@@ -69,6 +69,13 @@ def datalist_list(request):
     return render(request, "iic/datalist/list.html", {'datalists': datalists})
 
 
+def trigger_list(request):
+    from primary.core.bridge.models import Trigger
+    triggers = Trigger.objects.all().order_by('-id')
+
+    return render(request, "iic/trigger/list.html", {'triggers': triggers})
+
+
 def module_models(request):
     from django.apps import apps
     module = request.GET.get('module').lower()
