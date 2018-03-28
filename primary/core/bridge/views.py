@@ -125,6 +125,10 @@ class ServiceProcessor:
 						else:
 							lgr.info('Non Matching: %s' % item)
 							continue
+
+					else:
+						continue
+
 				#process action
 				if node_system.node_status.name == 'LOCAL API':
 					payload = Wrappers().call_api(item, item.command_function, payload)
