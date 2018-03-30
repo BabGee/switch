@@ -81,6 +81,7 @@ class BackgroundServiceActivityAdmin(admin.ModelAdmin):
 			'response_status','transaction_reference','currency','amount','charges',\
 			'gateway','institution','current_command',\
 			'scheduled_send','message','sends','ext_outbound_id',)
+	list_filter = ('service', 'status', 'gateway_profile__gateway', 'response_status',)
 admin.site.register(BackgroundServiceActivity, BackgroundServiceActivityAdmin)
 
 

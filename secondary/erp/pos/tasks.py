@@ -983,7 +983,7 @@ class System(Wrappers):
 	def assign_order(self, payload, node_info):
 		try:
 			delivery = Delivery.objects.get(pk=payload['delivery_id'])
-			delivery_profile = GatewayProfile.objects.get(id=payload['profile'])
+			delivery_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 
 			delivery.delivery_profile = delivery_profile
 			delivery.status = DeliveryStatus.objects.get(name='ASSIGNED')
