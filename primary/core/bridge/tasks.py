@@ -363,7 +363,7 @@ def background_service_call(background):
 
 				if i.service.retry:
 					retry_in = (i.service.retry.max_retry_hours)/(i.service.retry.max_retry)
-					i.scheduled_send = timezone.now()+timezone.timedelta(hours=retry_in)
+					i.scheduled_send = timezone.now()+timezone.timedelta(hours=float(retry_in))
 				else:
 					i.scheduled_send = timezone.now()+timezone.timedelta(hours=6)
 
