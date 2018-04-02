@@ -321,6 +321,13 @@ def background_service_call(background):
 		service = i.service
 		gateway_profile = i.gateway_profile
 
+
+		if i.service.retry and i.sends == i.service.retry.max_retry:
+			payload['trigger'] = 'last_send%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+		elif i.service.retry == None and i.sends > 3:
+			payload['trigger'] = 'last_send%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
+
 		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
 		payload = ServiceCall().api_service_call(service, gateway_profile, payload)
 
@@ -344,12 +351,21 @@ def background_service_call(background):
 			except ServiceCutOff.DoesNotExist: servicecutoff = None
 			if servicecutoff and servicecutoff.cut_off_command and i.current_command and i.current_command.level > servicecutoff.cut_off_command.level:
 				pass
-			elif  i.sends > 3:
+			elif  i.service.retry and i.sends > i.service.retry.max_retry:
+				pass
+
+			elif  i.service.retry == None and i.sends > 3:
 				pass
 			else:
 				i.status = TransactionStatus.objects.get(name='CREATED')
 				i.response_status = ResponseStatus.objects.get(response='DEFAULT')
-				i.scheduled_send = timezone.now()+timezone.timedelta(hours=6)
+
+				if i.service.retry:
+					retry_in = (i.service.retry.max_retry_hours)/(i.service.retry.max_retry)
+					i.scheduled_send = timezone.now()+timezone.timedelta(hours=retry_in)
+				else:
+					i.scheduled_send = timezone.now()+timezone.timedelta(hours=6)
+
 				#i.sends = i.sends + 1 #Sends already set on capture
 
 		i.save()
