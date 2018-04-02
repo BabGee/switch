@@ -46,6 +46,15 @@ class Product(models.Model):
 	def __unicode__(self):
 		return u'%s' % (self.name)        
 
+class Retry(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)	
+	name = models.CharField(max_length=50, unique=True)	
+	max_retry = models.IntegerField(null=True, blank=True)
+	max_retry_hours = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	def __unicode__(self):
+		return u'%s' % (self.name)        
+
 class ServiceStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
@@ -63,8 +72,7 @@ class Service(models.Model):
 	status = models.ForeignKey(ServiceStatus) # Whether Poller or Other
 	success_last_response = models.CharField(max_length=256, null=True, blank=True)
 	failed_last_response = models.CharField(max_length=256, null=True, blank=True)
-	max_retry = models.IntegerField(null=True, blank=True)
-	max_retry_hours = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	retry = models.ForeignKey(Retry, null=True, blank=True)
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)

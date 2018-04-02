@@ -15,8 +15,11 @@ admin.site.register(PaymentMethod, PaymentMethodAdmin)
 
 class ProductAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description','date_modified','date_created')        
-
 admin.site.register(Product, ProductAdmin)
+
+class RetryAdmin(admin.ModelAdmin):
+		list_display = ('id','name','max_retry','max_retry_hours')
+admin.site.register(Retry, RetryAdmin)
 
 class ServiceStatusAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description','date_modified','date_created')        
@@ -25,7 +28,7 @@ admin.site.register(ServiceStatus, ServiceStatusAdmin)
 
 class ServiceAdmin(admin.ModelAdmin):
 		list_display = ('id','name','product','description','status','success_last_response',\
-		 'failed_last_response','max_retry','max_retry_hours','access_level_list') 
+		 'failed_last_response','retry','access_level_list') 
 	        search_fields = ('name',)
 		list_filter = ('product','access_level',)
 admin.site.register(Service, ServiceAdmin)
