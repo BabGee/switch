@@ -330,6 +330,8 @@ def background_service_call(background):
 		#	payload['trigger'] = 'retry_send%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
 		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
+
+		lgr.info('\n\n\n\n\t########\Request: %s\n\n' % payload)
 		payload = ServiceCall().api_service_call(service, gateway_profile, payload)
 
 		lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
