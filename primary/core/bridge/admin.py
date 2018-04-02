@@ -25,7 +25,7 @@ admin.site.register(ServiceStatus, ServiceStatusAdmin)
 
 class ServiceAdmin(admin.ModelAdmin):
 		list_display = ('id','name','product','description','status','success_last_response',\
-		 'failed_last_response','access_level_list')        
+		 'failed_last_response','max_retry','max_retry_hours','access_level_list') 
 	        search_fields = ('name',)
 		list_filter = ('product','access_level',)
 admin.site.register(Service, ServiceAdmin)

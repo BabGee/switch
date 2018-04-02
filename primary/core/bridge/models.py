@@ -63,6 +63,8 @@ class Service(models.Model):
 	status = models.ForeignKey(ServiceStatus) # Whether Poller or Other
 	success_last_response = models.CharField(max_length=256, null=True, blank=True)
 	failed_last_response = models.CharField(max_length=256, null=True, blank=True)
+	max_retry = models.IntegerField(null=True, blank=True)
+	max_retry_hours = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)
