@@ -31,7 +31,8 @@ from .forms import \
     PageInputGroupForm, \
     PageGroupPageForm,\
     DataListForm,\
-    DataListQueryForm
+    DataListQueryForm,\
+    ServiceForm
 
 from django.db.models import Q
 from primary.core.administration.models import Channel
@@ -373,6 +374,8 @@ def interface(request, gateway_pk, service_name, page_group_pk=None, page_pk=Non
     # todo use page-inputs to filter, remove pages without page-inputs
     pages = page_group.page_set.all().order_by('item_level')
 
+    # todo no pages should redirect to /iic_editor/gateways/1/HOME/page_groups/create/
+
     # todo user page to optimize query
     # query pages from page inputs
     pages_with_inputs = pages.filter(pageinput__in=page_inputs).distinct()
@@ -580,8 +583,19 @@ def institution_page_group_list(request, gateway_pk, institution_pk, service):
 def gateway_service(request, gateway_pk, service_name):
     gateway = Gateway.objects.get(pk=gateway_pk)
     # page_groups = gateway.pagegroup_set.all()
+    try:
+        service = Service.objects.get(name=service_name)
+    except Service.DoesNotExist as e:
 
-    service = Service.objects.get(name=service_name)
+        service_form = ServiceForm(initial={
+            'name':service_name,
+            'gateway':gateway.pk
+        })
+
+        return render(request,'iic/service/create.html',{
+            'form':service_form,
+            'gateway': gateway
+        })
 
     service_commands = service.servicecommand_set.all().order_by('level')
 
@@ -1131,6 +1145,24 @@ def page_input_copy(request, gateway_pk, service_name, page_group_pk, page_pk, p
         'page_input': page_input,
         'page_input_group': page_input_group,
         'page_group': page_group})
+
+
+def service_create(request):
+    if request.method == 'POST':
+        service_name = request.POST.get('name')
+        gateway_pk = request.POST.get('gateway')
+
+        service = Service(name=service_name)
+        service.description = service_name.title()
+        service.product = Product.objects.get(name='SYSTEM')
+        service.status = ServiceStatus.objects.get(name='POLLER')
+
+        service.success_last_response = ' '
+        service.failed_last_response = ' '
+
+        service.save()
+
+        return redirect('/iic_editor/gateways/{}/{}/'.format(gateway_pk,service_name))
 
 
 def service_command_list(request, service_pk):

@@ -78,7 +78,7 @@ class Wrappers:
 					break
 				count = count+1
 
-		return json.dumps(new_payload)
+		return new_payload
 
 
 
@@ -192,11 +192,12 @@ class System(Wrappers):
 				charges = payload['charges'] if 'charges' in payload.keys() and payload['charges']!='' else None
 
 				request = payload.copy()
+				request = self.background_activity_payload(request)
 				try: request.update(json.loads(background_service[0].details))
 				except: pass
 
 				activity = BackgroundServiceActivity(service=background_service[0].service, status=status, \
-						gateway_profile=session_gateway_profile,request=self.background_activity_payload(request),\
+						gateway_profile=session_gateway_profile,request=json.dumps(request),\
 						channel=channel, response_status=response_status, currency = currency,\
 						amount = amount, charges = charges, gateway=session_gateway_profile.gateway,\
 						sends=0)

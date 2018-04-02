@@ -12,6 +12,11 @@ class PageInputOrderConfigForm(forms.Form):
     config = forms.CharField(widget = forms.HiddenInput(), required = True)
 
 
+class ServiceForm(forms.Form):
+    name = forms.CharField(widget = forms.TextInput(), required = True)
+    gateway = forms.CharField(widget=forms.HiddenInput())
+
+
 # Create the form class.
 class PageForm(ModelForm):
     description = forms.CharField(required=False,max_length=100)

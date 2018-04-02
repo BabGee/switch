@@ -134,7 +134,7 @@ urlpatterns = [
     url(r'services/', include([
         # url(r'^$', service_list),
         # url(r'^order/$', page_order),
-        # url(r'^create/$', page_create),
+        url(r'^create/$', service_create),
         url(r'^(?P<service_pk>\d+)/', include([
             # url(r'^$', page_detail),
             url(r'^service_commands/$', service_command_list),
