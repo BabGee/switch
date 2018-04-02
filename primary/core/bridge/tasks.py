@@ -193,7 +193,7 @@ class System(Wrappers):
 
 				request = payload.copy()
 				request = self.background_activity_payload(request)
-				try: request.update(json.loads(background_service[0].details))
+				try: request.update(json.loads(background_service[0].details)) #Triggers removed in previous call so no need to append
 				except: pass
 
 				activity = BackgroundServiceActivity(service=background_service[0].service, status=status, \
