@@ -323,7 +323,7 @@ def background_service_call(background):
 		gateway_profile = i.gateway_profile
 
 
-		if i.service.retry and i.sends == i.service.retry.max_retry:
+		if i.service.retry and i.sends > i.service.retry.max_retry:
 			payload['trigger'] = 'last_send%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 		elif i.service.retry == None and i.sends > 3:
 			payload['trigger'] = 'last_send%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
