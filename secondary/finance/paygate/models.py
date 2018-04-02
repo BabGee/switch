@@ -122,6 +122,7 @@ class RemittanceProduct(models.Model):
 	service = models.ManyToManyField(Service, blank=True)
 	realtime = models.BooleanField(default=False)
 	show_message = models.BooleanField(default=False)
+	fail_continues = models.BooleanField(default=False)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
         currency = models.ManyToManyField(Currency, blank=True) #Allowed Currencies
 	def __unicode__(self):

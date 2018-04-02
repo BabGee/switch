@@ -454,17 +454,26 @@ class System(Wrappers):
 
 								payload['remit_response'] = params['response']
 							else:
-								outgoing.state = OutgoingState.objects.get(name='SENT')
-								if 'response' in params.keys() and remittance_product[0].show_message:
-									payload['response'] = params['response']
+								if remittance_product[0].fail_continues:
+									payload['trigger'] = 'fail_continues%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+									params['response_status'] = '00'
 								else:
-									payload['response'] = 'Remittance Failed'
+									outgoing.state = OutgoingState.objects.get(name='SENT')
+									if 'response' in params.keys() and remittance_product[0].show_message:
+										payload['response'] = params['response']
+									else:
+										payload['response'] = 'Remittance Failed'
 
 							payload['response_status'] = params['response_status']
 						else:
 							outgoing.state = OutgoingState.objects.get(name='FAILED')
-							outgoing.response_status = ResponseStatus.objects.get(response='06')
-							payload['response_status'] = '06'
+							if remittance_product[0].fail_continues:
+								payload['trigger'] = 'fail_continues%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+								outgoing.response_status = ResponseStatus.objects.get(response='00')
+								payload['response_status'] = '00'
+							else:
+								outgoing.response_status = ResponseStatus.objects.get(response='06')
+								payload['response_status'] = '06'
 
 						outgoing.save()	
 					else:
