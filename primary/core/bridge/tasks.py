@@ -306,7 +306,7 @@ def background_service_call(background):
 	from primary.core.api.views import ServiceCall
 	try:
 		i = BackgroundServiceActivity.objects.get(id=background)
-
+		lgr.info('Background Service Call Started: %s' % i)
 		try:payload = json.loads(i.request)
 		except:pass
 		payload['chid'] = i.channel.id
@@ -321,7 +321,7 @@ def background_service_call(background):
 
 		service = i.service
 		gateway_profile = i.gateway_profile
-
+		lgr.info('Set Retry Trigger')
 
 		if i.service.retry and i.sends > i.service.retry.max_retry:
 			payload['trigger'] = 'last_send%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
@@ -394,6 +394,7 @@ def process_background_service():
 
 		processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
 		for bg in background:
+			lgr.info('Process Background Service %s' % bg)
 			background_service_call.delay(bg)
 	except Exception, e:
 		lgr.info('Error on Processing Background Service: %s' % e)
