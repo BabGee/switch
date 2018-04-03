@@ -1002,7 +1002,7 @@ class Wrappers:
 						if report_list:
 							pass
 						elif data.ifnull_response not in [None, '']:
-							report_list = [data.ifnull_response]
+							report_list = [[data.ifnull_response]]
 
 						params['lines']= report_list
 					else:
@@ -1061,7 +1061,7 @@ class Wrappers:
 			if report_list:
 				pass
 			elif data.ifnull_response not in [None, '']:
-				report_list = [data.ifnull_response]
+				report_list = [[data.ifnull_response]]
 
 			params['lines'] = report_list
 		else:
