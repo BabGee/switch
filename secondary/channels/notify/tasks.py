@@ -626,7 +626,6 @@ class System(Wrappers):
 
 			else:
 				gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-				session_gateway_profile = None
 
 				ext_outbound_id = None
 				if "ext_outbound_id" in payload.keys():
@@ -643,8 +642,13 @@ class System(Wrappers):
 					scheduled_send = timezone.now()
 				notification_product = NotificationProduct.objects.get(id=payload['notification_product_id'])
 
+				if 'session_gateway_profile_id' in payload.keys():
+					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+				else:
+					session_gateway_profile = gateway_profile
+
 				#Check if Contact exists in notification product
-				contact = Contact.objects.filter(product=notification_product, gateway_profile=gateway_profile) 
+				contact = Contact.objects.filter(product=notification_product, gateway_profile=session_gateway_profile) 
 
 				#Construct Message to send
 				if 'message' in payload.keys() and payload['message'] not in ['',None]:
@@ -657,7 +661,7 @@ class System(Wrappers):
 					if len(contact)<1:
 						details = json.dumps({})
 						new_contact = Contact(status=status,product=notification_product,subscription_details=details,\
-								gateway_profile=gateway_profile)
+								gateway_profile=session_gateway_profile)
 						if notification_product.subscribable:
 							new_contact.subscribed=False
 						else:
@@ -809,8 +813,14 @@ class System(Wrappers):
 					session_gateway_profile = GatewayProfile.objects.filter(msisdn=msisdn, gateway=gateway_profile.gateway)
 			'''
 
+			if 'session_gateway_profile_id' in payload.keys():
+				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			else:
+				session_gateway_profile = gateway_profile
+
+
 			#Check if Contact exists in notification product
-			contact = Contact.objects.filter(product=notification_product[0], gateway_profile=gateway_profile) 
+			contact = Contact.objects.filter(product=notification_product[0], gateway_profile=session_gateway_profile) 
 			lgr.info('Contact: %s' % contact)
 			#get notification_template using service & get/create contact
 			notification_template = NotificationTemplate.objects.filter(product=notification_product[0],service__name=payload['SERVICE'])
@@ -823,7 +833,7 @@ class System(Wrappers):
 				status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
 				if len(contact)<1:
 					new_contact = Contact(status=status,product=notification_product[0],subscription_details=details[:1920],\
-							subscribed=False, gateway_profile=gateway_profile)
+							subscribed=False, gateway_profile=session_gateway_profile)
 					new_contact.save()
 				else:
 					new_contact = contact[0]

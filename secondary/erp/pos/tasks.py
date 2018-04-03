@@ -1005,7 +1005,9 @@ class System(Wrappers):
 		Adds a trigger `has_delivery` if the purchaser_order has a Delivery
 		'''
 		try:
-			if Delivery.objects.filter(order_id=payload['purchase_order_id']).exists():
+			deliveries = Delivery.objects.filter(order_id=payload['purchase_order_id'])
+			if deliveries.exists():
+				payload['delivery_id'] = deliveries[0].pk
 				payload['trigger'] = 'has_delivery%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
 			else:
 				# TODO remove has_delivery trigger if exists

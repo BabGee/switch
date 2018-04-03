@@ -1,4 +1,5 @@
 {% extends 'iic/base.html' %}
+
 {% block content %}
 
     <ol class="breadcrumb">
@@ -14,53 +15,41 @@
 
         <div class="col-md-2">
             <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/create/">Add Page</a>
-            <h4>Page Groups</h4>
-
-
-            <div class="list-group">
-
+            <ul class="nav nav-pills flex-column">
                 {% for page_group_l in page_groups %}
 
-                    <a class="list-group-item list-group-item-action page-group {% if page_group_l == page_group %}active{% endif %}"
-                       href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group_l.pk }}/">{{ page_group_l }}</a>
+              <li class="nav-item">
+                <a class="nav-link"
+                   href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group_l.pk }}/">{{ page_group_l }}</a>
+                  {% if page_group_l == page_group %}
+                <ul class="nav flex-column ml-3">
 
-                {% empty %}
-                    <li>No items</li>
-                {% endfor %}
-
-
-            </div>
-
-        </div>
-        <div class="col-md-3">
-            <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/create/">Add
-                New</a>
-            <h4>Pages</h4>
-
-            <div class="list-group">
                 {% for page_l in pages %}
 
-                    <div class="list-group-item list-group-item-action {% if page_l == page %}active{% endif %}">
-                        {{ page_l.name }}
-
-                        <a class="float-right"
-                           href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page_l.pk }}/">
-                            <span class="fa fa-info-circle"></span>
-
-                            <a class="float-right"
-                               href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page_l.pk }}/">
-                                <span class="fa fa-caret-right"></span>
-                            </a>
-
-                    </div>
+                  <li class="nav-item">
+                    <a class="nav-link {% if page_l == page %}active{% endif %}" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page_l.pk }}/">{{ page_l.name }}</a>
+                  </li>
 
                 {% empty %}
                     <p>No items</p>
                 {% endfor %}
-            </div>
 
+
+                  <li class="nav-item">
+                    <a class="nav-link" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/create/">Add New</a>
+                  </li>
+                </ul>
+              {% endif %}
+              </li>
+
+                {% empty %}
+                    <li>No items</li>
+                {% endfor %}
+            </ul>
         </div>
-        <div class="col-md-3">
+
+
+        <div class="col-md-2">
 
             <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/create/">Add
                 New</a>
@@ -83,7 +72,7 @@
                 {% endfor %}
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-8">
 
             <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/">View
                 Detailed List</a>
