@@ -999,6 +999,11 @@ class Wrappers:
 						#lgr.info("#IF values_list is used")
 						report_list = np.asarray(report_list).tolist()
 						#Set Data
+						if report_list:
+							pass
+						elif data.ifnull_response not in [None, '']:
+							report_list = [data.ifnull_response]
+
 						params['lines']= report_list
 					else:
 						#lgr.info("#IF values_list is used")
@@ -1053,6 +1058,11 @@ class Wrappers:
 			#IF values_list is used
 			report_list = np.asarray(report_list).tolist()
 			#Set Data
+			if report_list:
+				pass
+			elif data.ifnull_response not in [None, '']:
+				report_list = [data.ifnull_response]
+
 			params['lines'] = report_list
 		else:
 			#IF values_list is used

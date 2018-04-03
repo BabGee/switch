@@ -108,6 +108,7 @@ class DataList(models.Model):
 	pn_id_field = models.CharField('Push Notification ID Field', max_length=50, blank=True, null=True)
 	pn_update_field = models.CharField('Push Update Field', max_length=50, blank=True, null=True)
 	data_response_type = models.ForeignKey(DataResponseType)
+	ifnull_response = models.CharField(max_length=256, null=True, blank=True)
 	pn_action = models.ManyToManyField(PushAction, blank=True)
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	institution = models.ManyToManyField(Institution, blank=True)
