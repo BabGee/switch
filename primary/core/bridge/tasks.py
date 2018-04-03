@@ -104,9 +104,9 @@ class Wrappers:
 			currency = Currency.objects.get(code=currency_code) if currency_code is not None  else None
 			amount = payload['amount'] if 'amount' in payload.keys() and payload['amount']!='' else None
 			charges = payload['charges'] if 'charges' in payload.keys() and payload['charges']!='' else None
-
+			request = self.background_activity_payload(payload)
 			activity = BackgroundServiceActivity(service=service, status=status,\
-					gateway_profile=gateway_profile,request=self.background_activity_payload(payload),\
+					gateway_profile=gateway_profile,request=json.dumps(request),\
 					channel=channel, response_status=response_status, currency = currency,\
 					amount = amount, charges = charges, gateway=gateway_profile.gateway,\
 					sends=0)
@@ -306,7 +306,6 @@ def background_service_call(background):
 	from primary.core.api.views import ServiceCall
 	try:
 		i = BackgroundServiceActivity.objects.get(id=background)
-		lgr.info('Background Service Call Started: %s' % i)
 		try:payload = json.loads(i.request)
 		except:pass
 		payload['chid'] = i.channel.id
@@ -321,7 +320,6 @@ def background_service_call(background):
 
 		service = i.service
 		gateway_profile = i.gateway_profile
-		lgr.info('Set Retry Trigger')
 
 		if i.service.retry and i.sends > i.service.retry.max_retry:
 			payload['trigger'] = 'last_send%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
@@ -394,7 +392,6 @@ def process_background_service():
 
 		processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
 		for bg in background:
-			lgr.info('Process Background Service %s' % bg)
 			background_service_call.delay(bg)
 	except Exception, e:
 		lgr.info('Error on Processing Background Service: %s' % e)
