@@ -1194,6 +1194,34 @@ class System(Wrappers):
 		return payload
 
 
+	def reset_pin(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+			chars = string.digits
+			rnd = random.SystemRandom()
+			pin = ''.join(rnd.choice(chars) for i in range(0,4))
+
+
+			salt = str(session_gateway_profile.id)
+			salt = '0%s' % salt if len(salt) < 2 else salt
+
+			hash_pin = crypt.crypt(str(pin), salt)
+
+			session_gateway_profile.pin = hash_pin
+			session_gateway_profile.status = ProfileStatus.objects.get(name='RESET PIN')
+			session_gateway_profile.save()
+
+			payload['reset_pin'] = pin
+			payload['response'] = 'Reset Pin'
+			payload['response_status'] = '00'
+		except Exception, e:
+			lgr.info('Error on Reset Pin: %s' % e)
+			payload['response_status'] = '96'
+		return payload
+
+
 	def one_time_pin(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
