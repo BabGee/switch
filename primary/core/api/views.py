@@ -21,16 +21,16 @@ class ServiceCall:
 	def api_service_call(self, service, gateway_profile, payload):
 		try:
 			payload = dict(filter(lambda x:x[1], payload.items())) #Remove empty value items
-			response = ServiceProcessor().do_process(service, gateway_profile, payload.copy())
+			payload = ServiceProcessor().do_process(service, gateway_profile, payload.copy())
 
-			payload = {}
-
+			'''
 			payload['action_id'] = response['action_id']
 			payload['last_response'] = response['last_response']
 			payload['response'] = response['response']
 			payload['response_status'] = response['response_status']
 			if 'transaction_reference' in response.keys(): payload['transaction_reference'] = response['transaction_reference']
 			if 'timestamp' in response.keys(): payload['timestamp'] = response['timestamp']
+			'''
 		except Exception, e:
 			payload['response_status'] = '96'
 			lgr.info("Service Processing Failed: %s" % e)

@@ -73,6 +73,7 @@ class Service(models.Model):
 	success_last_response = models.CharField(max_length=256, null=True, blank=True)
 	failed_last_response = models.CharField(max_length=256, null=True, blank=True)
 	retry = models.ForeignKey(Retry, null=True, blank=True)
+	allowed_response_key = models.CharField(max_length=1024, null=True, blank=True, help_text='Comma Delimitted')
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)
