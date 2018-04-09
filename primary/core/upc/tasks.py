@@ -2045,7 +2045,7 @@ def expired_passport_background_service_call(profile):
 def process_expired_passport():
 	lgr = get_task_logger(__name__)
 	try:
-		orig_gateway_profile = GatewayProfile.objects.select_for_update(nowait=True).filter(Q(status__name='ACTIVATED'), user__profile__passport_expiry_date__lte=timezone.now().date())
+		orig_gateway_profile = GatewayProfile.objects.select_for_update(nowait=True).filter(Q(status__name='ACTIVATED'), user__profile__passport_expiry_date__lte=( timezone.now()-timezone.timedelta(days=30) ).date())
 		gateway_profile = list(orig_gateway_profile.values_list('id',flat=True)[:500])
 
 		processing = orig_gateway_profile.filter(id__in=gateway_profile).update(status=ProfileStatus.objects.get(name='EXPIRED PASSPORT'), date_modified=timezone.now())
