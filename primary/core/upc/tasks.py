@@ -2042,7 +2042,7 @@ def expired_passport_background_service_call(profile):
 @app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
-def processing_expired_passport():
+def process_expired_passport():
 	lgr = get_task_logger(__name__)
 	try:
 		orig_gateway_profile = GatewayProfile.objects.select_for_update(nowait=True).filter(Q(status__name='ACTIVATED'), passport_expiry_date__lte=timezone.now().date())
