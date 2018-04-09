@@ -19,6 +19,7 @@ from django.core.files import File
 import base64, re, crypt
 from django.utils.http import urlquote
 
+from django.db import transaction
 from primary.core.bridge.models import *
 
 import logging
@@ -2003,3 +2004,51 @@ class Payments(System):
 #from celery.utils.log import get_task_logger
 #lgr = get_task_logger(__name__)
 #Celery Tasks Here
+@app.task(ignore_result=True)
+def expired_passport_background_service_call(profile):
+	lgr = get_task_logger(__name__)
+	try:
+		from primary.core.bridge.tasks import Wrappers as BridgeWrappers
+		p = GatewayProfile.objects.get(id=profile)
+		lgr.info('Captured Profile: %s' % p)
+
+		payload = {}
+
+		gateway_profile = p
+		service = Service.objects.get(name='EXPIRED PASSPORT')
+
+		payload['chid'] = c.channel.id
+		payload['ip_address'] = '127.0.0.1'
+		payload['gateway_host'] = '127.0.0.1'
+
+		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
+
+		payload = BridgeWrappers().background_service_call(service, gateway_profile, payload)
+		lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
+	except Exception, e:
+		payload['response_status'] = '96'
+		lgr.info('Unable to make service call: %s' % e)
+	return payload
+
+
+
+@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def processing_expired_passport():
+	lgr = get_task_logger(__name__)
+	try:
+		orig_gateway_profile = GatewayProfile.objects.select_for_update(nowait=True).filter(Q(status__name='ACTIVATED'), passport_expiry_date__lte=timezone.now().date())
+		gateway_profile = list(orig_gateway_profile.values_list('id',flat=True)[:500])
+
+		processing = orig_gateway_profile.filter(id__in=gateway_profile).update(status=ProfileStatus.objects.get(name='EXPIRED PASSPORT'), date_modified=timezone.now())
+		for gp in gateway_profile:
+			lgr.info('Gateway Profile : %s' % gp)
+			transaction.on_commit(lambda: expired_passport_background_service_call.delay(gp))
+
+	except DatabaseError, e:
+		transaction.set_rollback(True)
+
+	except Exception, e: lgr.info('Error on processing expired passport: %s' % e)
+
+
