@@ -1617,7 +1617,7 @@ def send_outbound_email_messages():
 
 			channel = i.contact.product.notification.code.channel.name
 			endpoint = i.contact.product.notification.endpoint
-			email = i.contact.gateway_profile.user.email
+			email = i.recipient if i.recipient not in [None, ""] else i.contact.gateway_profile.user.email
 			lgr.info('Before Sender')
 			sender = '<%s>' % i.contact.product.notification.code.code
 	
