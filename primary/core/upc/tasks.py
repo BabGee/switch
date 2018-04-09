@@ -2024,7 +2024,7 @@ def expired_passport_background_service_call(profile):
 		gateway_profile = p
 		service = Service.objects.get(name='EXPIRED PASSPORT')
 
-		payload['chid'] = c.channel.id
+		payload['chid'] = 2
 		payload['ip_address'] = '127.0.0.1'
 		payload['gateway_host'] = '127.0.0.1'
 
