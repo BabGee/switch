@@ -85,7 +85,7 @@ GEOIP_PATH = '/usr/share/GeoIP'
 #EMAIL_USE_TLS = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = '192.168.137.3'
+EMAIL_HOST = 'localhost'
 #EMAIL_PORT = 25
 EMAIL_PORT = 587
 EMAIL_HOST_USER = ''
@@ -100,7 +100,7 @@ GRAPH_MODELS = {
 }
 
 ADMINS = (
-     ('Samson Arita', 'samson.arita@gmail.com'),
+     ('InterIntel Support', 'support@interintel.co.ke'),
 )
 
 SUIT_CONFIG = {
