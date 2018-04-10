@@ -40,7 +40,7 @@ class DataListQuery(models.Model):
 	gateway_profile_filters = models.CharField(max_length=512, blank=True, null=True)
 	profile_filters = models.CharField(max_length=512, blank=True, null=True)
 	list_filters = models.CharField(max_length=512, blank=True, null=True) 
-	duration_filters = models.CharField(max_length=512, blank=True, null=True)
+	duration_days_filters = models.CharField(max_length=512, blank=True, null=True)
 	date_filters = models.CharField(max_length=512, blank=True, null=True)
 	time_filters = models.CharField(max_length=512, blank=True, null=True)
 	token_filters = models.CharField(max_length=512, null=True, blank=True)

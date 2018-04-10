@@ -176,9 +176,9 @@ class Wrappers:
             model_class = apps.get_model(data.query.module_name, data.query.model_name)
             # model_class = globals()[data.query.model_name]
 
-            duration_filters = data.query.duration_filters
+            duration_days_filters = data.query.duration_days_filters
             date_filters = data.query.date_filters
-            time_filters = data.query.time_filters
+            duration_hours_filters = data.query.duration_hours_filters
             token_filters = data.query.token_filters
 
             not_filters = data.query.not_filters
@@ -200,9 +200,9 @@ class Wrappers:
 	    distinct = data.query.distinct
 
 	    values_data = {}
-            duration_filter_data = {}
+            duration_days_filter_data = {}
             date_filter_data = {}
-            time_filter_data = {}
+            duration_hours_filter_data = {}
             token_filters_data = {}
 
             not_filter_data = {}
@@ -317,26 +317,44 @@ class Wrappers:
 
 
 	    #lgr.info('Not Filters Report List Count: %s' % report_list.count())
-            if duration_filters not in ['',None]:
+            if duration_days_filters not in ['',None]:
 	        #lgr.info('Date Filters')
-                for i in duration_filters.split("|"):
+                for i in duration_days_filters.split("|"):
                     k,v = i.split('%')
 	    	    #lgr.info('Date %s| %s' % (k,v))
-		    try: duration_filter_data[k] = (timezone.now()+timezone.timedelta(days=float(v))).date() if v not in ['',None] else None
+		    try: duration_days_filter_data[k] = (timezone.now()+timezone.timedelta(days=float(v))).date() if v not in ['',None] else None
 		    except Exception, e: lgr.info('Error on date filter 0: %s' % e)
 
 
-                if len(duration_filter_data):
-	    	    #lgr.info('Duration Filter Data: %s' % duration_filter_data)
-		    for k,v in duration_filter_data.items(): 
+                if len(duration_days_filter_data):
+	    	    #lgr.info('Duration Filter Data: %s' % duration_days_filter_data)
+		    for k,v in duration_days_filter_data.items(): 
 			try:lgr.info('Duration Data: %s' % v.isoformat())
 			except: pass
-                    query = reduce(operator.and_, (Q(k) for k in duration_filter_data.items()))
+                    query = reduce(operator.and_, (Q(k) for k in duration_days_filter_data.items()))
 		    #lgr.info('Query: %s' % query)
                     report_list = report_list.filter(query)
 
 
-	    #lgr.info('Date Filters Report List Count: %s' % report_list.count())
+	    #lgr.info('Duration Days Filters Report List Count: %s' % report_list.count())
+            if duration_hours_filters not in ['',None]:
+                for i in duration_hours_filters.split("|"):
+                    k,v = i.split('%')
+		    try: duration_hours_filter_data[k] = timezone.now()+timezone.timedelta(hours=float(v)) if v not in ['',None] else None
+		    except Exception, e: lgr.info('Error on time filter: %s' % e)
+
+                if len(duration_hours_filter_data):
+		    for k,v in duration_hours_filter_data.items(): 
+			try:lgr.info('Date Data: %s' % v.isoformat())
+			except: pass
+                    query = reduce(operator.and_, (Q(k) for k in duration_hours_filter_data.items()))
+		    #lgr.info('Query: %s' % query)
+
+                    report_list = report_list.filter(query)
+
+            #q_list = [Q(**{f:q}) for f in field_lookups]
+
+	    #lgr.info('Duration Hours Filters Report List Count: %s' % report_list.count())
             if date_filters not in ['',None]:
 	        #lgr.info('Date Filters')
                 for i in date_filters.split("|"):
@@ -377,24 +395,6 @@ class Wrappers:
 
 
 	    #lgr.info('Date Filters Report List Count: %s' % report_list.count())
-            if time_filters not in ['',None]:
-                for i in time_filters.split("|"):
-                    k,v = i.split('%')
-		    try: time_filter_data[k] = timezone.now()+timezone.timedelta(hours=float(v)) if v not in ['',None] else None
-		    except Exception, e: lgr.info('Error on time filter: %s' % e)
-
-                if len(time_filter_data):
-		    for k,v in time_filter_data.items(): 
-			try:lgr.info('Date Data: %s' % v.isoformat())
-			except: pass
-                    query = reduce(operator.and_, (Q(k) for k in time_filter_data.items()))
-		    #lgr.info('Query: %s' % query)
-
-                    report_list = report_list.filter(query)
-
-            #q_list = [Q(**{f:q}) for f in field_lookups]
-
-	    #lgr.info('Time Filters Report List Count: %s' % report_list.count())
             if token_filters not in ['',None]:
                 for f in token_filters.split("|"):
             	    if 'csrfmiddlewaretoken' in payload.keys() and payload['csrfmiddlewaretoken'] not in ['', None]:
