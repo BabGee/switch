@@ -357,7 +357,7 @@ class Wrappers:
 			if i in payload.keys():
 				try:date_filter_data[i] = datetime.strptime(payload[i], '%Y-%m-%d').date() if payload[i] not in ['',None] else None
 			        except Exception, e: lgr.info('Error on date filter 3: %s' % e)
-			elif 'start_date' in payload.keys) or 'end_date' in payload.keys():
+			elif 'start_date' in payload.keys() or 'end_date' in payload.keys():
 				if 'start_date' in payload.keys():
 					try:date_filter_data[i+'__gte'] = datetime.strptime(payload['start_date'], '%Y-%m-%d').date() if payload['start_date'] not in ['',None] else None
 				        except Exception, e: lgr.info('Error on date filter 4: %s' % e)
