@@ -176,6 +176,7 @@ class Wrappers:
             model_class = apps.get_model(data.query.module_name, data.query.model_name)
             # model_class = globals()[data.query.model_name]
 
+            duration_filters = data.query.duration_filters
             date_filters = data.query.date_filters
             time_filters = data.query.time_filters
             token_filters = data.query.token_filters
@@ -199,6 +200,7 @@ class Wrappers:
 	    distinct = data.query.distinct
 
 	    values_data = {}
+            duration_filter_data = {}
             date_filter_data = {}
             time_filter_data = {}
             token_filters_data = {}
@@ -237,8 +239,7 @@ class Wrappers:
 		    of_list = f.split('%')
 		    if len(of_list)==2:
 			if of_list[0] in payload.keys() and getattr(model_class, of_list[1].split('__')[0], False):
-				if f not in ['',None]: or_filter_data[of_list[1] + '__icontains'] = payload[of_list[0]]
-
+				or_filter_data[of_list[1] + '__icontains'] = payload[of_list[0]]
 			elif getattr(model_class, of_list[0].split('__')[0], False):
                     		k,v = of_list
 				v_list = v.split(',')
@@ -264,7 +265,7 @@ class Wrappers:
 		    af_list = f.split('%')
 		    if len(af_list)==2:
 			if af_list[0] in payload.keys() and getattr(model_class, af_list[1].split('__')[0], False):
-				if f not in ['',None]: and_filter_data[af_list[1] + '__icontains'] = payload[af_list[0]]
+				and_filter_data[af_list[1] + '__icontains'] = payload[af_list[0]]
 			elif getattr(model_class, af_list[0].split('__')[0], False):
                     		k,v = af_list
 				v_list = v.split(',')
@@ -291,7 +292,7 @@ class Wrappers:
 		    nf_list = f.split('%')
 		    if len(nf_list)==2:
 			if nf_list[0] in payload.keys() and getattr(model_class, nf_list[1].split('__')[0], False):
-				if f not in ['',None]: not_filter_data[nf_list[1] + '__icontains'] = payload[nf_list[0]]
+				not_filter_data[nf_list[1] + '__icontains'] = payload[nf_list[0]]
 			elif getattr(model_class, nf_list[0].split('__')[0], False):
                     		k,v = nf_list
 				v_list = v.split(',')
@@ -316,13 +317,55 @@ class Wrappers:
 
 
 	    #lgr.info('Not Filters Report List Count: %s' % report_list.count())
+            if duration_filters not in ['',None]:
+	        #lgr.info('Date Filters')
+                for i in duration_filters.split("|"):
+                    k,v = i.split('%')
+	    	    #lgr.info('Date %s| %s' % (k,v))
+		    try: duration_filter_data[k] = (timezone.now()+timezone.timedelta(days=float(v))).date() if v not in ['',None] else None
+		    except Exception, e: lgr.info('Error on date filter 0: %s' % e)
+
+
+                if len(duration_filter_data):
+	    	    #lgr.info('Duration Filter Data: %s' % duration_filter_data)
+		    for k,v in duration_filter_data.items(): 
+			try:lgr.info('Duration Data: %s' % v.isoformat())
+			except: pass
+                    query = reduce(operator.and_, (Q(k) for k in duration_filter_data.items()))
+		    #lgr.info('Query: %s' % query)
+                    report_list = report_list.filter(query)
+
+
+	    #lgr.info('Date Filters Report List Count: %s' % report_list.count())
             if date_filters not in ['',None]:
 	        #lgr.info('Date Filters')
                 for i in date_filters.split("|"):
-                    k,v = i.split('%')
-	    	    #lgr.info('Date %s| %s' % (k,v))
-		    try: date_filter_data[k] = (timezone.now()+timezone.timedelta(days=float(v))).date() if v not in ['',None] else None
-		    except Exception, e: lgr.info('Error on date filter: %s' % e)
+		    df_list = i.split('%')
+		    if len(df_list)==2:
+			if df_list[0] in payload.keys() and getattr(model_class, df_list[1].split('__')[0], False):
+				try:date_filter_data[df_list[1]] = datetime.strptime(payload[df_list[0]], '%Y-%m-%d').date() 
+			        except Exception, e: lgr.info('Error on date filter 1: %s' % e)
+			elif getattr(model_class, df_list[0].split('__')[0], False):
+                    		k,v = df_list
+				v_list = v.split(',')
+				if len(v_list)>1:
+					v = v_list
+				try:date_filter_data[k] = datetime.strptime(v, '%Y-%m-%d').date() if v not in ['',None] else None
+			        except Exception, e: lgr.info('Error on date filter 2: %s' % e)
+
+		    elif getattr(model_class, f.split('__')[0], False):
+			if i in payload.keys():
+				try:date_filter_data[i] = datetime.strptime(payload[i], '%Y-%m-%d').date() if payload[i] not in ['',None] else None
+			        except Exception, e: lgr.info('Error on date filter 3: %s' % e)
+			elif 'start_date' in payload.keys) or 'end_date' in payload.keys():
+				if 'start_date' in payload.keys():
+					try:date_filter_data[i+'__gte'] = datetime.strptime(payload['start_date'], '%Y-%m-%d').date() if payload['start_date'] not in ['',None] else None
+				        except Exception, e: lgr.info('Error on date filter 4: %s' % e)
+				if 'end_date' in payload.keys():
+					try:date_filter_data[i+'__lte'] = datetime.strptime(payload['end_date'], '%Y-%m-%d').date() if payload['end_date'] not in ['',None] else None
+				        except Exception, e: lgr.info('Error on date filter 5: %s' % e)
+
+
                 if len(date_filter_data):
 	    	    #lgr.info('Date Filter Data: %s' % date_filter_data)
 		    for k,v in date_filter_data.items(): 
@@ -448,6 +491,7 @@ class Wrappers:
                     report_list = report_list.filter(profile_query)
 
 	    #lgr.info('Date Filters Report List Count: %s' % report_list.count())
+	    '''
             if 'start_date' in payload.keys():
                 try:
                     date_obj = datetime.strptime(payload["start_date"] + ' 12:00 am', '%d/%m/%Y %I:%M %p')
@@ -481,7 +525,7 @@ class Wrappers:
 
 
 	    #lgr.info('Report List Count: %s' % report_list.count())
-
+	    '''
 
 
 	    join_query = DataListJoinQuery.objects.filter(query=data.query,join_inactive=False)
@@ -858,6 +902,16 @@ class Wrappers:
 					params['cols'][count] = i
 					count += 1
 				except: pass
+
+	    if date_filters not in [None,'']:
+                for f in and_filters.split("|"):
+		    count = 0
+		    for i in params['cols']:
+			if i['value'] == f.strip():
+				i['date_filters'] = []
+			params['cols'][count] = i
+			count += 1
+
 
 	    if data.query.links not in [None,'']:
 		    href = {"label": "Actions", "type": "href", "links": {}}

@@ -231,7 +231,7 @@
 
 
 
-                                    {% if page_input.input_variable.variable_type.name == 'SHOPPING CART BTN' or page_input.input_variable.variable_type.name == 'HYPERLINK' %}
+                                    {% if page_input.input_variable.variable_type.name == 'SHOPPING CART BTN' or page_input.input_variable.variable_type.name == 'HYPERLINK' or page_input.input_variable.variable_type.name == 'SERVICE BUTTON' %}
 
                                         <a target="_blank"
                                            href="/iic_editor/gateways/{{ gateway.pk }}/{{ page_input.input_variable.service.name }}/">
