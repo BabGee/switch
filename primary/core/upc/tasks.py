@@ -178,9 +178,10 @@ class Wrappers:
 			postal_address_list = str(postal_address).split('-')
 			if len(postal_address_list)>1 and 'postal_code' not in payload.keys():
 				profile.postal_address = postal_address_list[0]
-				payload['postal_code'] = postal_address_list[1]
+				profile.postal_code = postal_address_list[1]
 			else:
 				profile.postal_address = postal_address
+				profile.postal_code =  None
 
 		if 'postal_code' in payload.keys(): profile.postal_code = payload['postal_code']
 		if 'country' in payload.keys(): profile.country = Country.objects.get(iso2=payload['country'])

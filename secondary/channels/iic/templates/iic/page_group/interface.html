@@ -1,6 +1,10 @@
 {% extends 'iic/base.html' %}
 
 {% block content %}
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"
+          rel="stylesheet"/>
+
 
     <ol class="breadcrumb">
 
@@ -18,29 +22,32 @@
             <ul class="nav nav-pills flex-column">
                 {% for page_group_l in page_groups %}
 
-              <li class="nav-item">
-                <a class="nav-link"
-                   href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group_l.pk }}/">{{ page_group_l }}</a>
-                  {% if page_group_l == page_group %}
-                <ul class="nav flex-column ml-3">
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group_l.pk }}/">{{ page_group_l }}</a>
+                        {% if page_group_l == page_group %}
+                            <ul class="nav flex-column ml-3">
 
-                {% for page_l in pages %}
+                                {% for page_l in pages %}
 
-                  <li class="nav-item">
-                    <a class="nav-link {% if page_l == page %}active{% endif %}" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page_l.pk }}/">{{ page_l.name }}</a>
-                  </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if page_l == page %}active{% endif %}"
+                                           href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page_l.pk }}/">{{ page_l.name }}</a>
+                                    </li>
 
-                {% empty %}
-                    <p>No items</p>
-                {% endfor %}
+                                {% empty %}
+                                    <p>No items</p>
+                                {% endfor %}
 
 
-                  <li class="nav-item">
-                    <a class="nav-link" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/create/">Add New</a>
-                  </li>
-                </ul>
-              {% endif %}
-              </li>
+                                <li class="nav-item">
+                                    <a class="nav-link"
+                                       href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/create/">Add
+                                        New</a>
+                                </li>
+                            </ul>
+                        {% endif %}
+                    </li>
 
                 {% empty %}
                     <li>No items</li>
@@ -49,105 +56,332 @@
         </div>
 
 
-        <div class="col-md-2">
+        <div class="col-md-10">
 
             <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/create/">Add
-                New</a>
+                New Section</a>
 
-            <h4>Page Input Groups</h4>
-            <div class="list-group">
+            {% for page_input_group_l in page_input_groups %}
+                {% if page_input_group_l == page_input_group %}
+                    <div class="card" style="margin-bottom: 5px">
+                        <div class="card-header">
+                            <p>
+                                <strong> {{ page_input_group_l.name }} </strong> {{ page_input_group_l.section_size }}
 
-                {% for page_input_group_l in page_input_groups %}
-                    <div class="list-group-item list-group-item-action {% if page_input_group_l == page_input_group %}active{% endif %}">
-                        {{ page_input_group_l.name }}
+                            <span class="float-right">
 
-                        <span class="fa fa-info-circle page-input-group"></span>
-                        <a class="float-right"
-                           href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page.pk }}/{{ page_input_group_l.pk }}/">
-                            <span class="fa fa-caret-right"></span>
-                        </a>
+                                <a class="inline-block"
+                                   href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page.pk }}/{{ page_input_group_l.pk }}/">
+                                    <span class="fa fa-caret-down"> More </span>
+                                </a>
+
+
+                                <a class="inline-block"
+                                   href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/">View
+                                    Detailed List</a>
+
+                                <a class="inline-block"
+                                   href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/create/">Add
+                                    New</a>
+
+                                <a class="inline-block"
+                                   href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/order/">Order</a>
+
+
+                            </span>
+
+
+                            </p>
+                        </div>
+                        <ul class="list-group">
+                            {% for page_input in page_inputs %}
+                                <li class="list-group-item list-group-item-
+                                        {% if page_input.page_input_status.name == 'ACTIVE' %}{% else %}danger{% endif %}">
+
+
+                                    <h3 class="editable"
+                                        data-type="text"
+                                        data-name="page_input"
+                                        data-pk="{{ page_input.pk }}"
+                                        data-url="/iic_editor/page_inputs/">{{ page_input.page_input }}</h3>
+                                    <p>
+
+
+                                        page <strong class="editable"
+                                                     data-type="text"
+                                                     data-name="page"
+                                                     data-pk="{{ page_input.pk }}"
+                                                     data-url="/iic_editor/page_inputs/">{{ page_input.page.pk }}</strong>
+                                        |
+
+                                        page input group <strong class="editable"
+                                                                 data-type="text"
+                                                                 data-name="page_input_group"
+                                                                 data-pk="{{ page_input.pk }}"
+                                                                 data-url="/iic_editor/page_inputs/">{{ page_input.page_input_group.pk }}</strong>
+                                        <br>
+                                        <strong>{{ page_input.input_variable.variable_type }}</strong> |
+                                        pk <strong>{{ page_input.pk }}</strong> |
+                                        input_variable_pk <strong>{{ page_input.input_variable.pk }}</strong> |
+                                        min <strong>{{ page_input.input_variable.validate_min }}</strong> |
+                                        max <strong>{{ page_input.input_variable.validate_max }}</strong> |
+                                        name <strong class="editable"
+                                                     data-type="text"
+                                                     data-name="name"
+                                                     data-pk="{{ page_input.input_variable.pk }}"
+                                                     data-url="/iic_editor/input_variables/">{{ page_input.input_variable.name }}</strong>
+                                        |
+                                        default_value <strong class="editable"
+                                                              data-type="text"
+                                                              data-name="default_value"
+                                                              data-pk="{{ page_input.input_variable.pk }}"
+                                                              data-url="/iic_editor/input_variables/">{{ page_input.input_variable.default_value }}</strong>
+                                        |
+
+                                        {% if page_input.input_variable.service.name == 'DATA SOURCE' %}
+                                            DATA SOURCE
+                                            <a href="/iic_editor/dsc/{{ page_input.input_variable.default_value }}/"><strong>Edit</strong></a>
+                                            |
+                                        {% else %}
+                                            service <strong>{{ page_input.input_variable.service.name }}</strong>
+                                            <a href="/iic_editor/gateways/4/{{ page_input.input_variable.service.name }}">get_section</a>
+                                            |
+                                        {% endif %}
+
+                                        level <strong>{{ page_input.item_level }}</strong> |
+                                        icon <strong>{{ page_input.icon }}</strong> |
+                                        section_size <strong class="editable"
+                                                             data-type="text"
+                                                             data-name="section_size"
+                                                             data-pk="{{ page_input.pk }}"
+                                                             data-url="/iic_editor/page_inputs/">{{ page_input.section_size }}</strong>
+
+                                        <br>
+                                        Access Levels<br>
+                                        <a href="#"
+                                           class="page_input_access_level"
+                                           data-type="checklist"
+                                           data-pk="{{ page_input.pk }}"
+                                           data-name="access_levels"
+                                           data-value="
+                                                   {% for cat in page_input.access_level.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                                           data-url="/iic_editor/page_inputs/"
+                                           data-title="Select Access Levels"></a>
+
+                                        <br>
+                                    Also on <a href="#">X</a> more gateways
+                                        Gateways {% for cat in page_input.gateway.all %}{{ cat.name }},{% endfor %}
+                                        {#                            <a href="#"#}
+                                        {#                               class="page_input_gateway"#}
+                                        {#                               data-type="checklist"#}
+                                        {#                               data-pk="{{ page_input.pk }}"#}
+                                        {#                               data-name="gateways"#}
+                                        {#                               data-value="{% for cat in page_input.gateway.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"#}
+                                        {#                               data-url="/iic_editor/page_inputs/"#}
+                                        {#                               data-title="Select gateways"></a>#}
+                                        {#                #}
+                                        <br>
+
+                                        {% if page_input.channel.exists %}
+                                            Channels {% for cat in page_input.channel.all %}{{ cat.name }},{% endfor %}
+                                            {% for channel in page_input.channel.all %}
+                                                {% if channel.name == 'Android' %}
+                                                    <span class="fa fa-mobile"></span>
+
+                                                {% elif channel.name == 'WEB' %}
+                                                    <span class="fa fa-desktop"></span>
+                                                {% else %}
+                                                    {% comment %} TODO do nothing for now {% endcomment %}
+                                                {% endif %}
+
+                                            {% endfor %}
+                                        {% endif %}
+
+
+                                        <br> Input Variable Usage Count :
+                                        <strong>{{ page_input.input_variable.pageinput_set.count }}</strong>
+
+                                        <br>
+
+                                        {% if page_input.trigger.exists %}
+                                            <br>
+                                            Triggers {{ page_input.trigger_list }}
+                                            {% for trigger in page_input.trigger.all %}
+                                                <span class="badge badge-dark">{{ trigger.name }}</span>
+                                            {% endfor %}
+
+                                        {% endif %}
+
+
+
+                                        <br>
+                                        <a target="_blank"
+                                           href="/admin/iic/pageinput/{{ page_input.pk }}/change/">Edit</a> |
+                                        <a target="_blank"
+                                           href="/admin/iic/inputvariable/{{ page_input.input_variable.pk }}/change/">Edit
+                                            Input Variable</a> |
+                                        <a href="#" class="visibility-toggle" id="{{ page_input.pk }}">
+                                            {% if page_input.page_input_status.name == 'ACTIVE' %}Hide{% else %}
+                                                Show{% endif %}</a> |
+                                        <a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/{{ page_input.pk }}/copy/">Template </a>
+                                    </p>
+
+
+                                    {#                                ------------------------------------------------------------------------             #}
+
+
+
+                                    {% if page_input.input_variable.variable_type.name == 'SHOPPING CART BTN' or page_input.input_variable.variable_type.name == 'HYPERLINK' %}
+
+                                        <a target="_blank"
+                                           href="/iic_editor/gateways/{{ gateway.pk }}/{{ page_input.input_variable.service.name }}/">
+                                            Service <span class="fa fa-cogs"></span></a>
+                                        <span style="width: 3px"></span>
+                                        <a target="_blank"
+                                           href="/iic_editor/gateways/{{ gateway.pk }}/{{ page_input.input_variable.service.name }}/interface/">
+                                            Next <span class="fa fa-caret-right"></span></a>
+
+
+
+                                    {% elif page_input.input_variable.variable_type.name == 'SUBMIT' %}
+
+                                        <a target="_blank"
+                                           href="/iic_editor/gateways/{{ gateway.pk }}/{{ page_input.page_input_group.input_variable.service.name }}/">
+                                            Service <span class="fa fa-cogs"></span></a>
+                                        <span style="width: 3px"></span>
+                                        <a target="_blank"
+                                           href="/iic_editor/gateways/{{ gateway.pk }}/{{ page_input.page_input_group.input_variable.service.name }}/interface/">
+                                            Next <span class="fa fa-caret-right"></span></a>
+
+                                    {% endif %}
+
+
+                                </li>
+                            {% empty %}
+                                <li class="list-group-item">No items</li>
+                            {% endfor %}
+
+                        </ul>
                     </div>
-                {% empty %}
-                    <li>No items</li>
-                {% endfor %}
-            </div>
+                {% endif %}
+            {% empty %}
+                <li>No items</li>
+            {% endfor %}
         </div>
-        <div class="col-md-8">
 
-            <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/">View
-                Detailed List</a>
-
-            <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/create/">Add
-                New</a>
-
-            <ul class="list-group">
-                {% for page_input in page_inputs %}
-                    <li class="list-group-item list-group-item-
-                            {% if page_input.page_input_status.name == 'ACTIVE' %}{% else %}danger{% endif %}">
-                        {{ page_input.page_input }}
-
-                        <strong>{{ page_input.input_variable.variable_type }}</strong>
-
-
-                        {{ page_input.input_variable.pk }}
-                        {% if page_input.channel.exists %}
-
-                            {% for channel in page_input.channel.all %}
-                                {% if channel.name == 'Android' %}
-                                    <span class="fa fa-mobile"></span>
-
-                                {% elif channel.name == 'WEB' %}
-                                    <span class="fa fa-desktop"></span>
-                                {% else %}
-                                    {% comment %} TODO do nothing for now {% endcomment %}
-                                {% endif %}
-
-                            {% endfor %}
-                        {% endif %}
-
-                        {% if page_input.trigger.exists %}
-                            <br>
-
-                            {% for trigger in page_input.trigger.all %}
-                                <span class="badge badge-dark">{{ trigger.name }}</span>
-                            {% endfor %}
-
-                        {% endif %}
-                        <br>
-
-                        {% if page_input.input_variable.variable_type.name == 'SHOPPING CART BTN' or page_input.input_variable.variable_type.name == 'HYPERLINK' %}
-
-                            <a target="_blank"
-                               href="/iic_editor/gateways/{{ gateway.pk }}/{{ page_input.input_variable.service.name }}/">
-                                Service <span class="fa fa-cogs"></span></a>
-                            <span style="width: 3px"></span>
-                            <a target="_blank"
-                               href="/iic_editor/gateways/{{ gateway.pk }}/{{ page_input.input_variable.service.name }}/interface/">
-                                Next <span class="fa fa-caret-right"></span></a>
-
-
-
-                        {% elif page_input.input_variable.variable_type.name == 'SUBMIT' %}
-
-                            <a target="_blank"
-                               href="/iic_editor/gateways/{{ gateway.pk }}/{{ page_input.page_input_group.input_variable.service.name }}/">
-                                Service <span class="fa fa-cogs"></span></a>
-                            <span style="width: 3px"></span>
-                            <a target="_blank"
-                               href="/iic_editor/gateways/{{ gateway.pk }}/{{ page_input.page_input_group.input_variable.service.name }}/interface/">
-                                Next <span class="fa fa-caret-right"></span></a>
-
-                        {% endif %}
-
-
-                    </li>
-                {% empty %}
-                    <li class="list-group-item">No items</li>
-                {% endfor %}
-
-            </ul>
-        </div>
 
     </div>
 
+{% endblock %}
+{% block script %}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+    <script type="text/javascript">
+
+        $.fn.editable.defaults.mode = 'inline';
+        $.fn.editableform.buttons = '' +
+            '<button type="submit" class="btn btn-info editable-submit"><i class="fa fa-fw fa-check"></i></button>' +
+            '<button type="button" class="btn editable-cancel"><i class="fa fa-fw fa-remove"></i></button>';
+
+        $.fn.editable.defaults.ajaxOptions = {
+            type: "POST",
+            beforeSend: function (xhr, settings) {
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+
+            }
+        };
+
+        $(document).ready(function () {
+            $('.editable').editable();
+            $('.page_input_access_level').editable({
+                source: [
+                    {value: 1, text: 'CUSTOMER'},
+                    {value: 3, text: 'SYSTEM'},
+                    {value: 7, text: 'MANAGER'},
+                    {value: 8, text: 'OPERATOR'},
+                    {value: 11, text: 'ADMINISTRATOR'},
+                    {value: 14, text: 'SUPERVISOR'},
+                    {value: 15, text: 'SUPER ADMINISTRATOR'},
+                    {value: 16, text: 'API USER'},
+                    {value: 17, text: 'SALES'},
+                    {value: 18, text: 'DELIVERY'},
+                    {value: 19, text: 'AGENT'},
+                    {value: 20, text: 'SUPER AGENT'}
+                ]
+            });
+        });
+    </script>
+    <script type="text/javascript">
+        jQuery(document).ready(function () {
+            function toggleVisibility(page_input) {
+                var btn = $('#' + page_input);
+                $.ajax({
+                    url: '/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/' + page_input + '/',
+                    beforeSend: function (xhr, settings) {
+                        function getCookie(name) {
+                            var cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                var cookies = document.cookie.split(';');
+                                for (var i = 0; i < cookies.length; i++) {
+                                    var cookie = jQuery.trim(cookies[i]);
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+
+                        function csrfSafeMethod(method) {
+                            // these HTTP methods do not require CSRF protection
+                            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                        }
+
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                        }
+                        // todo btn.html('<img src="/static/loader.gif">');
+                    },
+                    data: {"action": 'toggle'},
+                    type: 'POST',
+                    success: function (data) {
+                        //console.log(data);
+                        btn.html(data.status);
+
+                    }
+                });
+            }
+
+            $('.visibility-toggle').on('click', function (e) {
+                e.preventDefault();//
+                toggleVisibility($(this).attr('id'))
+
+            });
+
+        });
+    </script>
 {% endblock %}
