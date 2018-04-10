@@ -42,7 +42,7 @@ class DataListQuery(models.Model):
 	list_filters = models.CharField(max_length=512, blank=True, null=True) 
 	duration_days_filters = models.CharField(max_length=512, blank=True, null=True)
 	date_filters = models.CharField(max_length=512, blank=True, null=True)
-	time_filters = models.CharField(max_length=512, blank=True, null=True)
+	duration_hours_filters = models.CharField(max_length=512, blank=True, null=True)
 	token_filters = models.CharField(max_length=512, null=True, blank=True)
 	links = models.CharField(max_length=512, blank=True, null=True) 
 	link_params = models.CharField(max_length=512, blank=True, null=True) 
