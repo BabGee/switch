@@ -179,6 +179,11 @@ def node_system_service_commands_code(request,node_system_pk,service_command_pk)
 def datalist_list_query_editor(request, data_name):
     # filter gateways
     data_list = DataList.objects.get(data_name=data_name)
+
+    context = {
+        'data_list': data_list
+    }
+
     data_list_query = data_list.query
 
     if request.method == 'POST':
@@ -196,42 +201,47 @@ def datalist_list_query_editor(request, data_name):
         return HttpResponse('')  # todo update only new input
 
     modules = NodeSystem.objects.filter(node_status__name='LOCAL')
-
-    values = data_list_query.values.split('|')
-    values_objs = []
-    for value in values:
-        v = value.split('%')
-        tmp = {
-            'label': v[0],
-            'path': v[1]
-        }
-        values_objs.append(tmp)
-
-    values = []
-    if data_list_query.links:
-        values = data_list_query.links.split('|')
-    links_objs = []
-    for value in values:
-        v = value.split('%')
-        tmp = {
-            'label': v[0],
-            'service': v[1],
-            'icon': v[2]
-        }
-        links_objs.append(tmp)
-
     usages = PageInput.objects.filter(
         input_variable__service__name='DATA SOURCE',
         input_variable__default_value__icontains=data_name
     )
 
-    return render(request, "iic/datalist/editor.html", {
-        'data_list': data_list,
-        'values': values_objs,
-        'links': links_objs,
+    context.update({
+        'usages': usages,
         'modules': modules,
-        'usages':usages
     })
+
+    if data_list.query:
+        values = data_list_query.values.split('|')
+        values_objs = []
+        for value in values:
+            v = value.split('%')
+            tmp = {
+                'label': v[0],
+                'path': v[1]
+            }
+            values_objs.append(tmp)
+
+        values = []
+        if data_list_query.links:
+            values = data_list_query.links.split('|')
+        links_objs = []
+        for value in values:
+            v = value.split('%')
+            tmp = {
+                'label': v[0],
+                'service': v[1],
+                'icon': v[2]
+            }
+            links_objs.append(tmp)
+
+        context.update({
+            'values': values_objs,
+            'links': links_objs,
+
+        })
+
+    return render(request, "iic/datalist/editor.html", context)
 
 
 def datalist_duplicate(request, data_name):

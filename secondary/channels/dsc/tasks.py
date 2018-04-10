@@ -904,11 +904,17 @@ class Wrappers:
 				except: pass
 
 	    if date_filters not in [None,'']:
-                for f in and_filters.split("|"):
+                for f in date_filters.split("|"):
 		    count = 0
 		    for i in params['cols']:
 			if i['value'] == f.strip():
-				i['date_filters'] = []
+				agg = {}
+				agg['min_'+f.strip()] = Min(f.strip())
+				agg['max_'+f.strip()] = Max(f.strip())
+				agg_data = report_list.aggregate(**agg)
+				min_agg = agg_data['min_'+f.strip()].date().isoformat()
+				max_agg = agg_data['max_'+f.strip()].date().isoformat()
+				i['date_filters'] = [min_agg,max_agg]
 			params['cols'][count] = i
 			count += 1
 

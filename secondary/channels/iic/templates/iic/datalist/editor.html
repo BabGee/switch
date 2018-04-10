@@ -3,7 +3,7 @@
 
 {% block content %}
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/iic_editor/dsc/">Datalists</a></li>
+        <li class="breadcrumb-item"><a href="/iic_editor/dsc/">Datalists</a></li>
         <li class="breadcrumb-item active">{{ data_list.title }}</li>
     </ol>
 
@@ -16,121 +16,113 @@
             data-pk="{{ data_list.pk }}"
             data-toggle="modal"
             data-target="#duplicateDataListModal">
-            Duplicate
+        Duplicate
     </button>
 
-<br>
+    <br>
 
     <div class="row">
+        <div class="col-md-7">
+            <!--
 
-    <div class="col-md-7">
+                Data List
+                    ----------------------------------
+                    dataname
+                    status DSC.dataliststatus ACTIVE
+                level=0
+                title
 
+                --------------------------------
+                name
+                description
+                    module
+                model
+                values
+             -->
+            <input placeholder="Data Name"
+                   value="{{ data_list.data_name }}"
+                   name="data_name" type="text" required> <br>
+            <input name="level" type="text" value="0"> <br>
+            <input placeholder="Title" name="title" type="text"> <br>
+            {% if data_list.query %}
 
-    <!--
+                {#    <p>{{ data_list.query.module_name }} {{ data_list.query.model_name }}</p>#}
 
-        Data List
-            ----------------------------------
-            dataname
-            status DSC.dataliststatus ACTIVE
-        level=0
-        title
+                <label for="module">Module</label>
+                <select id="module" name="module">
+                    {% for node_system in modules %}
+                        <option {% if node_system.name == data_list.query.module_name|upper %}selected{% endif %}
+                                value="{{ node_system.URL }}">{{ node_system.name }}</option>
+                    {% endfor %}
 
-        --------------------------------
-        name
-        description
-            module
-        model
-        values
-     -->
+                </select>
 
-    <input placeholder="Data Name" name="data_name" type="text" required> <br>
-    <input  name="level" type="text" value="0"> <br>
+                <label for="model">Model</label>
+                <select id="model" name="model"></select>
 
-    <input placeholder="Title" name="title" type="text"> <br>
+                <p>Values</p>
+                <div id="values">
+                    {% for value in values %}
+                        <div>
+                            <input type="text" value="{{ value.label }}"> :
+                            <input type="text" value="{{ value.path }}">
+                        </div>
+                    {% empty %}
+                        <p>No Values</p>
+                    {% endfor %}
+                </div>
+                <button onclick="textBoxCreate()">Add</button>
+                <button id="saveValues">Save</button>
+                <br>
 
+                <div id="bloodhound">
+                    <input class="typeahead" type="text" placeholder="States of USA">
+                </div>
 
-{#    <p>{{ data_list.query.module_name }} {{ data_list.query.model_name }}</p>#}
+                <br>
 
-    <label for="module">Module</label>
-    <select id="module" name="module">
-        {% for node_system in modules %}
-                <option {% if node_system.name == data_list.query.module_name|upper %}selected{% endif %}
-                        value="{{ node_system.URL }}">{{ node_system.name }}</option>
-        {% endfor %}
+                <p>Links</p>
+                <div id="links">
+                    {% for link in links %}
+                        <div>
+                            <input type="text" value="{{ link.label }}"> :
+                            <input type="text" value="{{ link.service }}"> :
+                            <input type="text" value="{{ link.icon }}">
+                            <!-- TODO add link params -->
+                            <button>-</button>
+                        </div>
 
-    </select>
+                    {% empty %}
+                        <p>No links</p>
+                    {% endfor %}
 
-    <label for="model">Model</label>
-    <select id="model" name="model"></select>
+                </div>
+                <button onclick="linkInputCreate()">Add</button>
+                <button id="saveLinks">Save</button>
 
-    <p>Values</p>
-    <div id="values">
-        {% for value in values %}
-            <div>
-                <input type="text" value="{{ value.label }}"> :
-                <input type="text" value="{{ value.path }}">
-            </div>
-            {% empty %}
-            <p>No Values</p>
-        {% endfor %}
-    </div>
-    <button onclick="textBoxCreate()">Add</button>
-    <button id="saveValues">Save</button>
-    <br>
+            {% else %}
+                Function <a href="#">{{ data_list.function }}</a>
+            {% endif %}
 
-    <div id="bloodhound">
-      <input class="typeahead" type="text" placeholder="States of USA">
-    </div>
-
-    <br>
-
-    <p>Links</p>
-    <div id="links">
-        {% for link in links %}
-            <div>
-                <input type="text" value="{{ link.label }}"> :
-                <input type="text" value="{{ link.service }}"> :
-                <input type="text" value="{{ link.icon }}">
-                <!-- TODO add link params -->
-            <button >-</button>
-            </div>
-
-            {% empty %}
-            <p>No links</p>
-        {% endfor %}
-
-    </div>
-<button onclick="linkInputCreate()">Add</button>
-<button id="saveLinks">Save</button>
-
-    </div>
-    <div class="col-md-5">
-    <h3>Page Inputs Usage</h3>
-        <ul class="list-group">
+        </div>
+        <div class="col-md-5">
+            <h3>Page Inputs Usage</h3>
+            <ul class="list-group">
                 {% for page_input in usages %}
-                    <li class="list-group-item list-group-item-{% if page_input.page_input_status.name == 'ACTIVE' %}{% else %}danger{% endif %}">
+                    <li class="list-group-item list-group-item-
+                        {% if page_input.page_input_status.name == 'ACTIVE' %}{% else %}danger{% endif %}">
                         {{ page_input.page_input }}
-
-                       <strong>{{ page_input.input_variable.variable_type }}</strong>
+                        <strong>{{ page_input.input_variable.variable_type }}</strong>
                         {{ page_input.input_variable.pk }}
-
-
                         <a href="/iic_editor/gateways/{{ page_input.page.gateway.first.pk }}/{{ page_input.page.service.first.name }}/interface/{{ page_input.page.page_group.pk }}/{{ page_input.page.pk }}/{{ page_input.page_input_group.pk }}/">view</a>
                         <br>
-
-                    {% for link in links %}
-            <div>
-
-
-                <a href="/iic_editor/gateways/{{ page_input.page.gateway.first.pk }}/{{ link.service }}/interface/">
-                    {{ link.label }} <span class="fa fa-caret-right"></span>
-                </a>
-
-
-            </div>
-            {% endfor %}
-
-
+                        {% for link in links %}
+                            <div>
+                                <a href="/iic_editor/gateways/{{ page_input.page.gateway.first.pk }}/{{ link.service }}/interface/">
+                                    {{ link.label }} <span class="fa fa-caret-right"></span>
+                                </a>
+                            </div>
+                        {% endfor %}
 
                     </li>
                 {% empty %}
@@ -138,48 +130,47 @@
                 {% endfor %}
 
             </ul>
+        </div>
     </div>
+
+    <div class="modal fade" id="duplicateDataListModal" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">New Name</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="/iic_editor/dsc/{{ data_list.data_name }}/duplicate" method="post">
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                            <label for="new_data_name" class="col-form-label">data_name</label>
+                            <input type="text" class="form-control" value="{{ data_list.data_name }}" id="new_data_name"
+                                   name="new_data_name">
+                        </div>
+                        <div class="form-group">
+                            <input class="form-control btn btn-primary" type="submit">
+                        </div>
+                    </form>
+                </div>
+                {#      <div class="modal-footer">#}
+                {#        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>#}
+                {#        <button type="button" class="btn btn-primary">Send message</button>#}
+                {#      </div>#}
+            </div>
+        </div>
     </div>
-
-
-<div class="modal fade" id="duplicateDataListModal" tabindex="-1" role="dialog"
-     aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">New Name</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <form action="/iic_editor/dsc/{{ data_list.data_name }}/duplicate" method="post">
-            {% csrf_token %}
-
-          <div class="form-group">
-            <label for="new_data_name" class="col-form-label">data_name</label>
-            <input type="text" class="form-control" value="{{ data_list.data_name }}" id="new_data_name" name="new_data_name" >
-          </div>
-          <div class="form-group">
-
-            <input class="form-control btn btn-primary" type="submit">
-          </div>
-        </form>
-      </div>
-{#      <div class="modal-footer">#}
-{#        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>#}
-{#        <button type="button" class="btn btn-primary">Send message</button>#}
-{#      </div>#}
-    </div>
-  </div>
-</div>
-
 
 {% endblock %}
 
 
 {% block script %}
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-3-typeahead/4.0.2/bootstrap3-typeahead.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-3-typeahead/4.0.2/bootstrap3-typeahead.min.js"></script>
     <script type="text/javascript">
         function textBoxCreate() {
             var container = document.createElement('DIV');
@@ -192,65 +183,65 @@
         function linkInputCreate() {
             var container = document.createElement('DIV');
             container.innerHTML = '<input placeholder="label" type="text"> : ' +
-                '<input placeholder="Service" type="text"> : '+
+                '<input placeholder="Service" type="text"> : ' +
                 '<input placeholder="Icon" type="text">';
 
             document.getElementById("links").appendChild(container);
 
         }
 
-        function loadModels(){
-                $.ajax({
-                    url: "/iic_editor/dsc/models/",
-                    beforeSend: function (xhr, settings) {
-                        function getCookie(name) {
-                            var cookieValue = null;
-                            if (document.cookie && document.cookie !== '') {
-                                var cookies = document.cookie.split(';');
-                                for (var i = 0; i < cookies.length; i++) {
-                                    var cookie = jQuery.trim(cookies[i]);
-                                    // Does this cookie string begin with the name we want?
-                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                                        break;
-                                    }
+        function loadModels() {
+            $.ajax({
+                url: "/iic_editor/dsc/models/",
+                beforeSend: function (xhr, settings) {
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie !== '') {
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = jQuery.trim(cookies[i]);
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
                                 }
                             }
-                            return cookieValue;
                         }
-
-                        function csrfSafeMethod(method) {
-                            // these HTTP methods do not require CSRF protection
-                            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-                        }
-
-                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
-                        }
-                        // todo btn.html('<img src="/static/loader.gif">');
-                    },
-                    data: { module:$('select#module').val(),model:'{{ data_list.query.model_name }}'},
-                    type: 'GET',
-                    success: function (data) {
-                       // console.log(data);
-                        $('#model').html(data);
-
-                        // update selection
-
-
+                        return cookieValue;
                     }
-                });
-			}
 
-        $(function(){
+                    function csrfSafeMethod(method) {
+                        // these HTTP methods do not require CSRF protection
+                        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                    }
+
+                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                    // todo btn.html('<img src="/static/loader.gif">');
+                },
+                data: {module: $('select#module').val(), model: '{{ data_list.query.model_name }}'},
+                type: 'GET',
+                success: function (data) {
+                    // console.log(data);
+                    $('#model').html(data);
+
+                    // update selection
 
 
-			$("select#module").change(loadModels);
+                }
+            });
+        }
 
-			// load models from templated selection
-			loadModels();
+        $(function () {
 
-            $("#saveLinks").click(function(){
+
+            $("select#module").change(loadModels);
+
+            // load models from templated selection
+            loadModels();
+
+            $("#saveLinks").click(function () {
 
                 var genLinks = [];
 
@@ -294,7 +285,7 @@
                         }
                         // todo btn.html('<img src="/static/loader.gif">');
                     },
-                    data: {name:'links', value:genLinks.join('|')},
+                    data: {name: 'links', value: genLinks.join('|')},
                     type: 'POST',
                     success: function (data) {
                         console.log(data);
@@ -303,9 +294,9 @@
                     }
 
                 });
-			});
+            });
 
-            $("#saveValues").click(function(){
+            $("#saveValues").click(function () {
 
                 var genLinks = [];
 
@@ -349,7 +340,7 @@
                         }
                         // todo btn.html('<img src="/static/loader.gif">');
                     },
-                    data: {name:'values', value:genLinks.join('|')},
+                    data: {name: 'values', value: genLinks.join('|')},
                     type: 'POST',
                     success: function (data) {
                         console.log(data);
@@ -358,10 +349,10 @@
                     }
 
                 });
-			})
+            })
 
 
-             var statesS = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California',
+            var statesS = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California',
                 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii',
                 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
                 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota',
@@ -370,28 +361,25 @@
                 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island',
                 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
                 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
-              ];
+            ];
 
-             // bloodhound
-              // ----------
+            // bloodhound
+            // ----------
 
-              // constructs the suggestion engine
+            // constructs the suggestion engine
 
-              $('#bloodhound .typeahead').typeahead({
-                hint: true,
-                highlight: true,
-                minLength: 1
-              },
-              {
-                name: 'states',
-                source: statesS
-              });
-
-
-		})
+            $('#bloodhound .typeahead').typeahead({
+                    hint: true,
+                    highlight: true,
+                    minLength: 1
+                },
+                {
+                    name: 'states',
+                    source: statesS
+                });
 
 
-
+        })
 
 
     </script>
