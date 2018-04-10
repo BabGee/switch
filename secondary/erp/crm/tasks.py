@@ -548,7 +548,7 @@ class System(Wrappers):
 				product.barcode = payload['product_barcode']
 			# product.unit_limit_min = payload['product_current_stok']
 
-			product.kind = payload['product_kind']
+			if 'product_kind' in payload.keys(): product.kind = payload['product_kind'] 
 			try:
 				filename = payload['product_default_image']
 				fromdir_name = settings.MEDIA_ROOT + '/tmp/uploads/'
@@ -593,7 +593,7 @@ class System(Wrappers):
 				product.barcode = payload['product_barcode']
 			# product.unit_limit_min = payload['product_current_stok']
 
-			product.kind = payload['product_kind']
+			if 'product_kind' in payload.keys(): product.kind = payload['product_kind'] 
 			try:
 				filename = payload['product_default_image']
 				fromdir_name = settings.MEDIA_ROOT + '/tmp/uploads/'
