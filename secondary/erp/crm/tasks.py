@@ -542,7 +542,7 @@ class System(Wrappers):
 			product.product_display = ProductDisplay.objects.get(name=payload['product_display']) # DEFAULT
 			if str(payload['is_vat_inclusive']) == 'True':
 				product.vat = payload['product_vat']
-			product.discount = payload['product_discount']
+			if 'product_discount' in payload.keys(): product.discount = payload['product_discount']
 			
 			if 'product_barcode' in payload.keys():
 				product.barcode = payload['product_barcode']
@@ -587,7 +587,8 @@ class System(Wrappers):
 			# product.product_display = ProductDisplay.objects.get(name=payload['product_display']) # DEFAULT
 			if str(payload['is_vat_inclusive']) == 'True':
 				product.vat = payload['product_vat']
-			product.discount = payload['product_discount']
+
+			if 'product_discount' in payload.keys(): product.discount = payload['product_discount']
 
 			if 'product_barcode' in payload.keys():
 				product.barcode = payload['product_barcode']
