@@ -1675,7 +1675,7 @@ def send_outbound_email_messages():
 					d = {'message':unescape(i.message), 'gateway':gateway}
 					html_content = html_content.render(d)
 					html_content = smart_str(html_content)
-					msg = EmailMultiAlternatives(subject, text_content, from_email, [to.strip()], headers={'Reply-To': 'No Reply'})
+					msg = EmailMultiAlternatives(subject, text_content, from_email, [to.strip()], headers={'Reply-To': from_email})
 
 					msg.attach_alternative(html_content, "text/html")
 					msg.send()              
