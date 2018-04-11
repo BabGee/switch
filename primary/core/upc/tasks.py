@@ -61,7 +61,7 @@ class Wrappers:
 			profile_error = True
 		elif session_gateway_profile.exists() and 'national_id' in payload.keys() and\
 		 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].replace(' ','').strip(),\
-		 gateway=gateway_profile.gateway).exists() and session_gateway_profile[0].user.profile.national_id in [None,''] and\
+		 gateway=gateway_profile.gateway).exists() and\
 		 GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].replace(' ','').strip(),\
 		 gateway=gateway_profile.gateway)[0].user <> session_gateway_profile[0].user:
 			#check update national_id profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
@@ -77,7 +77,7 @@ class Wrappers:
 			profile_error = True
 		elif session_gateway_profile.exists() and 'passport_number' in payload.keys() and\
 		 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
-		 gateway=gateway_profile.gateway).exists() and session_gateway_profile[0].user.profile.passport_number in [None,''] and\
+		 gateway=gateway_profile.gateway).exists() and\
 		 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
 		 gateway=gateway_profile.gateway)[0].user <> session_gateway_profile[0].user:
 			#check update passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
