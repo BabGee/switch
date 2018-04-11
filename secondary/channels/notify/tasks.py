@@ -333,10 +333,11 @@ class System(Wrappers):
 		return payload
 
 
-	def recipient_to_msisdn(self, payload, node_info):
+	def change_to_recipient(self, payload, node_info):
 		try:
 			lgr.info("Get Payload: %s" % payload)
-			if 'recipient_msisdn' in payload.keys() and payload['recipient_msisdn'] not in ["",None]:
+			if 'recipient_msisdn' in payload.keys() and payload['recipient_msisdn'] not in ["",None] or \
+			'recipient_email' in payload.keys() and payload['recipient_email'] not in ["",None]:
 
 
 				lng = payload['lng'] if 'lng' in payload.keys() else 0.0
@@ -384,8 +385,7 @@ class System(Wrappers):
 					payload['original_session_gateway_profile_id'] = payload['session_gateway_profile_id']
 					del payload['session_gateway_profile_id']
 
-		 		payload['msisdn'] = str(payload['recipient_msisdn'])
-				msisdn = UPCWrappers().get_msisdn(payload)
+
 				if 'recipient_national_id' in payload.keys():
 					payload['national_id'] = payload['recipient_national_id']
 				if 'recipient_document_number' in payload.keys():
@@ -397,15 +397,26 @@ class System(Wrappers):
 				if 'recipient_postal_code' in payload.keys():
 					payload['postal_code'] = payload['recipient_postal_code']
 
-				if msisdn is not None:
-					payload['msisdn'] = msisdn
-					payload['response'] = 'MSISDN Changed to recipient'
+				if 'recipient_msisdn' in payload.keys):
+			 		payload['msisdn'] = str(payload['recipient_msisdn'])
+					msisdn = UPCWrappers().get_msisdn(payload)
+
+					if msisdn is not None:
+						payload['msisdn'] = msisdn
+						payload['response'] = 'MSISDN Changed to recipient'
+						payload["response_status"] = "00"
+				                payload['trigger'] = 'change_to_recipient%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					else:
+						payload['response_status'] = '00'
+						payload['response'] = 'No Recipient Found'
+				elif 'recipient_email' in payload.keys) and self.validateEmail(payload["recipient_email"]):
+					payload['email'] = payload['recipient_email'].strip()
+					payload['response'] = 'EMAIL Changed to recipient'
 					payload["response_status"] = "00"
-			                payload['trigger'] = 'recipient_to_msisdn%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					payload['trigger'] = 'change_to_recipient%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				else:
 					payload['response_status'] = '00'
 					payload['response'] = 'No Recipient Found'
-
 			else:
 				payload['response_status'] = '00'
 				payload['response'] = 'No Recipient Found'
