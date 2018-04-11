@@ -42,7 +42,9 @@
             <input placeholder="Data Name"
                    value="{{ data_list.data_name }}"
                    name="data_name" type="text" required> <br>
-            <input name="level" type="text" value="0"> <br>
+            <input name="level"
+                   value="{{ data_list.title }}"
+                   type="text" value="0"> <br>
             <input placeholder="Title" name="title" type="text"> <br>
             {% if data_list.query %}
 
@@ -59,6 +61,11 @@
 
                 <label for="model">Model</label>
                 <select id="model" name="model"></select>
+
+                <div id="fields">
+
+
+                </div>
 
                 <p>Values</p>
                 <div id="values">
@@ -190,6 +197,54 @@
 
         }
 
+
+        function loadModelFields() {
+
+            var module = $('select#module').val();
+            var model = $('select#model').val();
+
+            $.ajax({
+                url: "/iic_editor/dsc/fields/",
+                beforeSend: function (xhr, settings) {
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie !== '') {
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = jQuery.trim(cookies[i]);
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    function csrfSafeMethod(method) {
+                        // these HTTP methods do not require CSRF protection
+                        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                    }
+
+                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                    // todo btn.html('<img src="/static/loader.gif">');
+                },
+                data: {module: module, model: model},
+                type: 'GET',
+                success: function (data) {
+                    // console.log(data);
+                    $('#fields').html(data);
+
+                    // update selection
+
+
+                }
+            });
+        }
+
         function loadModels() {
             $.ajax({
                 url: "/iic_editor/dsc/models/",
@@ -225,10 +280,7 @@
                 success: function (data) {
                     // console.log(data);
                     $('#model').html(data);
-
-                    // update selection
-
-
+                    loadModelFields();
                 }
             });
         }
@@ -237,9 +289,13 @@
 
 
             $("select#module").change(loadModels);
+            $("select#model").change(loadModelFields);
+
 
             // load models from templated selection
             loadModels();
+
+
 
             $("#saveLinks").click(function () {
 

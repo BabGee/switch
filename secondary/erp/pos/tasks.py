@@ -1166,7 +1166,11 @@ def order_background_service_call(order):
 	lgr = get_task_logger(__name__)
 	try:
 		from primary.core.bridge.tasks import Wrappers as BridgeWrappers
-		o = PurchaseOrder.objects.get(id=order)
+		#o = PurchaseOrder.objects.get(id=order)
+
+
+		bill = BillManager.objects.get(order__id=order).last()
+		o = bill.order
 		lgr.info('Captured Order: %s' % o)
 		cart_item = o.cart_item.filter(Q(status__name='PAID'), ~Q(product_item__product_type__service=None))
 		lgr.info('Cart Item: %s' % cart_item)
@@ -1191,6 +1195,11 @@ def order_background_service_call(order):
 			payload['chid'] = c.channel.id
 			payload['ip_address'] = '127.0.0.1'
 			payload['gateway_host'] = '127.0.0.1'
+
+
+			if bill.incoming_payment:
+				payload['ext_inbound_id'] = bill.incoming_payment.ext_inbound_id
+
 
 			payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
 

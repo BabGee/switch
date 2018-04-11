@@ -34,7 +34,7 @@ urlpatterns = [
     url(r'dsc/', include([
         url(r'^$', datalist_list),
         url(r'^models/$', module_models),
-        # url(r'^fields$', datalist_list),
+        url(r'^fields/$', module_model_fields),
         url(r'^(?P<data_name>[\w]+)/', include([
             url(r'^$', datalist_list_query_editor),
             url(r'^duplicate$', datalist_duplicate),

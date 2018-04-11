@@ -90,6 +90,19 @@ def module_models(request):
     return render(request, "iic/shared/models.html", {'models': app_models,'selected_model':selected_model})
 
 
+def module_model_fields(request):
+    from django.apps import apps
+    module = request.GET.get('module').lower()
+    selected_model = request.GET.get('model').lower()
+    app = module.split('.')[-1]
+
+    model = apps.get_app_config(app).get_model(selected_model)
+    # for model in app_models:
+    #     pass
+
+    return render(request, "iic/shared/model_fields.html", {'fields': model._meta.get_fields()})
+
+
 import ast, os
 from django.conf import settings
 # this two are used in the next two views
