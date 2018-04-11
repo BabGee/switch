@@ -214,7 +214,6 @@ class Wrappers:
 		lgr.info('Profile Capture')
 		if ('email' in payload.keys() and self.validateEmail(payload["email"]) ) and \
 		('msisdn' in payload.keys() and self.get_msisdn(payload)):
-			lgr.info('Email/MSISDN')
 			msisdn_session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.get_msisdn(payload)),Q(gateway=gateway_profile.gateway))
 			email_session_gateway_profile = GatewayProfile.objects.filter(Q(user__email=payload["email"]),Q(gateway=gateway_profile.gateway))
 
@@ -235,44 +234,32 @@ class Wrappers:
 
 
 		elif 'email' in payload.keys() and self.validateEmail(payload["email"]):
-			lgr.info('EMAIL')
 			session_gateway_profile = GatewayProfile.objects.filter(user__email=payload["email"],\
 					 gateway=gateway_profile.gateway)
 		elif 'msisdn' in payload.keys() and self.get_msisdn(payload):
-			lgr.info('MSISDN')
 			session_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=self.get_msisdn(payload),\
 					 gateway=gateway_profile.gateway)
 		elif 'session_gateway_profile_id' in payload.keys():
-			lgr.info('Session')
 			session_gateway_profile = GatewayProfile.objects.filter(id=payload['session_gateway_profile_id'])
-		elif 'reference' in payload.keys():
-
-			lgr.info('Reference')
-			if 'reference' in payload.keys() and self.validateEmail(payload["reference"]):
-				session_gateway_profile = GatewayProfile.objects.filter(user__email=payload["reference"],\
-						 gateway=gateway_profile.gateway)
-			else:
-				payload['msisdn'] = payload['reference']
-				msisdn = self.get_msisdn(payload)
-				if msisdn:
-					session_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=msisdn,\
-							 gateway=gateway_profile.gateway)
-				else:
-					del payload['msisdn']
-					session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 		elif 'national_id' in payload.keys() and payload['national_id'] not in ["",None,"None"]:
-
-			lgr.info('National ID')
 			session_gateway_profile = GatewayProfile.objects.filter(user__profile__national_id=payload['national_id'].replace(' ','').strip(),\
 					 gateway=gateway_profile.gateway)
 		elif 'passport_number' in payload.keys() and payload['passport_number'] not in ["",None,"None"]:
-
-			lgr.info('Passport')
 			session_gateway_profile = GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
 					 gateway=gateway_profile.gateway)
+		elif 'reference' in payload.keys() and (self.validateEmail(payload['reference']) or self.simple_get_msisdn(payload['reference'], payload)):
+			if self.validateEmail(payload["reference"]):
+				session_gateway_profile = GatewayProfile.objects.filter(user__email=payload["reference"],\
+						 gateway=gateway_profile.gateway)
+			else:
+				msisdn = self.simple_get_msisdn(payload['reference'], payload)
+				if msisdn:
+					session_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=msisdn,\
+							 gateway=gateway_profile.gateway)
+					payload['msisdn'] = msisdn
+				else:
+					session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 		else:
-
-			lgr.info('Else')
 			session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 
 		return session_gateway_profile, payload, profile_error
