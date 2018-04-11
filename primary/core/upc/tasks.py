@@ -80,6 +80,8 @@ class Wrappers:
 		 gateway=gateway_profile.gateway).exists() and\
 		 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
 		 gateway=gateway_profile.gateway)[0].user <> session_gateway_profile[0].user:
+			lgr.info ('%s != %s' % GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),gateway=gateway_profile.gateway)[0].user, session_gateway_profile[0].user)
+
 			#check update passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
 			payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
 			payload['response_status'] = '63'
