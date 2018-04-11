@@ -80,8 +80,6 @@ class Wrappers:
 		 gateway=gateway_profile.gateway).exists() and\
 		 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
 		 gateway=gateway_profile.gateway)[0].user <> session_gateway_profile[0].user:
-			lgr.info ('%s != %s' % GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),gateway=gateway_profile.gateway)[0].user, session_gateway_profile[0].user)
-
 			#check update passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
 			payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
 			payload['response_status'] = '63'
@@ -89,8 +87,6 @@ class Wrappers:
 		elif session_gateway_profile.exists() == False and 'passport_number' in payload.keys() and\
 		 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
 		 gateway=gateway_profile.gateway).exists():
-
-			lgr.info ('No Session User != %s' % GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),gateway=gateway_profile.gateway)[0].user)
 			#check create passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile.
 			payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
 			payload['response_status'] = '63'
@@ -218,7 +214,7 @@ class Wrappers:
 
 		if ('email' in payload.keys() and self.validateEmail(payload["email"]) ) and \
 		('msisdn' in payload.keys() and self.get_msisdn(payload)):
-
+			lgr.info('Email/MSISDN')
 			msisdn_session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.get_msisdn(payload)),Q(gateway=gateway_profile.gateway))
 			email_session_gateway_profile = GatewayProfile.objects.filter(Q(user__email=payload["email"]),Q(gateway=gateway_profile.gateway))
 
@@ -239,9 +235,11 @@ class Wrappers:
 
 
 		elif 'email' in payload.keys() and self.validateEmail(payload["email"]):
+			lgr.info('EMAIL')
 			session_gateway_profile = GatewayProfile.objects.filter(user__email=payload["email"],\
 					 gateway=gateway_profile.gateway)
 		elif 'msisdn' in payload.keys() and self.get_msisdn(payload):
+			lgr.info('MSISDN')
 			session_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=self.get_msisdn(payload),\
 					 gateway=gateway_profile.gateway)
 		elif 'session_gateway_profile_id' in payload.keys():
