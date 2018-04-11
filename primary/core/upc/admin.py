@@ -33,7 +33,7 @@ class ProfileAdmin(admin.OSMGeoAdmin):
 	list_display = ('id','middle_name','api_key','timezone','language','geometry', 'country', 'dob',\
 			'gender','physical_address','photo','user','national_id', 'city', 'region',\
 			'address','postal_code','passport_number','passport_expiry_date','postal_address',)
-	search_fields = ('user__username','user__first_name','user__last_name','national_id','city','physical_address','address',)
+	search_fields = ('user__username','user__first_name','user__last_name','national_id','city','physical_address','address','passport_number',)
 admin.site.register(Profile, ProfileAdmin)
 
 class GatewayProfileAdmin(admin.ModelAdmin):
