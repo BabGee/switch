@@ -397,7 +397,7 @@ class System(Wrappers):
 				if 'recipient_postal_code' in payload.keys():
 					payload['postal_code'] = payload['recipient_postal_code']
 
-				if 'recipient_msisdn' in payload.keys):
+				if 'recipient_msisdn' in payload.keys():
 			 		payload['msisdn'] = str(payload['recipient_msisdn'])
 					msisdn = UPCWrappers().get_msisdn(payload)
 
@@ -409,7 +409,7 @@ class System(Wrappers):
 					else:
 						payload['response_status'] = '00'
 						payload['response'] = 'No Recipient Found'
-				elif 'recipient_email' in payload.keys) and self.validateEmail(payload["recipient_email"]):
+				elif 'recipient_email' in payload.keys() and self.validateEmail(payload["recipient_email"]):
 					payload['email'] = payload['recipient_email'].strip()
 					payload['response'] = 'EMAIL Changed to recipient'
 					payload["response_status"] = "00"
