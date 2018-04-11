@@ -719,7 +719,30 @@ class System(Wrappers):
 					if 'notification_template_id' in payload.keys():
 						template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
 						outbound.template = template
-						outbound.heading = template.template_heading
+
+						heading = template.template_heading
+						variables = re.findall("\[(.*?)\]", heading)
+						for v in variables:
+							variable_key, variable_val = None, None
+							n = v.find("=")
+							if n >=0:
+								variable_key = v[:n]
+								variable_val = str(v[(n+1):]).strip()
+							else:
+								variable_key = v
+							heading_item = ''
+							if variable_key in payload.keys():
+								heading_item = payload[variable_key]
+								if variable_val is not None:
+									if '|' in variable_val:
+										prefix, suffix = variable_val.split('|')
+										heading_item = '%s %s %s' % (prefix, heading_item, suffix)
+									else:
+										heading_item = '%s %s' % (variable_val, heading_item)
+							heading = heading.replace('['+v+']',str(heading_item).strip())
+
+						outbound.heading = heading
+
 					outbound.save()
 
 					payload['response'] = "Notification Sent. Please check %s" % notification_product.notification.code.channel.name
