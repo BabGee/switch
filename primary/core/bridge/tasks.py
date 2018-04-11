@@ -72,7 +72,7 @@ class Wrappers:
 			 key not in ['ext_product_id','vpc_securehash','currency','amount'] and \
 			 'institution_id' not in key and key <> 'response' and key <> 'input' and key <> 'trigger' and \
 			 key not in ['send_minutes_period','send_hours_period','send_days_period','send_years_period']:
-				if count <= 50:
+				if count <= 100:
 					new_payload[str(k)[:30] ] = str(v)[:500]
 				else:
 					break

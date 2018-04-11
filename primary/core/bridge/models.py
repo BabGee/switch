@@ -210,7 +210,7 @@ class BackgroundServiceActivity(models.Model):
 	service = models.ForeignKey(Service)
 	status = models.ForeignKey(TransactionStatus)
 	gateway_profile = models.ForeignKey(GatewayProfile)
-	request = models.CharField(max_length=1920)
+	request = models.CharField(max_length=10240)
 	channel = models.ForeignKey(Channel)
 	response_status = models.ForeignKey(ResponseStatus)
 	transaction_reference = models.CharField(max_length=45, null=True, blank=True) #Transaction ID
