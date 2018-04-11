@@ -89,6 +89,8 @@ class Wrappers:
 		elif session_gateway_profile.exists() == False and 'passport_number' in payload.keys() and\
 		 GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),\
 		 gateway=gateway_profile.gateway).exists():
+
+			lgr.info ('No Session User != %s' % GatewayProfile.objects.filter(user__profile__passport_number=payload['passport_number'].replace(' ','').strip(),gateway=gateway_profile.gateway)[0].user)
 			#check create passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile.
 			payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
 			payload['response_status'] = '63'
