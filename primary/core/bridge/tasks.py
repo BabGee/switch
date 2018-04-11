@@ -73,7 +73,7 @@ class Wrappers:
 			 'institution_id' not in key and key <> 'response' and key <> 'input' and key <> 'trigger' and \
 			 key not in ['send_minutes_period','send_hours_period','send_days_period','send_years_period']:
 				if count <= 30:
-					new_payload[str(k)[:30] ] = str(v)[:500]
+					new_payload[str(k)[:50] ] = str(v)[:500]
 				else:
 					break
 				count = count+1
