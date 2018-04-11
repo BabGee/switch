@@ -308,6 +308,8 @@ def background_service_call(background):
 		i = BackgroundServiceActivity.objects.get(id=background)
 		try:payload = json.loads(i.request)
 		except:pass
+
+		lgr.info('\n\n\n\n\t########\Pre-Request: %s\n\n' % payload)
 		payload['chid'] = i.channel.id
 		payload['ip_address'] = '127.0.0.1'
 		payload['gateway_host'] = '127.0.0.1'
