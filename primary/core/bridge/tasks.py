@@ -192,10 +192,14 @@ class System(Wrappers):
 				charges = payload['charges'] if 'charges' in payload.keys() and payload['charges']!='' else None
 
 				request = payload.copy()
+				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
 				request = self.background_activity_payload(request)
+
+				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
 				try: request.update(json.loads(background_service[0].details)) #Triggers removed in previous call so no need to append
 				except: pass
 
+				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
 				activity = BackgroundServiceActivity(service=background_service[0].service, status=status, \
 						gateway_profile=session_gateway_profile,request=json.dumps(request),\
 						channel=channel, response_status=response_status, currency = currency,\
