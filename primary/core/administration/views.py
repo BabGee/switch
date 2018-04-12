@@ -25,7 +25,7 @@ class WebService:
 			return False
 
 
-	def post_request(self, payload, node):
+	def post_request(self, payload, node, timeout=30):
 		try:
 			if self.validate_url(node):
 				jdata = json.dumps(payload)
@@ -34,8 +34,8 @@ class WebService:
 				#payload = json.loads(jdata)
 				c = pycurl.Curl()
 				#Timeout in 30 seconds
-				c.setopt(pycurl.CONNECTTIMEOUT, 30)
-				c.setopt(pycurl.TIMEOUT, 30)
+				c.setopt(pycurl.CONNECTTIMEOUT, timeout)
+				c.setopt(pycurl.TIMEOUT, timeout)
 				c.setopt(pycurl.NOSIGNAL, 1)
 				c.setopt(pycurl.URL, str(node) )
 				c.setopt(pycurl.POST, 1)
