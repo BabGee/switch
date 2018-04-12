@@ -54,7 +54,7 @@ class PageString(ServiceCall, Wrappers):
 	def get_nav(self, navigator, attrs={}):
 		#00 Main not filtered as variable value still needs to be captured. For 0 back, there already exists a menu entry so value not needed.
 		navigator_list = Navigator.objects.filter(Q(session=navigator.session), Q(nav_step=navigator.nav_step),\
-			~Q(input_select__in=['','0']),Q(invalid=False)).order_by('-date_created','-menu__level')
+			~Q(input_select__in=['']),Q(invalid=False)).order_by('-date_created','-menu__level')
 
 		nav = {}
 
@@ -138,7 +138,7 @@ class PageString(ServiceCall, Wrappers):
 
 				lgr.info('Key: %s | Val: %s' % (value.id,value))
 				lgr.info('NAvigator: %s' % navigator_list)
-				item_val = navigator_list.filter(id__gt=value.id).last()
+				item_val = navigator_list.filter(Q(id__gt=value.id),~Q(input_select__in=['0'])).last()
 				lgr.info('Item Val: %s' % item_val)
 				item_level = item_val.id if item_val else 0
 				lgr.info('Item Level: %s' % item_level)
@@ -168,6 +168,10 @@ class PageString(ServiceCall, Wrappers):
 				navigator_list = navigator_list.filter(~Q(id__lt=value.id))
 				nav = gen_payload(nav,navigator_list,value)
 				break
+			elif value.input_select in ['0']: #Ensure that any input select to back is not included & Existing keys not replaced[mostly with back 0]
+				navigator_list = navigator_list.filter(~Q(Q(menu=value.menu),~Q(id=value.id)))
+				#nav = gen_payload(nav,navigator_list,value)
+				continue
 			else:
 				nav = gen_payload(nav,navigator_list,value)
 
