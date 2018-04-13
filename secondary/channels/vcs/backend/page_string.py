@@ -1687,26 +1687,6 @@ class PageString(ServiceCall, Wrappers):
 					page_string = page_string.replace('['+v+']',item)
 
 
-				elif variable_key == 'postal_code':
-
-					item = ''
-
-					if navigator.session.gateway_profile and navigator.session.gateway_profile.user.profile.postal_code:
-						item = navigator.session.gateway_profile.user.profile.postal_code
-
-					page_string = page_string.replace('['+v+']',item)
-
-
-				elif variable_key == 'postal_address':
-
-					item = ''
-
-					if navigator.session.gateway_profile and navigator.session.gateway_profile.user.profile.postal_address:
-						item = navigator.session.gateway_profile.user.profile.postal_address
-
-					page_string = page_string.replace('['+v+']',item)
-
-
 				elif variable_key == 'document_number':
 
 					item = ''
