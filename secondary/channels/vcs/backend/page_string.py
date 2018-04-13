@@ -128,12 +128,6 @@ class PageString(ServiceCall, Wrappers):
 		'''
 
 		def gen_payload(nav, navigator_list, value):
-			#add menu details
-			try: 
-				details = json.loads(value.menu.details)
-				if isinstance(details,dict): nav.update(details)
-			except: pass
-
 			if value.menu.selection_preview == True:
 
 				lgr.info('Key: %s | Val: %s' % (value.id,value))
@@ -179,6 +173,13 @@ class PageString(ServiceCall, Wrappers):
 		#Process Submit and input not in ['0','00']
 		page_string = payload['page_string']
 		del payload['page_string']
+
+		#add menu details
+		try: 
+			details = json.loads(navigator.menu.details)
+			if isinstance(details,dict): payload.update(details)
+		except: pass
+
 
 		payload.update(self.get_nav(navigator))
 
