@@ -3347,13 +3347,6 @@ class System(Wrappers):
                     for c in product:
                         rows.append([c.id, c.name])
 
-                else:
-                    cols = [{"label": "index", "type": "string"}, {"label": "name", "type": "string"},
-                            {"label": "image", "type": "string"}, {"label": "checked", "type": "string"},
-                            {"label": "selectValue", "type": "string"}, {"label": "description", "type": "string"},
-                            {"label": "color", "type": "string"}]
-
-                    rows = [["YES", "YES"], ["NO", "NO"]]
 
             payload['response'] = {
                 'cols': cols,
