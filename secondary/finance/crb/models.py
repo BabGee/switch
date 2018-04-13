@@ -53,11 +53,20 @@ class CreditGrade(models.Model):
 	def __unicode__(self):
 		return u'%s %s' % (self.code, self.name)
 
+class IdentificationProfileStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s %s' % (self.name, self.description)
+
 class IdentificationProfile(models.Model):
 	national_id = models.CharField(max_length=45, unique=True)
 	first_name = models.CharField(max_length=30, null=True, blank=True)
 	middle_name = models.CharField(max_length=30, null=True, blank=True)
 	last_name = models.CharField(max_length=30, null=True, blank=True)
+	status = models.ForeignKey(IdentificationProfileStatus, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s' % (self.national_id)
 

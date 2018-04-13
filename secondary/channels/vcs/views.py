@@ -362,7 +362,7 @@ class VAS:
 
 						if override_level and isinstance(override_level, int): self.level = override_level
 
-						if override_service and isinstance(override_service, int): self.service = override_service
+						if override_service: self.service = override_service
 
 						if init_nav_step: self.nav_step = (self.navigator[0].nav_step + 1) if self.navigator.exists() else 0
 
@@ -404,7 +404,7 @@ class VAS:
 
 						if override_level and isinstance(override_level, int): self.level = override_level
 
-						if override_service and isinstance(override_service, int): self.service = override_service
+						if override_service: self.service = override_service
 
 						if init_nav_step: self.nav_step = (self.navigator[0].nav_step + 1) if self.navigator.exists() else 0
 
@@ -434,7 +434,7 @@ class VAS:
 
 						if override_level and isinstance(override_level, int): self.level = override_level
 
-						if override_service and isinstance(override_service, int): self.service = override_service
+						if override_service: self.service = override_service
 
 						if init_nav_step: self.nav_step = (self.navigator[0].nav_step + 1) if self.navigator.exists() else 0
 

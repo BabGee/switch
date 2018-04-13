@@ -16,6 +16,10 @@ class CreditGradeAdmin(admin.ModelAdmin):
 	list_display = ('code','name','description','min_credit_score','max_credit_score','hierarchy',)
 admin.site.register(CreditGrade, CreditGradeAdmin)
 
+class IdentificationProfileStatusAdmin(admin.ModelAdmin):
+	list_display = ('name','description')
+admin.site.register(IdentificationProfileStatus, IdentificationProfileStatusAdmin)
+
 class IdentificationProfileAdmin(admin.ModelAdmin):
 	list_display = ('id','national_id','first_name','middle_name','last_name')
 admin.site.register(IdentificationProfile, IdentificationProfileAdmin)
