@@ -1223,8 +1223,8 @@ class Wrappers:
         return params
 
     def bid_ranking(self,payload,gateway_profile,profile_tz,data):
-	params = {}
-	params['rows'] = []
+
+        params = {}
 	params['cols'] = [
 	    {"label":"id","value":"id","type":"string"},
 		{"label": "position","value": "position", "type": "string"},
@@ -1232,15 +1232,37 @@ class Wrappers:
 	    {"label":"total_price","value":"total_price","type":"string"},
 		{"type":"href","label":"Actions","links":{"Unit Prices":{"service":"VIEW REQUIREMENT APPLICATIONS","icon":"icons:home","params":{"bid_app_id":"id"}}}}
 	]
+
+        params['rows'] = []
+        params['data'] = []
+        params['lines'] = []
+
+        max_id = 0
+        min_id = 0
+        ct = 0
+	mqtt = {}
+
+
 	try:
 	    from thirdparty.bidfather.models import Bid
 	    bid = Bid.objects.get(pk=payload['bid_id'])
 	    rows = bid.app_rankings(gateway_profile.institution,gateway_profile)
 	    lgr.info(rows)
-	    params['rows'] = rows
+
+	    if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+		if data.pn_id_field not in ['',None] and data.pn_update_field not in ['',None]:
+
+		    params['rows'] = rows
+	    else:
+		#Loop through a report to get the different pn_id_fields to be updated
+		group = {}
+		group[data.pn_id_field] = '12345'
+		channel = "%s/%s/%s" % (gateway_profile.gateway.id, data.data_name,group[data.pn_id_field])
+		mqtt[channel] = rows
 	except Exception as e:
 	    lgr.info('Error on bid rankings: %s',e)
-	return params
+
+	return cols,rows,lines,groups,data,min_id,max_id,t_count, mqtt
 
     def industries_categories(self,payload,gateway_profile,profile_tz,data):
         r = []
@@ -1660,7 +1682,7 @@ class Wrappers:
                         #lgr.info('Is a Function: ')
                         try:
                             func = getattr(self, d.function.strip())
-                            params = func(payload, gateway_profile, profile_tz, d)
+                            params,max_id,min_id,t_count,mqtt[d.data_name] = func(payload, gateway_profile, profile_tz, d)
 			    cols = params['cols'] if 'cols' in params.keys() else []
 			    rowsParams = params['rows'] if 'rows' in params.keys() else []
                             dataParams = params['data'] if 'data' in params.keys() else []
