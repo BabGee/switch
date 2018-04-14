@@ -1240,29 +1240,28 @@ class Wrappers:
         max_id = 0
         min_id = 0
         ct = 0
-	mqtt = {}
-
-
+	# mqtt = {}
 	try:
 	    from thirdparty.bidfather.models import Bid
-	    bid = Bid.objects.get(pk=payload['bid_id'])
-	    rows = bid.app_rankings(gateway_profile.institution,gateway_profile)
-	    lgr.info(rows)
-
-	    if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
-		if data.pn_id_field not in ['',None] and data.pn_update_field not in ['',None]:
-
-		    params['rows'] = rows
-	    else:
-		#Loop through a report to get the different pn_id_fields to be updated
-		group = {}
-		group[data.pn_id_field] = '12345'
-		channel = "%s/%s/%s" % (gateway_profile.gateway.id, data.data_name,group[data.pn_id_field])
-		mqtt[channel] = rows
+            if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+                mqtt = {}
+                # Loop through a report to get the different pn_id_fields to be updated
+                for bid in Bid.objects.all():
+                    channel = "%s/%s/%s" % (gateway_profile.gateway.id, 'bid_ranking', bid.institution.pk)
+                    mqtt[channel] = bid.app_rankings(bid.institution)
+                    for application in bid.bidapplication_set.all():
+                        channel = "%s/%s/%s" % (gateway_profile.gateway.id, 'bid_ranking', application.institution.pk)
+                        mqtt[channel] = bid.app_rankings(application.institution)
+                return cols, rows, lines, groups, data, min_id, max_id, t_count, mqtt
+            else:
+                bid = Bid.objects.get(pk=payload['bid_id'])
+                rows = bid.app_rankings(gateway_profile.institution, gateway_profile)
+                params['rows'] = rows
+                return params
+                
 	except Exception as e:
 	    lgr.info('Error on bid rankings: %s',e)
 
-	return cols,rows,lines,groups,data,min_id,max_id,t_count, mqtt
 
     def industries_categories(self,payload,gateway_profile,profile_tz,data):
         r = []

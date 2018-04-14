@@ -225,7 +225,6 @@ INSTALLED_APPS = (
     'secondary.erp.loyalty',
     'secondary.finance.vbs',
     'secondary.finance.crc',
-    'secondary.finance.crb',
     'secondary.finance.paygate',
 ) + tuple(installed_apps)
 
