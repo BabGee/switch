@@ -325,14 +325,14 @@ class VAS:
 						if val and self.nav.menu.input_variable.min_amount and val >= self.nav.menu.input_variable.min_amount: pass
 						else:
 							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
-							else: self.group_select = 96 #Fail menu as list not matching
+							else: self.group_select = 97 #Fail menu as list not matching
 							if error_level and isinstance(error_level, int): self.level = error_level
 							else: pass
 
 						if val and self.nav.menu.input_variable.max_amount and val <= self.nav.menu.input_variable.max_amount: pass
 						else:
 							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
-							else: self.group_select = 96 #Fail menu as list not matching
+							else: self.group_select = 98 #Fail menu as list not matching
 							if error_level and isinstance(error_level, int): self.level = error_level
 							else: pass
 
