@@ -58,75 +58,6 @@ class PageString(ServiceCall, Wrappers):
 
 		nav = {}
 
-		'''
-		for value in navigator_list:
-			if value.input_select in ['00'] or value.menu.level == 0: #Ensure that if menu level is 0, captures data but ends capture(level 0=main menu)
-				item[int(value.menu.level)] = value
-				break
-			elif value.input_select in ['0'] or int(value.menu.level) in item.keys(): #Ensure that any input select to back is not included & Existing keys not replaced[mostly with back 0]
-				continue
-			else:
-				item[int(value.menu.level)] = value
-
-		for key, value in item.items():
-			if value.menu.selection_preview == True:
-				item_level = value.menu.level + 1
-				try:item_list = json.loads(value.item_list)
-				except: item_list = []
-				if len(item_list) > 0:
-					lgr.info('Item List not None: %s|Item Level: %s' % (item_list,item_level) )
-					try: input_nav = item_list[int(item[item_level].input_select) - 1]
-					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
-				else:
-					lgr.info('Item List None')
-					try:input_nav = item[item_level].input_select 
-					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
-				nav[value.menu.menu_description] = input_nav
-		'''
-		'''
-		for value in navigator_list:
-			if value.input_select in ['00'] or value.level == 0: #Ensure that if menu level is 0, captures data but ends capture(level 0=main menu)
-				item[value.id] = value
-				break
-			elif value.input_select in ['0'] or value.id in item.keys(): #Ensure that any input select to back is not included & Existing keys not replaced[mostly with back 0]
-				continue
-			elif value.menu in [v.menu for v in item.values()]:
-				continue
-			else:
-				item[value.id] = value
-
-		for key, value in item.items():
-			#add menu details
-			try: 
-				details = json.loads(value.menu.details)
-				if isinstance(details,dict): nav.update(details)
-			except: pass
-
-			if value.menu.selection_preview == True:
-
-				lgr.info('Key: %s | Val: %s' % (key,value))
-				item_val = navigator_list.filter(id__gt=value.id).last()
-				lgr.info('Item Val: %s' % item_val)
-				item_level = item_val.id if item_val else 0
-				lgr.info('Item Level: %s' % item_level)
-				try:item_list = json.loads(value.item_list)
-				except: item_list = []
-				lgr.info('Item List: %s' % item_list)
-				lgr.info('variable: %s' % value.menu.menu_description)
-				if len(item_list) > 0:
-					lgr.info('Item List not None: %s|Item Level: %s' % (item_list,item_level) )
-					try: 
-						lgr.info("Item: %s" % item)
-						input_nav = item_list[int(item[item_level].input_select) - 1]
-						lgr.info('Input Nav: %s' % input_nav)
-					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
-				else:
-					lgr.info('Item List None')
-					try:input_nav = item[item_level].input_select 
-					except Exception, e:lgr.info('Error on item_list: %s' % e);input_nav = None
-				if input_nav: nav[value.menu.menu_description] = input_nav
-		'''
-
 		def gen_payload(nav, navigator_list, value):
 			if value.menu.selection_preview == True:
 
@@ -200,15 +131,49 @@ class PageString(ServiceCall, Wrappers):
 
 			payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
 			payload = self.api_service_call(navigator.menu.service, gateway_profile, payload)
-			item = ''
-			if 'response' in payload.keys():
-				for key, value in payload['response'].items():
-					if navigator.session.channel.name == 'IVR':
-						item = '%s\n%s is %s' % (item, key.replace('_',' ').title(), value)
-					elif navigator.session.channel.name == 'USSD':
-						item = '%s\n%s: %s' % (item, key.replace('_',' ').title(), value)
-			if '[RESPONSE]' in page_string:
-				page_string = page_string.replace('[RESPONSE]',item)
+
+			variables = re.findall("\[(.*?)\]", page_string)
+			for v in variables:
+				variable_key, variable_val = None, None
+			        n = v.find("=")
+		        	if n >=0:
+		                	variable_key = v[:n]
+	                		variable_val = v[(n+1):].strip()
+			        else:
+                			variable_key = v
+
+				#Global variable key check
+				if 'RESPONSE' in page_string:
+					page_string = page_string.replace('['+v+']', payload['last_response'])
+
+				elif variable_key == 'RESPONSE_SUMMARY':
+					from primary.core.administration.models import ResponseStatus
+					SUCCESS,ERROR = variable_val.split("|")
+					new_page_string = ''
+					if 'response_status' in payload.keys() and payload['response_status'] == '00':
+						success_list = SUCCESS.split('@')
+						lgr.info('success_list: %s' % success_list)
+						if len(success_list)>1 and len(success_list[1].split(' '))==1:
+							try: new_page_string =  payload['response'][success_list[1]]
+							except: new_page_string = SUCCESS
+						elif SUCCESS == 'RESPONSE': new_page_string = payload['last_response']
+						else: new_page_string = SUCCESS
+					else:
+						if ERROR == 'RESPONSE':
+							#ERR = ResponseStatus.objects.get(response=payload['response_status']).description
+							ERR = payload['last_response']
+							#Success message Can be used to mask error as well
+							success_list = SUCCESS.split('@')
+							lgr.info('success_list: %s' % success_list)
+							if len(success_list)>1 and len(success_list[1].split(' '))==1:
+								try: new_page_string =  payload['response'][success_list[1]]
+								except: new_page_string = ERR
+							else: new_page_string = ERR 
+						elif ERROR == 'RESPONSE': new_page_string = payload['last_response']
+						else: new_page_string= ERROR
+
+					page_string = page_string.replace('['+v+']', new_page_string)
+
 
 		variables = re.findall("\[(.*?)\]", page_string)
 		for v in variables:
@@ -221,34 +186,9 @@ class PageString(ServiceCall, Wrappers):
                 		variable_key = v
 
 			lgr.info('\n\n\n\n Variable Found: Key:%s|Val: %s\n\n\n\n' % (variable_key, variable_val))
-			if variable_key is not None:		
-				if variable_key == 'RESPONSE_SUMMARY':
-					from primary.core.administration.models import ResponseStatus
-					SUCCESS,ERROR = variable_val.split("|")
-					item = ''
-					if 'response_status' in payload.keys() and payload['response_status'] == '00':
-						success_list = SUCCESS.split('@')
-						lgr.info('success_list: %s' % success_list)
-						if len(success_list)>1 and len(success_list[1].split(' '))==1:
-							try:item =  payload['response'][success_list[1]]
-							except: item = SUCCESS
-						else:item = SUCCESS
-					else:
-						if ERROR == 'RESPONSE':
-							#ERR = ResponseStatus.objects.get(response=payload['response_status']).description
-							ERR = payload['last_response']
-							#Success message Can be used to mask error as well
-							success_list = SUCCESS.split('@')
-							lgr.info('success_list: %s' % success_list)
-							if len(success_list)>1 and len(success_list[1].split(' '))==1:
-								try:item =  payload['response'][success_list[1]]
-								except: item = ERR
-							else:item = ERR 
-						else:item = ERROR
-
-					page_string = page_string.replace('['+v+']', item)
-
-				elif variable_key == 'session_variable':
+			if variable_key is not None:
+				#Begin variable checks
+				if variable_key == 'session_variable':
 					item = ''
 
 					params = payload

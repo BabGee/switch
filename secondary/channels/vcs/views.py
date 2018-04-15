@@ -117,7 +117,7 @@ class VAS:
 			else:
 				return ''
 
-		if len(self.menu)>0:
+		if self.menu.exists():
 
 			self.payload['page_string'] = self.menu[0].page_string
 			new_navigator = Navigator(session=self.session, menu=self.menu[0], pin_auth=self.pin_auth, level=self.level, group_select=self.group_select,invalid=self.menu[0].invalid)
@@ -144,7 +144,7 @@ class VAS:
 			input_type = self.menu[0].input_variable.variable_type.variable
 			input_min = self.menu[0].input_variable.validate_min
 			input_max = self.menu[0].input_variable.validate_max
-		elif self.nav and len(self.menu)<1:
+		elif self.nav and self.menu.exists() == False:
 			page_string = self.nav.menu.page_string
 			if len(self.navigator)<2 and self.nav.menu.level == 0:
 				page_string = '%s' % page_string
