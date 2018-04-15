@@ -77,6 +77,8 @@ class InputVariable(models.Model):
 	init_nav_step = models.BooleanField(default=False)
 	min_amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	max_amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	min_group_select = models.IntegerField(blank=True, null=True)
+	max_group_select = models.IntegerField(blank=True, null=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)		
 

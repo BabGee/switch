@@ -43,7 +43,8 @@ admin.site.register(VariableType, VariableTypeAdmin)
 class InputVariableAdmin(admin.ModelAdmin):
 	list_display = ('name', 'variable_type', 'validate_min', 'validate_max', 'allowed_input_list',\
 			 'override_group_select','error_group_select','override_level','error_level',\
-			 'override_service','error_service','init_nav_step','min_amount','max_amount',)
+			 'override_service','error_service','init_nav_step','min_amount','max_amount',\
+			 'min_group_select','max_group_select')
 admin.site.register(InputVariable, InputVariableAdmin)
 
 class MenuAdmin(admin.ModelAdmin):
