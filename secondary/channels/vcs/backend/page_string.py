@@ -174,7 +174,7 @@ class PageString(ServiceCall, Wrappers):
 
 					page_string = page_string.replace('['+v+']', new_page_string)
 
-
+			page_string = page_string.replace('<<','[').replace('>>',']')
 		variables = re.findall("\[(.*?)\]", page_string)
 		for v in variables:
 			variable_key, variable_val = None, None
