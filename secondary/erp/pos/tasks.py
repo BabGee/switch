@@ -1010,8 +1010,9 @@ class System(Wrappers):
 				payload['delivery_id'] = deliveries[0].pk
 				payload['trigger'] = 'has_delivery%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
 			else:
-				# TODO remove has_delivery trigger if exists
-				pass
+				payload['trigger'] = 'no_delivery%s' % (
+					',' + payload['trigger'] if 'trigger' in payload.keys() else '')
+
 			payload['response_status'] = '00'
 			payload['response'] = 'Checked Delivery'
 		except Exception, e:
