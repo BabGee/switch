@@ -264,6 +264,19 @@ class Wrappers:
 
 		return session_gateway_profile, payload, profile_error
 
+	def simple_kra_pin(self, kra_pin):
+		kra_pin = str(kra_pin).replace(' ','').strip()
+		try: kra_pin = int(kra_pin)
+		except: pass
+
+		if re.search(r"([a-zA-Z]{1})(\d{9})([a-zA-Z]{1}$)", str(kra_pin)):
+			kra_pin = str(kra_pin)
+		else:
+			kra_pin = None
+		lgr.info('Simple KRA Pin: %s' % kra_pin)
+		return kra_pin
+
+
 	def simple_id_passport(self, id_passport):
 		id_passport = str(id_passport).replace(' ','').strip()
 		try: id_passport = int(id_passport)
