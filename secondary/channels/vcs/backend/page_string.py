@@ -143,11 +143,12 @@ class PageString(ServiceCall, Wrappers):
                 			variable_key = v
 
 				#Global variable key check
-				if 'RESPONSE' in page_string:
+
+				if variable_key == 'RESPONSE':
 					page_string = page_string.replace('['+v+']', payload['last_response'])
 
 				elif variable_key == 'RESPONSE_SUMMARY':
-					from primary.core.administration.models import ResponseStatus
+					#from primary.core.administration.models import ResponseStatus
 					SUCCESS,ERROR = variable_val.split("|")
 					new_page_string = ''
 					if 'response_status' in payload.keys() and payload['response_status'] == '00':
