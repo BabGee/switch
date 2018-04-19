@@ -119,6 +119,7 @@ class Wrappers:
 					try: profile.passport_expiry_date = datetime.strptime(payload['passport_expiry_date'], '%Y-%m-%d').date()
 					except Exception, e: lgr.info('Error on Passport Expiry Date: %s' % e)
 
+			if 'tax_pin' in payload.keys() and profile.tax_pin in [None,""]: profile.tax_pin = payload['tax_pin']
 			if 'physical_address' in payload.keys() and profile.physical_address in [None,""]: profile.physical_address = payload['physical_address']
 			if 'city' in payload.keys() and profile.city in [None,""]: profile.city = payload['city']
 			if 'region' in payload.keys() and profile.region in [None,""]: profile.region = payload['region']
@@ -170,6 +171,7 @@ class Wrappers:
 				try: profile.passport_expiry_date = datetime.strptime(payload['passport_expiry_date'], '%Y-%m-%d').date()
 				except Exception, e: lgr.info('Error on Passport Expiry Date: %s' % e)
 
+		if 'tax_pin' in payload.keys(): profile.tax_pin = payload['tax_pin']
 		if 'physical_address' in payload.keys(): profile.physical_address = payload['physical_address']
 		if 'city' in payload.keys(): profile.city = payload['city']
 		if 'region' in payload.keys(): profile.region = payload['region']
@@ -552,6 +554,7 @@ class System(Wrappers):
 			payload['passport_number'] = profile.passport_number
 			if profile.passport_expiry_date: payload['passport_expiry_date'] = profile.passport_expiry_date.isoformat()
 			payload['physical_address'] = profile.physical_address
+			payload['tax_pin'] = profile.taxt_pin
 			payload['city'] = profile.city
 			payload['region'] = profile.region
 			payload['postal_address'] = profile.postal_address
