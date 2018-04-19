@@ -912,8 +912,8 @@ class Wrappers:
 				agg['min_'+f.strip()] = Min(f.strip())
 				agg['max_'+f.strip()] = Max(f.strip())
 				agg_data = report_list.aggregate(**agg)
-				min_agg = agg_data['min_'+f.strip()].date().isoformat()
-				max_agg = agg_data['max_'+f.strip()].date().isoformat()
+				min_agg = agg_data['min_'+f.strip()].date().isoformat() if agg_data['min_'+f.strip()] else None
+				max_agg = agg_data['max_'+f.strip()].date().isoformat() if agg_data['max_'+f.strip()] else None
 				i['date_filters'] = [min_agg,max_agg]
 			params['cols'][count] = i
 			count += 1
