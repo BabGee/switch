@@ -31,3 +31,7 @@ rabbitmqctl start_app
 
 
 \copy (SELECT crb_identificationprofile.id, first_name record_firstname, middle_name record_middle_name, last_name record_last_name, national_id,surname,forename_1,forename_2,forename_3,salutation,date_of_birth,client_number,marital_status,description FROM crb_identificationprofile inner join crb_reference  on crb_identificationprofile.id=crb_reference.identification_profile_id full outer join administration_gender on crb_reference.gender_id=administration_gender.id) TO /tmp/dump_crb_reference_EAFF.csv CSV DELIMITER ',';
+
+ \COPY crb_identificationprofile (national_id,phone_number,first_name,middle_name,last_name,county,nearest_town,gender,year_of_birth) from '/tmp/eGRANARY_10000_1.csv' DELIMITERS ',' CSV;
+
+SELECT setval('crb_identificationprofile_id_seq', (SELECT max(id) FROM crb_identificationprofile));

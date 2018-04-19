@@ -361,26 +361,26 @@ class Wrappers:
 		    df_list = i.split('%')
 		    if len(df_list)==2:
 			if df_list[0] in payload.keys() and getattr(model_class, df_list[1].split('__')[0], False):
-				try:date_filter_data[df_list[1]] = datetime.strptime(payload[df_list[0]], '%Y-%m-%d').date() 
+				try:date_filter_data[df_list[1]] = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload[df_list[0]], '%Y-%m-%d')).date()
 			        except Exception, e: lgr.info('Error on date filter 1: %s' % e)
 			elif getattr(model_class, df_list[0].split('__')[0], False):
                     		k,v = df_list
 				v_list = v.split(',')
 				if len(v_list)>1:
 					v = v_list
-				try:date_filter_data[k] = datetime.strptime(v, '%Y-%m-%d').date() if v not in ['',None] else None
+				try:date_filter_data[k] = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(v, '%Y-%m-%d')).date() if v not in ['',None] else None
 			        except Exception, e: lgr.info('Error on date filter 2: %s' % e)
 
 		    elif getattr(model_class, f.split('__')[0], False):
 			if i in payload.keys():
-				try:date_filter_data[i] = datetime.strptime(payload[i], '%Y-%m-%d').date() if payload[i] not in ['',None] else None
+				try:date_filter_data[i] = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload[i], '%Y-%m-%d')).date() if payload[i] not in ['',None] else None
 			        except Exception, e: lgr.info('Error on date filter 3: %s' % e)
 			elif 'start_date' in payload.keys() or 'end_date' in payload.keys():
 				if 'start_date' in payload.keys():
-					try:date_filter_data[i+'__gte'] = datetime.strptime(payload['start_date'], '%Y-%m-%d').date() if payload['start_date'] not in ['',None] else None
+					try:date_filter_data[i+'__gte'] = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload['start_date'], '%Y-%m-%d')).date() if payload['start_date'] not in ['',None] else None
 				        except Exception, e: lgr.info('Error on date filter 4: %s' % e)
 				if 'end_date' in payload.keys():
-					try:date_filter_data[i+'__lte'] = datetime.strptime(payload['end_date'], '%Y-%m-%d').date() if payload['end_date'] not in ['',None] else None
+					try:date_filter_data[i+'__lte'] = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload['end_date'], '%Y-%m-%d')).date() if payload['end_date'] not in ['',None] else None
 				        except Exception, e: lgr.info('Error on date filter 5: %s' % e)
 
 
@@ -1240,24 +1240,26 @@ class Wrappers:
         max_id = 0
         min_id = 0
         ct = 0
-	# mqtt = {}
+	mqtt = {}
 	try:
 	    from thirdparty.bidfather.models import Bid
             if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
-                mqtt = {}
+                #mqtt = {}
                 # Loop through a report to get the different pn_id_fields to be updated
                 for bid in Bid.objects.all():
                     channel = "%s/%s/%s" % (gateway_profile.gateway.id, 'bid_ranking', bid.institution.pk)
-                    mqtt[channel] = bid.app_rankings(bid.institution)
+                    params['rows'] = bid.app_rankings(bid.institution)
+                    mqtt[channel] = params # bid.app_rankings(bid.institution)
                     for application in bid.bidapplication_set.all():
                         channel = "%s/%s/%s" % (gateway_profile.gateway.id, 'bid_ranking', application.institution.pk)
-                        mqtt[channel] = bid.app_rankings(application.institution)
-                return cols, rows, lines, groups, data, min_id, max_id, t_count, mqtt
+                        params['rows'] = bid.app_rankings(application.institution)
+                        mqtt[channel] = params
+                return params,max_id, min_id, ct, mqtt
             else:
                 bid = Bid.objects.get(pk=payload['bid_id'])
                 rows = bid.app_rankings(gateway_profile.institution, gateway_profile)
                 params['rows'] = rows
-                return params
+                return params,max_id,min_id,ct,mqtt
                 
 	except Exception as e:
 	    lgr.info('Error on bid rankings: %s',e)
