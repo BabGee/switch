@@ -24,7 +24,7 @@ class DataListQuery(models.Model):
 	description = models.CharField(max_length=200)
 	model_name = models.CharField(max_length=100) 
 	module_name = models.CharField(max_length=100) 
-	values = models.CharField(max_length=512, blank=True, null=True) 
+	values = models.CharField(max_length=2048, blank=True, null=True) 
 	date_values = models.CharField(max_length=512, blank=True, null=True)
 	date_time_values = models.CharField(max_length=512, blank=True, null=True)
 	month_year_values = models.CharField(max_length=512, blank=True, null=True)
