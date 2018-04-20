@@ -1123,6 +1123,23 @@ class System(Wrappers):
 		return payload
 
 
+	def set_profile_deactivated(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+			session_gateway_profile.status = ProfileStatus.objects.get(name='DEACTIVATED')
+			session_gateway_profile.save()
+			payload['response'] = 'Profile DeActivated'
+			payload['response_status'] = '00'
+
+		except Exception, e:
+			lgr.info('Error on Validating One Time Pin: %s' % e)
+			payload['response_status'] = '96'
+		return payload
+
+
+
 	def set_profile_activated(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
