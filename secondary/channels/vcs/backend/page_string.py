@@ -2356,7 +2356,10 @@ class PageString(ServiceCall, Wrappers):
 				else:
 					from secondary.channels.dsc.tasks import System as DSCSystem
 					lgr.info('DSC query')
+
 					payload['data_name'] = variable_key
+					if 'chid' not in payload.keys(): payload['chid'] = 4
+
 					if variable_val:
 						payload[str(variable_key)] = variable_val
 
