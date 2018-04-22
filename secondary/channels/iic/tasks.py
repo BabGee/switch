@@ -9,9 +9,6 @@ from django.utils import timezone
 
 import logging
 
-lgr = logging.getLogger('iic')
-
-
 class Generator:
     def validateEmail(self, email):
         try:
@@ -28,9 +25,10 @@ class Generator:
         except ValidationError:
             return False
 
-    def section_generator(self, payload, this_page_inputs):
+    def section_generator(self, payload, this_page_inputs, node_info):
         this_page = {}
         menu_page_group = None
+	lgr = node_info.log
         try:
             lgr.info('Starting Interface: %s' % this_page_inputs)
 
@@ -134,7 +132,7 @@ class Generator:
 
                     this_page[menu_page_group_level][input_page.item_level][input_page.name][
                         input.page_input_group.item_level] = {input.page_input_group.name: {
-                        'input_var': Wrappers().fill_input_variables(page_input_group_input_var, payload)}}
+                        'input_var': Wrappers().fill_input_variables(page_input_group_input_var, payload, node_info)}}
                 if menu_page_group_level in this_page.keys() and input_page.item_level in this_page[
                     menu_page_group_level].keys() and \
                         input_page.name in this_page[menu_page_group_level][input_page.item_level].keys() and \
@@ -162,7 +160,7 @@ class Generator:
                         Wrappers().fill_input_variables(
                             this_page[menu_page_group_level][input_page.item_level][input_page.name][
                                 input.page_input_group.item_level][input.page_input_group.name][input.item_level],
-                            payload)
+                            payload, node_info)
                 except Exception, e:
                     lgr.info(
                         'Error Getting Wrapper on Inputs: %s' % e)  # pass #Escape sections with similar leveling (item_level)
@@ -171,7 +169,9 @@ class Generator:
 
         return this_page
 
-    def all_pages_generator(self, payload, this_page_inputs):
+    def all_pages_generator(self, payload, this_page_inputs, node_info):
+
+	lgr = node_info.log
         page_groups = {}
         try:
             lgr.info('Starting All Pages')
@@ -204,6 +204,8 @@ class Generator:
 
 class System(Generator):
     def redirect(self, payload, node_info):
+
+	lgr = node_info.log
         try:
             if 'redirect' in payload.keys():
                 if self.validateURL(payload['redirect']):
@@ -221,6 +223,8 @@ class System(Generator):
         return payload
 
     def get_interface(self, payload, node_info):
+
+	lgr = node_info.log
         try:
             lgr.info('Get Interface: %s' % payload)
             gui = {}
@@ -266,8 +270,8 @@ class System(Generator):
             #			 Q(page__access_level=profile[0].access_level) |Q(page__access_level__name='SYSTEM'), \
             # If a page input has a page_list with on of the pages on a none zero item_level, the section will be previewed on DASHBOARD (START SERVICE)
 
-            gui['this_page_inputs'] = self.section_generator(payload, this_page_inputs)
-            gui['all_pages'] = self.all_pages_generator(payload, this_page_inputs)
+            gui['this_page_inputs'] = self.section_generator(payload, this_page_inputs, node_info)
+            gui['all_pages'] = self.all_pages_generator(payload, this_page_inputs, node_info)
 
             payload['response'] = gui
             payload['response_status'] = '00'
@@ -277,6 +281,7 @@ class System(Generator):
         return payload
 
     def get_section(self, payload, node_info):
+	lgr = node_info.log
         try:
             lgr.info('Get Interface: %s' % payload)
             gui = {}
@@ -311,7 +316,7 @@ class System(Generator):
                 prefetch_related('trigger', 'page', 'access_level', 'institution', 'input_variable', 'page_input_group',
                                  'gateway', 'channel', 'payment_method')
 
-            gui['this_page_inputs'] = self.section_generator(payload, this_page_inputs)
+            gui['this_page_inputs'] = self.section_generator(payload, this_page_inputs, node_info)
 
             payload['response'] = gui
             payload['response_status'] = '00'
@@ -322,20 +327,11 @@ class System(Generator):
 
 
 class Registration(System):
-    def runItems(self):
-        import random
-        import string
-        chars = string.ascii_letters + string.punctuation + string.digits
-
-        rnd = random.SystemRandom()
-        s = ''.join(rnd.choice(chars) for i in range(20))
-        lgr.info('Task: %s' % s)
-        return s
-
+	pass
 
 class Trade(System):
-    pass
+	pass
 
 
 class Payments(System):
-    pass
+	pass

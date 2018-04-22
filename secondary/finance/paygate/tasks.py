@@ -30,7 +30,7 @@ from primary.core.administration.views import WebService
 from .models import *
 
 import logging
-lgr = logging.getLogger('paygate')
+lgr = logging.getLogger('secondary.finance.paygate')
 
 from celery import shared_task
 #from celery.contrib.methods import task_method

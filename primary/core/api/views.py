@@ -11,7 +11,7 @@ from django.http import Http404
 from decimal import Decimal, ROUND_DOWN
 
 import logging
-lgr = logging.getLogger('api')
+lgr = logging.getLogger('primary.core.api')
 
 @csrf_protect
 def service_call(request):

@@ -10,7 +10,7 @@ from decimal import Decimal
 
 
 import logging
-lgr = logging.getLogger('vcs')
+lgr = logging.getLogger('secondary.channels.vcs')
 class Wrappers:
 	def sale_charge_bill(self, balance_bf, product_item, gateway):
 		from secondary.erp.pos.models import SaleCharge
@@ -51,7 +51,8 @@ class Wrappers:
 class PageString(ServiceCall, Wrappers):
 	def __init__(self, name=None, app_name='tags'):
 		self._registry = {} # model_class class -> admin_class instance
-	def get_nav(self, navigator, attrs={}):
+	def get_nav(self, navigator, node_info):
+		lgr = node_info.log
 		#00 Main not filtered as variable value still needs to be captured. For 0 back, there already exists a menu entry so value not needed.
 		navigator_list = Navigator.objects.filter(Q(session=navigator.session), Q(nav_step=navigator.nav_step),\
 			~Q(input_select__in=['']),Q(invalid=False)).order_by('-date_created','-menu__level')
@@ -99,7 +100,9 @@ class PageString(ServiceCall, Wrappers):
 		lgr.info('Nav: %s' % nav)
 		return nav
 
-	def pagestring(self, navigator, payload, code):
+	def pagestring(self, navigator, payload, code, node_info):
+
+		lgr = node_info.log
 		#Find Variable
 		#Process Submit and input not in ['0','00']
 		page_string = payload['page_string']
@@ -112,7 +115,7 @@ class PageString(ServiceCall, Wrappers):
 		except: pass
 
 
-		payload.update(self.get_nav(navigator))
+		payload.update(self.get_nav(navigator, node_info))
 
 
 		if navigator is not None and navigator.menu is not None and navigator.menu.submit == True:
@@ -205,7 +208,7 @@ class PageString(ServiceCall, Wrappers):
 
 				elif variable_key == 'SELECTION':
 					item = ''
-					for key, value in self.get_nav(navigator, {'selection':True}).items():
+					for key, value in self.get_nav(navigator, node_info).items():
 						key = key.replace("_"," ")
 						if navigator.session.channel.name == 'IVR':
 							item = '%s\n%s is %s.' % (item, key.title(), value)

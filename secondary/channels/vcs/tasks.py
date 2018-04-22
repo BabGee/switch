@@ -23,7 +23,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.utils.http import urlquote
 
 import logging
-lgr = logging.getLogger('vcs')
+lgr = logging.getLogger('secondary.channels.vcs')
 
 #Check on out of range issue with int
 class Wrappers:

@@ -30,7 +30,7 @@ from django.core import serializers
 from secondary.erp.pos.models import *
 
 import logging
-lgr = logging.getLogger('pos')
+lgr = logging.getLogger('secondary.erp.pos')
 
 
 class Wrappers:

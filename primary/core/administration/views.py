@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError
 import pytz, time, json, pycurl
 
 import logging
-lgr = logging.getLogger('administration')
+lgr = logging.getLogger('primary.core.administration')
 
 class WebService:
 	def validate_url(self, url):

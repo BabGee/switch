@@ -16,7 +16,7 @@ import base64, re, crypt
 
 from .models import *
 import logging
-lgr = logging.getLogger('crc')
+lgr = logging.getLogger('secondary.finance.crc')
 	
 from keyczar import keyczar
 location = '/opt/kz'

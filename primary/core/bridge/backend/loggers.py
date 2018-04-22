@@ -9,7 +9,7 @@ from django.utils.formats import get_format
 from django.contrib.gis.geos import Point
 from django.contrib.gis.geoip import GeoIP
 import logging
-lgr = logging.getLogger('bridge')
+lgr = logging.getLogger('primary.core.bridge')
 
 
 class Loggers:

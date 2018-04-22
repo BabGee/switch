@@ -10,7 +10,7 @@ from django.core.exceptions import PermissionDenied
 #from paygate.backend.processor import *
 
 import logging
-lgr = logging.getLogger('paygate')
+lgr = logging.getLogger('secondary.finance.paygate')
 
 #BRIDGE PORT = 732873 #SECURE
 

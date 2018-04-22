@@ -53,7 +53,7 @@ CELERYD_LOG_LEVEL="INFO"
 #CELERYD_LOG_FILE="/var/log/celery/%n%I.log"
 #CELERYD_PID_FILE="/var/run/celery/%n.pid"
 
-CELERYD_LOG_FILE="/opt/logs/switch/%n%I.log"
+CELERYD_LOG_FILE="/opt/logs/switch/async/%n%I.log"
 CELERYD_PID_FILE="/var/run/celery/%n.pid"
 
 

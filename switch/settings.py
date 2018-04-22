@@ -35,6 +35,32 @@ hosts = conf_hosts.split(",")
 installed_apps = products+thirdparty
 installed_apps = filter(None, installed_apps)
 
+primary = (
+    'primary.core.administration',
+    'primary.core.api',
+    'primary.core.upc',
+    'primary.core.bridge',
+	)
+
+secondary = (
+    'secondary.channels.vcs',
+    'secondary.channels.iic',
+    'secondary.channels.dsc',
+    'secondary.channels.notify',
+    'secondary.erp.distro',
+    'secondary.erp.pos',
+    'secondary.erp.ads',
+    'secondary.erp.crm',
+    'secondary.erp.survey',
+    'secondary.erp.loyalty',
+    'secondary.finance.vbs',
+    'secondary.finance.crc',
+    'secondary.finance.paygate',
+	)
+
+installed_apps = primary + secondary + tuple(installed_apps)
+
+
 #import djcelery
 #djcelery.setup_loader()
 
@@ -209,25 +235,7 @@ INSTALLED_APPS = (
     'django_extensions',
     'django_celery_results',
     'django_celery_beat',
-    'primary.core.administration',
-    'primary.core.api',
-    'primary.core.upc',
-    'primary.core.bridge',
-    'secondary.channels.vcs',
-    'secondary.channels.iic',
-    'secondary.channels.dsc',
-    'secondary.channels.notify',
-    'secondary.erp.distro',
-    'secondary.erp.pos',
-    'secondary.erp.ads',
-    'secondary.erp.crm',
-    'secondary.erp.survey',
-    'secondary.erp.loyalty',
-    'secondary.finance.vbs',
-    'secondary.finance.crc',
-    'secondary.finance.paygate',
-) + tuple(installed_apps)
-
+) +  installed_apps
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -273,30 +281,8 @@ TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 VENV_ROOT = '/opt/logs/switch/'
 
 print VENV_ROOT
-today = datetime.date.today()
-today = str(today)
-#LOGFILE='info-'+today+'.log'
-#MPESAFILE='mpesa-'+today+'.log'
-LOGFILE='info.log'
-ADMINISTRATIONFILE='administration.log'
-MPESAFILE='mpesa.log'
-PAYGATEFILE='paygate.log'
-IICFILE='iic.log'
-APIFILE='api.log'
-UPCFILE='upc.log'
-DSCFILE='dsc.log'
-VBSFILE='vbs.log'
-BRIDGEFILE='bridge.log'
-CRCFILE='crc.log'
-CRBFILE='crb.log'
-CRMFILE='crm.log'
-VCSFILE='vcs.log'
-NOTIFYFILE='notify.log'
-POSFILE='pos.log'
-SURVEYFILE='survey.log'
-GUSFILE='gus.log'
 
-CELERYFILE='celery.log'
+LOGFILE='info.log'
 
 LOGGING = {
     'version': 1,
@@ -315,160 +301,6 @@ LOGGING = {
         }
     },
     'handlers': {
-         'gus_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', GUSFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },        
-         'survey_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', SURVEYFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },        
-         'pos_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', POSFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },        
-         'notify_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', NOTIFYFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },        
-         'vcs_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', VCSFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },        
-         'crm_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', CRMFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },        
-         'crc_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', CRCFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },
-         'crb_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', CRBFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },
-         'bridge_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', BRIDGEFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },        
-         'vbs_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', VBSFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },        
-         'dsc_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', DSCFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },        
-         'api_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', APIFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },        
-         'administration_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', ADMINISTRATIONFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },        
- 
-        'default_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', LOGFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },  
-        'paygate_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', PAYGATEFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },  
-         'upc_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', UPCFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },  
-        'iic_rotating_file':{
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            'filename' : os.path.join(VENV_ROOT, '', IICFILE), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-            'backupCount' : 7,
-        },  
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler',
@@ -484,155 +316,6 @@ LOGGING = {
     },
 
     'loggers': {
-         'gus': {
-            'handlers': ['gus_rotating_file'],
-            'level': 'INFO',
-        },    
-
-         'roadroute': {
-            'handlers': ['default_rotating_file'],
-            'level': 'INFO',
-        },    
-
-         'loyalty': {
-            'handlers': ['default_rotating_file'],
-            'level': 'INFO',
-        },    
-
-         'notify': {
-            'handlers': ['notify_rotating_file'],
-            'level': 'INFO',
-        },    
-
-         'ads': {
-            'handlers': ['default_rotating_file'],
-            'level': 'INFO',
-        },    
-
-          'crm': {
-            'handlers': ['crm_rotating_file'],
-            'level': 'INFO',
-        },    
-   
-         'vcs': {
-            'handlers': ['vcs_rotating_file'],
-            'level': 'INFO',
-        },    
-     
-         'bridge': {
-            'handlers': ['bridge_rotating_file'],
-            'level': 'INFO',
-        },    
-     
-         'crc': {
-            'handlers': ['crc_rotating_file'],
-            'level': 'INFO',
-        },
-
-         'crb': {
-            'handlers': ['crb_rotating_file'],
-            'level': 'INFO',
-        },
-       
-         'vbs': {
-            'handlers': ['vbs_rotating_file'],
-            'level': 'INFO',
-        },    
-     
-         'api': {
-            'handlers': ['api_rotating_file'],
-            'level': 'INFO',
-        },    
-    
-         'administration': {
-            'handlers': ['administration_rotating_file'],
-            'level': 'INFO',
-        },       
-    
-         'upc': {
-            'handlers': ['upc_rotating_file'],
-            'level': 'INFO',
-        },       
-    
-         'regix': {
-            'handlers': ['default_rotating_file'],
-            'level': 'INFO',
-        },       
-
-         'doc': {
-            'handlers': ['default_rotating_file'],
-            'level': 'INFO',
-        },       
-
-         'muziqbit': {
-            'handlers': ['default_rotating_file'],
-            'level': 'INFO',
-        },       
-
-         'paygate': {
-            'handlers': ['paygate_rotating_file'],
-            'level': 'INFO',
-        },       
-         'iic': {
-            'handlers': ['iic_rotating_file'],
-            'level': 'INFO',
-        },    
-
-         'dsc': {
-            'handlers': ['dsc_rotating_file'],
-            'level': 'INFO',
-        },       
-
-         'pos': {
-            'handlers': ['pos_rotating_file'],
-            'level': 'INFO',
-        },       
-
-         'survey': {
-            'handlers': ['survey_rotating_file'],
-            'level': 'INFO',
-        },       
-
-         'mcsk': {
-            'handlers': ['default_rotating_file'],
-            'level': 'INFO',
-        },       
-
-         'products': {
-            'handlers': ['default_rotating_file'],
-            'level': 'INFO',
-        },       
-
-         'thirdparty': {
-            'handlers': ['default_rotating_file'],
-            'level': 'INFO',
-        },       
-
-         'amkagroup_co_ke': {
-            'handlers': ['default_rotating_file'],
-            'level': 'INFO',
-        },       
-
-         'wahi': {
-            'handlers': ['default_rotating_file'],
-            'level': 'INFO',
-        },       
-
-         'sortika': {
-            'handlers': ['default_rotating_file'],
-            'level': 'INFO',
-        },       
-
-         'nikobizz': {
-            'handlers': ['default_rotating_file'],
-            'level': 'INFO',
-        },       
-
-         'bidfather': {
-            'handlers': ['default_rotating_file'],
-            'level': 'INFO',
-        },       
-
         'logview.usersaves': {               # define another logger
             'handlers': ['file_actions'],  # associate a different handler
             'level': 'INFO',                 # specify the logging level
@@ -646,4 +329,32 @@ LOGGING = {
 
     }
 }
+#for app in installed_apps:
+#	print app
 
+
+
+for app in installed_apps:
+	LOGGING['handlers'][app] = {
+            'level' : 'INFO',
+            'formatter' : 'verbose', # from the django doc example
+            'class' : 'logging.handlers.TimedRotatingFileHandler',
+            'filename' : os.path.join(VENV_ROOT, '', app+'.log'), # full path works
+            'when' : 'midnight',
+            'interval' : 1,
+            'backupCount' : 7,
+        }
+
+	LOGGING['loggers'][app] = {
+            'handlers': [app],
+            'level': 'INFO',
+        }
+
+'''
+print 'HANDLERS' 
+for handle in LOGGING['handlers']:
+	print handle, LOGGING['handlers'][handle]
+print 'LOGGERS' 
+for log in LOGGING['loggers']:
+	print log, LOGGING['loggers'][log]
+'''

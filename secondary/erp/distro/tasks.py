@@ -26,7 +26,7 @@ from .models import *
 
 import logging
 
-lgr = logging.getLogger('thirdparty')
+lgr = logging.getLogger('secondary.erp.distro')
 
 
 class Wrappers:

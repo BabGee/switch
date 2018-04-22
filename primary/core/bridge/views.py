@@ -10,7 +10,7 @@ from django.utils.formats import get_format
 from django.db.models import Q
 
 import logging
-lgr = logging.getLogger('bridge')
+lgr = logging.getLogger('primary.core.bridge')
 
 class ServiceProcessor:
 	def action_reverse(self, commands, gateway_profile, payload, transaction, reverse_response_tree, level):

@@ -11,7 +11,7 @@ from django.db.models import Q
 import hashlib, hmac, base64
 
 import logging
-lgr = logging.getLogger('iic')
+lgr = logging.getLogger('secondary.finance.iic')
 	
 
 class Wrapper:

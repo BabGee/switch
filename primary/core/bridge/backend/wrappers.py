@@ -8,7 +8,7 @@ from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from primary.core.upc.tasks import Wrappers as UPCWrappers
 
-lgr = logging.getLogger('bridge')
+lgr = logging.getLogger('primary.core.bridge')
 
 
 class TimeoutError(Exception):
@@ -26,6 +26,21 @@ class timeout:
         signal.alarm(self.seconds)
     def __exit__(self, type, value, traceback):
         signal.alarm(0)
+
+
+class node:
+	def __init__(self):
+		self.log = None 
+		self.url = None
+		self.timeout = None
+		self.key_file = None
+		self.cert_file = None
+		self.use_ssl = None
+		self.username = None
+		self.password = None
+		self.api_key = None
+
+
 
 class Wrappers:
 	def validate_url(self, url):
@@ -235,15 +250,6 @@ class Wrappers:
 		responseParams = {}
 		lgr.info('processorFinal: We are now processing the transaction: %s' % item)
 		try:	
-		        node_info = {'url': item.node_system.URL,
-		                       	'timeout': item.node_system.timeout_time,
-		                       	'key_file': item.node_system.key_path,
-		                       	'cert_file': item.node_system.cert_path,
-		                       	'use_ssl': item.node_system.use_ssl,
-					'username': item.node_system.username,
-					'password': item.node_system.password,
-					'api_key': item.node_system.api_key
-		                       }
 
 			node_to_call = str(item.node_system.URL.lower())
 			class_name = str(item.service.product.name.title())
@@ -270,9 +276,18 @@ class Wrappers:
 			lgr.info("Run Func: %s TimeOut: %s" % (func, item.node_system.timeout_time))
 			#lgr.info('Task Name: %s' % func.name)
 
-			#use celery - decomissioned 13/1/2016
-			#response = func.delay (payload, node_info)
-			#responseParams = response.get(timeout=int(item.node_system.timeout_time))
+
+			node_info = node()
+			node_info.log = logging.getLogger(node_to_call)
+			node_info.url = item.node_system.URL
+                       	node_info.timeout = item.node_system.timeout_time
+                       	node_info.key_file = item.node_system.key_path
+                       	node_info.cert_file = item.node_system.cert_path
+                       	node_info.use_ssl = item.node_system.use_ssl
+			node_info.username = item.node_system.username
+			node_info.password = item.node_system.password
+			node_info.api_key = item.node_system.api_key
+
 
 			#non celery use
 			responseParams = func(payload, node_info)

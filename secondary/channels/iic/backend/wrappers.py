@@ -3,11 +3,11 @@ import re, json
 from django.utils.encoding import smart_str
 from xml.sax.saxutils import escape, unescape
 
-import logging
-lgr = logging.getLogger('iic')
-
 class Wrappers:
-	def fill_input_variables(self, input_variable, payload):
+	def fill_input_variables(self, input_variable, payload, node_info):
+
+		lgr = node_info.log
+
 		lgr.info('Filler input: %s' % input_variable)
 
 	

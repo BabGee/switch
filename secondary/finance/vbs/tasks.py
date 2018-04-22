@@ -28,7 +28,7 @@ from django.core import serializers
 from secondary.finance.vbs.models import *
 from primary.core.upc.tasks import Wrappers as UPCWrappers
 import logging
-lgr = logging.getLogger('vbs')
+lgr = logging.getLogger('secondary.finance.vbs')
 
 class Wrappers:
         def validateEmail(self, email):

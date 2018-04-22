@@ -31,7 +31,7 @@ from django.utils.encoding import smart_str, smart_unicode
 from secondary.finance.crb.models import *
 
 import logging
-lgr = logging.getLogger('crb')
+lgr = logging.getLogger('secondary.finance.crb')
 
 class Wrappers:
     @app.task(ignore_result=True)

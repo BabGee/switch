@@ -30,7 +30,7 @@ from django.db import transaction
 from primary.core.bridge.models import *
 
 import logging
-lgr = logging.getLogger('upc')
+lgr = logging.getLogger('primary.core.upc')
 
 #from celery import shared_task
 #from celery.contrib.methods import task_method

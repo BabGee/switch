@@ -10,9 +10,6 @@ import base64, re, pytz
 from primary.core.upc.tasks import Wrappers as UPCWrappers
 from decimal import Decimal
 
-import logging
-lgr = logging.getLogger('vcs')
-
 class VAS:
         def validateEmail(self, email):
                 try:
@@ -22,6 +19,7 @@ class VAS:
                         return False
 
 	def initialize(self, *args):
+		lgr = self.node_info.log
 		if 'timelimit' in args:
 			self.channel = Channel.objects.get(id=self.payload["chid"])
 			if self.channel.name == 'USSD':
@@ -80,6 +78,7 @@ class VAS:
 				self.session.save()
 
 	def menu_view(self):
+		lgr = self.node_info.log
 		self.view_data = {}
 		self.item_list = []
 
@@ -129,7 +128,7 @@ class VAS:
 			new_navigator.save()
 
 			#Process Page String
-			try: self.payload =  PageString().pagestring(new_navigator, self.payload, self.code)
+			try: self.payload =  PageString().pagestring(new_navigator, self.payload, self.code, self.node_info)
 			except Exception, e: lgr.info('Error on Processing Page String: %s' % e)
 
 			menuitems = menuitems.filter(menu=self.menu[0])
@@ -162,7 +161,7 @@ class VAS:
 			new_navigator.save()
 			
 			#Process Page String
-			try: self.payload =  PageString().pagestring(new_navigator, self.payload, self.code)
+			try: self.payload =  PageString().pagestring(new_navigator, self.payload, self.code, self.node_info)
 			except Exception, e: lgr.info('Error on Processing Page String: %s' % e)
 
 			menuitems = menuitems.filter(menu=self.nav.menu)
@@ -211,6 +210,7 @@ class VAS:
 		self.view_data["INPUT_MAX"] = input_max
 
 	def create_menu(self, **kwargs):
+		lgr = self.node_info.log
 		#if exists, get navigator & max of nav_step order_by(nav_step)[1], add nav_step + 1
 		self.menu = Menu.objects.filter(menu_status__name='ENABLED')
 		self.pin_auth = False
@@ -473,6 +473,8 @@ class VAS:
 
 
 	def menu_input(self, payload, node_info):
+		self.node_info = node_info
+		lgr = self.node_info.log
 		try:
 			self.payload = payload
 			#Get the sessionId, input. 

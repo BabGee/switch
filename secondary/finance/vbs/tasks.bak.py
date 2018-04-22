@@ -21,7 +21,7 @@ from decimal import Decimal, ROUND_DOWN, ROUND_UP
 from vbs.models import *
 
 import logging
-lgr = logging.getLogger('vbs')
+lgr = logging.getLogger('secondary.finance.vbs')
 
 from celery import shared_task
 from celery.contrib.methods import task_method

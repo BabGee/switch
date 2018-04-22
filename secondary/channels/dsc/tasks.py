@@ -46,7 +46,7 @@ from django.core import serializers
 
 from secondary.channels.dsc.models import *
 
-lgr = logging.getLogger('dsc')
+lgr = logging.getLogger('secondary.channels.dsc')
 
 
 class Wrappers:

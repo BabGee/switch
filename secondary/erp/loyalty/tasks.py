@@ -24,7 +24,7 @@ import base64, re
 from secondary.erp.loyalty.models import *
 
 import logging
-lgr = logging.getLogger('loyalty')
+lgr = logging.getLogger('secondary.erp.loyalty')
 
 
 class Wrappers:

@@ -42,7 +42,7 @@ from primary.core.administration.views import WebService
 from .models import *
 
 import logging
-lgr = logging.getLogger('notify')
+lgr = logging.getLogger('secondary.channels.notify')
 
 
 class Wrappers:
@@ -805,10 +805,10 @@ class System(Wrappers):
 				this_outbound.save()
 				#Notify Institution
 				if this_outbound.contact.product.notification.institution_url not in [None, ""]:
-					node_info = {}
-					node_info['institution_url'] = this_outbound.contact.product.notification.institution_url
-					#self.notify_institution.delay(payload, node_info)
-					notify_institution.delay(payload, node_info)
+					node = {}
+					node['institution_url'] = this_outbound.contact.product.notification.institution_url
+					#self.notify_institution.delay(payload, node)
+					notify_institution.delay(payload, node)
 
 				payload['ext_outbound_id'] = this_outbound.ext_outbound_id
 				payload['response'] = "Delivery Status Processed"
@@ -1139,10 +1139,10 @@ class System(Wrappers):
 				inbound.save()
 				#notify institution
 				if inbound.contact.product.notification.institution_url not in [None, ""]:
-					node_info = {}
-					node_info['institution_url'] = inbound.contact.product.notification.institution_url
-					#self.notify_institution.delay(payload, node_info)
-					notify_institution.delay(self, payload, node_info)
+					node = {}
+					node['institution_url'] = inbound.contact.product.notification.institution_url
+					#self.notify_institution.delay(payload, node)
+					notify_institution.delay(self, payload, node)
 
 			payload['response'] = 'Inbox Message Successful'
 			payload['response_status']= '00'
@@ -1338,17 +1338,17 @@ def send_contact_unsubscription(payload, node):
 		lgr.info("Error on Sending Contact: %s" % e)
 
 @app.task(ignore_result=True)
-def notify_institution(payload, node_info):
+def notify_institution(payload, node):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
 		payload = json.loads(payload)
-		lgr.info("Payload: %s| Node Info: %s" % (payload, node_info) )
-		if 'institution_url' in node_info.keys():
-			node = node_info['institution_url']
-			lgr.info('Endpoint: %s' % node)
-			payload = WebService().post_request(payload, node)
-		lgr.info("Response||Payload: %s| Node Info: %s" % (payload, node_info) )
+		lgr.info("Payload: %s| Node Info: %s" % (payload, node) )
+		if 'institution_url' in node.keys():
+			endpoint = node['institution_url']
+			lgr.info('Endpoint: %s' % endpoint)
+			payload = WebService().post_request(payload, endpoint)
+		lgr.info("Response||Payload: %s| Node Info: %s" % (payload, node) )
 
 		payload['response'] = 'Institution Notified'
 		payload['response_status']= '00'

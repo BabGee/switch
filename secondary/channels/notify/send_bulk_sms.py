@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import csv
 
 import logging
-lgr = logging.getLogger('notify')
+lgr = logging.getLogger('secondary.channels.notify')
 
 from celery import shared_task
 from celery.contrib.methods import task_method

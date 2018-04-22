@@ -26,7 +26,7 @@ import base64, re
 from .models import *
 
 import logging
-lgr = logging.getLogger('bridge')
+lgr = logging.getLogger('primary.core.bridge')
 
 class Wrappers:
 	def response_payload(self, payload):

@@ -23,7 +23,7 @@ from django.db.models import Q
 import operator
 
 import logging
-lgr = logging.getLogger('survey')
+lgr = logging.getLogger('secondary.erp.survey')
 
 class Wrappers:
 	pass

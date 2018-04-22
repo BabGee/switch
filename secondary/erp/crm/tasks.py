@@ -28,7 +28,7 @@ from switch.celery import app
 from switch.celery import single_instance_task
 
 import logging
-lgr = logging.getLogger('crm')
+lgr = logging.getLogger('secondary.erp.crm')
 
 class Wrappers:
 	pass

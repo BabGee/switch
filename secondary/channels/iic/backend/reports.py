@@ -10,7 +10,7 @@ from django.utils.translation import ugettext, ungettext
 from django.db.models import Q
 
 import logging
-lgr = logging.getLogger('iic')
+lgr = logging.getLogger('secondary.channels.iic')
 
 class DataSource:
 	payload, input_variable, data, delta = {}, [], {}, None

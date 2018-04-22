@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.template import Context, loader
 #from vbs.backend.processor import *
 import logging
-lgr = logging.getLogger('vbs')
+lgr = logging.getLogger('secondary.finance.vbs')
 
 #BRIDGE PORT = 732873 #SECURE
 
