@@ -140,7 +140,7 @@
 
                                         {% if page_input.input_variable.service.name == 'DATA SOURCE' %}
                                             DATA SOURCE
-                                            <a href="/iic_editor/dsc/{{ page_input.input_variable.default_value }}/"><strong>Edit</strong></a>
+                                            <a href="/iic_editor/dsc/{{ page_input.input_variable.default_value }}/?gateway_pk={{gateway.id}}"><strong>Edit</strong></a>
                                             |
                                         {% else %}
                                             service <strong>{{ page_input.input_variable.service.name }}</strong>

@@ -125,7 +125,7 @@
                         <br>
                         {% for link in links %}
                             <div>
-                                <a href="/iic_editor/gateways/{{ page_input.page.gateway.first.pk }}/{{ link.service }}/interface/">
+                                <a href="/iic_editor/gateways/{{ request.GET.gateway_pk }}/{{ link.service }}/interface/">
                                     {{ link.label }} <span class="fa fa-caret-right"></span>
                                 </a>
                             </div>
