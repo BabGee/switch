@@ -1198,6 +1198,7 @@ def order_background_service_call(order):
 
 
 			if bill.incoming_payment:
+				payload['inbound_id'] = bill.incoming_payment.id
 				payload['ext_inbound_id'] = bill.incoming_payment.ext_inbound_id
 
 
