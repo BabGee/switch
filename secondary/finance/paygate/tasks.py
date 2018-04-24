@@ -151,6 +151,20 @@ class Wrappers:
 
 
 class System(Wrappers):
+	def payment_details(self, payload, node_info):
+		try:
+			if 'ext_first_name' in payload.keys(): payload['first_name'] = payload['ext_first_name']
+			if 'ext_middle_name' in payload.keys(): payload['middle_name'] = payload['ext_middle_name']
+			if 'ext_last_name' in payload.keys(): payload['last_name'] = payload['ext_last_name']
+
+			payload['response_status'] = '00'
+			payload['response'] = 'Captrued Payment Details'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Payment Details: %s" % e)
+		return payload
+
+
 	def amount_to_float(self, payload, node_info):
 		try:
 			if 'amount' in payload.keys():
