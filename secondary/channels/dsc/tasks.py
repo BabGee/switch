@@ -770,7 +770,7 @@ class Wrappers:
 	    case_query = DataListCaseQuery.objects.filter(query=data.query,case_inactive=False)
 
 	    for case in case_query:
-		    args.append(case.case_field.strip())
+		    args.append(case.case_name.strip())
 		    params['cols'].append({"label": case.case_field.strip(), "type": "string", "value": case.case_field.strip()})
 
 		    case_data = {}
