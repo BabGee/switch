@@ -67,6 +67,7 @@ urlpatterns = [
             # ])),
             url(r'^gateway_profiles/', include([
                 url(r'^$', gateway_profile_list),
+                url(r'^export$', gateway_profile_list_export),
 
             ])),
             url(r'^institutions/', include([

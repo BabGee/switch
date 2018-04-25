@@ -1242,11 +1242,11 @@ class Wrappers:
         ct = 0
 	mqtt = {}
 	try:
-	    from thirdparty.bidfather.models import Bid
+	    from thirdparty.bidfather.models import Bid,BidRequirementApplication
             if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
                 #mqtt = {}
                 # Loop through a report to get the different pn_id_fields to be updated
-                for bid in Bid.objects.all():
+                for bid in Bid.objects.filter(bidapplication__bidrequirementapplication__pn=False):
                     channel = "%s/%s/%s" % (gateway_profile.gateway.id, 'bid_ranking', bid.institution.pk)
                     params['rows'] = bid.app_rankings(bid.institution)
                     mqtt[channel] = params # bid.app_rankings(bid.institution)
@@ -1254,6 +1254,7 @@ class Wrappers:
                         channel = "%s/%s/%s" % (gateway_profile.gateway.id, 'bid_ranking', application.institution.pk)
                         params['rows'] = bid.app_rankings(application.institution)
                         mqtt[channel] = params
+                        BidRequirementApplication.objects.filter(bid_application=application).update(pn=True)
                 return params,max_id, min_id, ct, mqtt
             else:
                 bid = Bid.objects.get(pk=payload['bid_id'])

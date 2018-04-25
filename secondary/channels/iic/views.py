@@ -287,6 +287,42 @@ def gateway_detail(request, gateway_pk):
     return render(request, "iic/gateway/detail.html", {'gateway': gateway})
 
 
+def gateway_profile_list_export(request, gateway_pk):
+    import csv
+    gateway = Gateway.objects.get(pk=gateway_pk)
+
+    import datetime
+    now = datetime.datetime.now()
+
+    gateway_profiles = GatewayProfile.objects.filter(gateway=gateway).order_by('-id')
+
+    filename = now.strftime("gateway_profile_{}_%B_%d_%Y__%H_%M".format(gateway.name))
+
+    # Create the HttpResponse object with the appropriate CSV header.
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="{}.csv"'.format(filename)
+
+    writer = csv.writer(response)
+    writer.writerow([
+        'pk',
+        'name',
+        'email',
+        'institution',
+        'access_level',
+    ])
+
+    for li in gateway_profiles:
+        writer.writerow([
+            li.id,
+            li.user.first_name +' '+li.user.last_name,
+            li.user.email,
+            li.institution.name if li.institution else 'XXXX',
+            li.access_level.name
+        ])
+
+    return response
+
+
 def gateway_profile_list(request, gateway_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     # page_groups = gateway.pagegroup_set.all()

@@ -18,6 +18,10 @@ class DataListQueryAdmin(admin.ModelAdmin):
 	search_fields = ('name','description','model_name','module_name',)
 admin.site.register(DataListQuery, DataListQueryAdmin)
 
+class DataListCaseQueryAdmin(admin.ModelAdmin):
+        list_display = ('query', 'case_values','case_default_value','case_inactive',)
+admin.site.register(DataListCaseQuery, DataListCaseQueryAdmin)
+
 class DataListJoinQueryAdmin(admin.ModelAdmin):
 	list_display = ('query','join_model_name','join_module_name',\
 			'join_or_filters','join_and_filters','join_not_filters',\
