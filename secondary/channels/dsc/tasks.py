@@ -773,11 +773,12 @@ class Wrappers:
 		    args.append(case.case_field.strip())
 		    params['cols'].append({"label": case.case_field.strip(), "type": "string", "value": case.case_field.strip()})
 
-		    case_data = {case.case_field.strip() : case.case_value }
+		    case_data = {}
 
-		    then = {'then': Value(case.case_newvalue)}
+		    case_data[case.case_field.strip()] =  case.case_value
+		    case_data['then'] = Value(case.case_newvalue)
 
-                    case_values_data[case.case_name.strip()] = Case(When(*[case_data, then]), default=Value(case.case_default_value), output_field=CharField())
+                    case_values_data[case.case_name.strip()] = Case(When(**case_data), default=Value(case.case_default_value), output_field=CharField())
 
 	    if len(case_values_data.keys()):
 		    report_list = report_list.annotate(**case_values_data)
