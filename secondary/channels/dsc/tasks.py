@@ -775,12 +775,9 @@ class Wrappers:
 
 		    case_data = {case.case_field.strip() : case.case_value }
 
-		    #Final Case
 		    then = {'then': Value(case.case_newvalue)}
-		    when = [] 
-		    when.append(**case_data)
-		    when.append(**then)
-                    case_values_data[case.case_name.strip()] = Case(When(*when), default=Value(case.case_default_value), output_field=CharField())
+
+                    case_values_data[case.case_name.strip()] = Case(When(*[case_data, then]), default=Value(case.case_default_value), output_field=CharField())
 
 	    if len(case_values_data.keys()):
 		    report_list = report_list.annotate(**case_values_data)
