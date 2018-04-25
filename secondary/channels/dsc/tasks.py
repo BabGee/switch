@@ -214,7 +214,8 @@ class Wrappers:
             gateway_profile_filter_data = {}
             profile_filter_data = {}
 	    list_filter_data = {}
-		
+
+	    case_values_data = {}
 
 	    #lgr.info('\n\n\n')
 	    #lgr.info('Model Name: %s' % data.query.name)
@@ -527,7 +528,6 @@ class Wrappers:
 	    #lgr.info('Report List Count: %s' % report_list.count())
 	    '''
 
-
 	    join_query = DataListJoinQuery.objects.filter(query=data.query,join_inactive=False)
 
 	    for join in join_query:
@@ -763,6 +763,26 @@ class Wrappers:
 
 	    if len(values_data.keys()):
         	    report_list = report_list.annotate(**values_data)
+
+
+
+	    #lgr.info('Report Values')
+	    case_query = DataListCaseQuery.objects.filter(query=data.query,case_inactive=False)
+
+	    for case in case_query:
+		    case = {}
+		    args.append(case.case_field.strip())
+		    params['cols'].append({"label": case.case_field.strip(), "type": "string", "value": case.case_field.strip()})
+
+		    case[case.case_field.strip()] = case.case_value
+
+		    #Final Case
+		    then = {'then': Value(case.case_newvalue)}
+		    when = [**case, **then] 
+                    case_values_data[k.strip()] = Case(When(*when), default=Value(case.case_default_value), output_field=CharField())
+
+	    if len(case_values_data.keys()):
+		    report_list = report_list.annotate(**case_values_data)
 
 
 	    #lgr.info('Report Values')
