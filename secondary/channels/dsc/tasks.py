@@ -770,15 +770,14 @@ class Wrappers:
 	    case_query = DataListCaseQuery.objects.filter(query=data.query,case_inactive=False)
 
 	    for case in case_query:
-		    case = {}
 		    args.append(case.case_field.strip())
 		    params['cols'].append({"label": case.case_field.strip(), "type": "string", "value": case.case_field.strip()})
 
-		    case[case.case_field.strip()] = case.case_value
+		    case = {case.case_field.strip() : case.case_value }
 
 		    #Final Case
 		    then = {'then': Value(case.case_newvalue)}
-		    when = [**case, **then] 
+		    when = [case, then] 
                     case_values_data[k.strip()] = Case(When(*when), default=Value(case.case_default_value), output_field=CharField())
 
 	    if len(case_values_data.keys()):
