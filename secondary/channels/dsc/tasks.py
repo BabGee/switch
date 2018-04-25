@@ -777,7 +777,9 @@ class Wrappers:
 
 		    #Final Case
 		    then = {'then': Value(case.case_newvalue)}
-		    when = [case, then] 
+		    when = [] 
+		    when.append(**case)
+		    when.append(**then)
                     case_values_data[case.case_name.strip()] = Case(When(*when), default=Value(case.case_default_value), output_field=CharField())
 
 	    if len(case_values_data.keys()):
