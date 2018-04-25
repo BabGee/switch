@@ -771,7 +771,7 @@ class Wrappers:
 
 	    for case in case_query:
 		    args.append(case.case_name.strip())
-		    params['cols'].append({"label": case.case_field.strip(), "type": "string", "value": case.case_field.strip()})
+		    params['cols'].append({"label": case.case_name.strip(), "type": "string", "value": case.case_name.strip()})
 
 		    case_data = {}
 
