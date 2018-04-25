@@ -778,7 +778,7 @@ class Wrappers:
 		    #Final Case
 		    then = {'then': Value(case.case_newvalue)}
 		    when = [case, then] 
-                    case_values_data[k.strip()] = Case(When(*when), default=Value(case.case_default_value), output_field=CharField())
+                    case_values_data[case.case_name.strip()] = Case(When(*when), default=Value(case.case_default_value), output_field=CharField())
 
 	    if len(case_values_data.keys()):
 		    report_list = report_list.annotate(**case_values_data)
