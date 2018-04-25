@@ -773,12 +773,12 @@ class Wrappers:
 		    args.append(case.case_field.strip())
 		    params['cols'].append({"label": case.case_field.strip(), "type": "string", "value": case.case_field.strip()})
 
-		    case = {case.case_field.strip() : case.case_value }
+		    case_data = {case.case_field.strip() : case.case_value }
 
 		    #Final Case
 		    then = {'then': Value(case.case_newvalue)}
 		    when = [] 
-		    when.append(**case)
+		    when.append(**case_data)
 		    when.append(**then)
                     case_values_data[case.case_name.strip()] = Case(When(*when), default=Value(case.case_default_value), output_field=CharField())
 
