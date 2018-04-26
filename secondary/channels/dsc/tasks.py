@@ -324,7 +324,7 @@ class Wrappers:
                 for i in duration_days_filters.split("|"):
                     k,v = i.split('%')
 	    	    #lgr.info('Date %s| %s' % (k,v))
-		    try: duration_days_filter_data[k] = (timezone.now()+timezone.timedelta(days=float(v))).date() if v not in ['',None] else None
+		    try: duration_days_filter_data[k] = timezone.now()+timezone.timedelta(days=float(v)) if v not in ['',None] else None
 		    except Exception, e: lgr.info('Error on date filter 0: %s' % e)
 
 
@@ -695,7 +695,7 @@ class Wrappers:
 		                for i in join_duration_days_filters.split("|"):
         		            k,v = i.split('%')
 	    			    #lgr.info('Date %s| %s' % (k,v))
-				    try: join_duration_days_filter_data[k] = (timezone.now()+timezone.timedelta(days=float(v))).date() if v not in ['',None] else None
+				    try: join_duration_days_filter_data[k] = timezone.now()+timezone.timedelta(days=float(v)) if v not in ['',None] else None
 				    except Exception, e: lgr.info('Error on date filter 0: %s' % e)
 
 
