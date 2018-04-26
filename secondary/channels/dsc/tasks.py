@@ -772,7 +772,7 @@ class Wrappers:
 	    for case in case_query:
 		    try:
 			case_when = []
-	            	for i in case_values.split('|'):
+	            	for i in case.case_values.split('|'):
         	        	case_name, case_field, case_value, case_newvalue = i.split('%')
 
 				args.append(case_name.strip())
