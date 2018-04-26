@@ -340,7 +340,8 @@ class Wrappers:
 	    #lgr.info('Duration Days Filters Report List Count: %s' % report_list.count())
             if duration_hours_filters not in ['',None]:
                 for i in duration_hours_filters.split("|"):
-                    k,v = i.split('%')
+                    try:k,v = i.split('%')
+		    except: continue
 		    try: duration_hours_filter_data[k] = timezone.now()+timezone.timedelta(hours=float(v)) if v not in ['',None] else None
 		    except Exception, e: lgr.info('Error on time filter: %s' % e)
 
@@ -684,7 +685,8 @@ class Wrappers:
 
         	    	if join_fields not in ['',None]:
                 		for i in join_fields.split("|"):
-	                	    k,v = i.split('%')
+	                	    try:k,v = i.split('%')
+				    except: continue
 				    record = join_report_list.values_list(v,flat=True).distinct()
 				    join_fields_data[k+'__in'] = list(record)
 
@@ -696,7 +698,8 @@ class Wrappers:
 
         	    	if join_manytomany_fields not in ['',None]:
                 		for i in join_manytomany_fields.split("|"):
-	                	    k,v = i.split('%')
+	                	    try:k,v = i.split('%')
+				    except: continue
 				    record = join_report_list.values_list(v,flat=True).distinct()
 				    join_manytomany_fields_data[k+'__in'] = list(record)
         	        	if len(join_manytomany_fields_data):
@@ -707,7 +710,8 @@ class Wrappers:
 
         	    	if join_not_fields not in ['',None]:
                 		for i in join_not_fields.split("|"):
-	                	    k,v = i.split('%')
+	                	    try:k,v = i.split('%')
+				    except: continue
 				    record = join_report_list.values_list(v,flat=True).distinct()
 				    join_not_fields_data[k+'__in'] = list(record)
 
@@ -719,7 +723,8 @@ class Wrappers:
 
         	    	if join_manytomany_not_fields not in ['',None]:
                 		for i in join_manytomany_not_fields.split("|"):
-	                	    k,v = i.split('%')
+	                	    try:k,v = i.split('%')
+				    except: continue
 				    record = join_report_list.values_list(v,flat=True).distinct()
 				    join_manytomany_not_fields_data[k+'__in'] = list(record)
         	        	if len(join_manytomany_not_fields_data):
@@ -734,7 +739,8 @@ class Wrappers:
             args = []
 	    if values not in [None,'']:
             	for i in values.split('|'):
-                	k,v = i.split('%')
+                	try:k,v = i.split('%')
+			except: continue
 	                args.append(k.strip())
 			value_type = model_class._meta.get_field(v.split('__')[0]).get_internal_type()
 			
@@ -784,9 +790,9 @@ class Wrappers:
 
 			case_data[case_field.strip()] =  case_value
 			case_data['then'] = Value(case_newvalue)
-			lgr.info('Case Data: %s' % case_data)
+
 			case_when.append(When(**case_data))
-			lgr.info('Case When: %s' % case_when)
+
 		#Final Case
 		case_values_data[case_name.strip()] = Case(*case_when, default=Value(case_default_value), output_field=CharField())
 
@@ -798,7 +804,8 @@ class Wrappers:
 	    selected_data = {}
 	    if data.query.date_values not in [None,'']:
 	            for i in data.query.date_values.split('|'):
-			k,v = i.split('%')
+			try:k,v = i.split('%')
+			except: continue
 	                args.append(k.strip())
 			selected_data[k.strip()] = "to_char("+ data.query.module_name +"_"+ data.query.model_name +"."+v+", 'DD, Month, YYYY')"
                     	params['cols'].append({"label": k.strip(), "type": "date", "value": v.strip()})
@@ -806,7 +813,8 @@ class Wrappers:
 	    #lgr.info('Report Date Values')
 	    if data.query.date_time_values not in [None,'']:
 	            for i in data.query.date_time_values.split('|'):
-			k,v = i.split('%')
+			try:k,v = i.split('%')
+			except: continue
 	                args.append(k.strip())
 			selected_data[k.strip()] = "to_char("+ data.query.module_name +"_"+ data.query.model_name +"."+v+", 'DD, Month, YYYY HH:MI:SS TZ')"
                     	params['cols'].append({"label": k.strip(), "type": "date", "value": v.strip()})
@@ -815,7 +823,8 @@ class Wrappers:
 
 	    if data.query.month_year_values not in [None,'']:
 	            for i in data.query.month_year_values.split('|'):
-			k,v = i.split('%')
+			try:k,v = i.split('%')
+			except: continue
 	                args.append(k.strip())
 			selected_data[k.strip()] = "to_char("+ data.query.module_name +"_"+ data.query.model_name +"."+v+", 'Month, YYYY')"
                     	params['cols'].append({"label": k.strip(), "type": "date", "value": k.strip()})
@@ -846,7 +855,8 @@ class Wrappers:
             if count_values not in [None,'']:
                 kwargs = {}
                 for i in count_values.split('|'):
-                    k,v = i.split('%')
+                    try:k,v = i.split('%')
+		    except: continue
 		    args.append(k.strip())
                     params['cols'].append({"label": k.strip(), "type": "number", "value": k.strip()})
                     if k <> v:kwargs[k.strip()] = Count(v.strip())
@@ -857,7 +867,8 @@ class Wrappers:
             if sum_values not in [None,'']:
                 kwargs = {}
                 for i in sum_values.split('|'):
-                    k,v = i.split('%')
+                    try:k,v = i.split('%')
+		    except: continue
 		    args.append(k.strip())
                     params['cols'].append({"label": k.strip(), "type": "number", "value": k.strip()})
                     if k <> v:kwargs[k.strip()] = Sum(v.strip())
@@ -870,7 +881,8 @@ class Wrappers:
             if avg_values not in [None,'']:
                 kwargs = {}
                 for i in avg_values.split('|'):
-                    k,v = i.split('%')
+                    try:k,v = i.split('%')
+		    except: continue
 		    args.append(k.strip())
                     params['cols'].append({"label": k.strip(), "type": "number", "value": k.strip()})
                     if k <> v:kwargs[k.strip()] = Avg(v.strip())
@@ -884,7 +896,8 @@ class Wrappers:
             if last_balance not in [None,'']:
                 kwargs = {}
                 for i in last_balance.split('|'):
-                    k,v = i.split('%')
+                    try:k,v = i.split('%')
+		    except: continue
 		    args.append(k.strip())
                     params['cols'].append({"label": k.strip(), "type": "number", "value": v.strip()})
                     if k <> v:kwargs[k.strip()] = ( (( (Sum('balance_bf')*2) + Sum('amount') ) + Sum('charge'))*2  )/2
@@ -964,7 +977,8 @@ class Wrappers:
 
 			if data.query.link_params not in [None,'']:
 	            		for i in data.query.link_params.split('|'):
-					k,v = i.split('%')
+					try:k,v = i.split('%')
+					except: continue
 					href['links'][name]['params'] = {k:v}
 		    params['cols'].append(href)
 
