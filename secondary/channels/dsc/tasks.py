@@ -808,7 +808,7 @@ class Wrappers:
 					model_data = model_data.related_model._meta.get_field(f)
 
 			#selected_data[k.strip()] = "to_char("+ data.query.module_name +"_"+ data.query.model_name +"."+v+", 'DD, Month, YYYY')"
-			selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:] +", 'DD, Month, YYYY')"
+			selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:][0] +", 'DD, Month, YYYY')"
 
                     	params['cols'].append({"label": k.strip(), "type": "date", "value": v.strip()})
 
