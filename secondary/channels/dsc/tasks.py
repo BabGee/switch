@@ -547,6 +547,10 @@ class Wrappers:
 			join_fields = join.join_fields
 	            	join_institution_filters = join.join_institution_filters
 	            	join_institution_not_filters = join.join_institution_not_filters
+            		join_duration_days_filters = join.join_duration_days_filters
+
+
+
 			join_manytomany_fields = join.join_manytomany_fields
 			join_not_fields = join.join_not_fields
 			join_manytomany_not_fields = join.join_manytomany_not_fields
@@ -561,6 +565,8 @@ class Wrappers:
 			join_fields_data = {}
             		join_institution_filter_data = {}
             		join_institution_not_filter_data = {}
+            		join_duration_days_filter_data = {}
+
 			join_manytomany_fields_data = {}
 			join_not_fields_data = {}
 			join_manytomany_not_fields_data = {}
@@ -682,6 +688,26 @@ class Wrappers:
 		                if len(join_institution_not_filter_data):
 		                    institution_query = reduce(operator.and_, (~Q(k) for k in join_institution_not_filter_data.items()))
 		                    join_report_list = join_report_list.filter(institution_query)
+
+
+	                if join_duration_days_filters not in ['',None]:
+		        	#lgr.info('Date Filters')
+		                for i in join_duration_days_filters.split("|"):
+        		            k,v = i.split('%')
+	    			    #lgr.info('Date %s| %s' % (k,v))
+				    try: join_duration_days_filter_data[k] = (timezone.now()+timezone.timedelta(days=float(v))).date() if v not in ['',None] else None
+				    except Exception, e: lgr.info('Error on date filter 0: %s' % e)
+
+
+		                if len(join_duration_days_filter_data):
+			    	    #lgr.info('Duration Filter Data: %s' % join_duration_days_filter_data)
+				    for k,v in join_duration_days_filter_data.items(): 
+					try:lgr.info('Duration Data: %s' % v.isoformat())
+					except: pass
+        		            query = reduce(operator.and_, (Q(k) for k in join_duration_days_filter_data.items()))
+				    #lgr.info('Query: %s' % query)
+	                	    join_report_list = join_report_list.filter(query)
+
 
 
         	    	if join_fields not in ['',None]:

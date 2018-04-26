@@ -26,6 +26,7 @@ class DataListJoinQueryAdmin(admin.ModelAdmin):
 	list_display = ('query','join_model_name','join_module_name',\
 			'join_or_filters','join_and_filters','join_not_filters',\
 			'join_institution_filters','join_gateway_filters','join_gateway_profile_filters','join_profile_filters',\
+			'join_duration_days_filters',\
 			'join_fields','join_manytomany_fields','join_not_fields','join_manytomany_not_fields','join_inactive',)
 	search_fields = ('name','description','model_name','module_name',)
 admin.site.register(DataListJoinQuery, DataListJoinQueryAdmin)

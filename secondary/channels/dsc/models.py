@@ -77,6 +77,7 @@ class DataListJoinQuery(models.Model):
 	join_gateway_filters = models.CharField(max_length=512, blank=True, null=True)
 	join_gateway_profile_filters = models.CharField(max_length=512, blank=True, null=True)
 	join_profile_filters = models.CharField(max_length=512, blank=True, null=True)
+	join_duration_days_filters = models.CharField(max_length=512, blank=True, null=True)
 	join_fields = models.CharField(max_length=512, null=True, blank=True)
 	join_manytomany_fields = models.CharField(max_length=512, null=True, blank=True)
 	join_not_fields = models.CharField(max_length=512, null=True, blank=True)
