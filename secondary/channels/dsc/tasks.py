@@ -575,7 +575,7 @@ class Wrappers:
 
 		                if len(join_and_filter_data):
 		                    and_query = reduce(operator.and_, (Q(k) for k in join_and_filter_data.items()))
-		    		    lgr.info('Join And Query: %s' % and_query)
+		    		    #lgr.info('Join And Query: %s' % and_query)
 		                    join_report_list = join_report_list.filter(and_query)
 
 
@@ -669,7 +669,7 @@ class Wrappers:
 					try:lgr.info('Duration Data: %s' % v.isoformat())
 					except: pass
         		            query = reduce(operator.and_, (Q(k) for k in join_duration_days_filter_data.items()))
-				    lgr.info('Query: %s' % query)
+				    #lgr.info('Query: %s' % query)
 	                	    join_report_list = join_report_list.filter(query)
 
 
@@ -684,7 +684,7 @@ class Wrappers:
         	        	if len(join_fields_data):
 	                	    query = reduce(operator.and_, (Q(k) for k in join_fields_data.items()))
 
-				    lgr.info('%s Join Fields Applied: %s' % (data.query.name,query))
+				    #lgr.info('%s Join Fields Applied: %s' % (data.query.name,query))
                 		    report_list = report_list.filter(query)
 
         	    	if join_manytomany_fields not in ['',None]:
