@@ -547,10 +547,10 @@ class Wrappers:
 			if join_or_filters not in [None,'']:
 		                for f in join_or_filters.split("|"):
 				    of_list = f.split('%')
-				    if len(of_list)==2 and getattr(model_class, of_list[0].split('__')[0], False):
+				    if len(of_list)==2 and getattr(join_model_class, of_list[0].split('__')[0], False):
 	                    		k,v = of_list
 					v_list = v.split(',')
-					if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
+					if join_model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
 						v = True if v not in ['',None,'False',False,'false'] else False
 					elif len(v_list)>1:
 						v = v_list
@@ -564,10 +564,10 @@ class Wrappers:
 			if join_and_filters not in [None,'']:
 		                for f in join_and_filters.split("|"):
 				    af_list = f.split('%')
-				    if len(af_list)==2 and getattr(model_class, af_list[0].split('__')[0], False):
+				    if len(af_list)==2 and getattr(join_model_class, af_list[0].split('__')[0], False):
 	                    		k,v = af_list
 					v_list = v.split(',')
-					if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
+					if join_model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
 						v = True if v not in ['',None,'False',False,'false'] else False
 					elif len(v_list)>1:
 						v = v_list
@@ -583,10 +583,10 @@ class Wrappers:
 			if join_not_filters not in ['',None]:
 		                for f in join_not_filters.split("|"):
 				    nf_list = f.split('%')
-				    if len(nf_list)==2 and getattr(model_class, nf_list[0].split('__')[0], False):
+				    if len(nf_list)==2 and getattr(join_model_class, nf_list[0].split('__')[0], False):
 	                    		k,v = nf_list
 					v_list = v.split(',')
-					if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
+					if join_model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
 						v = True if v not in ['',None,'False',False,'false'] else False
 					elif len(v_list)>1:
 						v = v_list
