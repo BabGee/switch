@@ -493,42 +493,6 @@ class Wrappers:
                     profile_query = reduce(operator.and_, (Q(k) for k in profile_filter_data.items()))
                     report_list = report_list.filter(profile_query)
 
-	    #lgr.info('Date Filters Report List Count: %s' % report_list.count())
-	    '''
-            if 'start_date' in payload.keys():
-                try:
-                    date_obj = datetime.strptime(payload["start_date"] + ' 12:00 am', '%d/%m/%Y %I:%M %p')
-                except:
-                    date_obj = None
-                if date_obj is not None:
-                    profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
-                    start_date = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
-                else:
-                    date = timezone.now().date().strftime('%d/%m/%Y')
-                    date_obj = datetime.strptime(date + ' 12:00 am', '%d/%m/%Y %I:%M %p')
-                    profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
-                    start_date = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
-                report_list = report_list.filter(date_created__gte=start_date)
-
-	    #lgr.info('Report Start Date')
-            if 'end_date' in payload.keys():
-                try:
-                    date_obj = datetime.strptime(payload["end_date"] + ' 11:59 pm', '%d/%m/%Y %I:%M %p')
-                except:
-                    date_obj = None
-                if date_obj is not None:
-                    profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
-                    end_date = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
-                else:
-                    date = timezone.now().date().strftime('%d/%m/%Y')
-                    date_obj = datetime.strptime(date + ' 11:59 pm', '%d/%m/%Y %I:%M %p')
-                    profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
-                    end_date = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
-                report_list = report_list.filter(date_created__lte=end_date)
-
-
-	    #lgr.info('Report List Count: %s' % report_list.count())
-	    '''
 
 	    join_query = DataListJoinQuery.objects.filter(query=data.query,join_inactive=False)
 
@@ -611,7 +575,7 @@ class Wrappers:
 
 		                if len(join_and_filter_data):
 		                    and_query = reduce(operator.and_, (Q(k) for k in join_and_filter_data.items()))
-		    		    #lgr.info('Join And Query: %s' % and_query)
+		    		    lgr.info('Join And Query: %s' % and_query)
 		                    join_report_list = join_report_list.filter(and_query)
 
 
@@ -705,7 +669,7 @@ class Wrappers:
 					try:lgr.info('Duration Data: %s' % v.isoformat())
 					except: pass
         		            query = reduce(operator.and_, (Q(k) for k in join_duration_days_filter_data.items()))
-				    #lgr.info('Query: %s' % query)
+				    lgr.info('Query: %s' % query)
 	                	    join_report_list = join_report_list.filter(query)
 
 
@@ -720,7 +684,7 @@ class Wrappers:
         	        	if len(join_fields_data):
 	                	    query = reduce(operator.and_, (Q(k) for k in join_fields_data.items()))
 
-				    #lgr.info('%s Join Fields Applied: %s' % (data.query.name,query))
+				    lgr.info('%s Join Fields Applied: %s' % (data.query.name,query))
                 		    report_list = report_list.filter(query)
 
         	    	if join_manytomany_fields not in ['',None]:
