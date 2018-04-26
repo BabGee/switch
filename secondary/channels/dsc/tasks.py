@@ -798,7 +798,7 @@ class Wrappers:
 			try:k,v = i.split('%')
 			except: continue
 	                args.append(k.strip())
-			selected_data[k.strip()] = "to_char("+ data.query.module_name +"_"+ data.query.model_name +"."+v+", 'DD, Month, YYYY')"
+			selected_data[k.strip()] = "to_char("+ data.query.module_name +"_"+ data.query.model_name +"."+v.strip().replace('__','.')+", 'DD, Month, YYYY')"
                     	params['cols'].append({"label": k.strip(), "type": "date", "value": v.strip()})
 
 	    #lgr.info('Report Date Values')
