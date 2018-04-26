@@ -807,7 +807,6 @@ class Wrappers:
 				for f in field_data[1:]:
 					model_data = model_data.related_model._meta.get_field(f)
 
-			#selected_data[k.strip()] = "to_char("+ data.query.module_name +"_"+ data.query.model_name +"."+v+", 'DD, Month, YYYY')"
 			selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:][0] +", 'DD, Month, YYYY')"
 
                     	params['cols'].append({"label": k.strip(), "type": "date", "value": v.strip()})
@@ -818,7 +817,17 @@ class Wrappers:
 			try:k,v = i.split('%')
 			except: continue
 	                args.append(k.strip())
-			selected_data[k.strip()] = "to_char("+ data.query.module_name +"_"+ data.query.model_name +"."+v+", 'DD, Month, YYYY HH:MI:SS TZ')"
+
+			original_model_data =  model_class._meta
+			field_data = v.split('__')
+			model_data = original_model_data.get_field(field_data[0])
+
+			if field_data[1:]:
+				for f in field_data[1:]:
+					model_data = model_data.related_model._meta.get_field(f)
+
+			selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:][0] +", 'DD, Month, YYYY HH:MI:SS TZ')"
+
                     	params['cols'].append({"label": k.strip(), "type": "date", "value": v.strip()})
 
 	    #lgr.info('Report Date Time Values')
@@ -828,7 +837,17 @@ class Wrappers:
 			try:k,v = i.split('%')
 			except: continue
 	                args.append(k.strip())
-			selected_data[k.strip()] = "to_char("+ data.query.module_name +"_"+ data.query.model_name +"."+v+", 'Month, YYYY')"
+
+			original_model_data =  model_class._meta
+			field_data = v.split('__')
+			model_data = original_model_data.get_field(field_data[0])
+
+			if field_data[1:]:
+				for f in field_data[1:]:
+					model_data = model_data.related_model._meta.get_field(f)
+
+			selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:][0] +", 'Month, YYYY')"
+
                     	params['cols'].append({"label": k.strip(), "type": "date", "value": k.strip()})
 
 	    #lgr.info('Report Month Year Values')
