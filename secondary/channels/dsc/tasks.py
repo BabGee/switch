@@ -771,8 +771,8 @@ class Wrappers:
 
 	    for case in case_query:
 		    try:
-			when = []
-	            	for i in values.split('|'):
+			case_when = []
+	            	for i in case_values.split('|'):
         	        	case_name, case_field, case_value, case_newvalue = i.split('%')
 
 				args.append(case_name.strip())
@@ -782,10 +782,11 @@ class Wrappers:
 
 				case_data[case_field.strip()] =  case_value
 				case_data['then'] = Value(case_newvalue)
-				when.append(When(**case_data))
-
+				lgr.info('Case Data: %s' % case_data)
+				case_when.append(When(**case_data))
+				lgr.info('Case When: %s' % case_when)
 			#Final Case
-			case_values_data[case_name.strip()] = Case(*when, default=Value(case.case_default_value), output_field=CharField())
+			case_values_data[case_name.strip()] = Case(*case_when, default=Value(case.case_default_value), output_field=CharField())
 		    except Exception, e: lgr.info('Error on Case Query: %s' % e)
 
 	    if len(case_values_data.keys()):
