@@ -31,6 +31,7 @@ class DataListQuery(models.Model):
 	avg_values = models.CharField(max_length=512, blank=True, null=True) 
 	sum_values = models.CharField(max_length=512, blank=True, null=True) 
 	count_values = models.CharField(max_length=512, blank=True, null=True) 
+	custom_values = models.CharField(max_length=512, blank=True, null=True) 
 	or_filters = models.CharField(max_length=512, blank=True, null=True)
 	and_filters = models.CharField(max_length=512, blank=True, null=True)
 	not_filters = models.CharField(max_length=512, blank=True, null=True)

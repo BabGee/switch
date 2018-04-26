@@ -196,6 +196,7 @@ class Wrappers:
             sum_values = data.query.sum_values
             last_balance = data.query.last_balance
             avg_values = data.query.avg_values
+            custom_values = data.query.custom_values
 	    order = data.query.order
 	    distinct = data.query.distinct
 
@@ -886,6 +887,21 @@ class Wrappers:
 		    args.append(k.strip())
                     params['cols'].append({"label": k.strip(), "type": "number", "value": k.strip()})
                     if k <> v:kwargs[k.strip()] = Avg(v.strip())
+
+	        #lgr.info('Sum Applied: %s' % kwargs)
+                report_list = report_list.annotate(**kwargs)
+
+
+
+	    #lgr.info('Report Sum Values')
+            if custom_values not in [None,'']:
+                kwargs = {}
+                for i in custom_values.split('|'):
+                    try:k,v = i.split('%')
+		    except: continue
+		    args.append(k.strip())
+                    params['cols'].append({"label": k.strip(), "type": "string", "value": k.strip()})
+                    if k <> v:kwargs[k.strip()] = Value(v.strip(), output_field=CharField())
 
 	        #lgr.info('Sum Applied: %s' % kwargs)
                 report_list = report_list.annotate(**kwargs)

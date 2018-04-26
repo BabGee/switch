@@ -11,7 +11,7 @@ admin.site.register(DataListGroup, DataListGroupAdmin)
 
 class DataListQueryAdmin(admin.ModelAdmin):
 	list_display = ('id','name', 'description', 'model_name', 'module_name','values','date_values','date_time_values',\
-			'month_year_values','avg_values','sum_values','count_values','or_filters','and_filters',\
+			'month_year_values','avg_values','sum_values','count_values','custom_values','or_filters','and_filters',\
 			'not_filters','institution_filters','gateway_filters','gateway_profile_filters','profile_filters',\
 			'list_filters','duration_days_filters','date_filters','duration_hours_filters','token_filters',\
 			'links','link_params','last_balance','order','distinct',)
