@@ -19,7 +19,7 @@ class DataListQueryAdmin(admin.ModelAdmin):
 admin.site.register(DataListQuery, DataListQueryAdmin)
 
 class DataListCaseQueryAdmin(admin.ModelAdmin):
-        list_display = ('query', 'case_values','case_name','case_field','case_value','case_newvalue','case_default_value','case_inactive',)
+        list_display = ('query', 'case_values','case_default_value','case_inactive',)
 admin.site.register(DataListCaseQuery, DataListCaseQueryAdmin)
 
 class DataListJoinQueryAdmin(admin.ModelAdmin):

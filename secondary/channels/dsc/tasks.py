@@ -770,15 +770,23 @@ class Wrappers:
 	    case_query = DataListCaseQuery.objects.filter(query=data.query,case_inactive=False)
 
 	    for case in case_query:
-		    args.append(case.case_name.strip())
-		    params['cols'].append({"label": case.case_name.strip(), "type": "string", "value": case.case_name.strip()})
+		    try:
+			when = []
+	            	for i in values.split('|'):
+        	        	case_name, case_field, case_value, case_newvalue = i.split('%')
 
-		    case_data = {}
+				args.append(case_name.strip())
+				params['cols'].append({"label": case_name.strip(), "type": "string", "value": case_name.strip()})
 
-		    case_data[case.case_field.strip()] =  case.case_value
-		    case_data['then'] = Value(case.case_newvalue)
+				case_data = {}
 
-                    case_values_data[case.case_name.strip()] = Case(When(**case_data), default=Value(case.case_default_value), output_field=CharField())
+				case_data[case_field.strip()] =  case_value
+				case_data['then'] = Value(case_newvalue)
+				when.append(When(**case_data))
+
+			#Final Case
+			case_values_data[case_name.strip()] = Case(*when, default=Value(case.case_default_value), output_field=CharField())
+		    except Exception, e: lgr.info('Error on Case Query: %s' % e)
 
 	    if len(case_values_data.keys()):
 		    report_list = report_list.annotate(**case_values_data)
