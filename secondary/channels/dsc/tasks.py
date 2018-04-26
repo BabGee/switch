@@ -985,13 +985,13 @@ class Wrappers:
                 for f in date_filters.split("|"):
 		    count = 0
 		    for i in params['cols']:
-			if i['value'] == f.strip():
+			if i['value'] == f.split('%')[0].strip():
 				agg = {}
-				agg['min_'+f.strip()] = Min(f.strip())
-				agg['max_'+f.strip()] = Max(f.strip())
+				agg['min_'+f.split('%')[0].strip()] = Min(f.split('%')[0].strip())
+				agg['max_'+f.split('%')[0].strip()] = Max(f.split('%')[0].strip())
 				agg_data = report_list.aggregate(**agg)
-				min_agg = agg_data['min_'+f.strip()].date().isoformat() if agg_data['min_'+f.strip()] else None
-				max_agg = agg_data['max_'+f.strip()].date().isoformat() if agg_data['max_'+f.strip()] else None
+				min_agg = agg_data['min_' + f.split('%')[0].strip()].date().isoformat() if agg_data['min_' + f.split('%')[0].strip()] else None
+				max_agg = agg_data['max_' + f.split('%')[0].strip()].date().isoformat() if agg_data['max_' + f.split('%')[0].strip()] else None
 				i['date_filters'] = [min_agg,max_agg]
 			params['cols'][count] = i
 			count += 1
