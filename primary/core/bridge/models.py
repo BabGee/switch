@@ -213,7 +213,7 @@ class BackgroundServiceActivity(models.Model):
 	request = models.CharField(max_length=10240)
 	channel = models.ForeignKey(Channel)
 	response_status = models.ForeignKey(ResponseStatus)
-	transaction_reference = models.CharField(max_length=45, null=True, blank=True) #Transaction ID
+	transaction_reference = models.CharField(max_length=256, null=True, blank=True) #Transaction ID
 	currency = models.ForeignKey(Currency, null=True, blank=True)
 	amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	charges = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
@@ -223,7 +223,7 @@ class BackgroundServiceActivity(models.Model):
 	scheduled_send = models.DateTimeField(blank=True, null=True)
 	message = models.CharField(max_length=3840, blank=True, null=True)
 	sends = models.IntegerField()
-	ext_outbound_id = models.CharField(max_length=200, blank=True, null=True)
+	ext_outbound_id = models.CharField(max_length=256, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.service, self.gateway_profile)
 
