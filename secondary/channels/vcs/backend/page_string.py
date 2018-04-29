@@ -118,7 +118,8 @@ class PageString(ServiceCall, Wrappers):
 		payload.update(self.get_nav(navigator, node_info))
 
 
-		if navigator is not None and navigator.menu is not None and navigator.menu.submit == True and payload['input'] not in ['0','00']:
+		#if navigator is not None and navigator.menu is not None and navigator.menu.submit == True and payload['input'] not in ['0','00']:
+		if navigator is not None and navigator.menu is not None and navigator.menu.submit == True:
 			#payload = {}
 			#payload['chid'] = navigator.session.channel.id
 			#payload['ip_address'] = 'vcs'
