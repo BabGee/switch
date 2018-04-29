@@ -329,10 +329,6 @@ def background_service_call(background):
 
 		if i.service.retry and i.sends > i.service.retry.max_retry:
 			payload['trigger'] = 'last_send%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-		elif i.service.retry == None and i.sends > 3:
-			payload['trigger'] = 'last_send%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-		#else:
-		#	payload['trigger'] = 'retry_send%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
 		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
 
@@ -355,26 +351,18 @@ def background_service_call(background):
 
 		#Set for failed retries in every 6 hours within 24 hours
 		if payload['response_status'] <> '00':
-			try: servicecutoff = i.service.servicecutoff
-			except ServiceCutOff.DoesNotExist: servicecutoff = None
-			if servicecutoff and servicecutoff.cut_off_command and i.current_command and i.current_command.level > servicecutoff.cut_off_command.level:
-				pass
-			elif  i.service.retry and i.sends > i.service.retry.max_retry:
-				pass
-
-			elif  i.service.retry == None and i.sends > 3:
-				pass
-			else:
-				i.status = TransactionStatus.objects.get(name='CREATED')
-				i.response_status = ResponseStatus.objects.get(response='DEFAULT')
-
-				if i.service.retry:
+			if i.service.retry:
+				try: servicecutoff = i.service.servicecutoff
+				except ServiceCutOff.DoesNotExist: servicecutoff = None
+				if servicecutoff and servicecutoff.cut_off_command and i.current_command and i.current_command.level > servicecutoff.cut_off_command.level:
+					pass
+				elif  i.sends > i.service.retry.max_retry:
+					pass
+				else:
+					i.status = TransactionStatus.objects.get(name='CREATED')
+					i.response_status = ResponseStatus.objects.get(response='DEFAULT')
 					retry_in = (i.service.retry.max_retry_hours)/(i.service.retry.max_retry+1)
 					i.scheduled_send = timezone.now()+timezone.timedelta(hours=float(retry_in))
-				else:
-					i.scheduled_send = timezone.now()+timezone.timedelta(hours=6)
-
-				#i.sends = i.sends + 1 #Sends already set on capture
 
 		i.save()
 
