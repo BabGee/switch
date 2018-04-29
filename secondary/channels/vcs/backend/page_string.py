@@ -2374,16 +2374,18 @@ class PageString(ServiceCall, Wrappers):
 					payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
 
 
-					lgr.info('Request Payload: %s' % payload)
-					payload = DSCSystem().data_source(payload, {})
-					lgr.info('Response Payload: %s' % payload)
+					params = payload.copy()
+					lgr.info('Request Payload: %s' % params)
+
+					params = DSCSystem().data_source(params, {})
+					lgr.info('Response Payload: %s' % params)
 
 					item = ''
 					item_list = []
 					count = 1
-					if 'response_status' in payload.keys() and payload['response_status'] == '00':
+					if 'response_status' in params.keys() and params['response_status'] == '00':
 
-						data_source = payload['response']
+						data_source = params['response']
 	
 						lgr.info('Data Source : %s' % data_source)
 						if 'rows' in data_source.keys() and len(data_source['rows']):
