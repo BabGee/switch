@@ -383,7 +383,7 @@ class Wrappers:
 					try:date_filter_data[i+'__gte'] = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload['start_date'], '%Y-%m-%d')) if payload['start_date'] not in ['',None] else None
 				        except Exception, e: lgr.info('Error on date filter 4: %s' % e)
 				if 'end_date' in payload.keys():
-					try:date_filter_data[i+'__lte'] = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload['end_date'], '%Y-%m-%d'))+timezone.timedelta(days=1) if payload['end_date'] not in ['',None] else None
+					try:date_filter_data[i+'__lte'] = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload['end_date'], '%Y-%m-%d'))+timezone.timedelta(seconds=1439) if payload['end_date'] not in ['',None] else None
 				        except Exception, e: lgr.info('Error on date filter 5: %s' % e)
 
 
