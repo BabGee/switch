@@ -50,7 +50,7 @@ class ServiceCommandAdmin(admin.ModelAdmin):
 		 'profile_status_list', 'channel_list',\
 		 'payment_method_list','trigger_list','gateway_list',)
 	        list_filter = ('service','node_system','gateway','access_level','channel','payment_method',)
-		search_fields = ('command_function','service__name','reverse_function','trigger__name',)
+		search_fields = ('command_function','service__name','reverse_function','trigger__name','details',)
 admin.site.register(ServiceCommand, ServiceCommandAdmin)
 
 class ServiceCutOffAdmin(admin.ModelAdmin):
