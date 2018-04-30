@@ -110,7 +110,6 @@ class ServiceProcessor:
 			lgr.info('Got Items: %s' % item)
 			status = item.status
 			node_system = item.node_system
-			payload = Wrappers().create_payload(item, gateway_profile, payload)
 			try:
 				lgr.info("if item.trigger.all(): %s" % item.trigger.all())
 				#Check if triggerable action
@@ -135,6 +134,7 @@ class ServiceProcessor:
 						continue
 
 				#process action
+				payload = Wrappers().create_payload(item, gateway_profile, payload)
 				lgr.info('#process action')
 				if node_system.node_status.name == 'LOCAL API':
 					payload = Wrappers().call_api(item, item.command_function, payload)
