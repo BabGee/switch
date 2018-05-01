@@ -188,7 +188,7 @@ class BackgroundService(models.Model):
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	trigger_service = models.ManyToManyField(Service)
 	service = models.ForeignKey(Service, related_name='background_service')
-	details = models.CharField(max_length=1920, default=json.dumps({}))
+	details = models.CharField(max_length=3840, default=json.dumps({}))
 	cut_off_command = models.ForeignKey(ServiceCommand, null=True, blank=True)
 	trigger = models.ManyToManyField(Trigger, blank=True)
 	def __unicode__(self):
