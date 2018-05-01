@@ -103,10 +103,12 @@ class VAS:
 
 		def get_menu_items(menuitems):
 			if len(menuitems)>0:
-				if 'response_status' in self.payload.keys() and  self.payload['response_status'] <> '00':
-					menuitems = menuitems.filter(failed_session_include=True)
+				if 'response_status' in self.payload.keys() and  self.payload['response_status'] == '00':
+					menuitems = menuitems.filter(Q(response_status=None)|Q(response_status__response='00'))
+				elif 'response_status' in self.payload.keys():
+					menuitems = menuitems.filter(response_status__response=self.payload['response_status'])
 				else:
-					menuitems = menuitems.filter(failed_session_include=False)
+					menuitems = menuitems.filter(response_status=None)
 
 				menuitems = menuitems.order_by('item_order').values('menu_item','item_level')
 				self.item_list = ['%s' % (item['menu_item']) for item in menuitems.filter(~Q(item_level=0))] #Escape 0 for back and main in navigator entry to avoid validation issues
@@ -214,6 +216,7 @@ class VAS:
 		#if exists, get navigator & max of nav_step order_by(nav_step)[1], add nav_step + 1
 		self.menu = Menu.objects.filter(menu_status__name='ENABLED')
 		self.pin_auth = False
+		self.selection = None
 
 		#Get Access Point
 		if 'access_point' in kwargs.keys():
@@ -376,7 +379,7 @@ class VAS:
 						try:item_list = json.loads(self.nav.item_list)
 						except:item_list = []
 
-						try: item_list[int(self.payload['input'])-1]; nolist=False
+						try: self.selection = item_list[int(self.payload['input'])-1]; nolist=False
 						except: 
 							if allowed_input_list and self.payload['input'] in allowed_input_list.split(','): nolist=False
 							else: nolist= True
@@ -394,7 +397,6 @@ class VAS:
 								if error_level and isinstance(error_level, int): self.level = error_level
 								else: pass
 
-						lgr.info('Got Here')
 					elif self.nav.menu.input_variable.name == 'Initialize':
 						self.group_select = 0
 						self.level = '0'
@@ -447,7 +449,7 @@ class VAS:
 
 			except Exception, e: lgr.info('Error: %s' % e); self.group_select = 96
 
-		lgr.info('LEVEL: %s | GROUP: %s | Protected: %s | Service %s' % (self.level, self.group_select, self.pin_auth, self.service))
+		lgr.info('LEVEL: %s | GROUP: %s | Protected: %s | Service: %s | Selection: %s ' % (self.level, self.group_select, self.pin_auth, self.service, self.selection))
 
 		#FIlter Enrollments
 		if self.gateway_profile.exists():

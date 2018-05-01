@@ -56,10 +56,16 @@ admin.site.register(Menu, MenuAdmin)
 
 class MenuItemAdmin(admin.ModelAdmin):
 	list_display = ('menu_item', 'access_level_list', 'profile_status_list', 'item_level', 'item_order', 'menu', 'status',\
-			'failed_session_include','enrollment_type_included_list','enrollment_type_excluded_list',)
+			'failed_session_include','response_status','enrollment_type_included_list','enrollment_type_excluded_list',)
 	list_filter = ('menu__code','menu', 'menu__service', 'status','failed_session_include',)
 	search_fields = ('menu_item', 'item_level', 'item_order',)
 admin.site.register(MenuItem, MenuItemAdmin)
+
+class SubMenuAdmin(admin.ModelAdmin):
+	list_display = ('id','menu','sub_menu','menu_item',)
+	list_filter = ('menu__code','menu__code__institution','menu__code__mno','menu__code__channel','menu__code__code_type',)
+	search_fields = ('menu__code__code','menu__page_string',)
+admin.site.register(SubMenu, SubMenuAdmin)
 
 class NavigatorAdmin(admin.ModelAdmin):
 	list_display = ('id','session_hop', 'menu', 'item_list', 'nav_step', 'input_select','code','pin_auth','session','level','group_select','invalid',)
