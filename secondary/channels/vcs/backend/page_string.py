@@ -541,7 +541,7 @@ class PageString(ServiceCall, Wrappers):
 
 					params = payload
 
-					investmentfund = InvestmentFund.objects.filter(name=params['from_investmentfund'])
+					investmentfund = InvestmentFund.objects.filter(name=params['investmentfund'])
 
 					item = ''
 					if investmentfund.exists():
@@ -555,8 +555,8 @@ class PageString(ServiceCall, Wrappers):
 					from thirdparty.i_invest.models import InvestmentFund
 
 					investmentfund = InvestmentFund.objects.filter(status__name='ENABLED').order_by('id')
-					if 'from_investmentfund' in payload.keys():
-						investmentfund = investmentfund.filter(~Q(name=payload['from_investmentfund']))
+					if 'investmentfund' in payload.keys():
+						investmentfund = investmentfund.filter(~Q(name=payload['investmentfund']))
 
 					item = ''
 					item_list = []
