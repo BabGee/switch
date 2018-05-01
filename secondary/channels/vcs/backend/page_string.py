@@ -138,7 +138,7 @@ class PageString(ServiceCall, Wrappers):
 			#Page String Response
 			if navigator.menu.page_string_response not in [None,'']:
 				for ps in navigator.menu.page_string_response.split('|'):
-					ps.replace('%%','|') #Escape percentage character
+					ps = ps.replace('%%','|') #Escape percentage character
 					try: key,value,state = ps.split('%')
 					except: continue
 					if 'response_status' in payload.keys() and payload['response_status'] == key.strip():
