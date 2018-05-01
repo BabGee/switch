@@ -57,6 +57,10 @@ class Wrappers:
 	def background_activity_payload(self, payload):
 		new_payload, transaction, count = {}, None, 1
 		for k, v in payload.items():
+			try:
+				value = json.loads(v)
+				if isinstance(value, list) or isinstance(value, dict):continue
+			except: pass
 			key = k.lower()
 			if 'card' not in key and 'credentials' not in key and 'new_pin' not in key and \
 			 'validate_pin' not in key and 'password' not in key and 'confirm_password' not in key and \
@@ -106,7 +110,7 @@ class Wrappers:
 			charges = payload['charges'] if 'charges' in payload.keys() and payload['charges']!='' else None
 			request = self.background_activity_payload(payload)
 			activity = BackgroundServiceActivity(service=service, status=status,\
-					gateway_profile=gateway_profile,request=json.dumps(request)[:3839],\
+					gateway_profile=gateway_profile,request=json.dumps(request),\
 					channel=channel, response_status=response_status, currency = currency,\
 					amount = amount, charges = charges, gateway=gateway_profile.gateway,\
 					sends=0)
@@ -201,7 +205,7 @@ class System(Wrappers):
 
 				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
 				activity = BackgroundServiceActivity(service=background_service[0].service, status=status, \
-						gateway_profile=session_gateway_profile,request=json.dumps(request)[:3839],\
+						gateway_profile=session_gateway_profile,request=json.dumps(request),\
 						channel=channel, response_status=response_status, currency = currency,\
 						amount = amount, charges = charges, gateway=session_gateway_profile.gateway,\
 						sends=0)
