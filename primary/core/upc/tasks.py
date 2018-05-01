@@ -1019,7 +1019,7 @@ class System(Wrappers):
 				payload['response'] = 'New PIN isSet'
 				payload['response_status'] = '00'
 			else:
-				payload['response_status'] = '55'
+				payload['response_status'] = '95'
 				payload['response'] = 'Confirm PIN did not match New PIN'
 
 		except Exception, e:
