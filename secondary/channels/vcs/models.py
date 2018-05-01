@@ -100,6 +100,7 @@ class Menu(models.Model):
 	protected = models.BooleanField(default=False)
 	details = models.CharField(max_length=512, default=json.dumps({}))
 	invalid = models.BooleanField(default=False)
+	selection = models.CharField(max_length=64, null=True, blank=True)
 	enrollment_type_included = models.ManyToManyField(EnrollmentType, blank=True)
 	enrollment_type_excluded = models.ManyToManyField(EnrollmentType, blank=True, related_name='menu_enrollment_type_excluded')
 	def __unicode__(self):
@@ -139,15 +140,6 @@ class MenuItem(models.Model):
 		return "\n".join([a.name for a in self.enrollment_type_included.all()])
 	def enrollment_type_excluded_list(self):
 		return "\n".join([a.name for a in self.enrollment_type_excluded.all()])
-
-class SubMenu(models.Model):
-        date_modified  = models.DateTimeField(auto_now=True)
-        date_created = models.DateTimeField(auto_now_add=True)
-	menu = models.ForeignKey(Menu)
-	sub_menu = models.ForeignKey(Menu, related_name='sub_menu')
-	menu_item = models.ForeignKey(MenuItem)
-	def __unicode__(self):
-		return u'%s %s %s %s' % (self.id, self.menu, self.sub_menu, self.menu_item)
 
 class Navigator(models.Model):
         date_modified  = models.DateTimeField(auto_now=True)

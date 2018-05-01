@@ -468,8 +468,19 @@ class VAS:
 		self.menu = self.menu.filter(group_select=self.group_select)
 
 		#Filter Service
-		if self.service is not None:
+		if self.service:
 			self.menu = self.menu.filter(service=self.service)
+
+		#Filter SubMenu selection - Got to be last after final menu is selected
+		if self.selection:
+			sub_menu = self.menu.filter(selection=self.selection)
+			if sub_menu.exists():
+				self.menu = sub_menu
+			else:
+				self.menu = self.menu.filter(selection__in=['',None])
+		else:
+			self.menu = self.menu.filter(selection__in=['',None])
+
 
 		self.menu_view()
 
