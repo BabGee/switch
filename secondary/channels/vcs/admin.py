@@ -47,8 +47,8 @@ class InputVariableAdmin(admin.ModelAdmin):
 admin.site.register(InputVariable, InputVariableAdmin)
 
 class MenuAdmin(admin.ModelAdmin):
-	list_display = ('id','page_string', 'access_level_list', 'session_state','failed_session_state',\
-			'code_list','profile_status_list','service',\
+	list_display = ('id','page_string', 'page_string_response','error_prefix', 'access_level_list', 'session_state',\
+			'failed_session_state','code_list','profile_status_list','service',\
 			'submit', 'level', 'group_select', 'input_variable', 'selection_preview','menu_description',\
 			'menu_status','protected','details','invalid','selection','enrollment_type_included_list',\
 			'enrollment_type_excluded_list',)

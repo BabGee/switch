@@ -120,13 +120,11 @@ class VAS:
 
 		if self.menu.exists():
 
-			self.payload['page_string'] = self.menu[0].page_string
 			new_navigator = Navigator(session=self.session, menu=self.menu[0], pin_auth=self.pin_auth, level=self.level, group_select=self.group_select,invalid=self.menu[0].invalid)
 			new_navigator.input_select = self.payload['input']
 
 			new_navigator.nav_step = self.nav_step
 			new_navigator.code = self.code[0]
-			#new_navigator.transaction = self.transaction
 			new_navigator.save()
 
 			#Process Page String
@@ -146,20 +144,17 @@ class VAS:
 			input_min = self.menu[0].input_variable.validate_min
 			input_max = self.menu[0].input_variable.validate_max
 		elif self.nav and self.menu.exists() == False:
-			page_string = self.nav.menu.page_string
-			if len(self.navigator)<2 and self.nav.menu.level == 0:
-				page_string = '%s' % page_string
-			else:
-				page_string = 'Invalid input! %s' % page_string
 
-			self.payload['page_string'] = page_string
-			
+			if len(self.navigator)<2 and self.nav.menu.level == 0:
+				error_prefix = None
+			else:
+				error_prefix = self.nav.menu.error_prefix if self.nav.menu.error_prefix not in ['',None] else 'Invalid input!' 
+
 			new_navigator = Navigator(session=self.session, menu=self.nav.menu, pin_auth=self.pin_auth, level=self.level, group_select=self.group_select,invalid=True)
 			new_navigator.input_select = self.nav.input_select
 
 			new_navigator.nav_step = self.nav_step
 			new_navigator.code = self.code[0]
-			#new_navigator.transaction = self.transaction
 			new_navigator.save()
 			
 			#Process Page String
@@ -167,12 +162,16 @@ class VAS:
 			except Exception, e: lgr.info('Error on Processing Page String: %s' % e)
 
 			menuitems = menuitems.filter(menu=self.nav.menu)
-			page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
+
+			if error_prefix:
+				page_string = '%s %s%s' % (error_prefix, self.payload['page_string'], get_menu_items(menuitems))
+			else:
+				page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
+
 			if len(self.item_list)>0:
 				new_navigator.item_list = json.dumps(self.item_list)
 			new_navigator.save()
 
-			#page_string = re.sub(r'\[.+?\]\s?','',page_string) #Replace square bracket variables
 			session_state = self.nav.menu.failed_session_state.name if 'response_status' in self.payload.keys() and  self.payload['response_status'] <> '00' and self.nav.menu.failed_session_state else self.nav.menu.session_state.name 
 			session_state = self.nav.menu.session_state.name
 			input_type = self.nav.menu.input_variable.variable_type.variable
@@ -185,7 +184,6 @@ class VAS:
 
 			new_navigator.nav_step = self.nav_step
 			new_navigator.code = self.code[0]
-			#new_navigator.transaction = self.transaction
 			new_navigator.save()
 
 			page_string = 'Sorry, no Menu Found!'

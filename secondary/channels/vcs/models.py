@@ -84,6 +84,8 @@ class Menu(models.Model):
         date_modified  = models.DateTimeField(auto_now=True)
         date_created = models.DateTimeField(auto_now_add=True)
 	page_string = models.CharField(max_length=320)
+	page_string_response = models.CharField(max_length=2048, blank=True, null=True, help_text='response_status%page_string|') 
+	error_prefix = models.CharField(max_length=128, null=True, blank=True)
 	access_level = models.ManyToManyField(AccessLevel)
 	session_state = models.ForeignKey(SessionState)
 	failed_session_state = models.ForeignKey(SessionState, blank=True, null=True, related_name='failed_session_state')

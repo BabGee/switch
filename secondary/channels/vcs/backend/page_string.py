@@ -105,8 +105,7 @@ class PageString(ServiceCall, Wrappers):
 		lgr = node_info.log
 		#Find Variable
 		#Process Submit and input not in ['0','00']
-		page_string = payload['page_string']
-		del payload['page_string']
+		page_string = navigator.menu.page_string
 
 		#add menu details
 		try: 
@@ -136,6 +135,15 @@ class PageString(ServiceCall, Wrappers):
 			payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
 			payload = self.api_service_call(navigator.menu.service, gateway_profile, payload)
 
+			#Page String Response
+			if navigator.menu.page_string_response not in [None,'']:
+				for ps in navigator.menu.page_string_response.split('|'):
+					try: key,value = ps.split('%')
+					except: continue
+					if 'response_status' in payload.keys() and payload['response_status'] == key.strip():
+						page_string = value.strip()
+
+			#process service response
 			variables = re.findall("\[(.*?)\]", page_string)
 			for v in variables:
 				variable_key, variable_val = None, None
