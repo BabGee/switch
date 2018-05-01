@@ -477,9 +477,9 @@ class VAS:
 			if sub_menu.exists():
 				self.menu = sub_menu
 			else:
-				self.menu = self.menu.filter(selection__in=['',None])
+				self.menu = self.menu.filter(Q(selection='')|Q(selection=None))
 		else:
-			self.menu = self.menu.filter(selection__in=['',None])
+			self.menu = self.menu.filter(Q(selection='')|Q(selection=None))
 
 
 		self.menu_view()
