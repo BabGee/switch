@@ -106,7 +106,7 @@ class Wrappers:
 			charges = payload['charges'] if 'charges' in payload.keys() and payload['charges']!='' else None
 			request = self.background_activity_payload(payload)
 			activity = BackgroundServiceActivity(service=service, status=status,\
-					gateway_profile=gateway_profile,request=json.dumps(request),\
+					gateway_profile=gateway_profile,request=json.dumps(request)[:3839],\
 					channel=channel, response_status=response_status, currency = currency,\
 					amount = amount, charges = charges, gateway=gateway_profile.gateway,\
 					sends=0)
@@ -201,7 +201,7 @@ class System(Wrappers):
 
 				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
 				activity = BackgroundServiceActivity(service=background_service[0].service, status=status, \
-						gateway_profile=session_gateway_profile,request=json.dumps(request),\
+						gateway_profile=session_gateway_profile,request=json.dumps(request)[:3839],\
 						channel=channel, response_status=response_status, currency = currency,\
 						amount = amount, charges = charges, gateway=session_gateway_profile.gateway,\
 						sends=0)
