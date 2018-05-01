@@ -139,11 +139,11 @@ class PageString(ServiceCall, Wrappers):
 			if navigator.menu.page_string_response not in [None,'']:
 				for ps in navigator.menu.page_string_response.split('|'):
 					ps.replace('%%','|') #Escape percentage character
-					try: key,value = ps.split('%')
+					try: key,value,state = ps.split('%')
 					except: continue
 					if 'response_status' in payload.keys() and payload['response_status'] == key.strip():
 						page_string = value.replace('|','%').strip()
-
+						payload['session_state'] = state.strip()
 			#process service response
 			variables = re.findall("\[(.*?)\]", page_string)
 			for v in variables:

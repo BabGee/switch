@@ -139,7 +139,7 @@ class VAS:
 			new_navigator.save()
 
 
-			session_state = self.menu[0].failed_session_state.name if 'response_status' in self.payload.keys() and  self.payload['response_status'] <> '00' and self.menu[0].failed_session_state else self.menu[0].session_state.name 
+			session_state = self.payload['session_state'] if 'session_state' in self.payload.keys() and  self.payload['session_state'] not in [None,''] else self.menu[0].session_state.name 
 			input_type = self.menu[0].input_variable.variable_type.variable
 			input_min = self.menu[0].input_variable.validate_min
 			input_max = self.menu[0].input_variable.validate_max
@@ -172,8 +172,7 @@ class VAS:
 				new_navigator.item_list = json.dumps(self.item_list)
 			new_navigator.save()
 
-			session_state = self.nav.menu.failed_session_state.name if 'response_status' in self.payload.keys() and  self.payload['response_status'] <> '00' and self.nav.menu.failed_session_state else self.nav.menu.session_state.name 
-			session_state = self.nav.menu.session_state.name
+			session_state = self.payload['session_state'] if 'session_state' in self.payload.keys() and  self.payload['session_state'] not in [None,''] else self.nav.menu.session_state.name 
 			input_type = self.nav.menu.input_variable.variable_type.variable
 			input_min = self.nav.menu.input_variable.validate_min
 			input_max = self.nav.menu.input_variable.validate_max
