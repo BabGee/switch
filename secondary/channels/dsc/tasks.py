@@ -764,34 +764,6 @@ class Wrappers:
 
 
 	    #lgr.info('Report Values')
-	    case_query = DataListCaseQuery.objects.filter(query=data.query,case_inactive=False)
-
-	    for case in case_query:
-	        case_values = case.case_values
-	        case_default_value = case.case_default_value
-		case_when = []
-            	for i in case_values.split('|'):
-       	        	try:case_name, case_field, case_value, case_newvalue = i.split('%')
-			except: continue
-
-			args.append(case_name.strip())
-			params['cols'].append({"label": case_name.strip(), "type": "string", "value": case_name.strip()})
-
-			case_data = {}
-
-			case_data[case_field.strip()] =  case_value
-			case_data['then'] = Value(case_newvalue)
-
-			case_when.append(When(**case_data))
-
-		#Final Case
-		case_values_data[case_name.strip()] = Case(*case_when, default=Value(case_default_value), output_field=CharField())
-
-	    if len(case_values_data.keys()):
-		    report_list = report_list.annotate(**case_values_data)
-
-
-	    #lgr.info('Report Values')
 	    selected_data = {}
 	    if data.query.date_values not in [None,'']:
 	            for i in data.query.date_values.split('|'):
@@ -945,9 +917,40 @@ class Wrappers:
 
 	        #lgr.info('AVG Applied: %s' % kwargs)
                 report_list = report_list.annotate(**kwargs)
-	    
 
-	    #lgr.info('Report Last Balance')
+
+	    
+	    #lgr.info('Last Balance')
+	    case_query = DataListCaseQuery.objects.filter(query=data.query,case_inactive=False)
+
+	    for case in case_query:
+	        case_values = case.case_values
+	        case_default_value = case.case_default_value
+		case_when = []
+            	for i in case_values.split('|'):
+       	        	try:case_name, case_field, case_value, case_newvalue = i.split('%')
+			except: continue
+
+			args.append(case_name.strip())
+			params['cols'].append({"label": case_name.strip(), "type": "string", "value": case_name.strip()})
+
+			case_data = {}
+
+			case_data[case_field.strip()] =  case_value
+			case_data['then'] = Value(case_newvalue)
+
+			case_when.append(When(**case_data))
+
+		#Final Case
+		case_values_data[case_name.strip()] = Case(*case_when, default=Value(case_default_value), output_field=CharField())
+
+	    if len(case_values_data.keys()):
+		    report_list = report_list.annotate(**case_values_data)
+
+
+
+	    #lgr.info('Case Values')
+
 	    if or_filters not in [None,'']:
                 # for a in filters.split("&"):
                 for f in or_filters.split("|"):
