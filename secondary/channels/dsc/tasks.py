@@ -1307,6 +1307,7 @@ class Wrappers:
             lgr.info('Error on purchases: %s' % e)
         return params
 
+    @transaction.atomic
     def bid_ranking(self,payload,gateway_profile,profile_tz,data):
 
         params = {}
@@ -1327,19 +1328,32 @@ class Wrappers:
         ct = 0
 	mqtt = {}
 	try:
+
 	    from thirdparty.bidfather.models import Bid,BidRequirementApplication
             if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
                 #mqtt = {}
+                import copy
                 # Loop through a report to get the different pn_id_fields to be updated
-                for bid in Bid.objects.filter(bidapplication__bidrequirementapplication__pn=False):
-                    channel = "%s/%s/%s" % (gateway_profile.gateway.id, 'bid_ranking', bid.institution.pk)
-                    params['rows'] = bid.app_rankings(bid.institution)
-                    mqtt[channel] = params # bid.app_rankings(bid.institution)
-                    for application in bid.bidapplication_set.all():
-                        channel = "%s/%s/%s" % (gateway_profile.gateway.id, 'bid_ranking', application.institution.pk)
-                        params['rows'] = bid.app_rankings(application.institution)
-                        mqtt[channel] = params
-                        BidRequirementApplication.objects.filter(bid_application=application).update(pn=True)
+                bid_req_app =  BidRequirementApplication.objects.select_for_update().filter(pn=False)
+                #lgr.info(bid_req_app)    
+		if bid_req_app.exists():
+			#lgr.info('push updates exist')
+			for req_app in bid_req_app:
+				lgr.info('notify bid : {}'.format(req_app))
+				#Bid Owner
+				channel = "%s/%s/%s" % (gateway_profile.gateway.id, 'bid_ranking', req_app.bid_requirement.bid.institution.id)
+				params['rows'] = req_app.bid_requirement.bid.app_rankings(req_app.bid_requirement.bid.institution)
+				mqtt[channel] = copy.deepcopy(params)
+
+				#Bid Application
+				channel = "%s/%s/%s" % (gateway_profile.gateway.id, 'bid_ranking', req_app.bid_application.institution.id)
+				params['rows'] = req_app.bid_requirement.bid.app_rankings(req_app.bid_application.institution)
+				mqtt[channel] = copy.deepcopy(params)
+
+			#Update gotta come at the end to prevent filter of data on loop
+			bid_req_app.update(pn=True)
+
+		#lgr.info(mqtt)
                 return params,max_id, min_id, ct, mqtt
             else:
                 bid = Bid.objects.get(pk=payload['bid_id'])
@@ -3678,7 +3692,7 @@ def process_push_notification():
 				#lgr.info("MQTT task: %s" % mqtt)
 
 				for key,value in mqtt.items():
-					#lgr.info("%s PN: %s" % (key,value))
+					lgr.info("%s PN: %s" % (key,value))
 					if len(value):
 						msc = MqttServerClient()
 						for k,v in value.items():
