@@ -1199,7 +1199,7 @@ def order_background_service_call(order):
 
 
 			if bill.incoming_payment:
-				payload['incoming_id'] = bill.incoming_payment.id
+				payload['paygate_incoming_id'] = bill.incoming_payment.id
 				payload['ext_inbound_id'] = bill.incoming_payment.ext_inbound_id
 
 
