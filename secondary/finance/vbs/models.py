@@ -1,5 +1,5 @@
 from django.contrib.gis.db import models
-from secondary.erp.crm.models import *
+from secondary.erp.pos.models import *
 
 class AccountType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -142,6 +142,7 @@ class AccountManager(models.Model):
 	credit_overdue = models.ManyToManyField(CreditOverdue, blank=True)
 	updated = models.BooleanField(default=False, help_text="True for record that is not the last record")
 	credit_overdue_update = models.BooleanField(default=False, help_text="True for record that is not the last record")
+	bill_manager = models.ForeignKey(BillManager, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.id, self.credit, self.credit_paid)
 	def credit_overdue_list(self):

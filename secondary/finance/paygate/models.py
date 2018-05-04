@@ -1,6 +1,5 @@
 from django.db import models
 from secondary.erp.crm.models import *
-from secondary.finance.vbs.models import *
 
 class FloatType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)

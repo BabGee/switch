@@ -545,6 +545,7 @@ class System(Wrappers):
 								amount = Decimal(amount*forex[0].exchange_rate).quantize(Decimal('.01'), rounding=ROUND_DOWN)
 							lgr.info('Forex Calculate amount to %s|from: %s| %s' % (order_currency, currency, amount) )
 
+						payload['bill_manager_id'] = bill_manager.id
 						payload['amount'] = amount
 						payload['purchase_order_id'] = order.id
 						payload["response_status"] = "00"
