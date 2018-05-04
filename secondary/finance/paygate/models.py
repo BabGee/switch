@@ -214,7 +214,7 @@ class Incoming(models.Model):
 	channel = models.ForeignKey(Channel)
 	institution = models.ForeignKey(Institution, null=True, blank=True)
 	def __unicode__(self):
-		return u'%s %s %s' % (self.remittance_product, self.amount, self.currency)
+		return u'%s %s %s %s' % (self.remittance_product, self.amount, self.currency, self.ext_inbound_id)
 
 class OutgoingState(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
