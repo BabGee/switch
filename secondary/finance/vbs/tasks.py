@@ -586,6 +586,9 @@ class System(Wrappers):
 					charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					balance_bf=session_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
 
+				if 'paygate_incoming_id' in payload.keys():
+					session_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
+
 				session_manager.save()
 
 				gl_manager = AccountManager(credit=False, transaction_reference=payload['bridge__transaction_id'],\
