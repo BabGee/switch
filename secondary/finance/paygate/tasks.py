@@ -125,6 +125,10 @@ class Wrappers:
 	def transaction_payload(self, payload):
 		new_payload, transaction, count = {}, None, 1
 		for k, v in payload.items():
+			try:
+				value = json.loads(v)
+				if isinstance(value, list) or isinstance(value, dict):continue
+			except: pass
 			key = k.lower()
 			if 'card' not in key and 'credentials' not in key and 'new_pin' not in key and \
 			 'validate_pin' not in key and 'password' not in key and 'confirm_password' not in key and \
