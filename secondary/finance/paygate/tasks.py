@@ -85,7 +85,7 @@ class Wrappers:
 			if 'credentials' not in key and \
 			 'validate_pin' not in key and 'access_level' not in key and \
 			 'sec_hash' not in key and 'ip_address' not in key and \
-			 'service' not in key and key <> 'lat' and key <> 'lng' and \
+			 key <> 'service' and key <> 'lat' and key <> 'lng' and \
 			 key <> 'chid' and 'session' not in key and 'csrf_token' not in key and \
 			 'csrfmiddlewaretoken' not in key and 'gateway_host' not in key and \
 			 'gateway_profile' not in key and \
