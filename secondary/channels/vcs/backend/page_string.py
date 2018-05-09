@@ -215,6 +215,14 @@ class PageString(ServiceCall, Wrappers):
 					lgr.info('Your List: %s' % item)
 					page_string = page_string.replace('['+v+']',item)
 
+				elif variable_key == 'attempts_left':
+					item = ''
+
+					item = str(code[0].gateway.max_pin_retries - gateway_profile.pin_retries)
+
+					lgr.info('Your List: %s' % item)
+					page_string = page_string.replace('['+v+']',item)
+
 
 				elif variable_key == 'SELECTION':
 					item = ''
