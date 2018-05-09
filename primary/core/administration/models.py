@@ -131,6 +131,7 @@ class Gateway(models.Model):
 	primary_color = models.CharField(max_length=100, blank=True, null=True)
 	secondary_color = models.CharField(max_length=100, blank=True, null=True)
 	accent_color = models.CharField(max_length=100, blank=True, null=True)
+	max_pin_retries = models.SmallIntegerField(default=3)
 	def __unicode__(self):
 		return u'%s' % (self.name)
 	def default_host_list(self):
