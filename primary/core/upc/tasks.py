@@ -1044,7 +1044,7 @@ class System(Wrappers):
 				payload['response'] = 'Valid PIN'
 				payload['response_status'] = '00'
 			else:
-				if session_gateway_profile.pin_retries >= 3:
+				if session_gateway_profile.pin_retries >= gateway_profile.gateway.max_pin_retries:
 					session_gateway_profile.status = ProfileStatus.objects.get(name='LOCKED')
 				session_gateway_profile.pin_retries = session_gateway_profile.pin_retries+1
 				session_gateway_profile.save()
@@ -1200,7 +1200,7 @@ class System(Wrappers):
 				payload['response'] = 'Valid One Time PIN'
 				payload['response_status'] = '00'
 			else:
-				if session_gateway_profile.pin_retries >= 3:
+				if session_gateway_profile.pin_retries >= gateway_profile.gateway.max_pin_retries:
 					session_gateway_profile.status = ProfileStatus.objects.get(name='LOCKED')
 				session_gateway_profile.pin_retries = session_gateway_profile.pin_retries+1
 				session_gateway_profile.save()
@@ -2011,7 +2011,7 @@ class System(Wrappers):
 							authorized_gateway_profile = session_gateway_profile
 
 						else:
-							if session_gateway_profile.pin_retries >= 3:
+							if session_gateway_profile.pin_retries >= gateway_profile.gateway.max_pin_retries:
 								session_gateway_profile.status = ProfileStatus.objects.get(name='LOCKED')
 							session_gateway_profile.pin_retries = session_gateway_profile.pin_retries+1
 							session_gateway_profile.save()
