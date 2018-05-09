@@ -48,7 +48,7 @@ class ServiceCommandAdmin(admin.ModelAdmin):
 		list_display = ('id','command_function','level','service','node_system', 'status',\
 		 'reverse_function','description','response','details', 'access_level_list',\
 		 'profile_status_list', 'channel_list',\
-		 'payment_method_list','trigger_list','gateway_list',)
+		 'payment_method_list','trigger_list','gateway_list','success_response_status_list',)
 	        list_filter = ('service','node_system','gateway','access_level','channel','payment_method',)
 		search_fields = ('command_function','service__name','reverse_function','trigger__name','details',)
 admin.site.register(ServiceCommand, ServiceCommandAdmin)

@@ -67,7 +67,7 @@ class ServiceProcessor:
 				elif item.reverse_function == 'no_reverse':
 					break
 
-				if payload['response_status'] <> '00':
+				if payload['response_status'] <> '00' and payload['response_status'] not in [rs.response for rs in item.success_response_status.all()]:
 					response_status = Wrappers().process_responsestatus(payload['response_status'],payload)
 					response = response_status['response']
 					lgr.info('Failed response status. check if to reverse: %s' % response_status['reverse'])						
@@ -150,7 +150,7 @@ class ServiceProcessor:
 					pass
 				elif node_system.node_status.name == 'LOCAL':	
 					payload = Wrappers().call_local(item, item.command_function, payload)
-				if payload['response_status'] <> '00':
+				if payload['response_status'] <> '00' and payload['response_status'] not in [rs.response for rs in item.success_response_status.all()]:
 					response_status = Wrappers().process_responsestatus(payload['response_status'], payload)
 					response = response_status['response']
 					lgr.info('Failed response status. check if to reverse: %s' % response_status['reverse'])						
@@ -189,6 +189,7 @@ class ServiceProcessor:
 		response_tree['response_status'] = payload['response_status']
 		response_tree['overall_status']	= payload['response_status']
 		last_response = '' if isinstance(response, dict) else response
+
 		if payload['response_status'] <> '00':
 			response_tree['last_response'] = service.failed_last_response if service.failed_last_response not in [None,''] else last_response
 		else:

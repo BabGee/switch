@@ -116,6 +116,7 @@ class ServiceCommand(models.Model):
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	trigger = models.ManyToManyField(Trigger, blank=True)
 	gateway = models.ManyToManyField(Gateway, blank=True)
+	success_response_status = models.ManyToManyField(ResponseStatus, blank=True)
 	def access_level_list(self):
 		return "\n".join([a.name for a in self.access_level.all()])
 	def profile_status_list(self):
@@ -128,6 +129,8 @@ class ServiceCommand(models.Model):
 		return "\n".join([a.name for a in self.trigger.all()])
 	def gateway_list(self):
 		return "\n".join([a.name for a in self.gateway.all()])
+	def success_response_status_list(self):
+		return "\n".join([a.response for a in self.success_response_status.all()])
 	def __unicode__(self):
 		return u'%s %s %s' % (self.command_function, self.status.name, self.access_level_list())
 
