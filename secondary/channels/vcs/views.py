@@ -421,7 +421,7 @@ class VAS:
 									self.group_select = 0
 									self.level = '0'
 							else:
-								if session_gateway_profile.pin_retries >= 3:
+								if session_gateway_profile.pin_retries >= self.code[0].gateway.max_pin_retries:
 									session_gateway_profile.status = ProfileStatus.objects.get(name='LOCKED')
 									self.level = '99'
 								else:
