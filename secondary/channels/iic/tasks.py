@@ -233,20 +233,6 @@ class System(Generator):
             gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
             lgr.info('Started This Page Inputs')
-            # this_page_inputs = PageInput.objects.filter(Q(page__service__name=payload['SERVICE']),\
-
-            '''
-			this_page_inputs = PageInput.objects.filter( Q(page__service__name=payload['SERVICE']),\
-					 Q(page_input_status__name='ACTIVE'), Q(access_level__name=payload['access_level']), \
-					 Q(page__access_level__name=payload['access_level']), Q(channel__id=payload['chid']), ~Q(page__item_level=0), \
-					 Q(page__page_group__gateway=gateway_profile.gateway) |Q(page__page_group__gateway=None),\
-					 Q(page_input_group__gateway=gateway_profile.gateway) |Q(page_input_group__gateway=None),\
-					 Q(page__gateway=gateway_profile.gateway) |Q(page__gateway=None),\
-					 Q(gateway=gateway_profile.gateway) |Q(gateway=None)).\
-					prefetch_related('trigger','page','access_level','institution','input_variable','page_input_group','gateway','channel','payment_method')
-
-			'''
-
             this_page_inputs = PageInput.objects.filter(Q(page__service__name=payload['SERVICE']),
                                                         Q(page_input_status__name='ACTIVE'), \
                                                         Q(Q(access_level=gateway_profile.access_level) | Q(
@@ -267,8 +253,14 @@ class System(Generator):
                                                         Q(gateway=gateway_profile.gateway) | Q(gateway=None)). \
                 prefetch_related('trigger', 'page', 'access_level', 'institution', 'input_variable', 'page_input_group',
                                  'gateway', 'channel', 'payment_method')
-            #			 Q(page__access_level=profile[0].access_level) |Q(page__access_level__name='SYSTEM'), \
-            # If a page input has a page_list with on of the pages on a none zero item_level, the section will be previewed on DASHBOARD (START SERVICE)
+
+	    #Role Filters
+	    if gateway_profile.role:
+		role_permission = RolePermission.objects.filter(role=gateway_profile.role)
+		if role_permission.exists():
+			this_page_inputs = this_page_inputs.filter(page__in=role_permission.role_right.page.all())
+			for permission in role_permission:
+				this_page_inputs = this_page_inputs.filter(Q(role_action=None)|Q(role_action=permission.role_action.all()))
 
             gui['this_page_inputs'] = self.section_generator(payload, this_page_inputs, node_info)
             gui['all_pages'] = self.all_pages_generator(payload, this_page_inputs, node_info)
@@ -290,13 +282,6 @@ class System(Generator):
             gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
             lgr.info('Started This Page Inputs')
-            '''
-			this_page_inputs = PageInput.objects.filter(Q(page__service__name=payload['SERVICE']),Q(page_input_status__name='ACTIVE'),\
-					 Q(access_level__name=payload['access_level']), Q(page__access_level__name=payload['access_level']),\
-					 Q(channel__id=payload['chid']), Q(page_input_group__gateway=gateway_profile.gateway) |Q(page_input_group__gateway=None),\
-					 Q(page__gateway=gateway_profile.gateway) |Q(page__gateway=None),Q(gateway=gateway_profile.gateway) |Q(gateway=None)).\
-					prefetch_related('trigger','page','access_level','institution','input_variable','page_input_group','gateway','channel','payment_method')
-			'''
             this_page_inputs = PageInput.objects.filter(Q(page__service__name=payload['SERVICE']),
                                                         Q(page_input_status__name='ACTIVE'), \
                                                         Q(Q(access_level=gateway_profile.access_level) | Q(
@@ -315,6 +300,14 @@ class System(Generator):
                                                         Q(gateway=gateway_profile.gateway) | Q(gateway=None)). \
                 prefetch_related('trigger', 'page', 'access_level', 'institution', 'input_variable', 'page_input_group',
                                  'gateway', 'channel', 'payment_method')
+
+	    #Role Filters
+	    if gateway_profile.role:
+		role_permission = RolePermission.objects.filter(role=gateway_profile.role)
+		if role_permission.exists():
+			this_page_inputs = this_page_inputs.filter(page__in=role_permission.role_right.page.all())
+			for permission in role_permission:
+				this_page_inputs = this_page_inputs.filter(Q(role_action=None)|Q(role_action=permission.role_action.all()))
 
             gui['this_page_inputs'] = self.section_generator(payload, this_page_inputs, node_info)
 
