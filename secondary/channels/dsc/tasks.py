@@ -763,6 +763,11 @@ class Wrappers:
         	    report_list = report_list.annotate(**values_data)
 
 
+	    class DateTrunc(Func):
+		function = 'DATE_TRUNC'
+		def __init__(self, trunc_type, field_expression, **extra):
+			super(DateTrunc, self).__init__(Value(trunc_type), field_expression, **extra)
+
 
 	    #lgr.info('Report Values: %s' % report_list.count())
 	    if data.query.date_values not in [None,'']:
@@ -772,22 +777,7 @@ class Wrappers:
 			except: continue
 	                args.append(k.strip())
 
-			'''
-			original_model_data =  model_class._meta
-			field_data = v.split('__')
-			model_data = original_model_data.get_field(field_data[0])
-
-			if field_data[1:]:
-				for f in field_data[1:]:
-					model_data = model_data.related_model._meta.get_field(f)
-
-			selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:][0] +", 'DD, Month, YYYY')"
-			'''
-
-			date_data[k.strip()] = Cast(Func(F(v.strip()), function='DATE'), CharField(max_length=16))
-			
-			#date_data[k.strip()] = Cast(Func(F(v.strip()), function='DATE'), TextField())
-			#date_data[k.strip()] = Func(F(v.strip()), function='DATE')
+			date_data[k.strip()] = Cast(DateTrunc('day', v.strip()), CharField(max_length=32))
                     	params['cols'].append({"label": k.strip(), "type": "date", "value": v.strip()})
 
 		    if date_data:
@@ -795,54 +785,39 @@ class Wrappers:
 			report_list = report_list.annotate(**date_data)
 
 	    #lgr.info('Report Date Values: %s' % report_list.count())
-
-	    selected_data = {}
 	    if data.query.date_time_values not in [None,'']:
+		    date_time_data = {}
 	            for i in data.query.date_time_values.split('|'):
 			try:k,v = i.split('%')
 			except: continue
 	                args.append(k.strip())
 
-			original_model_data =  model_class._meta
-			field_data = v.split('__')
-			model_data = original_model_data.get_field(field_data[0])
-
-			if field_data[1:]:
-				for f in field_data[1:]:
-					model_data = model_data.related_model._meta.get_field(f)
-
-			selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:][0] +", 'DD, Month, YYYY HH:MI:SS TZ')"
+			date_time_data[k.strip()] = Cast(F(v.strip()), CharField(max_length=32))
 
                     	params['cols'].append({"label": k.strip(), "type": "date", "value": v.strip()})
+
+		    if date_time_data:
+			#lgr.info('Date Time Data: %s' % date_time_data)
+			report_list = report_list.annotate(**date_time_data)
+
 
 	    #lgr.info('Report Date Time Values')
 
 	    if data.query.month_year_values not in [None,'']:
+
+		    month_year_data = {}
 	            for i in data.query.month_year_values.split('|'):
 			try:k,v = i.split('%')
 			except: continue
 	                args.append(k.strip())
 
-			original_model_data =  model_class._meta
-			field_data = v.split('__')
-			model_data = original_model_data.get_field(field_data[0])
-
-			if field_data[1:]:
-				for f in field_data[1:]:
-					model_data = model_data.related_model._meta.get_field(f)
-
-			selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:][0] +", 'Month, YYYY')"
-
+			month_year_data[k.strip()] = Cast(DateTrunc('month', v.strip()), CharField(max_length=32))
                     	params['cols'].append({"label": k.strip(), "type": "date", "value": k.strip()})
 
-	    #lgr.info('Report Month Year Values')
-            report_list = report_list.extra(select=selected_data)
+		    if month_year_data:
+			#lgr.info('Month Year Data: %s' % month_year_data)
+			report_list = report_list.annotate(**month_year_data)
 
-	    '''
-	    if len(values_data.keys()):
-        	    report_list = report_list.annotate(**values_data)
-
-	    '''
 
 	    if data.data_response_type.name == 'DATA':
 		    #Values
