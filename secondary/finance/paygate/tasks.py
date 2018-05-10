@@ -196,27 +196,12 @@ class System(Wrappers):
 				lgr.info('Payment Notification| Ref List')
 				#order, institution does not need a service as purchase order items have services
 				keyword = reference_list[0].strip().replace('',' ')
-				enrollment_record = reference_list[1].strip().replace('',' ') #Used in enrollment
-
-				#capture institution reference from Purchase Order
-				institution_list = Institution.objects.filter(business_number__iexact=keyword)
-				if institution_list.exists():
-					institution = institution_list[0]
 
 				#Capture Incoming Service
 				institution_incoming_service_list = InstitutionIncomingService.objects.filter(keyword__iexact=keyword)
 				if institution_incoming_service_list.exists():
-					msisdn = UPCWrappers.simple_get_msisdn(enrollment_record,payload)
-					default_msisdn = UPCWrappers.get_msisdn(payload)
-					if msisdn:
-						enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
-											record=msisdn)
-					elif default_msisdn:
-						enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
-											record=default_msisdn)
-					else:
-						enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
-											record=enrollment_record)
+					enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
+										record=reference)
 					if enrollment.exists():
 						institution_incoming_service = institution_incoming_service_list[0]
 			else:
@@ -224,22 +209,11 @@ class System(Wrappers):
 				lgr.info('Payment Notification | Ref')
 				if reference not in ['', None]:
 					keyword = reference[:4].strip().replace('',' ')
-					enrollment_record = reference[4:].strip().replace('',' ') #Used in enrollment
 
 					institution_incoming_service_list = InstitutionIncomingService.objects.filter(keyword__iexact=keyword)
-
 					if institution_incoming_service_list.exists():
-						msisdn = UPCWrappers.simple_get_msisdn(enrollment_record,payload)
-						default_msisdn = UPCWrappers.get_msisdn(payload)
-						if msisdn:
-							enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
-												record=msisdn)
-						elif default_msisdn:
-							enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
-												record=default_msisdn)
-						else:
-							enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
-												record=enrollment_record)
+						enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
+											record=reference)
 						if enrollment.exists():
 							institution_incoming_service = institution_incoming_service_list[0]
 
