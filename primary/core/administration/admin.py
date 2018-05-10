@@ -69,6 +69,10 @@ class AccessLevelAdmin(admin.ModelAdmin):
 	list_display = ('id','name','status','description', 'hierarchy')
 admin.site.register(AccessLevel, AccessLevelAdmin)
 
+class RoleAdmin(admin.ModelAdmin):
+	list_display = ('id','name','status','description')
+admin.site.register(Role, RoleAdmin)
+
 class ChannelAdmin(admin.ModelAdmin):
 	list_display = ('id','name','description', 'date_modified', 'date_created')
 admin.site.register(Channel, ChannelAdmin)

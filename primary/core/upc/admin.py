@@ -37,7 +37,7 @@ class ProfileAdmin(admin.OSMGeoAdmin):
 admin.site.register(Profile, ProfileAdmin)
 
 class GatewayProfileAdmin(admin.ModelAdmin):
-		list_display = ('id','user','gateway','pin','msisdn','status','access_level','institution',\
+		list_display = ('id','user','gateway','pin','msisdn','status','access_level','role','institution',\
 				'pin_retries','activation_code','device_id','activation_device_id',\
 				'email_activation_code','allowed_host_list',)
 		search_fields = ('id','msisdn__phone_number','user__username','user__first_name','user__last_name','user__email',)

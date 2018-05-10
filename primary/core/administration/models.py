@@ -155,6 +155,15 @@ class AccessLevel(models.Model):
 	def __unicode__(self):
 		return u'%s' % (self.name)  
        
+class Role(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	status = models.ForeignKey(AccessLevelStatus)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)  
+       
 class Channel(models.Model):
 	name = models.CharField(max_length=50, unique=True)	
 	description = models.CharField(max_length=200)	
