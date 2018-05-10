@@ -1198,6 +1198,8 @@ def process_incoming_payments():
 			except:pass
 
 			service = c.institution_incoming_service.service
+
+			payload['paygate_incoming_id'] = c.id
 			payload['service_id'] = service.id
 			payload['product_item_id'] = c.institution_incoming_service.product_item.id
 			payload['institution_id'] = c.institution_incoming_service.product_item.institution.id
