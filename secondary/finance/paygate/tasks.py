@@ -195,7 +195,7 @@ class System(Wrappers):
 
 				lgr.info('Payment Notification| Ref List')
 				#order, institution does not need a service as purchase order items have services
-				keyword = reference_list[0].strip().replace('',' ')
+				keyword = reference_list[0].strip().replace(' ','')
 				lgr.info('Keyword: %s' % keyword)
 				#Capture Incoming Service
 				institution_incoming_service_list = InstitutionIncomingService.objects.filter(keyword__iexact=keyword)
@@ -212,7 +212,7 @@ class System(Wrappers):
 
 				lgr.info('Payment Notification | Ref')
 				if reference not in ['', None]:
-					keyword = reference[:4].strip().replace('',' ')
+					keyword = reference[:4].strip().replace(' ','')
 
 					institution_incoming_service_list = InstitutionIncomingService.objects.filter(keyword__iexact=keyword)
 					if institution_incoming_service_list.exists():
