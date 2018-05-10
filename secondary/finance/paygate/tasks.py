@@ -169,11 +169,25 @@ class System(Wrappers):
 		return payload
 
 
+	def float_to_amount(self, payload, node_info):
+		try:
+			if 'float_amount' in payload.keys():
+				payload['amount'] = payload['float_amount']
+				payload['response_status'] = '00'
+				payload['response'] = 'Amount Captured'
+			else:
+				payload['response_status'] = '25'
+				payload['response'] = 'No float amount to capture'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Float to Amount: %s" % e)
+		return payload
+
+
 	def amount_to_float(self, payload, node_info):
 		try:
 			if 'amount' in payload.keys():
 				payload['float_amount'] = payload['amount']
-
 				payload['response_status'] = '00'
 				payload['response'] = 'Float Amount Captured'
 			else:
@@ -181,7 +195,7 @@ class System(Wrappers):
 				payload['response'] = 'No amount to capture'
 		except Exception, e:
 			payload['response_status'] = '96'
-			lgr.info("Error on Remittance: %s" % e)
+			lgr.info("Error on Amount to Float: %s" % e)
 		return payload
 
 	def payment_notification(self, payload, node_info):
