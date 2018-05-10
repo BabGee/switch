@@ -26,7 +26,8 @@ from django.core.files.storage import default_storage
 from django.core.validators import validate_email
 from django.db import IntegrityError
 from django.db import transaction
-from django.db.models import Count, Sum, Max, Min, Avg, Q, F, Func, Value, CharField, CharField, Case, Value, When
+from django.db.models import Count, Sum, Max, Min, Avg, Q, F, Func, Value, CharField, Case, Value, When, TextField
+from django.db.models.functions import Cast
 from django.db.models.functions import Concat, Substr
 from django.shortcuts import render
 from django.utils import timezone
@@ -763,14 +764,15 @@ class Wrappers:
 
 
 
-	    #lgr.info('Report Values')
-	    selected_data = {}
+	    #lgr.info('Report Values: %s' % report_list.count())
 	    if data.query.date_values not in [None,'']:
+		    date_data = {}
 	            for i in data.query.date_values.split('|'):
 			try:k,v = i.split('%')
 			except: continue
 	                args.append(k.strip())
 
+			'''
 			original_model_data =  model_class._meta
 			field_data = v.split('__')
 			model_data = original_model_data.get_field(field_data[0])
@@ -780,10 +782,21 @@ class Wrappers:
 					model_data = model_data.related_model._meta.get_field(f)
 
 			selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:][0] +", 'DD, Month, YYYY')"
+			'''
 
+			date_data[k.strip()] = Cast(Func(F(v.strip()), function='DATE'), CharField(max_length=16))
+			
+			#date_data[k.strip()] = Cast(Func(F(v.strip()), function='DATE'), TextField())
+			#date_data[k.strip()] = Func(F(v.strip()), function='DATE')
                     	params['cols'].append({"label": k.strip(), "type": "date", "value": v.strip()})
 
-	    #lgr.info('Report Date Values')
+		    if date_data:
+			#lgr.info('Date Data: %s' % date_data)
+			report_list = report_list.annotate(**date_data)
+
+	    #lgr.info('Report Date Values: %s' % report_list.count())
+
+	    selected_data = {}
 	    if data.query.date_time_values not in [None,'']:
 	            for i in data.query.date_time_values.split('|'):
 			try:k,v = i.split('%')
