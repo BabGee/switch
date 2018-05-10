@@ -544,7 +544,7 @@ class System(Wrappers):
 
 				if float_balance.exists():
 					charge = Decimal(0)
-					charge_list = FloatCharge.objects.filter(Q(float_type=float_type[0], min_amount__lt=Decimal(payload['float_amount']),\
+					charge_list = FloatCharge.objects.filter(Q(float_type=float_type[0], min_amount__lte=Decimal(payload['float_amount']),\
 							max_amount__gt=Decimal(payload['float_amount']),credit=False),\
 							Q(Q(gateway=gateway_profile.gateway)|Q(gateway=None))) #Credit Float reverses debits and adds charges
 
@@ -658,7 +658,7 @@ class System(Wrappers):
 				if float_balance.exists() and Decimal(float_balance[0].balance_bf) >= Decimal(payload['float_amount']):
 
 					charge = Decimal(0)
-					charge_list = FloatCharge.objects.filter(Q(float_type=float_type[0], min_amount__lt=Decimal(payload['float_amount']),\
+					charge_list = FloatCharge.objects.filter(Q(float_type=float_type[0], min_amount__lte=Decimal(payload['float_amount']),\
 							max_amount__gt=Decimal(payload['float_amount']),credit=False),\
 							Q(Q(gateway=gateway_profile.gateway)|Q(gateway=None)))
 
