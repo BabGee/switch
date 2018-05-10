@@ -68,6 +68,39 @@ class Page(models.Model):
 	def service_list(self):
 		return "\n".join([a.name for a in self.service.all()])
 
+class RoleAction(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
+
+class RoleRight(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=128, unique=True)
+	description = models.CharField(max_length=256)
+	page = models.ManyToManyField(Page)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+	def page_list(self):
+		return "\n".join([a.name for a in self.page.all()])
+
+
+class RolePermission(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	role = models.ForeignKey(Role)
+	role_right = models.ForeignKey(RoleRight)
+	role_action = models.ManyToManyField(RoleAction, blank=True)
+	def __unicode__(self):
+		return u'%s %s' % (self.role, self.role_right)
+	def role_action_list(self):
+		return "\n".join([a.name for a in self.role_action.all()])
+
+
 # p = Page()
 # p.access_level.all()
 
@@ -106,15 +139,7 @@ class PageInputGroup(models.Model):
 		return u'%s %s %s' % (self.id, self.name, self.input_variable)
 	def gateway_list(self):
 		return "\n".join([a.name for a in self.gateway.all()])
-'''
-class Trigger(models.Model):
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
-		return u'%s' % (self.name)
-'''
+
 class PageInput(models.Model):
         date_modified  = models.DateTimeField(auto_now=True)
         date_created = models.DateTimeField(auto_now_add=True)
@@ -140,6 +165,7 @@ class PageInput(models.Model):
         payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	enrollment_type_included = models.ManyToManyField(EnrollmentType, blank=True)
 	enrollment_type_excluded = models.ManyToManyField(EnrollmentType, blank=True, related_name='pageinput_enrollment_type_excluded')
+	role_action = models.ManyToManyField(RoleAction, blank=True)
 	def __unicode__(self):
 		return u'%s' % (self.page_input)
 	def trigger_list(self):
@@ -162,4 +188,6 @@ class PageInput(models.Model):
 		return "\n".join([a.name for a in self.enrollment_type_included.all()])
 	def enrollment_type_excluded_list(self):
 		return "\n".join([a.name for a in self.enrollment_type_excluded.all()])
+	def role_action_list(self):
+		return "\n".join([a.name for a in self.role_action.all()])
 
