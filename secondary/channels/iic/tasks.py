@@ -266,7 +266,8 @@ class System(Generator):
 					for action in permission.role_action.all(): 
 						if action not in pages[page]: pages[page].append(action)
 		if pages:
-			query = reduce(operator.or_, ( Q(Q(page=k),Q(Q(role_action=None)|Q(role_action__in=v))) for k,v in pages.items() ))				
+			query = reduce(operator.or_, ( Q(Q(page=k),Q(Q(role_action=None)|Q(role_action__in=v))) for k,v in pages.items() ))
+			lgr.info('Query: %s' % query)
 			this_page_inputs = this_page_inputs.filter(query)
 
             gui['this_page_inputs'] = self.section_generator(payload, this_page_inputs, node_info)
@@ -320,7 +321,8 @@ class System(Generator):
 					for action in permission.role_action.all(): 
 						if action not in pages[page]: pages[page].append(action)
 		if pages:
-			query = reduce(operator.or_, ( Q(Q(page=k),Q(Q(role_action=None)|Q(role_action__in=v))) for k,v in pages.items() ))				
+			query = reduce(operator.or_, ( Q(Q(page=k),Q(Q(role_action=None)|Q(role_action__in=v))) for k,v in pages.items() ))
+			lgr.info('Query: %s' % query)
 			this_page_inputs = this_page_inputs.filter(query)
 
             gui['this_page_inputs'] = self.section_generator(payload, this_page_inputs, node_info)
