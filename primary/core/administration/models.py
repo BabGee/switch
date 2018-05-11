@@ -161,6 +161,7 @@ class Role(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	status = models.ForeignKey(AccessLevelStatus)
 	description = models.CharField(max_length=100)
+	access_level = models.ForeignKey(AccessLevel)
 	def __unicode__(self):
 		return u'%s' % (self.name)  
        
