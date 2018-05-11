@@ -260,7 +260,7 @@ class System(Generator):
 		page_list = []
 		if role_permission.exists():
 			for permission in role_permission:
-				for page in permission.role_right.page:
+				for page in permission.role_right.page.all():
 					if page not in page_list: page_list.append(page)
 
 			this_page_inputs = this_page_inputs.filter(page__in=page_list)
