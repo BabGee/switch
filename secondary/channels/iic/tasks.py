@@ -257,22 +257,17 @@ class System(Generator):
 	    #Role Filters
 	    if gateway_profile.role:
 		role_permission = RolePermission.objects.filter(role=gateway_profile.role)
-		page_list = []
-		if role_permission.exists():
-			for permission in role_permission:
-				for page in permission.role_right.page.all():
-					if page not in page_list: page_list.append(page)
 
-			this_page_inputs = this_page_inputs.filter(page__in=page_list)
-
-	    '''
-	    if gateway_profile.role:
-		role_permission = RolePermission.objects.filter(role=gateway_profile.role)
-		if role_permission.exists():
-			this_page_inputs = this_page_inputs.filter(page__in=role_permission.role_right.page.all())
-			for permission in role_permission:
-				this_page_inputs = this_page_inputs.filter(Q(role_action=None)|Q(role_action=permission.role_action.all()))
-	    '''
+		pages = {}
+		for permission in role_permission:
+			for page in permission.role_right.page.all():
+				if page not in pages.keys():
+					pages[page] = []
+					for action in permission.role_action.all(): 
+						if action not in pages[page]: pages[page].append(action)
+		if pages:
+			query = reduce(operator.and_, ( Q(Q(page=k),Q(Q(role_action=None)|Q(role_action__in=v))) for k,v in pages.items() ))				
+			this_page_inputs = this_page_inputs.filter(query)
 
             gui['this_page_inputs'] = self.section_generator(payload, this_page_inputs, node_info)
             gui['all_pages'] = self.all_pages_generator(payload, this_page_inputs, node_info)
@@ -316,15 +311,17 @@ class System(Generator):
 	    #Role Filters
 	    if gateway_profile.role:
 		role_permission = RolePermission.objects.filter(role=gateway_profile.role)
-		page_list = []
-		if role_permission.exists():
-			for permission in role_permission:
-				for page in permission.role_right.page.all():
-					if page not in page_list: page_list.append(page)
 
-			this_page_inputs = this_page_inputs.filter(page__in=page_list)
-
-			#this_page_inputs = this_page_inputs.filter(Q(role_action=None)|Q(role_action=permission.role_action.all()))
+		pages = {}
+		for permission in role_permission:
+			for page in permission.role_right.page.all():
+				if page not in pages.keys():
+					pages[page] = []
+					for action in permission.role_action.all(): 
+						if action not in pages[page]: pages[page].append(action)
+		if pages:
+			query = reduce(operator.and_, ( Q(Q(page=k),Q(Q(role_action=None)|Q(role_action__in=v))) for k,v in pages.items() ))				
+			this_page_inputs = this_page_inputs.filter(query)
 
             gui['this_page_inputs'] = self.section_generator(payload, this_page_inputs, node_info)
 
