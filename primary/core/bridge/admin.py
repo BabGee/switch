@@ -116,6 +116,7 @@ class ActivityTransactionAdmin(admin.ModelAdmin):
                         'transaction_reference','currency','amount','charges','gateway','institution',\
                         'message','sends','ext_outbound_id',)
 admin.site.register(ActivityTransaction, ActivityTransactionAdmin)
+admin.site.register(Approval,ApprovalActivity,ApprovalActivityStatus)
 
 
 
