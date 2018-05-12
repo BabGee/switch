@@ -316,3 +316,59 @@ class ActivityTransaction(models.Model):
         def __unicode__(self):
                 return u'%s %s' % (self.activity_product, self.gateway_profile)
 
+
+class Approval(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	institution = models.ManyToManyField(Institution, blank=True)
+	gateway = models.ManyToManyField(Gateway, blank=True)
+	access_level = models.ManyToManyField(AccessLevel, blank=True)
+	trigger_service = models.ManyToManyField(Service)
+	service = models.ForeignKey(Service, related_name='approvals')
+	details = models.CharField(max_length=3840, default=json.dumps({}))
+	cut_off_command = models.ForeignKey(ServiceCommand, null=True, blank=True)
+	trigger = models.ManyToManyField(Trigger, blank=True)
+	def __unicode__(self):
+		return u'%s %s' % (self.id, self.service)
+	def institution_list(self):
+		return "\n".join([a.name for a in self.institution.all()])
+	def gateway_list(self):
+		return "\n".join([a.name for a in self.gateway.all()])
+	def access_level_list(self):
+		return "\n".join([a.name for a in self.access_level.all()])
+	def trigger_service_list(self):
+		return "\n".join([a.name for a in self.trigger_service.all()])
+
+
+class ApprovalActivityStatus(models.Model):
+	name = models.CharField(max_length=50) # CREATED APPROVED DENIED
+	description = models.CharField(max_length=200)
+	date_modified = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
+
+class ApprovalActivity(models.Model):
+	date_modified = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+
+	approval = models.ForeignKey(Approval)
+	status = models.ForeignKey(ApprovalActivityStatus)
+
+	gateway_profile = models.ForeignKey(GatewayProfile, related_name='requested_approvals')
+	gateway_profile_role = models.ForeignKey(Role, related_name='requested_approvals',blank=True,null=True)
+
+	approve_gateway_profile = models.ForeignKey(GatewayProfile, related_name='pending_approvals',blank=True,null=True)
+	approve_gateway_profile_role = models.ForeignKey(Role, related_name='pending_approvals',blank=True,null=True)
+
+	request = models.CharField(max_length=10240)
+	channel = models.ForeignKey(Channel)
+	response_status = models.ForeignKey(ResponseStatus)
+
+	gateway = models.ForeignKey(Gateway)
+	institution = models.ForeignKey(Institution, null=True, blank=True)
+
+	def __unicode__(self):
+		return u'%s %s' % (self.id, self.approval)

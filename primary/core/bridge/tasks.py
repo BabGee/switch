@@ -253,6 +253,160 @@ class System(Wrappers):
 		return payload
 
 
+	def approve_activity(self, payload, node_info):
+		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+		try:
+			activities = ApprovalActivity.objects.filter(pk=payload['approval_activity_pk'])
+
+			if activities.exists():
+				activity = activities[0]
+
+				activity_status = ApprovalActivityStatus.objects.get(name='APPROVED')
+				activity.status = activity_status
+				activity.approve_gateway_profile = gateway_profile
+
+				activity.save()
+
+				payload['trigger'] = 'approve_service%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
+
+
+			payload['response'] = "Activity Approval Logged. Wait to Process"
+			payload['response_status'] = '00'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Background Service Call: %s" % e)
+		return payload
+
+
+	def approve_service(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			activities = ApprovalActivity.objects.filter(pk=payload['approval_activity_pk'])
+
+			if activities.exists():
+				activity = activities[0]
+
+				# lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
+				# try:
+				# 	payload.update(json.loads(activity.request))  # Triggers removed in previous call so no need to append
+				# except:
+				# 	pass
+
+				# session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+				status = TransactionStatus.objects.get(name='CREATED')
+				response_status = ResponseStatus.objects.get(response='DEFAULT')
+
+				channel = Channel.objects.get(id=int(payload['chid']))
+				currency_code = payload['currency'] if 'currency' in payload.keys() and payload['currency']!='' else None
+				currency = Currency.objects.get(code=currency_code) if currency_code is not None  else None
+				amount = payload['amount'] if 'amount' in payload.keys() and payload['amount']!='' else None
+				charges = payload['charges'] if 'charges' in payload.keys() and payload['charges']!='' else None
+
+				request = payload.copy()
+				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
+				request = self.background_activity_payload(request)
+
+
+				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
+				b_activity = BackgroundServiceActivity(service=activity.approval.service,
+													 status=status,
+													 gateway_profile=activity.gateway_profile,
+													 request=activity.request,
+													 channel=channel,
+													 response_status=response_status,
+													 currency = currency,
+													 amount = amount,
+													 charges = charges,
+													 gateway=activity.gateway_profile.gateway,
+													 sends=0)
+
+				# activity.transaction_reference = payload['bridge__transaction_id'] if 'bridge__transaction_id' in payload.keys() else None
+				b_activity.scheduled_send = timezone.now()+timezone.timedelta(seconds=1)
+
+				if 'institution_id' in payload.keys():
+					b_activity.institution = Institution.objects.get(id=payload['institution_id'])
+
+				b_activity.save()
+
+				payload['response'] = "Activity Logged. Wait to Process"
+			else:
+				payload['response'] = 'No Activity Service Found'
+			#all are successes
+			payload['response_status'] = '00'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Background Service: %s" % e)
+		return payload
+
+	def approval_service(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+			approvals = Approval.objects.filter(Q(trigger_service__name=payload['SERVICE']),\
+										Q(gateway=gateway_profile.gateway)|Q(gateway=None))
+
+			if 'institution_id' in payload.keys():
+				approvals = approvals.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+
+			#Check if trigger Exists
+			if 'trigger' in payload.keys():
+				triggers = str(payload['trigger'].strip()).split(',')
+				lgr.info('BackgroundService Triggers: %s' % triggers)
+				trigger_list = Trigger.objects.filter(name__in=triggers)
+				approvals = approvals.filter(Q(trigger__in=trigger_list)|Q(trigger=None)).distinct()
+				#Eliminate none matching trigger list
+				for i in approvals:
+					if i.trigger.all().exists():
+						if i.trigger.all().count() == trigger_list.count():
+							if False in [i.trigger.filter(id=t.id).exists() for t in trigger_list.all()]:
+								lgr.info('Non Matching: %s' % i)
+								approvals = approvals.filter(~Q(id=i.id))
+						else:
+							lgr.info('Non Matching: %s' % i)
+							approvals = approvals.filter(~Q(id=i.id))
+			else:
+				approvals = approvals.filter(Q(trigger=None))
+
+			if approvals.exists():
+				status = ApprovalActivityStatus.objects.get(name='CREATED')
+				channel = Channel.objects.get(id=int(payload['chid']))
+
+
+				request = payload.copy()
+				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
+				request = self.background_activity_payload(request)
+
+				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
+				try: request.update(json.loads(approvals[0].details)) #Triggers removed in previous call so no need to append
+				except: pass
+
+				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
+				activity = ApprovalActivity(service=approvals[0].service,
+											status=status,
+											gateway_profile=session_gateway_profile,
+											request=json.dumps(request),
+											channel=channel,
+											gateway=session_gateway_profile.gateway,
+											approval=approvals[0])
+
+				if 'institution_id' in payload.keys():
+					activity.institution = Institution.objects.get(id=payload['institution_id'])
+
+				activity.save()
+
+				payload['response'] = "Activity Logged. Wait to Process"
+			else:
+				payload['response'] = 'No Activity Service Found'
+			#all are successes
+			payload['response_status'] = '00'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Background Service: %s" % e)
+		return payload
+
+
 	def check_transaction_auth(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
