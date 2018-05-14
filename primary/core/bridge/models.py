@@ -357,6 +357,7 @@ class ApprovalActivity(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	approval = models.ForeignKey(Approval)
 	status = models.ForeignKey(ApprovalActivityStatus)
+	affected_gateway_profile = models.ForeignKey(GatewayProfile, related_name='affecting_approvals')
 	requestor_gateway_profile = models.ForeignKey(GatewayProfile, related_name='requested_approvals')
 	approver_gateway_profile = models.ForeignKey(GatewayProfile, related_name='pending_approvals',blank=True,null=True)
 	request = models.CharField(max_length=10240)
