@@ -383,8 +383,7 @@ class System(Wrappers):
 				except: pass
 
 				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
-				activity = ApprovalActivity(service=approvals[0].service,
-											status=status,
+				activity = ApprovalActivity(status=status,
 											gateway_profile=session_gateway_profile,
 											request=json.dumps(request),
 											channel=channel,
