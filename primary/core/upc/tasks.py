@@ -1825,7 +1825,7 @@ class System(Wrappers):
 				if user.profile.postal_code: payload['postal_code'] = user.profile.postal_code
 
 				if user.profile.dob: payload['dob'] = user.profile.dob.isoformat()
-
+				if user.profile.tax_pin: payload['tax_pin'] = user.profile.tax_pin
 
 				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
 					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
@@ -1873,6 +1873,7 @@ class System(Wrappers):
 				if user.profile.address: payload['address'] = user.profile.address
 				if user.profile.postal_code: payload['postal_code'] = user.profile.postal_code
 				if user.profile.dob: payload['dob'] = user.profile.dob.isoformat()
+				if user.profile.tax_pin: payload['tax_pin'] = user.profile.tax_pin
 
 				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
 					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
@@ -1929,6 +1930,7 @@ class System(Wrappers):
 				if user.profile.address: payload['address'] = user.profile.address
 				if user.profile.postal_code: payload['postal_code'] = user.profile.postal_code
 				if user.profile.dob: payload['dob'] = user.profile.dob.isoformat()
+				if user.profile.tax_pin: payload['tax_pin'] = user.profile.tax_pin
 
 				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
 					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
