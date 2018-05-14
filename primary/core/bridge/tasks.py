@@ -263,7 +263,7 @@ class System(Wrappers):
 
 				activity_status = ApprovalActivityStatus.objects.get(name='APPROVED')
 				activity.status = activity_status
-				activity.approve_gateway_profile = gateway_profile
+				activity.approver_gateway_profile = gateway_profile
 
 				activity.save()
 
@@ -385,7 +385,7 @@ class System(Wrappers):
 				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
 				activity = ApprovalActivity()
 				activity.status=status
-				activity.gateway_profile=session_gateway_profile
+				activity.requestor_gateway_profile = session_gateway_profile
 				activity.request=json.dumps(request)
 				activity.channel=channel
 				activity.gateway=session_gateway_profile.gateway
