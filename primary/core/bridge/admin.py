@@ -116,7 +116,16 @@ class ActivityTransactionAdmin(admin.ModelAdmin):
                         'transaction_reference','currency','amount','charges','gateway','institution',\
                         'message','sends','ext_outbound_id',)
 admin.site.register(ActivityTransaction, ActivityTransactionAdmin)
-admin.site.register([Approval,ApprovalActivity,ApprovalActivityStatus])
 
+class ApprovalAdmin(admin.ModelAdmin):
+        list_display = ('id','institution_list','gateway_list','access_level_list',\
+			'service','details','cut_off_command','trigger_service_list','requestor','approver',)
+admin.site.register(Approval, ApprovalAdmin)
+
+
+class ApprovalActivityAdmin(admin.ModelAdmin):
+        list_display = ('id','approval','status','requestor_gateway_profile','approver_gateway_profile',\
+			'request','channel','response_status','gateway','institution',)
+admin.site.register(ApprovalActivity, ApprovalActivityAdmin)
 
 

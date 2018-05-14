@@ -383,12 +383,13 @@ class System(Wrappers):
 				except: pass
 
 				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
-				activity = ApprovalActivity(status=status,
-											gateway_profile=session_gateway_profile,
-											request=json.dumps(request),
-											channel=channel,
-											gateway=session_gateway_profile.gateway,
-											approval=approvals[0])
+				activity = ApprovalActivity()
+				activity.status=status
+				activity.gateway_profile=session_gateway_profile
+				activity.request=json.dumps(request)
+				activity.channel=channel
+				activity.gateway=session_gateway_profile.gateway
+				activity.approval=approvals[0]
 
 				if 'institution_id' in payload.keys():
 					activity.institution = Institution.objects.get(id=payload['institution_id'])
