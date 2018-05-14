@@ -56,26 +56,22 @@ class Wrappers:
 
 	def background_activity_payload(self, payload):
 		new_payload, transaction, count = {}, None, 1
+
+		exempt_keys = ['card','credentials','new_pin','validate_pin','confirm_password','password','pin',\
+					   'access_level','response_status','sec_hash','ip_address','service' ,'lat','lng',\
+					   'chid','session','csrf_token','csrfmiddlewaretoken' , 'gateway_host' ,'gateway_profile' ,\
+					   'transaction_timestamp' ,'action_id' , 'bridge__transaction_id','merchant_data', 'signedpares',\
+					   'gpid','sec','fingerprint','ext_product_id','vpc_securehash','currency','amount',\
+					   'institution_id','response','input','trigger','send_minutes_period','send_hours_period',\
+					   'send_days_period','send_years_period']
+
 		for k, v in payload.items():
 			try:
 				value = json.loads(v)
 				if isinstance(value, list) or isinstance(value, dict):continue
 			except: pass
 			key = k.lower()
-			if 'card' not in key and 'credentials' not in key and 'new_pin' not in key and \
-			 'validate_pin' not in key and 'password' not in key and 'confirm_password' not in key and \
-			 'pin' not in key and 'access_level' not in key and \
-			 'response_status' not in key and 'sec_hash' not in key and 'ip_address' not in key and \
-			 'service' not in key and key <> 'lat' and key <> 'lng' and \
-			 key <> 'chid' and 'session' not in key and 'csrf_token' not in key and \
-			 'csrfmiddlewaretoken' not in key and 'gateway_host' not in key and \
-			 'gateway_profile' not in key and 'transaction_timestamp' not in key and \
-			 'action_id' not in key and 'bridge__transaction_id' not in key and \
-			 'merchant_data' not in key and 'signedpares' not in key and \
-			 key <> 'gpid' and key <> 'sec' and  key <> 'fingerprint' and \
-			 key not in ['ext_product_id','vpc_securehash','currency','amount'] and \
-			 'institution_id' not in key and key <> 'response' and key <> 'input' and key <> 'trigger' and \
-			 key not in ['send_minutes_period','send_hours_period','send_days_period','send_years_period']:
+			if key not in exempt_keys:
 				if count <= 100:
 					new_payload[str(k)[:30] ] = str(v)[:500]
 				else:
