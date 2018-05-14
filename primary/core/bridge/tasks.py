@@ -382,6 +382,7 @@ class System(Wrappers):
 				activity = ApprovalActivity()
 				activity.status=status
 				activity.requestor_gateway_profile = gateway_profile
+				activity.affected_gateway_profile = session_gateway_profile
 				activity.request=json.dumps(request)
 				activity.channel=channel
 				activity.gateway=gateway_profile.gateway
