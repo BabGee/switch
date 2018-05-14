@@ -295,7 +295,7 @@ class System(Wrappers):
 				# session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 
 				status = TransactionStatus.objects.get(name='CREATED')
-				response_status = ResponseStatus.objects.get(response='DEFAULT')
+				#response_status = ResponseStatus.objects.get(response='DEFAULT')
 
 				channel = Channel.objects.get(id=int(payload['chid']))
 				currency_code = payload['currency'] if 'currency' in payload.keys() and payload['currency']!='' else None
@@ -314,7 +314,7 @@ class System(Wrappers):
 													 gateway_profile=activity.requestor_gateway_profile,
 													 request=activity.request,
 													 channel=channel,
-													 response_status=response_status,
+													 response_status=activity.response_status,
 													 currency = currency,
 													 amount = amount,
 													 charges = charges,
@@ -372,7 +372,7 @@ class System(Wrappers):
 			if approvals.exists():
 				status = ApprovalActivityStatus.objects.get(name='CREATED')
 				channel = Channel.objects.get(id=int(payload['chid']))
-
+				response_status = ResponseStatus.objects.get(response='DEFAULT')
 
 				request = payload.copy()
 				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
@@ -390,6 +390,7 @@ class System(Wrappers):
 				activity.channel=channel
 				activity.gateway=gateway_profile.gateway
 				activity.approval=approvals[0]
+				activity.response_status = response_status
 
 				if 'institution_id' in payload.keys():
 					activity.institution = Institution.objects.get(id=payload['institution_id'])
