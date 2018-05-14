@@ -311,14 +311,14 @@ class System(Wrappers):
 				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
 				b_activity = BackgroundServiceActivity(service=activity.approval.service,
 													 status=status,
-													 gateway_profile=activity.gateway_profile,
+													 gateway_profile=activity.requestor_gateway_profile,
 													 request=activity.request,
 													 channel=channel,
 													 response_status=response_status,
 													 currency = currency,
 													 amount = amount,
 													 charges = charges,
-													 gateway=activity.gateway_profile.gateway,
+													 gateway=activity.requestor_gateway_profile.gateway,
 													 sends=0)
 
 				# activity.transaction_reference = payload['bridge__transaction_id'] if 'bridge__transaction_id' in payload.keys() else None
@@ -385,10 +385,10 @@ class System(Wrappers):
 				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
 				activity = ApprovalActivity()
 				activity.status=status
-				activity.requestor_gateway_profile = session_gateway_profile
+				activity.requestor_gateway_profile = gateway_profile
 				activity.request=json.dumps(request)
 				activity.channel=channel
-				activity.gateway=session_gateway_profile.gateway
+				activity.gateway=gateway_profile.gateway
 				activity.approval=approvals[0]
 
 				if 'institution_id' in payload.keys():
