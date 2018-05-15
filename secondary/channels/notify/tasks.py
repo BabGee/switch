@@ -282,7 +282,7 @@ class System(Wrappers):
 
 			# notification_template.description = payload['template_heading']
 
-			if notification_template.template_file.file_path:
+			if notification_template.template_file and notification_template.template_file.file_path:
 				payload['template_file'] = notification_template.template_file.file_path.url
 
 			payload['template_products'] = ','.join([product.id for product in notification_template.product.all()])
