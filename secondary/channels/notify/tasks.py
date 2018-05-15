@@ -214,6 +214,88 @@ class System(Wrappers):
 
 		return payload
 
+	def edit_notification_template(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			notification_template = NotificationTemplate.objects.get(pk=payload['notification_template_id'])
+
+			notification_template.template_heading = payload['template_heading']
+			notification_template.template_message = payload['template_message']
+
+			# notification_template.description = payload['template_heading']
+
+
+			##########################
+			media_temp = settings.MEDIA_ROOT + '/tmp/uploads/'
+
+			if 'attachment' in payload.keys() and payload['attachment'] not in [None, '']:
+				filename = payload['attachment']
+
+				if notification_template.template_file:
+					template_file = notification_template.template_file
+				else:
+					template_file = TemplateFile()
+
+					template_file.name = notification_template.template_heading
+					template_file.description = notification_template.template_heading
+					template_file.save()
+					notification_template.template_file = template_file
+
+				tmp_file = media_temp + str(filename)
+				with open(tmp_file, 'r') as f:
+					template_file.file_path.save(filename, File(f), save=False)
+				f.close()
+			#######################
+
+			# notification_template.trigger = None
+			notification_template.save()
+
+			n_p_ids = [np for np in payload['notification_products'].split(',') if np]
+			notification_products = NotificationProduct.objects.filter(id__in=n_p_ids)
+
+			new_levels = n_p_ids
+			current_levels = notification_template.product.values_list('pk', flat=True)
+
+			remove_levels = list(set(current_levels).difference(new_levels))
+			add_levels = list(set(new_levels).difference(current_levels))
+
+			notification_template.product.add(*NotificationProduct.objects.filter(pk__in=add_levels))
+			notification_template.product.remove(*NotificationProduct.objects.filter(pk__in=remove_levels))
+
+			payload['response'] = 'Template Saved'
+			payload['response_status'] = '00'
+
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Updating Notification Template: %s" % e)
+
+		return payload
+
+	def notification_template_details(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			notification_template = NotificationTemplate.objects.get(pk=payload['notification_template_id'])
+			payload['template_heading'] = notification_template.template_heading
+			payload['template_message'] = notification_template.template_message
+
+			# notification_template.description = payload['template_heading']
+
+			if notification_template.template_file.file_path:
+				payload['template_file'] = notification_template.template_file.file_path.url
+
+			payload['template_products'] = ','.join([product.id for product in notification_template.product.all()])
+
+			payload['response'] = 'Template Saved'
+			payload['response_status'] = '00'
+
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Updating Notification Template: %s" % e)
+
+		return payload
+
 	def add_notification_contact(self, payload, node_info):
 		try:
 		
