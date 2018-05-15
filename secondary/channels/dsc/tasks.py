@@ -190,6 +190,7 @@ class Wrappers:
             gateway_filters = data.query.gateway_filters
             gateway_profile_filters = data.query.gateway_profile_filters
             profile_filters = data.query.profile_filters
+            role_filters = data.query.role_filters
             list_filters = data.query.list_filters
 
             values = data.query.values
@@ -215,6 +216,7 @@ class Wrappers:
             gateway_filter_data = {}
             gateway_profile_filter_data = {}
             profile_filter_data = {}
+            role_filter_data = {}
 	    list_filter_data = {}
 
 	    case_values_data = {}
@@ -494,6 +496,20 @@ class Wrappers:
                     profile_query = reduce(operator.and_, (Q(k) for k in profile_filter_data.items()))
                     report_list = report_list.filter(profile_query)
 
+	    #lgr.info('Role Filters Report List Count: %s' % report_list.count())
+            if role_filters not in ['', None]:
+                for f in role_filters.split("|"):
+		    #MQTT doesn't filter institution for push notifications
+		    if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+			pass
+		    else:
+			if f not in ['',None]: role_filter_data[f] = gateway_profile.role
+
+                if len(role_filter_data):
+                    role_query = reduce(operator.and_, (Q(k) for k in role_filter_data.items()))
+                    report_list = report_list.filter(role_query)
+
+
 
 	    join_query = DataListJoinQuery.objects.filter(query=data.query,join_inactive=False)
 
@@ -509,6 +525,7 @@ class Wrappers:
 
 			join_gateway_profile_filters = join.join_gateway_profile_filters
 			join_profile_filters = join.join_profile_filters
+			join_role_filters = join.join_role_filters
 			join_fields = join.join_fields
 	            	join_institution_filters = join.join_institution_filters
 	            	join_institution_not_filters = join.join_institution_not_filters
@@ -527,6 +544,7 @@ class Wrappers:
 			join_gateway_filters_data = {}
 			join_gateway_profile_filters_data  = {}
 			join_profile_filter_data = {}
+			join_role_filter_data = {}
 			join_fields_data = {}
             		join_institution_filter_data = {}
             		join_institution_not_filter_data = {}
@@ -620,6 +638,18 @@ class Wrappers:
 				if len(join_profile_filter_data):
 					profile_query = reduce(operator.and_, (Q(k) for k in join_profile_filter_data.items()))
 					join_report_list = join_report_list.filter(profile_query)
+
+
+			if join_role_filters not in ['', None]:
+				for f in join_role_filters.split("|"):
+					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+						pass
+					else:
+						if f not in ['',None]: join_role_filter_data[f] = gateway_profile.role
+
+				if len(join_role_filter_data):
+					role_query = reduce(operator.and_, (Q(k) for k in join_role_filter_data.items()))
+					join_report_list = join_report_list.filter(role_query)
 
 	    		if join_institution_filters not in ['',None]:
 		                for f in join_institution_filters.split("|"):
