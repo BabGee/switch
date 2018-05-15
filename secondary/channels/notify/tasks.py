@@ -37,6 +37,7 @@ import operator, string
 from django.core.mail import EmailMultiAlternatives
 from primary.core.upc.tasks import Wrappers as UPCWrappers
 import numpy as np
+from django.conf import settings
 
 from primary.core.administration.views import WebService
 from .models import *
@@ -159,6 +160,56 @@ class System(Wrappers):
 		except Exception, e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Updating Notification Template: %s" % e)
+		return payload
+
+	def create_notification_template(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			service = Service.objects.get(name='TEMPLATE SMS')
+			status = TemplateStatus.objects.get(name='ACTIVE')
+			notification_product = NotificationProduct.objects.get(pk=payload['notification_product_id'])
+
+			notification_template = NotificationTemplate()
+			notification_template.template_heading = payload['template_heading']
+			notification_template.template_message = payload['template_message']
+			notification_template.product = notification_product
+			notification_template.service = service
+			notification_template.description = payload['template_heading']
+			notification_template.status = status
+
+
+			template_file = TemplateFile()
+
+			template_file.name = notification_template.template_heading
+			template_file.description = notification_template.template_heading
+
+			##########################
+			media_temp = settings.MEDIA_ROOT + '/tmp/uploads/'
+
+			if 'attachment' in payload.keys() and payload['attachment'] not in [None, '']:
+				filename = payload['attachment']
+
+				template_file.save()
+
+				tmp_file = media_temp + str(filename)
+				with open(tmp_file, 'r') as f:
+					template_file.file_path.save(filename, File(f), save=False)
+				f.close()
+			#######################
+
+			notification_template.template_file = template_file
+			# notification_template.trigger = None
+			notification_template.save()
+
+
+			payload['response'] = 'Template Saved'
+			payload['response_status'] = '00'
+
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Updating Notification Template: %s" % e)
+
 		return payload
 
 	def add_notification_contact(self, payload, node_info):
