@@ -309,6 +309,7 @@ class System(Generator):
                 prefetch_related('trigger', 'page', 'access_level', 'institution', 'input_variable', 'page_input_group',
                                  'gateway', 'channel', 'payment_method')
 
+	    '''
 	    #Role Filters
 	    if gateway_profile.role:
 		role_permission = RolePermission.objects.filter(role=gateway_profile.role)
@@ -324,7 +325,7 @@ class System(Generator):
 			query = reduce(operator.or_, ( Q(Q(page=k),Q(Q(role_action=None)|Q(role_action__in=v))) for k,v in pages.items() ))
 			#lgr.info('Query: %s' % query)
 			this_page_inputs = this_page_inputs.filter(query)
-
+	    '''
             gui['this_page_inputs'] = self.section_generator(payload, this_page_inputs, node_info)
 
             payload['response'] = gui
