@@ -32,15 +32,15 @@ class PageAdmin(admin.ModelAdmin):
 admin.site.register(Page, PageAdmin)
 
 class RoleActionAdmin(admin.ModelAdmin):
-		list_display = ('name','description',)
+		list_display = ('id','name','description',)
 admin.site.register(RoleAction, RoleActionAdmin)
 
 class RoleRightAdmin(admin.ModelAdmin):
-		list_display = ('name','description','page_list',)
+		list_display = ('id','name','description','page_list',)
 admin.site.register(RoleRight, RoleRightAdmin)
 
 class RolePermissionAdmin(admin.ModelAdmin):
-		list_display = ('role','role_right','role_action_list',)
+		list_display = ('id','role','role_right','role_action_list',)
 admin.site.register(RolePermission, RolePermissionAdmin)
 
 class PageInputStatusAdmin(admin.ModelAdmin):
