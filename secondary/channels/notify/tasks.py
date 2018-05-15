@@ -168,7 +168,9 @@ class System(Wrappers):
 
 			service = Service.objects.get(name='TEMPLATE SMS')
 			status = TemplateStatus.objects.get(name='ACTIVE')
-			notification_products = NotificationProduct.objects.filter(id__in=payload['notification_products'].split(','))
+
+			n_p_ids = [np for np in payload['notification_products'].split(',') if np ]
+			notification_products = NotificationProduct.objects.filter(id__in=n_p_ids)
 
 			notification_template = NotificationTemplate()
 			notification_template.template_heading = payload['template_heading']
@@ -184,13 +186,12 @@ class System(Wrappers):
 			template_file.name = notification_template.template_heading
 			template_file.description = notification_template.template_heading
 
+			template_file.save()
 			##########################
 			media_temp = settings.MEDIA_ROOT + '/tmp/uploads/'
 
 			if 'attachment' in payload.keys() and payload['attachment'] not in [None, '']:
 				filename = payload['attachment']
-
-				template_file.save()
 
 				tmp_file = media_temp + str(filename)
 				with open(tmp_file, 'r') as f:
