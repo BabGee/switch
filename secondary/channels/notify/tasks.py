@@ -168,12 +168,12 @@ class System(Wrappers):
 
 			service = Service.objects.get(name='TEMPLATE SMS')
 			status = TemplateStatus.objects.get(name='ACTIVE')
-			notification_product = NotificationProduct.objects.get(pk=payload['notification_product_id'])
+			notification_products = NotificationProduct.objects.filter(id__in=payload['notification_products'].split(','))
 
 			notification_template = NotificationTemplate()
 			notification_template.template_heading = payload['template_heading']
 			notification_template.template_message = payload['template_message']
-			notification_template.product = notification_product
+
 			notification_template.service = service
 			notification_template.description = payload['template_heading']
 			notification_template.status = status
@@ -202,6 +202,7 @@ class System(Wrappers):
 			# notification_template.trigger = None
 			notification_template.save()
 
+			notification_template.product.add(*notification_products)
 
 			payload['response'] = 'Template Saved'
 			payload['response_status'] = '00'
