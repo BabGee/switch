@@ -275,30 +275,26 @@ class System(Wrappers):
 	def notification_template_details(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			lgr.info('Got Here')
 			notification_template = NotificationTemplate.objects.get(pk=payload['notification_template_id'])
 			payload['template_heading'] = notification_template.template_heading
 			payload['template_message'] = notification_template.template_message
 
-			lgr.info('Got Here')
 			# notification_template.description = payload['template_heading']
 
 			if notification_template.template_file and notification_template.template_file.file_path:
 				payload['template_file'] = notification_template.template_file.file_path.url
 
-			lgr.info('Got Here')
 			#payload['template_products'] = ','.join([product.id for product in notification_template.product.all()])
 			payload['template_products'] = json.dumps([dict(id=n.id, name=n.name) for n in notification_template.product.all()])
 
-			lgr.info('Got Here')
-			payload['response'] = 'Template Saved'
+			payload['response'] = 'Template Details Captured'
 			payload['response_status'] = '00'
 
 		except Exception, e:
 
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
-			lgr.info("Error on Updating Notification Template: %s" % e)
+			lgr.info("Error on Notification Template Details: %s" % e)
 
 		return payload
 
