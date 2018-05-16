@@ -681,17 +681,28 @@ class System(Wrappers):
 				notification_product=notification_product.filter(keyword__iexact=payload['keyword'])
 
 			lgr.info('Notification Product: %s ' % notification_product)
+
+
+			if 'notification_template_id' in payload.keys():
+				notification_template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
+				notification_product = notification_product.filter(id__in=[t.id for t in notification_template.product.all()])
+			else:
+				#get notification_template using service
+				notification_template_list = NotificationTemplate.objects.filter(product__in=notification_product,service__name=payload['SERVICE'])
+
+				notification_template_list = self.trigger_notification_template(payload,notification_template_list)
+				notification_template = notification_template_list[0]
+
+
+
+			lgr.info('Notification Product: %s ' % notification_product)
+
 			if notification_product.exists():
 				#Construct Message to send
 				if 'message' not in payload.keys():
-					#get notification_template using service
-					notification_template = NotificationTemplate.objects.filter(product=notification_product[0],service__name=payload['SERVICE'])
-
-					notification_template = self.trigger_notification_template(payload,notification_template)
-
-					if notification_template.exists():
-						payload['notification_template_id'] = notification_template[0].id
-						message = notification_template[0].template_message
+					if notification_template:
+						payload['notification_template_id'] = notification_template.id
+						message = notification_template.template_message
 						variables = re.findall("\[(.*?)\]", message)
 						for v in variables:
 							variable_key, variable_val = None, None
