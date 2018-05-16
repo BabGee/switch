@@ -3506,7 +3506,6 @@ class System(Wrappers):
         return payload
 
 
-class Trade(System):
     def upload_file(self, payload, node_info):
         try:
             gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
@@ -3546,6 +3545,8 @@ class Trade(System):
         return payload
 
 
+class Trade(System):
+    pass
 class Payments(System):
     pass
 
