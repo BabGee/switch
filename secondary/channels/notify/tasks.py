@@ -691,7 +691,7 @@ class System(Wrappers):
 				notification_template_list = NotificationTemplate.objects.filter(product__in=notification_product,service__name=payload['SERVICE'])
 
 				notification_template_list = self.trigger_notification_template(payload,notification_template_list)
-				notification_template = notification_template_list[0]
+				notification_template = notification_template_list[0] if notification_template_list.exists() else None
 
 
 
