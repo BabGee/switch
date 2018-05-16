@@ -280,7 +280,7 @@ class System(Wrappers):
 			if notification_template.template_file and notification_template.template_file.file_path:
 				payload['template_file'] = notification_template.template_file.file_path.url
 
-			notification_template_list = NotificationTemplate.ojects.filter(Q(notification__code__institution=gateway_profile.institution)|Q(notification__code__institution=None),\
+			notification_template_list = NotificationTemplate.objects.filter(Q(notification__code__institution=gateway_profile.institution)|Q(notification__code__institution=None),\
 							Q(notification__code__gateway=gateway_profile.gateway)|Q(notification__code__gateway=None))
 
 			#payload['template_products'] = ','.join([product.id for product in notification_template.product.all()])
