@@ -180,27 +180,28 @@ class System(Wrappers):
 			notification_template.description = payload['template_heading']
 			notification_template.status = status
 
-
-			template_file = TemplateFile()
-
-			template_file.name = notification_template.template_heading
-			template_file.description = notification_template.template_heading
-
-			template_file.save()
-			##########################
-			media_temp = settings.MEDIA_ROOT + '/tmp/uploads/'
-
 			if 'attachment' in payload.keys() and payload['attachment'] not in [None, '']:
+
+				template_file = TemplateFile()
+
+				template_file.name = notification_template.template_heading
+				template_file.description = notification_template.template_heading
+
+				template_file.save()
+				##########################
+				media_temp = settings.MEDIA_ROOT + '/tmp/uploads/'
+
+
 				filename = payload['attachment']
 
 				tmp_file = media_temp + str(filename)
 				with open(tmp_file, 'r') as f:
 					template_file.file_path.save(filename, File(f), save=False)
 				f.close()
-			#######################
+				#######################
+				notification_template.template_file = template_file
 
-			notification_template.template_file = template_file
-			# notification_template.trigger = None
+
 			notification_template.save()
 
 			notification_template.product.add(*notification_products)
@@ -231,16 +232,12 @@ class System(Wrappers):
 
 			if 'attachment' in payload.keys() and payload['attachment'] not in [None, '']:
 				filename = payload['attachment']
+				template_file = TemplateFile()
 
-				if notification_template.template_file:
-					template_file = notification_template.template_file
-				else:
-					template_file = TemplateFile()
-
-					template_file.name = notification_template.template_heading
-					template_file.description = notification_template.template_heading
-					template_file.save()
-					notification_template.template_file = template_file
+				template_file.name = notification_template.template_heading
+				template_file.description = notification_template.template_heading
+				template_file.save()
+				notification_template.template_file = template_file
 
 				tmp_file = media_temp + str(filename)
 				with open(tmp_file, 'r') as f:
@@ -248,7 +245,6 @@ class System(Wrappers):
 				f.close()
 			#######################
 
-			# notification_template.trigger = None
 			notification_template.save()
 
 			n_p_ids = [np for np in payload['notification_products'].split(',') if np]
