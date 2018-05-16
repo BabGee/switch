@@ -291,6 +291,8 @@ class System(Wrappers):
 			payload['response_status'] = '00'
 
 		except Exception, e:
+
+			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on Updating Notification Template: %s" % e)
 
