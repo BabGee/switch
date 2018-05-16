@@ -143,7 +143,7 @@ class System(Wrappers):
 			else:
 				gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 				notification_template = NotificationTemplate.objects.filter(product__id=payload['notification_product_id'],\
-							service__name='TEMPLATE SMS', status__name='ACTIVE')
+							service__name='TEMPLATE NOTIFICATION', status__name='ACTIVE')
 
 				notification_template = self.trigger_notification_template(payload,notification_template)
 
@@ -166,7 +166,7 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			service = Service.objects.get(name='TEMPLATE SMS')
+			service = Service.objects.get(name='TEMPLATE NOTIFICATION')
 			status = TemplateStatus.objects.get(name='ACTIVE')
 
 			n_p_ids = [np for np in payload['notification_products'].split(',') if np ]
