@@ -287,7 +287,8 @@ class System(Wrappers):
 				payload['template_file'] = notification_template.template_file.file_path.url
 
 			lgr.info('Got Here')
-			payload['template_products'] = ','.join([product.id for product in notification_template.product.all()])
+			#payload['template_products'] = ','.join([product.id for product in notification_template.product.all()])
+			payload['template_products'] = json.dumps([dict(id=n.id, name=n.name) for n in notification_template.product.all()])
 
 			lgr.info('Got Here')
 			payload['response'] = 'Template Saved'
