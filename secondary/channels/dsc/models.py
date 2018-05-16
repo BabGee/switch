@@ -58,8 +58,8 @@ class DataListCaseQuery(models.Model):
         date_modified  = models.DateTimeField(auto_now=True)
         date_created = models.DateTimeField(auto_now_add=True)
         query = models.ForeignKey(DataListQuery)
-	case_name = models.CharField(max_length=128, blank=True, null=True)
-	case_values = models.CharField(max_length=2048, help_text='name%field%value%newvalue|')
+	case_name = models.CharField(max_length=128)
+	case_values = models.CharField(max_length=2048, help_text='field%value%newvalue|')
         case_default_value = models.CharField(max_length=128)
         case_inactive = models.BooleanField(default=False)
         def __unicode__(self):
