@@ -947,13 +947,13 @@ class Wrappers:
 	        case_values = case.case_values
 	        case_default_value = case.case_default_value
 		case_when = []
+
+		args.append(case_name.strip())
+		params['cols'].append({"label": case_name.strip(), "type": "string", "value": case_name.strip()})
+
             	for i in case_values.split('|'):
        	        	try:case_field, case_value, case_newvalue = i.split('%')
 			except: continue
-
-			args.append(case_name.strip())
-			params['cols'].append({"label": case_name.strip(), "type": "string", "value": case_name.strip()})
-
 			case_data = {}
 
 			case_data[case_field.strip()] =  case_value
