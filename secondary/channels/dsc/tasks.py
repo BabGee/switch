@@ -45,6 +45,7 @@ from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core import serializers
 
+from primary.core.upc.tasks import Wrappers as UPCWrappers
 from secondary.channels.dsc.models import *
 
 lgr = logging.getLogger('secondary.channels.dsc')
@@ -3600,20 +3601,11 @@ def process_file_upload_activity(payload):
 
                         try:
                             valid = False
-                            if 'email' in payload.keys():
-                                if Wrappers().validateEmail(payload['email']):
-                                    valid = True
-                                else:
-                                    del payload['email']
+                            if 'email' in payload.keys() and Wrappers().validateEmail(payload['email']):
+				valid = True
 
-                            if 'msisdn' in payload.keys():
-                                payload["msisdn"] = '+%s' % payload["msisdn"] if '+' not in payload["msisdn"] else \
-                                    payload["msisdn"]
-                                pr = re.compile(r'^\+\d{9,15}$')
-                                if pr.match(payload['msisdn']):
-                                    valid = True
-                                else:
-                                    del payload['msisdn']
+                            if 'msisdn' in payload.keys() and UPCWrappers().get_msisdn(payload):
+				valid = True
 
                             if valid:
                                 try:
