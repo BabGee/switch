@@ -286,7 +286,7 @@ class System(Wrappers):
 
 			#payload['template_products'] = ','.join([product.id for product in notification_template.product.all()])
 
-			payload['template_products'] = json.dumps([dict(id=t.id, name=t.name, selected=notification_template.filter(id=t.id).exists()) for t in notification_template_list])
+			payload['template_products'] = json.dumps([dict(id=t.id, name=t.name, selected=notification_template.product.filter(id=t.id).exists()) for t in notification_template_list])
 
 			payload['response'] = 'Template Details Captured'
 			payload['response_status'] = '00'
