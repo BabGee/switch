@@ -94,8 +94,9 @@ class Interface(Authorize, ServiceCall):
 						break
 					count = count+1
 				'''
-				payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value) ), un_payload.items()))
+				#payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value) ), un_payload.items()))
 
+				payload = dict(map(lambda (key, value):(string.lower(key), value ), un_payload.items()))
 
 				'''#RISK IN REVIEW
 				for key, value in un_payload.items():
