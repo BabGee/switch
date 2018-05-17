@@ -201,40 +201,32 @@ class System(Wrappers):
 	def payment_notification(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			reference = payload['reference'].strip().replace(' ','') if 'reference' in payload.keys() else ""
-			reference_list = reference.split("-")
+			reference = payload['reference'].strip() if 'reference' in payload.keys() else ""
+
 			institution_incoming_service, institution = None, None
 			lgr.info('Payment Notification')
-			if len(reference_list)==2:
-
-				lgr.info('Payment Notification| Ref List')
-				#order, institution does not need a service as purchase order items have services
-				keyword = reference_list[0]
-				lgr.info('Keyword: %s' % keyword)
-				#Capture Incoming Service
-				institution_incoming_service_list = InstitutionIncomingService.objects.filter(keyword__iexact=keyword)
-				lgr.info('Incoming Service List: %s ' % institution_incoming_service_list)
-				if institution_incoming_service_list.exists():
-					enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
-										record=reference)
-
-					lgr.info('Enrollment: %s' % enrollment)
-
-					if enrollment.exists():
-						institution_incoming_service = institution_incoming_service_list[0]
-			else:
-
-				lgr.info('Payment Notification | Ref')
-				if reference not in ['', None]:
-					keyword = reference[:4]
-
-					institution_incoming_service_list = InstitutionIncomingService.objects.filter(keyword__iexact=keyword)
-					if institution_incoming_service_list.exists():
-						enrollment = Enrollment.objects.filter(enrollment_type__product_item=institution_incoming_service_list[0].product_item,\
-											record=reference)
-						if enrollment.exists():
-							institution_incoming_service = institution_incoming_service_list[0]
-
+			keyword = reference[:4]
+			institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(keyword__iexact=keyword)|Q(keyword__in=['',None]))
+			purchase_order = PurchaseOrder.objects.filter(reference__iexact=reference, status__name='UNPAID')
+			if institution_incoming_service_list.exists() and institution_incoming_service_list.count() == 1:
+				institution_incoming_service = institution_incoming_service_list[0]
+				if institution_incoming_service and institution_incoming_service.process_order == True:
+					if purchase_order.exists():pass #process_order=True - Only Process where order exists
+					else: institution_incoming_service = None
+				elif institution_incoming_service and institution_incoming_service.process_order == False:
+					if purchase_order.exists(): institution_incoming_service = None
+					else: pass #process_order=False - Only Process where order DOES NOT exist
+				else: pass #process all
+			elif institution_incoming_service_list.exists() and institution_incoming_service_list.count() > 1:
+				institution_incoming_service_list = institution_incoming_service_list.filter(keyword__in=['',None])
+				institution_incoming_service = institution_incoming_service_list[0] if institution_incoming_service_list.exists() else None
+				if institution_incoming_service and institution_incoming_service.process_order == True:
+					if purchase_order.exists():pass #process_order=True - Only Process where order exists
+					else: institution_incoming_service = None
+				elif institution_incoming_service and institution_incoming_service.process_order == False:
+					if purchase_order.exists(): institution_incoming_service = None
+					else: pass #process_order=False - Only Process where order DOES NOT exist
+				else: pass #process all
 
 			#capture remittance
 			remittance_product = RemittanceProduct.objects.filter(Q(service__name=payload['SERVICE']),\

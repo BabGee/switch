@@ -179,10 +179,11 @@ class InstitutionIncomingService(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	service = models.ForeignKey(Service)
 	description = models.CharField(max_length=100)
-	keyword = models.CharField(max_length=50, unique=True)
+	keyword = models.CharField(max_length=50, unique=True, blank=True, null=True)
 	product_item = models.ForeignKey(ProductItem)
 	gateway = models.ForeignKey(Gateway)
 	details = models.CharField(max_length=512, default=json.dumps({}))
+	process_order = models.NullBooleanField(help_text='Null=Both Order & None-Order, True=Only Order, False=Only Non-Orders')
 	def __unicode__(self):
 		return u'%s %s' % (self.product_item.institution, self.service)
 

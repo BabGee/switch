@@ -413,8 +413,8 @@ class System(Wrappers):
 			if 'reference' in payload.keys():
 
 				#An order will ALWAYS have an initial bill manager, hence
-
-				bill_manager_list = BillManager.objects.filter(order__reference__iexact=payload['reference'],order__status__name='UNPAID').order_by("-date_created")
+				reference = payload['reference'].strip()
+				bill_manager_list = BillManager.objects.filter(order__reference__iexact=reference,order__status__name='UNPAID').order_by("-date_created")
 				if bill_manager_list.exists():
 					cart_items = bill_manager_list[0].order.cart_item.all()
 					if cart_items.exists():
@@ -488,8 +488,9 @@ class System(Wrappers):
 		try:
 			if 'reference' in payload.keys():
 				#An order will ALWAYS have an initial bill manager, hence
+				reference = payload['reference'].strip()
 
-				bill_manager_list = BillManager.objects.filter(order__reference__iexact=payload['reference'],order__status__name='UNPAID').order_by("-date_created")
+				bill_manager_list = BillManager.objects.filter(order__reference__iexact=reference,order__status__name='UNPAID').order_by("-date_created")
 				if bill_manager_list.exists():
 					order = bill_manager_list[0].order
 					amount = Decimal(payload['balance_bf'])
@@ -594,7 +595,8 @@ class System(Wrappers):
 
 
 				elif 'reference' in payload.keys() and 'purchase_order_id' not in payload.keys():
-					bill_manager = bill_manager.filter(order__reference__iexact=payload['reference'])
+					reference = payload['reference'].strip()
+					bill_manager = bill_manager.filter(order__reference__iexact=reference)
 				else:
 					bill_manager = bill_manager.none()
 				if bill_manager.exists():
@@ -736,7 +738,9 @@ class System(Wrappers):
 	def cancel_sale_order(self, payload, node_info):
 		try:
 
-			purchase_order = PurchaseOrder.objects.filter(reference=payload['reference'], status__name='UNPAID')
+			reference = payload['reference'].strip() if 'reference' in payload.keys() else ""
+			purchase_order = PurchaseOrder.objects.filter(reference=reference, status__name='UNPAID')
+
 			if 'purchase_order_id' in payload.keys():
 				purchase_order = purchase_order.filter(id=payload['purchase_order_id'])
 
