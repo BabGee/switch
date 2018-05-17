@@ -206,19 +206,25 @@ class System(Wrappers):
 			institution_incoming_service, institution = None, None
 			lgr.info('Payment Notification')
 			keyword = reference[:4]
-			institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(keyword__iexact=keyword)|Q(keyword__in=['',None]))
+			institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(keyword__iexact=keyword)|Q(keyword__in=['',None])|Q(keyword=reference))
 			purchase_order = PurchaseOrder.objects.filter(reference__iexact=reference, status__name='UNPAID')
+			lgr.info('Order: %s' % purchase_order)
 			if institution_incoming_service_list.exists() and institution_incoming_service_list.count() == 1:
+				lgr.info('Keyword Found')
 				institution_incoming_service = institution_incoming_service_list[0]
 			elif institution_incoming_service_list.exists() and institution_incoming_service_list.count() > 1:
+				lgr.info('Multi Keyword Found')
 				institution_incoming_service_list = institution_incoming_service_list.filter(keyword__in=['',None])
 				institution_incoming_service = institution_incoming_service_list[0] if institution_incoming_service_list.exists() else None
 
 			#Execute Order Options
+			lgr.info('Institution Service: %s' % institution_incoming_service)
 			if institution_incoming_service and institution_incoming_service.process_order == True:
+				lgr.info('Process Order True')
 				if purchase_order.exists():pass #process_order=True - Only Process where order exists
 				else: institution_incoming_service = None
 			elif institution_incoming_service and institution_incoming_service.process_order == False:
+				lgr.info('Process Order False')
 				if purchase_order.exists(): institution_incoming_service = None
 				else: pass #process_order=False - Only Process where order DOES NOT exist
 			else: pass #process all
