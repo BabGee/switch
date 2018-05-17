@@ -56,7 +56,7 @@ class InstitutionNotificationAdmin(admin.ModelAdmin):
 admin.site.register(InstitutionNotification, InstitutionNotificationAdmin)
 
 class InstitutionIncomingServiceAdmin(admin.ModelAdmin):
-		list_display = ('service','description','keyword','product_item','gateway','details','process_order',)
+		list_display = ('id','service','description','keyword','product_item','gateway','details','process_order',)
 admin.site.register(InstitutionIncomingService, InstitutionIncomingServiceAdmin)
 
 class IncomingStateAdmin(admin.ModelAdmin):
