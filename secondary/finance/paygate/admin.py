@@ -64,7 +64,7 @@ class IncomingStateAdmin(admin.ModelAdmin):
 admin.site.register(IncomingState, IncomingStateAdmin)
 
 class IncomingAdmin(admin.ModelAdmin):
-	list_display = ('remittance_product','reference','request','amount','charge','currency',\
+	list_display = ('id','remittance_product','reference','request','amount','charge','currency',\
 			'response_status','message','ext_inbound_id','inst_notified','inst_num_tries',\
 			'state','processed','institution_incoming_service',\
 			'channel','institution',)
