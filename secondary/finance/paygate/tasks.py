@@ -206,7 +206,9 @@ class System(Wrappers):
 			institution_incoming_service, institution = None, None
 			lgr.info('Payment Notification')
 			keyword = reference[:4]
-			institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(keyword__iexact=keyword)|Q(keyword__in=['',None])|Q(keyword=reference))
+			institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(keyword__iexact=keyword)\
+										|Q(keyword__in=[''])|Q(keyword=reference)\
+										|Q(keyword__isnull=True))
 			purchase_order = PurchaseOrder.objects.filter(reference__iexact=reference, status__name='UNPAID')
 			lgr.info('Order: %s' % purchase_order)
 			if institution_incoming_service_list.exists() and institution_incoming_service_list.count() == 1:
@@ -214,7 +216,7 @@ class System(Wrappers):
 				institution_incoming_service = institution_incoming_service_list[0]
 			elif institution_incoming_service_list.exists() and institution_incoming_service_list.count() > 1:
 				lgr.info('Multi Keyword Found')
-				institution_incoming_service_list = institution_incoming_service_list.filter(keyword__in=['',None])
+				institution_incoming_service_list = institution_incoming_service_list.filter(Q(keyword__in=[''])|Q(keyword__isnull=True))
 				institution_incoming_service = institution_incoming_service_list[0] if institution_incoming_service_list.exists() else None
 
 			#Execute Order Options
