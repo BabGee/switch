@@ -210,23 +210,18 @@ class System(Wrappers):
 			purchase_order = PurchaseOrder.objects.filter(reference__iexact=reference, status__name='UNPAID')
 			if institution_incoming_service_list.exists() and institution_incoming_service_list.count() == 1:
 				institution_incoming_service = institution_incoming_service_list[0]
-				if institution_incoming_service and institution_incoming_service.process_order == True:
-					if purchase_order.exists():pass #process_order=True - Only Process where order exists
-					else: institution_incoming_service = None
-				elif institution_incoming_service and institution_incoming_service.process_order == False:
-					if purchase_order.exists(): institution_incoming_service = None
-					else: pass #process_order=False - Only Process where order DOES NOT exist
-				else: pass #process all
 			elif institution_incoming_service_list.exists() and institution_incoming_service_list.count() > 1:
 				institution_incoming_service_list = institution_incoming_service_list.filter(keyword__in=['',None])
 				institution_incoming_service = institution_incoming_service_list[0] if institution_incoming_service_list.exists() else None
-				if institution_incoming_service and institution_incoming_service.process_order == True:
-					if purchase_order.exists():pass #process_order=True - Only Process where order exists
-					else: institution_incoming_service = None
-				elif institution_incoming_service and institution_incoming_service.process_order == False:
-					if purchase_order.exists(): institution_incoming_service = None
-					else: pass #process_order=False - Only Process where order DOES NOT exist
-				else: pass #process all
+
+			#Execute Order Options
+			if institution_incoming_service and institution_incoming_service.process_order == True:
+				if purchase_order.exists():pass #process_order=True - Only Process where order exists
+				else: institution_incoming_service = None
+			elif institution_incoming_service and institution_incoming_service.process_order == False:
+				if purchase_order.exists(): institution_incoming_service = None
+				else: pass #process_order=False - Only Process where order DOES NOT exist
+			else: pass #process all
 
 			#capture remittance
 			remittance_product = RemittanceProduct.objects.filter(Q(service__name=payload['SERVICE']),\
