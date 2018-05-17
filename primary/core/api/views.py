@@ -56,6 +56,7 @@ class Authorize:
 
 	def check_hash(self, payload, API_KEY):
 		lgr.info("Check Hash: %s" % base64.b64decode(API_KEY))
+		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value) ), payload.items()))
 		secret = payload['sec_hash']
 		#remove sec_hash and hash_type	
 		sec_hash = self.secure(payload,API_KEY) 
@@ -153,7 +154,7 @@ class Interface(Authorize, ServiceCall):
 					lgr.info('Session ID available')
 					try:
 						lgr.info('SessionID: %s' % payload['session_id'])
-						session_id = base64.urlsafe_b64decode(payload['session_id'])
+						session_id = base64.urlsafe_b64decode(str(payload['session_id']))
 						session = Session.objects.filter(Q(session_id=session_id.decode('hex')), Q(channel__id=payload['chid']),\
 							Q(gateway_profile__allowed_host__host=payload['gateway_host'],\
 							gateway_profile__allowed_host__status__name='ENABLED')|\
