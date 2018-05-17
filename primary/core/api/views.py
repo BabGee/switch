@@ -127,7 +127,7 @@ class Interface(Authorize, ServiceCall):
 					#This allows any user with credentials to access services enabled within their access level
 					#System services are excluded. (System services are the most sensitive)
 					lgr.info('# A Credentials User Login')
-					credentials = json.loads(payload['credentials'])
+					credentials = payload['credentials']
 					gateway_profile_list = GatewayProfile.objects.filter(Q(allowed_host__host=payload['gateway_host'],\
 								allowed_host__status__name='ENABLED')|Q(gateway__default_host__host=payload['gateway_host'],\
 								gateway__default_host__status__name='ENABLED'),\
