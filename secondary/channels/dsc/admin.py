@@ -42,7 +42,7 @@ admin.site.register(DataResponseType, DataResponseTypeAdmin)
 class DataListAdmin(admin.ModelAdmin):
 	list_display = ('data_name','url','content','status','is_report','group','level','function',\
 			'title','query','pn_data','pn_id_field','pn_update_field','data_response_type',\
-			'ifnull_response','access_level_list','institution_list','channel_list','gateway_list')
+			'ifnull_response','pn_action_list','access_level_list','institution_list','channel_list','gateway_list')
 	search_fields = ('data_name','group__name',)
 admin.site.register(DataList, DataListAdmin)
 

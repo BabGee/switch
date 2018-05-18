@@ -140,6 +140,8 @@ class DataList(models.Model):
 		return "\n".join([a.name for a in self.access_level.all()])
 	def channel_list(self):
 		return "\n".join([a.name for a in self.channel.all()])
+	def pn_action_list(self):
+		return "\n".join([a.name for a in self.pn_action.all()])
 
 class FileUpload(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)

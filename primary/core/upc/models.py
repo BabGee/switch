@@ -227,4 +227,3 @@ class Session(models.Model):
 	def __unicode__(self):
 		return u'%s %s %s' % (self.session_id, self.gateway_profile, self.reference)
 
-

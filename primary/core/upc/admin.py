@@ -96,4 +96,3 @@ class SessionAdmin(admin.ModelAdmin):
 	list_filter = ('channel',)
 admin.site.register(Session, SessionAdmin)
 
-

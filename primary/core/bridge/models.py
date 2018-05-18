@@ -367,3 +367,37 @@ class ApprovalActivity(models.Model):
 	institution = models.ForeignKey(Institution, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.approval)
+
+
+class GatewayProfileChange(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	service = models.ForeignKey(Service)
+	institution = models.ManyToManyField(Institution, blank=True)
+	gateway = models.ManyToManyField(Gateway, blank=True)
+	access_level = models.ManyToManyField(AccessLevel, blank=True)
+	details = models.CharField(max_length=3840, default=json.dumps({}))
+	def __unicode__(self):
+		return u'%s %s' % (self.id, self.name)  
+	def institution_list(self):
+		return "\n".join([a.name for a in self.institution.all()])
+	def gateway_list(self):
+		return "\n".join([a.name for a in self.gateway.all()])
+	def access_level_list(self):
+		return "\n".join([a.name for a in self.access_level.all()])
+
+class GatewayProfileChangeActivity(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	change = models.ForeignKey(GatewayProfileChange)
+	gateway_profile = models.ForeignKey(GatewayProfile)
+	request = models.CharField(max_length=10240)
+	gateway = models.ForeignKey(Gateway)
+	institution = models.ForeignKey(Institution, null=True, blank=True)
+	processed = models.BooleanField(default=False)
+	def __unicode__(self):
+		return u'%s %s' % (self.change, self.gateway_profile)
+
+

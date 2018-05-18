@@ -128,4 +128,14 @@ class ApprovalActivityAdmin(admin.ModelAdmin):
 			'request','channel','response_status','gateway','institution',)
 admin.site.register(ApprovalActivity, ApprovalActivityAdmin)
 
+class GatewayProfileChangeAdmin(admin.ModelAdmin):
+	list_display = ('id','name','description','service','institution_list',\
+			'gateway_list','access_level_list','details',)
+admin.site.register(GatewayProfileChange, GatewayProfileChangeAdmin)
+
+class GatewayProfileChangeActivityAdmin(admin.ModelAdmin):
+	list_display = ('id','change','gateway_profile','request','gateway',\
+			'institution','processed',)
+admin.site.register(GatewayProfileChangeActivity, GatewayProfileChangeActivityAdmin)
+
 
