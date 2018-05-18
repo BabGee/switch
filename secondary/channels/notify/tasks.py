@@ -566,8 +566,11 @@ class System(Wrappers):
 	def init_notification(self, payload, node_info):
 		try:
 
+			if 'notification_template_id' in payload.keys():
+				del payload['notification_template_id'] #
+
 			if 'notification_product_id' in payload.keys():
-				del payload['notification_product_id'] #Avoid send SMS
+				del payload['notification_product_id'] #
 
 			if 'message' in payload.keys():
 				del payload['message']
