@@ -382,6 +382,38 @@ class Wrappers:
 
 
 class System(Wrappers):
+	def contact_check(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			if 'email' in payload.keys() and self.validateEmail(payload["email"]) and 'msisdn' in payload.keys() and self.get_msisdn(payload):
+				lgr.info('With Email and MSISDN')
+				payload['trigger'] = 'with_email,with_msisdn%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
+				payload['response'] = 'Email & MSISDN Captured'
+				payload['response_status'] = '00'
+			elif 'email' in payload.keys() and self.validateEmail(payload["email"]):
+				lgr.info('With Email')
+				payload['trigger'] = 'with_email%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
+				payload['response'] = 'Email Captured'
+				payload['response_status'] = '00'
+			elif 'msisdn' in payload.keys() and self.get_msisdn(payload):
+				lgr.info('With MSISDN')
+				payload['trigger'] = 'with_msisdn%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
+				payload['response'] = 'MSISDN Captured'
+				payload['response_status'] = '00'
+			else:
+				payload['response'] = 'MSISDN or Email Not Found'
+				payload['response_status'] = '25'
+		except Exception, e:
+			lgr.info('Error on contact check: %s' % e)
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+		return payload
+
+
 	def capture_identity_document(self, payload, node_info):
 		try:
 
