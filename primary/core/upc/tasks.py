@@ -1249,7 +1249,7 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 
-			chars = string.ascii_letters + string.punctuation + string.digits
+			chars = string.ascii_letters + string.digits
 			rnd = random.SystemRandom()
 			password = ''.join(rnd.choice(chars) for i in range(8))
 
