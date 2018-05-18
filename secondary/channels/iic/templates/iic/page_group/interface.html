@@ -61,17 +61,17 @@
             <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/create/">Add
                 New Section</a>
 
-            {% for page_input_group_l in page_input_groups %}
+            {% for page_input_group in page_input_groups %}
 
                     <div class="card" style="margin-bottom: 5px">
                         <div class="card-header">
                             <p>
-                                <strong> {{ page_input_group_l.name }} </strong> {{ page_input_group_l.section_size }}
+                                <strong> {{ page_input_group.name }} </strong> {{ page_input_group.section_size }}
 
                             <span class="float-right">
 
                                 <a class="inline-block"
-                                   href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page.pk }}/{{ page_input_group_l.pk }}/">
+                                   href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/interface/{{ page_group.pk }}/{{ page.pk }}/{{ page_input_group.pk }}/">
                                     <span class="fa fa-caret-down"> More </span>
                                 </a>
 
@@ -94,7 +94,7 @@
                             </p>
                         </div>
                         <ul class="list-group">
-                            {% for page_input in page_inputs %}
+                            {% for page_input in page_input_group.pageinput_set.all %}
                                 <li class="list-group-item list-group-item-
                                         {% if page_input.page_input_status.name == 'ACTIVE' %}{% else %}danger{% endif %}">
 
