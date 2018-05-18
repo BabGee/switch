@@ -380,8 +380,59 @@ class Wrappers:
 		except Exception, e:
 			lgr.info("Unable to save image: %s to: %s because: %s" % (filename, image_obj, e))
 
-
 class System(Wrappers):
+	def login_validation(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			email_msisdn = payload['email_msisdn'].strip()
+
+			def device_validation(gateway_profile, payload):
+				gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile=gateway_profile, \
+						gateway_profile__gateway=gateway_profile.gateway, channel__id=payload['chid'])
+
+				gateway_profile_device = gateway_profile_device_list.filter(device_id=payload['fingerprint'])
+
+				if gateway_profile_device_list.exists() and gateway_profile_device.exists() and gateway_profile_device[0].gateway_profile.status.name=='ONE TIME PIN':
+					payload['trigger'] = 'one_time_pin%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					payload['response'] = 'Device Validation one_time_pin'
+					payload['response_status'] = '00'
+				elif gateway_profile_device_list.exists() and gateway_profile_device.exists():
+					payload['trigger'] = 'device_valid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					payload['response'] = 'Device Validation device_valid'
+					payload['response_status'] = '00'
+				elif gateway_profile_device_list.exists():
+					payload['trigger'] = 'device_not_valid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					payload['response'] = 'Device Validation device_not_valid'
+					payload['response_status'] = '00'
+				else:
+					payload['trigger'] = 'device_not_valid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					gateway_profile_device = GatewayProfileDevice(channel=Channel.objects.get(id=payload['chid']),\
+											gateway_profile=gateway_profile_list[0])
+					gateway_profile_device.save()
+					payload['response'] = 'Device Validation device_not_valid new device'
+					payload['response_status'] = '00'
+				return payload
+
+			if self.validateEmail(email_msisdn):
+				lgr.info('With Email')
+				validate_gateway_profile = GatewayProfile.objects.filter(user__email=email_msisdn, gateway=gateway_profile.gateway)
+				payload = device_validation(validate_gateway_profile, payload)
+
+			elif self.simple_get_msisdn(email_msisdn, payload):
+				lgr.info('With MSISDN')
+				validate_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=self.simple_get_msisdn(email_msisdn, payload), gateway=gateway_profile.gateway)
+				payload = device_validation(validate_gateway_profile, payload)
+
+			else:
+				payload['response'] = 'MSISDN or Email Not Found'
+				payload['response_status'] = '25'
+
+		except Exception, e:
+			lgr.info('Error on validating device: %s' % e)
+			payload['response_status'] = '96'
+		return payload
+
+
 	def contact_check(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
