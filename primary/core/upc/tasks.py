@@ -385,7 +385,7 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			email_msisdn = payload['email_msisdn'].strip()
-
+			lgr.info('GatewayProfile: %s' % gateway_profile)
 			def device_validation(gateway_profile, payload):
 				gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile=gateway_profile, \
 						gateway_profile__gateway=gateway_profile.gateway, channel__id=payload['chid'])
@@ -410,6 +410,7 @@ class System(Wrappers):
 					payload['response_status'] = '00'
 				return payload
 
+			lgr.info('GatewayProfile: %s' % gateway_profile)
 			if self.validateEmail(email_msisdn):
 				lgr.info('With Email')
 				validate_gateway_profile = GatewayProfile.objects.filter(user__email__iexact=email_msisdn, gateway=gateway_profile.gateway)
@@ -420,8 +421,10 @@ class System(Wrappers):
 				validate_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=self.simple_get_msisdn(email_msisdn, payload), gateway=gateway_profile.gateway)
 				payload = device_validation(validate_gateway_profile, payload)
 
-			elif GatewayProfile.objects.filter(gateway=gateway_profile.gateway,user__username__iexact=email_msisdn).exists():
-				lgr.info('With Email')
+			elif GatewayProfile.objects.filter(gateway=gateway_profile.gateway, user__username__iexact=email_msisdn).exists():
+				lgr.info('With Username')
+
+				lgr.info('GatewayProfile: %s' % gateway_profile)
 				validate_gateway_profile = GatewayProfile.objects.filter(user__username__iexact=email_msisdn, gateway=gateway_profile.gateway)
 				payload = device_validation(validate_gateway_profile, payload)
 
