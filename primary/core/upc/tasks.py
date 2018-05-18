@@ -404,7 +404,7 @@ class System(Wrappers):
 				else:
 					payload['trigger'] = 'device_not_valid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 					gateway_profile_device = GatewayProfileDevice(channel=Channel.objects.get(id=payload['chid']),\
-											gateway_profile=gateway_profile_list[0])
+											gateway_profile=gateway_profile)
 					gateway_profile_device.save()
 					payload['response'] = 'Device Validation device_not_valid new device'
 					payload['response_status'] = '00'
