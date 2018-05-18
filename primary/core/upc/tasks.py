@@ -385,6 +385,7 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
+			email_msisdn = payload['email_msisdn'].strip()
 			def device_activation(gateway_profile, payload):
 				gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile=gateway_profile, \
 						gateway_profile__gateway=gateway_profile.gateway, channel__id=payload['chid'])
