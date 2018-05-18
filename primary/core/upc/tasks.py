@@ -392,12 +392,9 @@ class System(Wrappers):
 
 				gateway_profile_device = gateway_profile_device_list.filter(device_id=payload['fingerprint'])
 
-				if gateway_profile_device_list.exists() and gateway_profile_device.exists() and gateway_profile_device[0].gateway_profile.status.name=='ONE TIME PIN':
-					payload['trigger'] = 'one_time_pin%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-					payload['response'] = 'Device Validation one_time_pin'
-					payload['response_status'] = '00'
-				elif gateway_profile_device_list.exists() and gateway_profile_device.exists():
-					payload['trigger'] = 'device_valid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				if gateway_profile_device_list.exists() and gateway_profile_device.exists():
+					profile_status = gateway_profile_device[0].gateway_profile.status.name.lower().replace(' ','_')
+					payload['trigger'] = 'device_valid,%s%s' % (profile_status, ','+payload['trigger'] if 'trigger' in payload.keys() else '')
 					payload['response'] = 'Device Validation device_valid'
 					payload['response_status'] = '00'
 				elif gateway_profile_device_list.exists():
