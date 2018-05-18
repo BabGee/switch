@@ -1792,9 +1792,16 @@ class System(Wrappers):
 					except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
 					if create_gateway_profile.msisdn in [None,'']:
 						create_gateway_profile.msisdn = msisdn
-
 				if "access_level_id" in payload.keys() and create_gateway_profile.institution in [None,'']:
 					access_level = AccessLevel.objects.get(id=payload["access_level_id"])
+					if 'institution_id' in payload.keys():
+						create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
+					elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
+						create_gateway_profile.institution = gateway_profile.institution 
+				elif "role_id" in payload.keys() and create_gateway_profile.institution in [None,'']:
+					role = Role.objects.get(id=payload["role_id"])
+					access_level = role.access_level
+					create_gateway_profile.role = role
 					if 'institution_id' in payload.keys():
 						create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
 					elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
@@ -1805,6 +1812,15 @@ class System(Wrappers):
 						create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
 					elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
 						create_gateway_profile.institution = gateway_profile.institution 
+				elif "role" in payload.keys() and create_gateway_profile.institution in [None,'']:
+					role = Role.objects.get(name=payload["role"])
+					access_level = role.access_level
+					create_gateway_profile.role = role
+					if 'institution_id' in payload.keys():
+						create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
+					elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
+						create_gateway_profile.institution = gateway_profile.institution 
+
 				else:
 					access_level = AccessLevel.objects.get(name="CUSTOMER")
 
