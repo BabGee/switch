@@ -261,6 +261,13 @@ class Wrappers:
 					payload['msisdn'] = msisdn
 				else:
 					session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
+
+		elif 'email_msisdn' in payload.keys() and  self.validateEmail(payload['email_msisdn'].strip()):
+			session_gateway_profile = GatewayProfile.objects.filter(user__email__iexact=payload['email_msisdn'].strip(), gateway=gateway_profile.gateway)
+		elif  'email_msisdn' in payload.keys() and  self.simple_get_msisdn(payload['email_msisdn'].strip(), payload):
+			session_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=self.simple_get_msisdn(payload['email_msisdn'].strip(), payload), gateway=gateway_profile.gateway)
+		elif  'email_msisdn' in payload.keys() and  GatewayProfile.objects.filter(gateway=gateway_profile.gateway, user__username__iexact=payload['email_msisdn'].strip()).exists():
+			session_gateway_profile = GatewayProfile.objects.filter(user__username__iexact=payload['email_msisdn'].strip(), gateway=gateway_profile.gateway)
 		else:
 			session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 
@@ -1417,6 +1424,21 @@ class System(Wrappers):
 				session_gateway_profile.save()
 				payload['response_status'] = '55'
 				payload['response'] = 'Invalid One Time PIN'
+
+		except Exception, e:
+			lgr.info('Error on Validating One Time Pin: %s' % e)
+			payload['response_status'] = '96'
+		return payload
+
+
+	def validate_one_time_password(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			if gateway_profile.user.is_active and gateway_profile.user.check_password(payload['one_time_password']):
+				payload['response'] = 'Password Verified'
+				payload['response_status'] = '00'
+			else:
+				payload['response_status'] = '25'
 
 		except Exception, e:
 			lgr.info('Error on Validating One Time Pin: %s' % e)
