@@ -3730,7 +3730,17 @@ def process_push_request():
 									)
 								elif len(channel_list) == 4:
 									for i in v['data']:
-										lgr.info('Service: %s | Data: %s' % (channel_list[3], i))
+										params = i.copy()
+										service = Service.objects.get(name=channel_list[3])
+										gateway = Gateway.objects.get(id=channel_list[0])
+										if 'gateway_profile_id' in params.keys():
+											gateway_profile = GatewayProfile.objects.get(id=params['gateway_profile_id'])
+										else:
+											gateway_profile = GatewayProfile.objects.get(gateway=gateway,user__username='System@User',status__name__in=['ACTIVATED'])
+
+										lgr.info('Service: %s | Gateway Profile: %s | Data: %s' % (service, gateway_profile, params))
+
+
 							except Exception, e: lgr.info('Push update Failure '+e.message)
 						#disconnect after loop
 						msc.disconnect()
