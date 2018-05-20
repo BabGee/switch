@@ -530,7 +530,10 @@ class System(Wrappers):
 
 				if gateway_profile_device_list.exists() and gateway_profile_device.exists():
 					profile_status = gateway_profile_device[0].gateway_profile.status.name.lower().replace(' ','_')
-					payload['trigger'] = 'device_valid,%s%s' % (profile_status, ','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					if gateway_profile_device[0].gateway_profile.access_level.name == 'CUSTOMER':
+						payload['trigger'] = 'customer,device_valid,%s%s' % (profile_status, ','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					else:
+						payload['trigger'] = 'device_valid,%s%s' % (profile_status, ','+payload['trigger'] if 'trigger' in payload.keys() else '')
 					lgr.info('Profile Status - Trigger: %s' % payload['trigger'])
 					payload['response'] = 'Device Validation device_valid'
 					payload['response_status'] = '00'
