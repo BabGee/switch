@@ -3694,7 +3694,7 @@ def process_push_request():
 		max_id = 0
 		t_count = 0
 
-		gateway_profile_list = GatewayProfile.objects.filter(access_level__name='SYSTEM',status__name='ACTIVATED',user__username='MQTTUser')
+		gateway_profile_list = GatewayProfile.objects.filter(access_level__name='SYSTEM',status__name='ACTIVATED',user__username='PushUser')
 		for gateway_profile in gateway_profile_list:
 			profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
 			data_list = DataList.objects.filter(Q(status__name='ACTIVE'),Q(pn_data=True),\
