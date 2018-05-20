@@ -1267,28 +1267,6 @@ class System(Wrappers):
 		return payload
 
 
-	def set_profile_password(self, payload, node_info):
-		try:
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-
-			new_password = payload['new_password'] if 'new_password' in payload.keys() else payload['password']
-			if new_password == payload['confirm_password']:
-				session_gateway_profile.user.set_password(new_password)
-				session_gateway_profile.save()
-
-				payload['response'] = 'New Password isSet'
-				payload['response_status'] = '00'
-			else:
-				payload['response_status'] = '95'
-				payload['response'] = 'Confirm Password did not match New Password'
-
-		except Exception, e:
-			lgr.info('Error on Set Profile Password: %s' % e)
-			payload['response_status'] = '96'
-		return payload
-
-
 	def set_profile_pin(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
