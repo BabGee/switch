@@ -3704,6 +3704,7 @@ def process_push_request():
 				#lgr.info('push notification datalists : %s' % data_list)
 
 				from secondary.channels.notify.mqtt import MqttServerClient
+				from primary.core.bridge.tasks import Wrappers as BridgeWrappers
 
 				payload = {}
 				payload['push_request'] = True
@@ -3744,8 +3745,12 @@ def process_push_request():
 											except: pass
 											if isinstance(v, dict): payload.update(v)
 											else: payload[k] = v
+										payload['chid'] = 2
+										payload['ip_address'] = '127.0.0.1'
+										payload['gateway_host'] = '127.0.0.1'
 
 										lgr.info('Service: %s | Gateway Profile: %s | Data: %s' % (service, gateway_profile, payload))
+										payload = BridgeWrappers().background_service_call.delay(service, gateway_profile, payload)
 
 							except Exception, e: lgr.info('Push update Failure '+e.message)
 						#disconnect after loop

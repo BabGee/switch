@@ -94,6 +94,7 @@ class Wrappers:
 			lgr.info('Unable to make service call: %s' % e)
 		return payload
 
+	@app.task(ignore_result=True)
 	def background_service_call(self, service, gateway_profile, payload):
 		try:
 			status = TransactionStatus.objects.get(name='CREATED')
