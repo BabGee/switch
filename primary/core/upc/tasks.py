@@ -1524,6 +1524,7 @@ class System(Wrappers):
 			password = ''.join(rnd.choice(chars) for i in range(8))
 
 			session_gateway_profile.user.set_password(password)
+			session_gateway_profile.user.save()
 			session_gateway_profile.status = ProfileStatus.objects.get(name='ONE TIME PASSWORD')
 			session_gateway_profile.save()
 
