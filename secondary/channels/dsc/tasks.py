@@ -3718,15 +3718,19 @@ def process_push_request():
 						for k,v in value.items():
 							try:
 								channel = k
-								lgr.info('Channel: %s' % channel)
-								itms = json.dumps(v, cls=DjangoJSONEncoder)
-								lgr.info('Items: %s' % itms)
+								channel_list = channel.split('/')
+								if len(channel_list) == 3:
+									lgr.info('Channel: %s' % channel)
+									itms = json.dumps(v, cls=DjangoJSONEncoder)
+									lgr.info('Items: %s' % itms)
 
-								msc.publish(
-									channel,
-									itms
-								)
-							except Exception, e: lgr.info('MQTT update Failure '+e.message)
+									msc.publish(
+										channel,
+										itms
+									)
+								elif len(channel_list) == 4:
+									lgr.info('Service: %s | Data: %s' % (channel_list[3], v))
+							except Exception, e: lgr.info('Push update Failure '+e.message)
 						#disconnect after loop
 						msc.disconnect()
-	except Exception, e: lgr.info('Error on process push notification: %s' % e)
+	except Exception, e: lgr.info('Error on process push request: %s' % e)
