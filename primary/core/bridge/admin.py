@@ -133,3 +133,8 @@ class GatewayProfileChangeAdmin(admin.ModelAdmin):
 			'gateway_list','access_level_list','details',)
 admin.site.register(GatewayProfileChange, GatewayProfileChangeAdmin)
 
+class GatewayProfileChangeActivityAdmin(admin.ModelAdmin):
+	list_display = ('id','change','gateway_profile','request','gateway',\
+			'institution','processed',)
+admin.site.register(GatewayProfileChangeActivity, GatewayProfileChangeActivityAdmin)
+

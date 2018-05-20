@@ -388,3 +388,19 @@ class GatewayProfileChange(models.Model):
 	def access_level_list(self):
 		return "\n".join([a.name for a in self.access_level.all()])
 
+
+class GatewayProfileChangeActivity(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	change = models.ForeignKey(GatewayProfileChange)
+	gateway_profile = models.ForeignKey(GatewayProfile)
+	request = models.CharField(max_length=10240)
+	gateway = models.ForeignKey(Gateway)
+	institution = models.ForeignKey(Institution, null=True, blank=True)
+	processed = models.BooleanField(default=False)
+	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
+	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
+	def __unicode__(self):
+		return u'%s %s' % (self.change, self.gateway_profile)
+
+
