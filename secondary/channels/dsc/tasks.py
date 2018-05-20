@@ -3729,7 +3729,7 @@ def process_push_request():
 										itms
 									)
 								elif len(channel_list) == 4:
-									lgr.info('Service: %s | Data: %s' % (channel_list[3], v))
+									lgr.info('Service: %s | Data: %s' % (channel_list[3], v['data']))
 							except Exception, e: lgr.info('Push update Failure '+e.message)
 						#disconnect after loop
 						msc.disconnect()
