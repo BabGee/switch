@@ -171,7 +171,7 @@ class Wrappers:
         max_id = 0
         min_id = 0
         ct = 0
-	mqtt = {}
+	push = {}
 
 	#lgr.info('Payload on report: %s' % payload)
         try:
@@ -440,7 +440,7 @@ class Wrappers:
                     	if f not in ['',None]: institution_filter_data[f] = gateway_profile.institution
 		    else:
 			#MQTT doesn't filter institution for push notifications
-			if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+			if data.pn_data and 'push_request' in payload.keys() and payload['push_request']:
 				pass
 			else:
 	                    	if f not in ['',None]: institution_filter_data[f] = None
@@ -461,7 +461,7 @@ class Wrappers:
                     	if f not in ['',None]: institution_not_filter_data[f] = gateway_profile.institution
 		    else:
 			#MQTT doesn't filter institution for push notifications
-			if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+			if data.pn_data and 'push_request' in payload.keys() and payload['push_request']:
 				pass
 			else:
 	                    	if f not in ['',None]: institution_not_filter_data[f] = None
@@ -475,7 +475,7 @@ class Wrappers:
             if gateway_profile_filters not in ['', None]:
                 for f in gateway_profile_filters.split("|"):
 		    #MQTT doesn't filter institution for push notifications
-		    if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+		    if data.pn_data and 'push_request' in payload.keys() and payload['push_request']:
 			pass
 		    else:
 			if f not in ['',None]: gateway_profile_filter_data[f] = gateway_profile
@@ -488,7 +488,7 @@ class Wrappers:
             if profile_filters not in ['', None]:
                 for f in profile_filters.split("|"):
 		    #MQTT doesn't filter institution for push notifications
-		    if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+		    if data.pn_data and 'push_request' in payload.keys() and payload['push_request']:
 			pass
 		    else:
 			if f not in ['',None]: profile_filter_data[f] = gateway_profile.user.profile
@@ -501,7 +501,7 @@ class Wrappers:
             if role_filters not in ['', None]:
                 for f in role_filters.split("|"):
 		    #MQTT doesn't filter institution for push notifications
-		    if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+		    if data.pn_data and 'push_request' in payload.keys() and payload['push_request']:
 			pass
 		    else:
 			if f not in ['',None]: role_filter_data[f] = gateway_profile.role
@@ -620,7 +620,7 @@ class Wrappers:
 
             		if join_gateway_profile_filters not in ['', None]:
 				for f in join_gateway_profile_filters.split("|"):
-					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+					if data.pn_data and 'push_request' in payload.keys() and payload['push_request']:
 						pass
 					else:
 						if f not in ['',None]: join_gateway_profile_filter_data[f] = gateway_profile
@@ -631,7 +631,7 @@ class Wrappers:
 
 			if join_profile_filters not in ['', None]:
 				for f in join_profile_filters.split("|"):
-					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+					if data.pn_data and 'push_request' in payload.keys() and payload['push_request']:
 						pass
 					else:
 						if f not in ['',None]: join_profile_filter_data[f] = gateway_profile.user.profile
@@ -643,7 +643,7 @@ class Wrappers:
 
 			if join_role_filters not in ['', None]:
 				for f in join_role_filters.split("|"):
-					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+					if data.pn_data and 'push_request' in payload.keys() and payload['push_request']:
 						pass
 					else:
 						if f not in ['',None]: join_role_filter_data[f] = gateway_profile.role
@@ -659,7 +659,7 @@ class Wrappers:
 		            	    elif gateway_profile.institution not in ['', None]:
 		                    	if f not in ['',None]: join_institution_filter_data[f] = gateway_profile.institution
 				    else:
-					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+					if data.pn_data and 'push_request' in payload.keys() and payload['push_request']:
 						pass
 					else:
 			                    	if f not in ['',None]: join_institution_filter_data[f] = None
@@ -676,7 +676,7 @@ class Wrappers:
 		            	    elif gateway_profile.institution not in ['', None]:
 		                    	if f not in ['',None]: join_institution_not_filter_data[f] = gateway_profile.institution
 				    else:
-					if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+					if data.pn_data and 'push_request' in payload.keys() and payload['push_request']:
 						pass
 					else:
 			                    	if f not in ['',None]: join_institution_not_filter_data[f] = None
@@ -1103,7 +1103,7 @@ class Wrappers:
 	    #original_report_list = report_list
 
 
-	    if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
+	    if data.pn_data and 'push_request' in payload.keys() and payload['push_request']:
 		if data.pn_id_field not in ['',None] and data.pn_update_field not in ['',None]:
 			#Filter out (None|NULL). Filter to within the last 10 seconds MQTT runs every 2 seconds. 
 
@@ -1185,14 +1185,20 @@ class Wrappers:
 					original_filtered_report_list.filter().update(**pn_update)
 
 					#Update pn status
-					mqtt[channel] = params
-					#lgr.info('Return MQTT: %s' % mqtt)
-				return mqtt
+					push[channel] = params
+					#lgr.info('Return MQTT: %s' % push)
+
+				return push
 
 			for group in report_list_groups:
-				channel = "%s/%s/%s" % (gateway_profile.gateway.id, data.data_name,group[data.pn_id_field])
+				if data.push_service:
+					channel = "%s/%s/%s/%s" % (gateway_profile.gateway.id, data.data_name,group[data.pn_id_field],data.push_service.name)
+					push = get_pn_data(report_list, channel, group)
 
-				mqtt = get_pn_data(report_list, channel, group)
+				else:
+					channel = "%s/%s/%s" % (gateway_profile.gateway.id, data.data_name,group[data.pn_id_field])
+					push = get_pn_data(report_list, channel, group)
+
 	    else:
             	paginator = Paginator(report_list, payload.get('limit',50))
 
@@ -1239,7 +1245,7 @@ class Wrappers:
 	    #import traceback
             lgr.info('Error on report: %s' % e)
 	    #lgr.info(traceback.format_exc())
-        return params,max_id,min_id,ct,mqtt
+        return params,max_id,min_id,ct,push
 
 
     def balance(self, payload, gateway_profile, profile_tz, data):
@@ -1346,12 +1352,14 @@ class Wrappers:
         max_id = 0
         min_id = 0
         ct = 0
-	mqtt = {}
+	push = {}
 	try:
 
 	    from thirdparty.bidfather.models import Bid,BidRequirementApplication
-            if data.pn_data and 'push_notification' in payload.keys() and payload['push_notification'] == True:
-                #mqtt = {}
+
+
+	    if data.pn_data and 'push_request' in payload.keys() and payload['push_request']:
+                #push = {}
                 import copy
                 # Loop through a report to get the different pn_id_fields to be updated
                 bid_req_app =  BidRequirementApplication.objects.select_for_update().filter(pn=False)
@@ -1363,23 +1371,23 @@ class Wrappers:
 				#Bid Owner
 				channel = "%s/%s/%s" % (gateway_profile.gateway.id, 'bid_ranking', req_app.bid_requirement.bid.institution.id)
 				params['rows'] = req_app.bid_requirement.bid.app_rankings(req_app.bid_requirement.bid.institution)
-				mqtt[channel] = copy.deepcopy(params)
+				push[channel] = copy.deepcopy(params)
 
 				#Bid Application
 				channel = "%s/%s/%s" % (gateway_profile.gateway.id, 'bid_ranking', req_app.bid_application.institution.id)
 				params['rows'] = req_app.bid_requirement.bid.app_rankings(req_app.bid_application.institution)
-				mqtt[channel] = copy.deepcopy(params)
+				push[channel] = copy.deepcopy(params)
 
 			#Update gotta come at the end to prevent filter of data on loop
 			bid_req_app.update(pn=True)
 
-		#lgr.info(mqtt)
-                return params,max_id, min_id, ct, mqtt
+		#lgr.info(push)
+                return params,max_id, min_id, ct, push
             else:
                 bid = Bid.objects.get(pk=payload['bid_id'])
                 rows = bid.app_rankings(gateway_profile.institution, gateway_profile)
                 params['rows'] = rows
-                return params,max_id,min_id,ct,mqtt
+                return params,max_id,min_id,ct,push
                 
 	except Exception as e:
 	    lgr.info('Error on bid rankings: %s',e)
@@ -1794,7 +1802,7 @@ class Wrappers:
 	min_id = 0
 	max_id = 0
 	t_count = 0
-	mqtt = {}
+	push = {}
 	try:
                 #lgr.info('Fetching from Data List')
                 collection = {}
@@ -1803,7 +1811,7 @@ class Wrappers:
                         #lgr.info('Is a Function: ')
                         try:
                             func = getattr(self, d.function.strip())
-                            params,max_id,min_id,t_count,mqtt[d.data_name] = func(payload, gateway_profile, profile_tz, d)
+                            params,max_id,min_id,t_count,push[d.data_name] = func(payload, gateway_profile, profile_tz, d)
 			    cols = params['cols'] if 'cols' in params.keys() else []
 			    rowsParams = params['rows'] if 'rows' in params.keys() else []
                             dataParams = params['data'] if 'data' in params.keys() else []
@@ -1840,7 +1848,7 @@ class Wrappers:
                     elif d.query not in ['', None]:
                         #lgr.info('Is a Query: ')
                         try:
-                            params,max_id,min_id,t_count,mqtt[d.data_name] = self.report(payload, gateway_profile, profile_tz, d)
+                            params,max_id,min_id,t_count,push[d.data_name] = self.report(payload, gateway_profile, profile_tz, d)
                             cols = params['cols'] if 'cols' in params.keys() else []
                             rowsParams = params['rows'] if 'rows' in params.keys() else []
                             dataParams = params['data'] if 'data' in params.keys() else []
@@ -1892,7 +1900,7 @@ class Wrappers:
         except Exception, e:
             lgr.info('Error on process_data_list: %s' % e)
 
-	return cols,rows,lines,groups,data,min_id,max_id,t_count, mqtt
+	return cols,rows,lines,groups,data,min_id,max_id,t_count, push
 
 
 class System(Wrappers):
@@ -1935,7 +1943,7 @@ class System(Wrappers):
                 data_list = data_list.filter(institution=None)
 
             if data_list.exists():
-		cols, rows, lines, groups, data, min_id, max_id, t_count, mqtt = self.process_data_list(data_list, payload, gateway_profile, profile_tz, data)
+		cols, rows, lines, groups, data, min_id, max_id, t_count, push = self.process_data_list(data_list, payload, gateway_profile, profile_tz, data)
             else:
                 lgr.info('Not a Data List')
                 if 'survey' in data_name:
@@ -3673,7 +3681,7 @@ def process_file_upload():
 @app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
-def process_push_notification():
+def process_push_request():
 	try:
 		#from celery.utils.log import get_task_logger
 		lgr = get_task_logger(__name__)
@@ -3698,12 +3706,12 @@ def process_push_notification():
 				from secondary.channels.notify.mqtt import MqttServerClient
 
 				payload = {}
-				payload['push_notification'] = True
-				cols, rows, lines, groups, data, min_id, max_id, t_count, mqtt = Wrappers().process_data_list(data_list, payload, gateway_profile, profile_tz, data)
+				payload['push_request'] = True
+				cols, rows, lines, groups, data, min_id, max_id, t_count, push = Wrappers().process_data_list(data_list, payload, gateway_profile, profile_tz, data)
 
-				#lgr.info("MQTT task: %s" % mqtt)
+				#lgr.info("MQTT task: %s" % push)
 
-				for key,value in mqtt.items():
+				for key,value in push.items():
 					lgr.info("%s PN: %s" % (key,value))
 					if len(value):
 						msc = MqttServerClient()
