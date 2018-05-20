@@ -1587,7 +1587,8 @@ class System(Wrappers):
 	def set_password(self, payload, node_info):
 		try:
 			password = payload['password']
-			confirm_password = payload['confirm password']
+			confirm_password = payload['confirm_password']
+
 			error = ''
 
 			if re.search(r'\d', password) is None: error += 'Digit, ' 
