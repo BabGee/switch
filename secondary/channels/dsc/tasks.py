@@ -3752,7 +3752,7 @@ def process_push_request():
 										lgr.info('Service: %s | Gateway Profile: %s | Data: %s' % (service, gateway_profile, payload))
 										payload = bridge_tasks.background_service_call.delay(service, gateway_profile, payload)
 
-							except Exception, e: lgr.info('Push update Failure '+e.message)
+							except Exception, e: lgr.info('Push update Failure: %s ' % e)
 						#disconnect after loop
 						msc.disconnect()
 	except Exception, e: lgr.info('Error on process push request: %s' % e)
