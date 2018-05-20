@@ -2275,7 +2275,7 @@ class System(Wrappers):
                         #Check if LOGIN or SIGN UP
 			authorized_gateway_profile = None
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			if ('username' in payload.keys() or ('email' in payload.keys() and self.validateEmail(payload['email']))) and 'password' in payload.keys():
+			if ('email_msisdn' in payload.keys() or 'username' in payload.keys() or ('email' in payload.keys() and self.validateEmail(payload['email']))) and 'password' in payload.keys():
 				lgr.info("Returning User")
 				#CHECK CREDENTIALS and 
 				if 'email' in payload.keys() and self.validateEmail(payload['email']):
@@ -2289,6 +2289,13 @@ class System(Wrappers):
 					lgr.info('Login with Username')
 					gateway_login_profile = GatewayProfile.objects.filter(Q(gateway=gateway_profile.gateway),Q(user__username__iexact=payload['username'].strip())|\
 								Q(user__email__iexact=payload['username'].strip()))
+				elif 'email_msisdn' in payload.keys() and  self.validateEmail(payload['email_msisdn'].strip()):
+					gateway_login_profile = GatewayProfile.objects.filter(user__email__iexact=payload['email_msisdn'].strip(), gateway=gateway_profile.gateway)
+				elif  'email_msisdn' in payload.keys() and  self.simple_get_msisdn(payload['email_msisdn'].strip(), payload):
+					gateway_login_profile = GatewayProfile.objects.filter(msisdn__phone_number=self.simple_get_msisdn(payload['email_msisdn'].strip(), payload), gateway=gateway_profile.gateway)
+				elif  'email_msisdn' in payload.keys() and  GatewayProfile.objects.filter(gateway=gateway_profile.gateway, user__username__iexact=payload['email_msisdn'].strip()).exists():
+					gateway_login_profile = GatewayProfile.objects.filter(user__username__iexact=payload['email_msisdn'].strip(), gateway=gateway_profile.gateway)
+
 				else:
 					lgr.info('Login Details not found')
 					gateway_login_profile = GatewayProfile.objects.none()
@@ -2309,7 +2316,7 @@ class System(Wrappers):
 					authorized_gateway_profile = session[0].gateway_profile
 					#payload['trigger'] = "SET PASSWORD"
 
-			elif 'msisdn' in payload.keys() and 'fingerprint' in payload.keys() and 'pin' in payload.keys():
+			elif ('email_msisdn' in payload.keys() or 'msisdn' in payload.keys()) and 'fingerprint' in payload.keys() and 'pin' in payload.keys():
 
 				msisdn = self.get_msisdn(payload)
 				lgr.info('MSISDN: %s' % msisdn)
