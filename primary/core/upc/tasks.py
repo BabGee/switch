@@ -2300,31 +2300,35 @@ class System(Wrappers):
 					#payload['trigger'] = "SET PASSWORD"
 
 			elif ('email_msisdn' in payload.keys() or 'msisdn' in payload.keys()) and 'fingerprint' in payload.keys() and 'pin' in payload.keys():
-
-				msisdn = self.get_msisdn(payload)
-				lgr.info('MSISDN: %s' % msisdn)
-				if msisdn is not None:
-					gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile__msisdn__phone_number=msisdn, \
+				if  'email_msisdn' in payload.keys() and  self.simple_get_msisdn(payload['email_msisdn'].strip(), payload):
+					gateway_login_profile = GatewayProfile.objects.filter(msisdn__phone_number=self.simple_get_msisdn(payload['email_msisdn'].strip(), payload), gateway=gateway_profile.gateway)
+					gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile__msisdn__phone_number=self.simple_get_msisdn(payload['email_msisdn'].strip(), payload), \
 							gateway_profile__gateway=gateway_profile.gateway, device_id = payload['fingerprint'],\
 							channel__id=payload['chid'])
-					lgr.info('Gateway Profile Device: %s' % gateway_profile_device_list)
-					if gateway_profile_device_list.exists():
-						session_gateway_profile = gateway_profile_device_list[0].gateway_profile
+
+				else:
+					gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile__msisdn__phone_number= self.get_msisdn(payload), \
+							gateway_profile__gateway=gateway_profile.gateway, device_id = payload['fingerprint'],\
+							channel__id=payload['chid'])
+
+				lgr.info('Gateway Profile Device: %s' % gateway_profile_device_list)
+				if gateway_profile_device_list.exists():
+					session_gateway_profile = gateway_profile_device_list[0].gateway_profile
 		
-						salt = str(session_gateway_profile.id)
-						salt = '0%s' % salt if len(salt) < 2 else salt
+					salt = str(session_gateway_profile.id)
+					salt = '0%s' % salt if len(salt) < 2 else salt
 
-						hash_pin = crypt.crypt(str(payload['pin']), salt)
-						if hash_pin == session_gateway_profile.pin:
-							session_gateway_profile.pin_retries = 0
-							session_gateway_profile.save()
-							authorized_gateway_profile = session_gateway_profile
+					hash_pin = crypt.crypt(str(payload['pin']), salt)
+					if hash_pin == session_gateway_profile.pin:
+						session_gateway_profile.pin_retries = 0
+						session_gateway_profile.save()
+						authorized_gateway_profile = session_gateway_profile
 
-						else:
-							if session_gateway_profile.pin_retries >= gateway_profile.gateway.max_pin_retries:
-								session_gateway_profile.status = ProfileStatus.objects.get(name='LOCKED')
-							session_gateway_profile.pin_retries = session_gateway_profile.pin_retries+1
-							session_gateway_profile.save()
+					else:
+						if session_gateway_profile.pin_retries >= gateway_profile.gateway.max_pin_retries:
+							session_gateway_profile.status = ProfileStatus.objects.get(name='LOCKED')
+						session_gateway_profile.pin_retries = session_gateway_profile.pin_retries+1
+						session_gateway_profile.save()
 
 
 					lgr.info('Authorized Gateway Profile: %s' % authorized_gateway_profile)
