@@ -463,7 +463,7 @@ def process_pending_transactions():
 @app.task(ignore_result=True)
 def background_service_call(service, gateway_profile, payload):
 	try:
-		Wrappers.background_service_call(service, gateway_profile, payload)
+		Wrappers().background_service_call(service, gateway_profile, payload)
 	except Exception, e:
 		lgr.info('Error on BackgroundService Call: %s' % e)
 
