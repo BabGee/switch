@@ -3737,9 +3737,12 @@ def process_push_request():
 											gateway_profile = GatewayProfile.objects.get(id=params['gateway_profile_id'])
 										else:
 											gateway_profile = GatewayProfile.objects.get(gateway=gateway,user__username='System@User',status__name__in=['ACTIVATED'])
+										for k,v in params.items():
+											try: v = json.loads(v)
+											except: pass
+											if isinstance(v, dict): params.update(v)
 
 										lgr.info('Service: %s | Gateway Profile: %s | Data: %s' % (service, gateway_profile, params))
-
 
 							except Exception, e: lgr.info('Push update Failure '+e.message)
 						#disconnect after loop
