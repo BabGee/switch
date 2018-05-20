@@ -438,7 +438,9 @@ class System(Wrappers):
 				payload['response_status'] = '25'
 
 
-
+		except GatewayProfile.DoesNotExist:
+			payload['response'] = 'Profile Not Found'
+			payload['response_status'] = '25'
 
 		except Exception, e:
 			lgr.info('Error on device verification: %s' % e)
@@ -503,6 +505,11 @@ class System(Wrappers):
 				payload['response'] = 'MSISDN or Email Not Found'
 				payload['response_status'] = '25'
 
+		except GatewayProfile.DoesNotExist:
+			payload['response'] = 'Profile Not Found'
+			payload['response_status'] = '25'
+
+
 		except Exception, e:
 			lgr.info('Error on device activation: %s' % e)
 			payload['response'] = str(e)
@@ -562,6 +569,10 @@ class System(Wrappers):
 			else:
 				payload['response'] = 'MSISDN or Email Not Found'
 				payload['response_status'] = '25'
+
+		except GatewayProfile.DoesNotExist:
+			payload['response'] = 'Profile Not Found'
+			payload['response_status'] = '25'
 
 		except Exception, e:
 			lgr.info('Error on validating device: %s' % e)
