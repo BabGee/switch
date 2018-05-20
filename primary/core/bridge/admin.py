@@ -129,7 +129,7 @@ class ApprovalActivityAdmin(admin.ModelAdmin):
 admin.site.register(ApprovalActivity, ApprovalActivityAdmin)
 
 class GatewayProfileChangeAdmin(admin.ModelAdmin):
-	list_display = ('id','name','description','service','institution_list',\
+	list_display = ('id','name','description','institution_list',\
 			'gateway_list','access_level_list','details',)
 admin.site.register(GatewayProfileChange, GatewayProfileChangeAdmin)
 

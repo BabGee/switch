@@ -374,7 +374,6 @@ class GatewayProfileChange(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	service = models.ForeignKey(Service)
 	institution = models.ManyToManyField(Institution, blank=True)
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
