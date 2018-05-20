@@ -468,7 +468,7 @@ def background_service_call(service, gateway_profile, payload):
 		lgr.info('Error on BackgroundService Call: %s' % e)
 
 @app.task(ignore_result=True)
-def background_service_call(background):
+def process_background_service_call(background):
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	from primary.core.api.views import ServiceCall
@@ -550,7 +550,7 @@ def process_background_service():
 
 		processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
 		for bg in background:
-			background_service_call.delay(bg)
+			process_background_service_call.delay(bg)
 	except Exception, e:
 		lgr.info('Error on Processing Background Service: %s' % e)
 
