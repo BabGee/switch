@@ -580,6 +580,41 @@ class System(Wrappers):
 		return payload
 
 
+	def profile_contact_check(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+			if session_gateway_profile.user.email and session_gateway_profile.msisdn:
+				lgr.info('With Email and MSISDN')
+				payload['trigger'] = 'with_email,with_msisdn%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
+				payload['response'] = 'Email & MSISDN Captured'
+				payload['response_status'] = '00'
+			elif session_gateway_profile.user.email:
+				lgr.info('With Email')
+				payload['trigger'] = 'with_email%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
+				payload['response'] = 'Email Captured'
+				payload['response_status'] = '00'
+			elif session_gateway_profile.msisdn:
+				lgr.info('With MSISDN')
+				payload['trigger'] = 'with_msisdn%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
+				payload['response'] = 'MSISDN Captured'
+				payload['response_status'] = '00'
+			else:
+				payload['response'] = 'MSISDN or Email Not Found'
+				payload['response_status'] = '25'
+		except Exception, e:
+			lgr.info('Error on profile contact check: %s' % e)
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+		return payload
+
+
+
 	def contact_check(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
