@@ -94,7 +94,6 @@ class Wrappers:
 			lgr.info('Unable to make service call: %s' % e)
 		return payload
 
-	@app.task(ignore_result=True)
 	def background_service_call(self, service, gateway_profile, payload):
 		try:
 			status = TransactionStatus.objects.get(name='CREATED')
@@ -459,6 +458,14 @@ def process_pending_transactions():
 
                         lgr.info('Error processing file upload: %s | %s' % (u,e))
 '''
+
+
+@app.task(ignore_result=True)
+def background_service_call(service, gateway_profile, payload):
+	try:
+		Wrappers.background_service_call(service, gateway_profile, payload)
+	except Exception, e:
+		lgr.info('Error on BackgroundService Call: %s' % e)
 
 @app.task(ignore_result=True)
 def background_service_call(background):
