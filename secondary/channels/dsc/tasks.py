@@ -3745,7 +3745,7 @@ def process_push_request():
 											if isinstance(v, dict): payload.update(v)
 											else: payload[k] = v
 
-										lgr.info('Service: %s | Gateway Profile: %s | Data: %s' % (service, gateway_profile, params))
+										lgr.info('Service: %s | Gateway Profile: %s | Data: %s' % (service, gateway_profile, payload))
 
 							except Exception, e: lgr.info('Push update Failure '+e.message)
 						#disconnect after loop
