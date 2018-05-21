@@ -3734,7 +3734,9 @@ def process_push_request():
 										params = i.copy()
 										service = Service.objects.get(name=channel_list[3])
 										gateway = Gateway.objects.get(id=channel_list[0])
-										if 'gateway_profile_id' in params.keys():
+										if 'session_gateway_profile_id' in params.keys():
+											gateway_profile = GatewayProfile.objects.get(id=params['session_gateway_profile_id'])
+										elif 'gateway_profile_id' in params.keys():
 											gateway_profile = GatewayProfile.objects.get(id=params['gateway_profile_id'])
 										else:
 											gateway_profile = GatewayProfile.objects.get(gateway=gateway,user__username='System@User',status__name__in=['ACTIVATED'])
