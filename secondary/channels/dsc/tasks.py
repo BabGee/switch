@@ -1177,6 +1177,22 @@ class Wrappers:
 						params['rows']= report_list
 
 					#lgr.info("Update notification Sent")
+
+					original_model_data =  model_class._meta
+					field_data = data.pn_update_field.split('__')
+					model_data = original_model_data.get_field(field_data[0])
+
+					if field_data[1:]:
+						for f in field_data[1:]:
+							model_data = model_data.related_model._meta.get_field(f)
+
+					#selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:][0] +", 'DD, Month, YYYY')"
+
+					update_filtered_report = model_data.objects.all()
+
+					lgr.info('Model Data. Count: %s' % update_filtered_report.count())
+
+
 					pn_update = {}
 					pn_update[data.pn_update_field] = True
 					#filtered_report_list_for_update.query.annotations.clear()
