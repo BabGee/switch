@@ -31,6 +31,7 @@ dbport = cf.get('DATABASES','default_dbport')
 
 smtphost = cf.get('SMTP','default_host')
 smtpport = cf.get('SMTP','default_port')
+smtptls = bool(cf.get('SMTP','tls'))
 
 conf_hosts = cf.get('ALLOWED_HOSTS','hosts')
 hosts = conf_hosts.split(",")
@@ -119,7 +120,7 @@ EMAIL_HOST = smtphost
 EMAIL_PORT = smtpport
 EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
-EMAIL_USE_TLS = True
+EMAIL_USE_TLS = smtptls
 #EMAIL_USE_SSL = True
 DEFAULT_FROM_EMAIL = 'InterIntel <noreply@interintel.co.ke>'
 
