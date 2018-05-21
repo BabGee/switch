@@ -1107,7 +1107,7 @@ class Wrappers:
 		if data.pn_id_field not in ['',None] and data.pn_update_field not in ['',None]:
 			#Filter out (None|NULL). Filter to within the last 10 seconds MQTT runs every 2 seconds. 
 
-			#lgr.info('Report List: %s | %s' % (data.data_name,report_list.count()))
+			lgr.info('Report List: %s | %s' % (data.data_name,report_list.count()))
 
 			#report_list_groups = original_report_list.filter(~Q(Q(**{data.pn_id_field: None})|Q(**{data.pn_id_field: ''}))).\
 			#					filter(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30)).\
