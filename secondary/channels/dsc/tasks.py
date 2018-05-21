@@ -1161,7 +1161,6 @@ class Wrappers:
 
 			#lgr.info('Report List Group: %s | %s' % (data.data_name,report_list_groups))
 
-
 			@transaction.atomic
 			def get_pn_data(report_list, channel, group):
 
