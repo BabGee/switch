@@ -811,6 +811,9 @@ class System(Wrappers):
 	def get_profile_details(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			if 'session_gateway_profile_id' in payload.keys():
+				gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
 			user = gateway_profile.user
 			profile = user.profile
 
@@ -830,6 +833,7 @@ class System(Wrappers):
 			if profile.country:payload['country'] = profile.country.iso2
 			payload['address'] = profile.address
 			payload['msisdn'] = gateway_profile.msisdn.phone_number
+			if profile.role:payload['role_id'] = profile.role.pk
 
 			payload['response'] = 'Profile Details Captured'
 			payload['response_status'] = '00'
