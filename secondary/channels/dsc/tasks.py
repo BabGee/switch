@@ -1120,20 +1120,22 @@ class Wrappers:
 				for f in field_data[1:]:
 					id_model_data = id_model_data.related_model._meta.get_field(f)
 
-			lgr.info('ID Model Data: %s' % id_model_data.model)
+			id_model_field = field_data[len(field_data)-1:][0]
+
+			lgr.info('ID Model Data: %s | ID Model Field: %s' % (id_model_data.model, id_model_field))
 
 			#if model_class._meta.get_field(data.pn_id_field).get_internal_type() in ['AutoField','IntegerField','BigAutoField','BinaryField','DecimalField','SmallIntegerField']:
 
-			if id_model_data.model._meta.get_field(field_data[len(field_data)-1:][0]).get_internal_type() in ['AutoField','IntegerField','BigAutoField','BinaryField','DecimalField','SmallIntegerField']:
-				report_list_groups = report_list.filter(~Q(**{data.pn_id_field: None}),\
+			if id_model_data.model._meta.get_field(id_model_field).get_internal_type() in ['AutoField','IntegerField','BigAutoField','BinaryField','DecimalField','SmallIntegerField']:
+				report_list_groups = report_list.filter(~Q(**{data.pn_id_field+'__isnull': True}),\
 								Q(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30))).\
 								values(data.pn_id_field).annotate(Count(data.pn_id_field))
 			else:
-				report_list_groups = report_list.filter(~Q(Q(**{data.pn_id_field: None})|Q(**{data.pn_id_field: ''})),\
+				report_list_groups = report_list.filter(~Q(Q(**{data.pn_id_field+'__isnull': True})|Q(**{data.pn_id_field: ''})),\
 								Q(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30))).\
 								values(data.pn_id_field).annotate(Count(data.pn_id_field))
 
-			#lgr.info('Report List Group: %s | %s' % (data.data_name,report_list_groups))
+			lgr.info('Report List Group: %s | %s' % (data.data_name,report_list_groups))
 
 
 			@transaction.atomic
