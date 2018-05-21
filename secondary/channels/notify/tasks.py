@@ -1558,6 +1558,7 @@ def outbound_bulk_logger(payload, contact_list, scheduled_send):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
+		lgr.info('Outbound Bulk Logger Started')
 		state = OutBoundState.objects.get(name='CREATED')
 		#For Bulk Create, do not save each model in loop
 		outbound_list = []
@@ -1580,6 +1581,7 @@ def outbound_bulk_logger(payload, contact_list, scheduled_send):
 				outbound.heading = template.template_heading
 			outbound_list.append(outbound)
 		if len(outbound_list)>0:
+			lgr.info('Outbound Bulk Logger Captured')
 			Outbound.objects.bulk_create(outbound_list)
 	except Exception, e:
 		lgr.info("Error on Outbound Bulk Logger: %s" % e)
