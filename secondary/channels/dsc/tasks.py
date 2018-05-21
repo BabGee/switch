@@ -1120,6 +1120,8 @@ class Wrappers:
 				for f in field_data[1:]:
 					id_model_data = id_model_data.related_model._meta.get_field(f)
 
+			lgr.info('ID Model Data: %s' % id_model_data.model)
+
 			#if model_class._meta.get_field(data.pn_id_field).get_internal_type() in ['AutoField','IntegerField','BigAutoField','BinaryField','DecimalField','SmallIntegerField']:
 
 			if id_model_data.model._meta.get_field(field_data[len(field_data)-1:][0]).get_internal_type() in ['AutoField','IntegerField','BigAutoField','BinaryField','DecimalField','SmallIntegerField']:
