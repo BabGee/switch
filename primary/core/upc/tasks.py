@@ -833,7 +833,7 @@ class System(Wrappers):
 			if profile.country:payload['country'] = profile.country.iso2
 			payload['address'] = profile.address
 			payload['msisdn'] = gateway_profile.msisdn.phone_number
-			if profile.role:payload['role_id'] = profile.role.pk
+			if gateway_profile.role:payload['role_id'] = gateway_profile.role.pk
 
 			payload['response'] = 'Profile Details Captured'
 			payload['response_status'] = '00'
@@ -2182,6 +2182,13 @@ class System(Wrappers):
 
 				if 'msisdn' not in payload.keys() and session_gateway_profile[0].msisdn:
 					payload['msisdn'] = session_gateway_profile[0].msisdn.phone_number
+
+				if 'role_id' in payload.keys():
+					role = Role.objects.get(id=payload["role_id"])
+					access_level = role.access_level
+					session_gateway_profile[0].role = role
+					#session_gateway_profile[0].access_level = access_level
+					session_gateway_profile[0].save()
 
 				if user.email and self.validateEmail(user.email): payload['email'] = user.email
 				elif 'email' in payload.keys(): del payload['email']
