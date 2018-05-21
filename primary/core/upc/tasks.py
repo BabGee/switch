@@ -832,7 +832,7 @@ class System(Wrappers):
 			payload['postal_code'] = profile.postal_code
 			if profile.country:payload['country'] = profile.country.iso2
 			payload['address'] = profile.address
-			payload['msisdn'] = gateway_profile.msisdn.phone_number
+			if gateway_profile.msisdn:payload['msisdn'] = gateway_profile.msisdn.phone_number
 			if gateway_profile.role:payload['role_id'] = gateway_profile.role.pk
 
 			payload['response'] = 'Profile Details Captured'
