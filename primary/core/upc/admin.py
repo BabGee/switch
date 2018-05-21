@@ -25,6 +25,10 @@ class InstitutionAdmin(admin.OSMGeoAdmin):
 		search_fields = ('name','business_number',)
 admin.site.register(Institution, InstitutionAdmin)
 
+class PassportStatusAdmin(admin.ModelAdmin):
+		list_display = ('id','name','description')
+admin.site.register(PassportStatus, PassportStatusAdmin)
+
 class ProfileStatusAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description','date_modified','date_created')
 admin.site.register(ProfileStatus, ProfileStatusAdmin)
@@ -32,7 +36,8 @@ admin.site.register(ProfileStatus, ProfileStatusAdmin)
 class ProfileAdmin(admin.OSMGeoAdmin):
 	list_display = ('id','middle_name','api_key','timezone','language','geometry', 'country', 'dob',\
 			'gender','physical_address','photo','user','national_id', 'city', 'region',\
-			'address','postal_code','passport_number','passport_expiry_date','postal_address','tax_pin',)
+			'address','postal_code','passport_number','passport_expiry_date','postal_address',\
+			'tax_pin','passport_status',)
 	search_fields = ('user__username','user__first_name','user__last_name','national_id','city','physical_address','address','passport_number',)
 admin.site.register(Profile, ProfileAdmin)
 

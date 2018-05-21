@@ -57,6 +57,14 @@ class Institution(models.Model):
 	def currency_list(self):
 		return "\n".join([a.code for a in self.currency.all()])
 
+class PassportStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+		
 class ProfileStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
@@ -89,6 +97,9 @@ class Profile(models.Model):
 	passport_expiry_date = models.DateField(blank=True, null=True)
 	postal_address = models.CharField(max_length=200, blank=True, null=True)
 	tax_pin = models.CharField(max_length=100, blank=True, null=True)
+	passport_status = models.ForeignKey(PassportStatus, null=True, blank=True)
+	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
+	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
 	def __unicode__(self):
 		return '%s %s %s %s %s' % (self.user.username, self.user.first_name, self.user.last_name, self.national_id, self.user.email)
 
