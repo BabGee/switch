@@ -1112,8 +1112,17 @@ class Wrappers:
 			#report_list_groups = original_report_list.filter(~Q(Q(**{data.pn_id_field: None})|Q(**{data.pn_id_field: ''}))).\
 			#					filter(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30)).\
 			#					values(data.pn_id_field).annotate(Count(data.pn_id_field))
+			original_model_data =  model_class._meta
+			field_data = data.pn_id_field.split('__')
+			id_model_data = original_model_data.get_field(field_data[0])
 
-			if model_class._meta.get_field(data.pn_id_field).get_internal_type() in ['AutoField','IntegerField','BigAutoField','BinaryField','DecimalField','SmallIntegerField']:
+			if field_data[1:]:
+				for f in field_data[1:]:
+					id_model_data = id_model_data.related_model._meta.get_field(f)
+
+			#if model_class._meta.get_field(data.pn_id_field).get_internal_type() in ['AutoField','IntegerField','BigAutoField','BinaryField','DecimalField','SmallIntegerField']:
+
+			if id_model_data.model._meta.get_field(field_data[len(field_data)-1:][0]).get_internal_type() in ['AutoField','IntegerField','BigAutoField','BinaryField','DecimalField','SmallIntegerField']:
 				report_list_groups = report_list.filter(~Q(**{data.pn_id_field: None}),\
 								Q(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30))).\
 								values(data.pn_id_field).annotate(Count(data.pn_id_field))
@@ -1180,15 +1189,16 @@ class Wrappers:
 
 					original_model_data =  model_class._meta
 					field_data = data.pn_update_field.split('__')
-					model_data = original_model_data.get_field(field_data[0])
+					update_model_data = original_model_data.get_field(field_data[0])
 
 					if field_data[1:]:
 						for f in field_data[1:]:
-							model_data = model_data.related_model._meta.get_field(f)
+							update_model_data = update_model_data.related_model._meta.get_field(f)
 
 					#selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:][0] +", 'DD, Month, YYYY')"
 
-					update_filtered_report = model_data.objects.all()
+					lgr.info('Model Data: %s' % update_model_data.model)
+					update_filtered_report = update_model_data.model.objects.all()
 
 					lgr.info('Model Data. Count: %s' % update_filtered_report.count())
 
