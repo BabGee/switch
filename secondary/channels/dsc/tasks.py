@@ -1134,9 +1134,16 @@ class Wrappers:
 
 			update_field_data = data.pn_update_field.split('__')
 			update_model_data = original_model_data.get_field(update_field_data[0])
+			update_model_pk = ''
 
 			if update_field_data[1:]:
 				for f in update_field_data[1:]:
+					if f == update_field_data[len(update_field_data)-1:]:
+						update_model_pk = update_model_pk + '__' + f
+					else:
+						update_model_pk = update_model_pk + '__pk'
+
+
 					update_model_data = update_model_data.related_model._meta.get_field(f)
 
 			update_model_field = update_field_data[len(update_field_data)-1:][0]
@@ -1209,7 +1216,7 @@ class Wrappers:
 					#lgr.info("Update notification Sent")
 
 
-					lgr.info('Model Data: %s | Field Data: %s' % (update_model_data.model, update_model_field))
+					lgr.info('Model Data: %s | Field Data: %s | PK: %s' % (update_model_data.model, update_model_field, update_model_pk))
 
 					record = original_filtered_report_list.values_list(data.pn_id_field,flat=True)
 
