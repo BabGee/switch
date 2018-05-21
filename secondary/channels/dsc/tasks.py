@@ -1113,16 +1113,34 @@ class Wrappers:
 			#					filter(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30)).\
 			#					values(data.pn_id_field).annotate(Count(data.pn_id_field))
 			original_model_data =  model_class._meta
+
+
 			id_field_data = data.pn_id_field.split('__')
 			id_model_data = original_model_data.get_field(id_field_data[0])
+			id_model_pk = ''
 
 			if id_field_data[1:]:
 				for f in id_field_data[1:]:
+					if f == id_field_data[len(id_field_data)-1:]:
+						id_model_pk = id_model_pk + '__' + f
+					else:
+						id_model_pk = id_model_pk + '__pk'
+
 					id_model_data = id_model_data.related_model._meta.get_field(f)
 
 			id_model_field = id_field_data[len(id_field_data)-1:][0]
 
-			lgr.info('ID Model Data: %s | ID Model Field: %s' % (id_model_data.model, id_model_field))
+			lgr.info('ID Model Data: %s | ID Model Field: %s | PK: %s ' % (id_model_data.model, id_model_field, id_model_pk))
+
+			update_field_data = data.pn_update_field.split('__')
+			update_model_data = original_model_data.get_field(update_field_data[0])
+
+			if update_field_data[1:]:
+				for f in update_field_data[1:]:
+					update_model_data = update_model_data.related_model._meta.get_field(f)
+
+			update_model_field = update_field_data[len(update_field_data)-1:][0]
+			#selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:][0] +", 'DD, Month, YYYY')"
 
 			#if model_class._meta.get_field(data.pn_id_field).get_internal_type() in ['AutoField','IntegerField','BigAutoField','BinaryField','DecimalField','SmallIntegerField']:
 
@@ -1190,22 +1208,12 @@ class Wrappers:
 
 					#lgr.info("Update notification Sent")
 
-					original_model_data =  model_class._meta
-					update_field_data = data.pn_update_field.split('__')
-					update_model_data = original_model_data.get_field(update_field_data[0])
-
-					if update_field_data[1:]:
-						for f in update_field_data[1:]:
-							update_model_data = update_model_data.related_model._meta.get_field(f)
-
-					update_model_field = update_field_data[len(update_field_data)-1:][0]
-					#selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:][0] +", 'DD, Month, YYYY')"
 
 					lgr.info('Model Data: %s | Field Data: %s' % (update_model_data.model, update_model_field))
 
-					record = original_filtered_report_list.values_list(data.pn_update_field,flat=True)
+					record = original_filtered_report_list.values_list(data.pn_id_field,flat=True)
 
-					update_filtered_report = update_model_data.model.objects.filter(**{ update_model_field+'__in': list(record) })
+					update_filtered_report = id_model_data.model.objects.filter(**{ id_model_field +'__in': list(record) })
 
 					lgr.info('Model Data. Count: %s' % update_filtered_report.count())
 
