@@ -825,7 +825,7 @@ class System(Wrappers):
 			payload['passport_number'] = profile.passport_number
 			if profile.passport_expiry_date: payload['passport_expiry_date'] = profile.passport_expiry_date.isoformat()
 			payload['physical_address'] = profile.physical_address
-			payload['tax_pin'] = profile.taxt_pin
+			payload['tax_pin'] = profile.tax_pin if profile.tax_pin else ''
 			payload['city'] = profile.city
 			payload['region'] = profile.region
 			payload['postal_address'] = profile.postal_address
