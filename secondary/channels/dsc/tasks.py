@@ -1148,6 +1148,7 @@ class Wrappers:
 				query = reduce(operator.and_, (Q(k) for k in pn_filter.items()))
 				#Lock Query till Marked as sent (SELECT FOR UPDATE) & Select for trigger and Update Unfiltered List
 				#original_filtered_report_list = original_report_list.filter(query).select_for_update()
+
 				original_filtered_report_list = report_list.filter(query).select_for_update()
 
 				if data.pn_action.filter(name='REPLACE').exists():
@@ -1202,7 +1203,7 @@ class Wrappers:
 
 					lgr.info('Model Data: %s | Field Data: %s' % (update_model_data.model,update_field_data))
 
-					record = original_filtered_report_list.values_list(data.pn_update_field,flat=True).distinct()
+					record = original_filtered_report_list.values_list(data.pn_update_field,flat=True)
 
 					update_filtered_report = update_model_data.model.objects.filter(**{ update_model_field+'__in': list(record) })
 
