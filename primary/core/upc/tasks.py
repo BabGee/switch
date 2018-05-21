@@ -149,7 +149,7 @@ class Wrappers:
 
 	def profile_update(self, user, payload):
 		if 'full_names' in payload.keys():
-			full_names = payload["full_names"].split(" ")
+			full_names = payload["full_names"].strip().split(" ")
 			if len(full_names) == 1:
 				payload['first_name'] = full_names[0]
 			if len(full_names) == 2:
