@@ -1127,12 +1127,10 @@ class Wrappers:
 			#if model_class._meta.get_field(data.pn_id_field).get_internal_type() in ['AutoField','IntegerField','BigAutoField','BinaryField','DecimalField','SmallIntegerField']:
 
 			if id_model_data.model._meta.get_field(id_model_field).get_internal_type() in ['AutoField','IntegerField','BigAutoField','BinaryField','DecimalField','SmallIntegerField']:
-				report_list_groups = report_list.filter(~Q(**{data.pn_id_field+'__isnull': True}),\
-								Q(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30))).\
+				report_list_groups = report_list.filter(~Q(**{data.pn_id_field+'__isnull': True})).\
 								values(data.pn_id_field).annotate(Count(data.pn_id_field))
 			else:
-				report_list_groups = report_list.filter(~Q(Q(**{data.pn_id_field+'__isnull': True})|Q(**{data.pn_id_field: ''})),\
-								Q(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30))).\
+				report_list_groups = report_list.filter(~Q(Q(**{data.pn_id_field+'__isnull': True})|Q(**{data.pn_id_field: ''}))).\
 								values(data.pn_id_field).annotate(Count(data.pn_id_field))
 
 			lgr.info('Report List Group: %s | %s' % (data.data_name,report_list_groups))
