@@ -33,7 +33,7 @@ smtphost = cf.get('SMTP','default_host')
 smtpport = cf.get('SMTP','default_port')
 smtptls_default = cf.get('SMTP','tls')
 tls_default = {'True': True, 'False': False}
-smtptls = tls_default['smtptls_default']
+smtptls = tls_default[smtptls_default]
 
 conf_hosts = cf.get('ALLOWED_HOSTS','hosts')
 hosts = conf_hosts.split(",")
