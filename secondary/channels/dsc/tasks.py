@@ -1201,7 +1201,7 @@ class Wrappers:
 					update_model_field = update_field_data[len(update_field_data)-1:][0]
 					#selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:][0] +", 'DD, Month, YYYY')"
 
-					lgr.info('Model Data: %s | Field Data: %s' % (update_model_data.model,update_field_data))
+					lgr.info('Model Data: %s | Field Data: %s' % (update_model_data.model, update_model_field))
 
 					record = original_filtered_report_list.values_list(data.pn_update_field,flat=True)
 
