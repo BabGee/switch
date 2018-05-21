@@ -31,7 +31,9 @@ dbport = cf.get('DATABASES','default_dbport')
 
 smtphost = cf.get('SMTP','default_host')
 smtpport = cf.get('SMTP','default_port')
-smtptls = bool(cf.get('SMTP','tls'))
+smtptls_default = cf.get('SMTP','tls')
+tls_default = {'True': True, 'False': False}
+smtptls = tls_default['smtptls_default']
 
 conf_hosts = cf.get('ALLOWED_HOSTS','hosts')
 hosts = conf_hosts.split(",")
