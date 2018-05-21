@@ -1107,7 +1107,7 @@ class Wrappers:
 		if data.pn_id_field not in ['',None] and data.pn_update_field not in ['',None]:
 			#Filter out (None|NULL). Filter to within the last 10 seconds MQTT runs every 2 seconds. 
 
-			lgr.info('Report List: %s | %s' % (data.data_name,report_list.count()))
+			#lgr.info('Report List: %s | %s' % (data.data_name,report_list.count()))
 
 			#report_list_groups = original_report_list.filter(~Q(Q(**{data.pn_id_field: None})|Q(**{data.pn_id_field: ''}))).\
 			#					filter(date_modified__gte=timezone.now() - timezone.timedelta(minutes=30)).\
@@ -1139,10 +1139,11 @@ class Wrappers:
 			if update_field_data[1:]:
 				for f in update_field_data[1:]:
 					if f == update_field_data[len(update_field_data)-1:]:
-						update_model_pk = update_model_pk + '__' + f
-					else:
-						update_model_pk = update_model_pk + '__pk'
 
+						update_model_pk = update_model_pk + '__pk'
+					else:
+
+						update_model_pk = update_model_pk + '__' + f
 
 					update_model_data = update_model_data.related_model._meta.get_field(f)
 
@@ -1158,7 +1159,7 @@ class Wrappers:
 				report_list_groups = report_list.filter(~Q(Q(**{data.pn_id_field+'__isnull': True})|Q(**{data.pn_id_field: ''}))).\
 								values(data.pn_id_field).annotate(Count(data.pn_id_field))
 
-			lgr.info('Report List Group: %s | %s' % (data.data_name,report_list_groups))
+			#lgr.info('Report List Group: %s | %s' % (data.data_name,report_list_groups))
 
 
 			@transaction.atomic
