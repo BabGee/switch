@@ -29,6 +29,9 @@ dbpassword = cf.get('DATABASES','default_dbpassword')
 dbhost = cf.get('DATABASES','default_dbhost')
 dbport = cf.get('DATABASES','default_dbport')
 
+smtphost = cf.get('SMTP','default_host')
+smtpport = cf.get('SMTP','default_port')
+
 conf_hosts = cf.get('ALLOWED_HOSTS','hosts')
 hosts = conf_hosts.split(",")
 
@@ -111,9 +114,9 @@ GEOIP_PATH = '/usr/share/GeoIP'
 #EMAIL_USE_TLS = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'localhost'
+EMAIL_HOST = smtphost
 #EMAIL_PORT = 25
-EMAIL_PORT = 587
+EMAIL_PORT = smtpport
 EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
 EMAIL_USE_TLS = True
