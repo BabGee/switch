@@ -1275,6 +1275,37 @@ class System(Wrappers):
 		return payload
 
 
+	def update_msisdn(self, payload, node_info):
+		try:
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			if 'msisdn' in payload.keys() and self.get_msisdn(payload):
+				msisdn = self.get_msisdn(payload)
+
+				existing_gateway_profile = GatewayProfile.objects.filter(
+					Q(msisdn__phone_number=msisdn),
+					~Q(id=session_gateway_profile.id),
+					Q(gateway=session_gateway_profile.gateway),
+					Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS','ONE TIME PASSWORD'])
+				)
+				if existing_gateway_profile.exists():
+					payload['response'] = 'Profile With Phone Number Already exists'
+					payload['response_status'] = '26'
+				else:
+					session_gateway_profile.msisdn.phone_number = msisdn
+					session_gateway_profile.msisdn.save()
+
+					payload['response'] = 'Phone Number Updated'
+					payload['response_status'] = '00'
+			else:
+				lgr.info('Invalid Phone Number:%s' % payload)
+				payload['response'] = 'No Valid Phone Number Found'
+				payload['response_status'] = '25'
+		except Exception, e:
+			lgr.info('Error on Update Profile Phone Number: %s' % e)
+			payload['response_status'] = '96'
+		return payload
+
+
 	def set_profile_pin(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
