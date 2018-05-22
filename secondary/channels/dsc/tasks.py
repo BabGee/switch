@@ -3808,7 +3808,7 @@ def process_push_request():
 										payload['gateway_host'] = '127.0.0.1'
 
 										lgr.info('Service: %s | Gateway Profile: %s | Data: %s' % (service, gateway_profile, payload))
-										bridgetasks.background_service_call.delay(service, gateway_profile, payload)
+										bridgetasks.background_service_call.delay(service.name, gateway_profile.id, payload)
 
 							except Exception, e: lgr.info('Push update Failure: %s ' % e)
 						#disconnect after loop
