@@ -1131,7 +1131,7 @@ class Wrappers:
 
 			id_model_field = id_field_data[len(id_field_data)-1:][0]
 
-			lgr.info('ID Model Data: %s | ID Model Field: %s | PK: %s ' % (id_model_data.model, id_model_field, id_model_pk))
+			#lgr.info('ID Model Data: %s | ID Model Field: %s | PK: %s ' % (id_model_data.model, id_model_field, id_model_pk))
 
 			update_field_data = data.pn_update_field.split('__')
 			update_model_data = original_model_data.get_field(update_field_data[0])
@@ -1216,25 +1216,21 @@ class Wrappers:
 					#lgr.info("Update notification Sent")
 
 					'''
-
 					record = original_filtered_report_list.values_list(data.pn_id_field,flat=True)
-
 					id_filtered_report = id_model_data.model.objects.filter(**{ id_model_field +'__in': list(record) })
-
 					lgr.info('ID Model Data. Count: %s' % id_filtered_report.count())
 					'''
 
-					lgr.info('Model Data: %s | Field Data: %s | PK: %s' % (update_model_data.model, update_model_field, update_model_pk))
+					#lgr.info('Model Data: %s | Field Data: %s | PK: %s' % (update_model_data.model, update_model_field, update_model_pk))
 					record = original_filtered_report_list.values_list(update_model_pk,flat=True)
-
 					update_filtered_report = update_model_data.model.objects.filter(**{ 'pk__in': list(record) })
 
-					lgr.info('UPDATE Model Data. Count: %s' % update_filtered_report.count())
-
+					#lgr.info('UPDATE Model Data. Count: %s' % update_filtered_report.count())
 					pn_update = {}
 					pn_update[update_model_field] = True
 					update_filtered_report.query.annotations.clear()
 					update_filtered_report.filter().update(**pn_update)
+
 					'''
 					pn_update = {}
 					pn_update[data.pn_update_field] = True
@@ -1243,6 +1239,7 @@ class Wrappers:
 					original_filtered_report_list.query.annotations.clear()
 					original_filtered_report_list.filter().update(**pn_update)
 					'''
+
 					#Update pn status
 					push[channel] = params
 					#lgr.info('Return MQTT: %s' % push)
@@ -3811,7 +3808,7 @@ def process_push_request():
 										payload['gateway_host'] = '127.0.0.1'
 
 										lgr.info('Service: %s | Gateway Profile: %s | Data: %s' % (service, gateway_profile, payload))
-										BridgeWrappers().background_service_call(service, gateway_profile, payload)
+										BridgeWrappers().background_service_call.delay(service, gateway_profile, payload)
 
 							except Exception, e: lgr.info('Push update Failure: %s ' % e)
 						#disconnect after loop
