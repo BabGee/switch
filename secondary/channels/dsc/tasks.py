@@ -1410,7 +1410,6 @@ class Wrappers:
         ct = 0
 	push = {}
 	try:
-
 	    from thirdparty.bidfather.models import Bid,BidRequirementApplication
 
 
@@ -1438,11 +1437,13 @@ class Wrappers:
 			bid_req_app.update(pn=True)
 
 		#lgr.info(push)
+
                 return params,max_id, min_id, ct, push
             else:
                 bid = Bid.objects.get(pk=payload['bid_id'])
                 rows = bid.app_rankings(gateway_profile.institution, gateway_profile)
                 params['rows'] = rows
+
                 return params,max_id,min_id,ct,push
                 
 	except Exception as e:
@@ -3739,6 +3740,8 @@ def process_file_upload():
 @single_instance_task(60*10)
 def process_push_request():
 	try:
+
+		lgr.info('Start Push Request')
 		#from celery.utils.log import get_task_logger
 		lgr = get_task_logger(__name__)
 		cols = []
@@ -3770,7 +3773,7 @@ def process_push_request():
 
 				for key,value in push.items():
 					lgr.info("%s PN: %s" % (key,value))
-					if len(value):
+					if value:
 						msc = MqttServerClient()
 						for k,v in value.items():
 							try:
@@ -3813,4 +3816,7 @@ def process_push_request():
 							except Exception, e: lgr.info('Push update Failure: %s ' % e)
 						#disconnect after loop
 						msc.disconnect()
+
+
+		lgr.info('End Push Request')
 	except Exception, e: lgr.info('Error on process push request: %s' % e)

@@ -57,6 +57,7 @@ app.conf.task_routes = {
 		'secondary.channels.dsc.tasks.process_file_upload': {'queue': 'files','routing_key':'files'},
 		'secondary.channels.notify.tasks.service_call': {'queue': 'services','routing_key':'services'},
 		'primary.core.bridge.tasks.background_service_call': {'queue': 'services','routing_key':'services'},
+		'primary.core.bridge.tasks.process_background_service_call': {'queue': 'services','routing_key':'services'},
 		'primary.core.bridge.tasks.process_background_service': {'queue': 'services','routing_key':'services'},
 		'secondary.finance.crb.tasks.reference_activity_service_call': {'queue': 'services','routing_key':'services'},
 		'secondary.finance.crb.tasks.process_reference_activity': {'queue': 'commandline','routing_key':'commandline'},
