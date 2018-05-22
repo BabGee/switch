@@ -60,7 +60,7 @@ app.conf.task_routes = {
 		'primary.core.bridge.tasks.process_background_service': {'queue': 'services','routing_key':'services'},
 		'secondary.finance.crb.tasks.reference_activity_service_call': {'queue': 'services','routing_key':'services'},
 		'secondary.finance.crb.tasks.process_reference_activity': {'queue': 'commandline','routing_key':'commandline'},
-		'secondary.channels.dsc.tasks.process_push_notification': {'queue': 'push_notification','routing_key':'push_notification'},
+		'secondary.channels.dsc.tasks.process_push_request': {'queue': 'push_request','routing_key':'push_request'},
 		}
 
 
@@ -74,7 +74,7 @@ app.conf.task_queues = (
     Queue('files', Exchange('files'), routing_key='files', delivery_mode=1),
     Queue('payments', Exchange('payments'), routing_key='payments', delivery_mode=1),
     Queue('services', Exchange('services'), routing_key='services', delivery_mode=1),
-    Queue('push_notification', Exchange('push_notification'), routing_key='push_notification', delivery_mode=1),
+    Queue('push_request', Exchange('push_request'), routing_key='push_request', delivery_mode=1),
 
 )
 
