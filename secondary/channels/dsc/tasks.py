@@ -1215,15 +1215,16 @@ class Wrappers:
 
 					#lgr.info("Update notification Sent")
 
-
-					lgr.info('Model Data: %s | Field Data: %s | PK: %s' % (update_model_data.model, update_model_field, update_model_pk))
+					'''
 
 					record = original_filtered_report_list.values_list(data.pn_id_field,flat=True)
 
 					id_filtered_report = id_model_data.model.objects.filter(**{ id_model_field +'__in': list(record) })
 
 					lgr.info('ID Model Data. Count: %s' % id_filtered_report.count())
+					'''
 
+					lgr.info('Model Data: %s | Field Data: %s | PK: %s' % (update_model_data.model, update_model_field, update_model_pk))
 					record = original_filtered_report_list.values_list(update_model_pk,flat=True)
 
 					update_filtered_report = update_model_data.model.objects.filter(**{ 'pk__in': list(record) })
@@ -1231,12 +1232,17 @@ class Wrappers:
 					lgr.info('UPDATE Model Data. Count: %s' % update_filtered_report.count())
 
 					pn_update = {}
+					pn_update[update_model_field] = True
+					update_filtered_report.query.annotations.clear()
+					update_filtered_report.filter().update(**pn_update)
+					'''
+					pn_update = {}
 					pn_update[data.pn_update_field] = True
 					#filtered_report_list_for_update.query.annotations.clear()
 					#filtered_report_list_for_update.filter().update(**pn_update)
 					original_filtered_report_list.query.annotations.clear()
 					original_filtered_report_list.filter().update(**pn_update)
-
+					'''
 					#Update pn status
 					push[channel] = params
 					#lgr.info('Return MQTT: %s' % push)
