@@ -1120,6 +1120,7 @@ class Wrappers:
 			id_model_pk = ''
 
 			if id_field_data[1:]:
+				id_model_pk = id_field_data[0]
 				for f in id_field_data[1:]:
 					if f in id_field_data[len(id_field_data)-1:]:
 						id_model_pk = id_model_pk + '__pk'
@@ -1137,6 +1138,7 @@ class Wrappers:
 			update_model_pk = ''
 
 			if update_field_data[1:]:
+				update_model_pk = update_field_data[0]
 				for f in update_field_data[1:]:
 					if f in update_field_data[len(update_field_data)-1:]:
 						update_model_pk = update_model_pk + '__pk'
