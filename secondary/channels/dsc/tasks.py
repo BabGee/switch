@@ -1218,10 +1218,15 @@ class Wrappers:
 
 					record = original_filtered_report_list.values_list(data.pn_id_field,flat=True)
 
-					update_filtered_report = id_model_data.model.objects.filter(**{ id_model_field +'__in': list(record) })
+					id_filtered_report = id_model_data.model.objects.filter(**{ id_model_field +'__in': list(record) })
 
-					lgr.info('Model Data. Count: %s' % update_filtered_report.count())
+					lgr.info('ID Model Data. Count: %s' % id_filtered_report.count())
 
+					record = original_filtered_report_list.values_list(update_model_pk,flat=True)
+
+					update_filtered_report = update_model_data.model.objects.filter(**{ 'pk__in': list(record) })
+
+					lgr.info('UPDATE Model Data. Count: %s' % update_filtered_report.count())
 
 					pn_update = {}
 					pn_update[data.pn_update_field] = True
