@@ -25,10 +25,6 @@ class InstitutionAdmin(admin.OSMGeoAdmin):
 		search_fields = ('name','business_number',)
 admin.site.register(Institution, InstitutionAdmin)
 
-class PassportStatusAdmin(admin.ModelAdmin):
-		list_display = ('id','name','description')
-admin.site.register(PassportStatus, PassportStatusAdmin)
-
 class ProfileStatusAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description','date_modified','date_created')
 admin.site.register(ProfileStatus, ProfileStatusAdmin)

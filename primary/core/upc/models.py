@@ -56,15 +56,7 @@ class Institution(models.Model):
 		return "\n".join([a.name for a in self.gateway.all()])
 	def currency_list(self):
 		return "\n".join([a.code for a in self.currency.all()])
-
-class PassportStatus(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	def __unicode__(self):
-		return u'%s' % (self.name)
-		
+	
 class ProfileStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
