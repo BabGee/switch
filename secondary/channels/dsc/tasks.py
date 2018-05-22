@@ -1122,9 +1122,9 @@ class Wrappers:
 			if id_field_data[1:]:
 				for f in id_field_data[1:]:
 					if f == id_field_data[len(id_field_data)-1:]:
-						id_model_pk = id_model_pk + '__' + f
-					else:
 						id_model_pk = id_model_pk + '__pk'
+					else:
+						id_model_pk = id_model_pk + '__' + f if id_model_pk else f
 
 					id_model_data = id_model_data.related_model._meta.get_field(f)
 
@@ -1139,11 +1139,9 @@ class Wrappers:
 			if update_field_data[1:]:
 				for f in update_field_data[1:]:
 					if f == update_field_data[len(update_field_data)-1:]:
-
 						update_model_pk = update_model_pk + '__pk'
 					else:
-
-						update_model_pk = update_model_pk + '__' + f
+						update_model_pk = update_model_pk + '__' + f if update_model_pk else f
 
 					update_model_data = update_model_data.related_model._meta.get_field(f)
 

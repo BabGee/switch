@@ -1225,7 +1225,9 @@ class System(Wrappers):
 					#self.outbound_bulk_logger.delay(payload, contact_list, scheduled_send)
 					contact_list = np.asarray(contact_list).tolist()
 					lgr.info('Contact List: %s' % len(contact_list))
-					outbound_bulk_logger.apply_async((payload, contact_list, scheduled_send), serializer='json')
+					#outbound_bulk_logger.apply_async((payload, contact_list, scheduled_send), serializer='json')
+
+					outbound_bulk_logger(payload, contact_list, scheduled_send)
 
 					payload['response'] = 'Outbound Message Processed'
 					payload['response_status']= '00'
@@ -1265,7 +1267,9 @@ class System(Wrappers):
 
 					contact_list = np.asarray(contact_list).tolist()
 					lgr.info('Contact List: %s' % len(contact_list))
-					outbound_bulk_logger.apply_async((payload, contact_list, scheduled_send), serializer='json')
+					#outbound_bulk_logger.apply_async((payload, contact_list, scheduled_send), serializer='json')
+
+					outbound_bulk_logger(payload, contact_list, scheduled_send)
 
 					payload['response'] = 'Outbound Message Processed'
 					payload['response_status']= '00'
