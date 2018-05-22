@@ -97,7 +97,7 @@ class Profile(models.Model):
 	passport_expiry_date = models.DateField(blank=True, null=True)
 	postal_address = models.CharField(max_length=200, blank=True, null=True)
 	tax_pin = models.CharField(max_length=100, blank=True, null=True)
-	passport_status = models.ForeignKey(PassportStatus, null=True, blank=True)
+	passport_alert = models.BooleanField(default=False)
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
 	def __unicode__(self):
