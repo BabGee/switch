@@ -1361,19 +1361,18 @@ class System(Wrappers):
 		return payload
 
 
-	def passport_alert(self, payload, node_info):
+	def reset_profile_pushnotification(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 			profile = session_gateway_profile.user.profile
-			profile.passport_alert = True
 			profile.pn = False
 			profile.save()
-			payload['response'] = 'Passport Alert'
+			payload['response'] = 'Profile Push Notification Reset'
 			payload['response_status'] = '00'
 
 		except Exception, e:
-			lgr.info('Error on Passport Alert: %s' % e)
+			lgr.info('Error on Reset Profile Push Notification: %s' % e)
 			payload['response_status'] = '96'
 		return payload
 
