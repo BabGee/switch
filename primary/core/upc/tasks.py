@@ -1252,14 +1252,15 @@ class System(Wrappers):
 	def add_change_email(self, payload, node_info):
 		try:
 			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-			if 'email' in payload.keys() and self.validateEmail(payload["email"]): 
-				existing_gateway_profile = GatewayProfile.objects.filter(Q(user__email__iexact=payload['email']), ~Q(id=session_gateway_profile.id),\
-							Q(gateway=session_gateway_profile.gateway),Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS']))
+			if 'email' in payload.keys() and self.validateEmail(payload["email"].strip()):
+				email = payload["email"].strip()
+				existing_gateway_profile = GatewayProfile.objects.filter(Q(user__email__iexact=email), ~Q(id=session_gateway_profile.id),\
+							Q(gateway=session_gateway_profile.gateway),Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS','ONE TIME PASSWORD']))
 				if existing_gateway_profile.exists():
 					payload['response'] = 'Profile With Email Already exists'
 					payload['response_status'] = '26'
 				else:
-					session_gateway_profile.user.email = payload["email"]
+					session_gateway_profile.user.email = email
 					session_gateway_profile.user.save()
 
 					payload['response'] = 'Email Updated'
