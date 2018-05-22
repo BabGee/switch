@@ -3741,9 +3741,10 @@ def process_file_upload():
 def process_push_request():
 	try:
 
+		lgr = get_task_logger(__name__)
+
 		lgr.info('Start Push Request')
 		#from celery.utils.log import get_task_logger
-		lgr = get_task_logger(__name__)
 		cols = []
 		rows = []
 		lines = []
