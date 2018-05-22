@@ -3739,9 +3739,8 @@ def process_file_upload():
 @transaction.atomic
 @single_instance_task(60*10)
 def process_push_request():
+	lgr = get_task_logger(__name__)
 	try:
-
-		lgr = get_task_logger(__name__)
 
 		lgr.info('Start Push Request')
 		#from celery.utils.log import get_task_logger
