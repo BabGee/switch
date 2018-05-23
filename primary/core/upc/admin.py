@@ -26,7 +26,7 @@ class InstitutionAdmin(admin.OSMGeoAdmin):
 admin.site.register(Institution, InstitutionAdmin)
 
 class ProfileStatusAdmin(admin.ModelAdmin):
-		list_display = ('id','name','description','date_modified','date_created')
+		list_display = ('id','name','description','registered','date_modified','date_created')
 admin.site.register(ProfileStatus, ProfileStatusAdmin)
 
 class ProfileAdmin(admin.OSMGeoAdmin):

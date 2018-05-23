@@ -60,6 +60,7 @@ class Institution(models.Model):
 class ProfileStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
+	registered = models.BooleanField(default=False)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	def __unicode__(self):
