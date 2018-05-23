@@ -45,11 +45,15 @@ from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core import serializers
 
+from secondary.channels.notify.mqtt import MqttServerClient
+from primary.core.bridge import tasks as bridgetasks
+
 from primary.core.upc.tasks import Wrappers as UPCWrappers
 from secondary.channels.dsc.models import *
 
 lgr = logging.getLogger('secondary.channels.dsc')
 
+msc = MqttServerClient()
 
 class Wrappers:
     def validateEmail(self, email):
@@ -334,9 +338,6 @@ class Wrappers:
 
                 if len(duration_days_filter_data):
 	    	    #lgr.info('Duration Filter Data: %s' % duration_days_filter_data)
-		    for k,v in duration_days_filter_data.items(): 
-			try:lgr.info('Duration Data: %s' % v.isoformat())
-			except: pass
                     query = reduce(operator.and_, (Q(k) for k in duration_days_filter_data.items()))
 		    #lgr.info('Query: %s' % query)
                     report_list = report_list.filter(query)
@@ -351,9 +352,6 @@ class Wrappers:
 		    except Exception, e: lgr.info('Error on time filter: %s' % e)
 
                 if len(duration_hours_filter_data):
-		    for k,v in duration_hours_filter_data.items(): 
-			try:lgr.info('Date Data: %s' % v.isoformat())
-			except: pass
                     query = reduce(operator.and_, (Q(k) for k in duration_hours_filter_data.items()))
 		    #lgr.info('Query: %s' % query)
 
@@ -1151,13 +1149,13 @@ class Wrappers:
 			#selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:][0] +", 'DD, Month, YYYY')"
 
 			#if model_class._meta.get_field(data.pn_id_field).get_internal_type() in ['AutoField','IntegerField','BigAutoField','BinaryField','DecimalField','SmallIntegerField']:
-
+			#Limit report list groups to 50 for optimization
 			if id_model_data.model._meta.get_field(id_model_field).get_internal_type() in ['AutoField','IntegerField','BigAutoField','BinaryField','DecimalField','SmallIntegerField']:
 				report_list_groups = report_list.filter(~Q(**{data.pn_id_field+'__isnull': True})).\
-								values(data.pn_id_field).annotate(Count(data.pn_id_field))
+								values(data.pn_id_field).annotate(Count(data.pn_id_field))[:50]
 			else:
 				report_list_groups = report_list.filter(~Q(Q(**{data.pn_id_field+'__isnull': True})|Q(**{data.pn_id_field: ''}))).\
-								values(data.pn_id_field).annotate(Count(data.pn_id_field))
+								values(data.pn_id_field).annotate(Count(data.pn_id_field))[:50]
 
 			#lgr.info('Report List Group: %s | %s' % (data.data_name,report_list_groups))
 
@@ -1416,8 +1414,8 @@ class Wrappers:
 	    if data.pn_data and 'push_request' in payload.keys() and payload['push_request']:
                 #push = {}
                 import copy
-                # Loop through a report to get the different pn_id_fields to be updated
-                bid_req_app =  BidRequirementApplication.objects.select_for_update().filter(pn=False)
+                # Loop through a report to get the different pn_id_fields to be updated | Limit to 50 for optimization
+                bid_req_app =  BidRequirementApplication.objects.select_for_update().filter(pn=False)[:50]
                 #lgr.info(bid_req_app)    
 		if bid_req_app.exists():
 			#lgr.info('push updates exist')
@@ -3735,6 +3733,48 @@ def process_file_upload():
             lgr.info('Error processing file upload: %s | %s' % (u, e))
 
 
+
+def push_update(k, v):
+	try:
+		channel = k
+		channel_list = channel.split('/')
+		if len(channel_list) == 3:
+			lgr.info('Channel: %s' % channel)
+			itms = json.dumps(v, cls=DjangoJSONEncoder)
+			lgr.info('Items: %s' % itms)
+
+			msc.publish(
+				channel,
+				itms
+			)
+		elif len(channel_list) == 4:
+			for i in v['data']:
+				params = i.copy()
+				service = Service.objects.get(name=channel_list[3])
+				gateway = Gateway.objects.get(id=channel_list[0])
+				if 'session_gateway_profile_id' in params.keys():
+					gateway_profile = GatewayProfile.objects.get(id=params['session_gateway_profile_id'])
+				elif 'gateway_profile_id' in params.keys():
+					gateway_profile = GatewayProfile.objects.get(id=params['gateway_profile_id'])
+				else:
+					gateway_profile = GatewayProfile.objects.get(gateway=gateway,user__username='System@User',status__name__in=['ACTIVATED'])
+				payload = {}
+				for k,v in params.items():
+					try: v = json.loads(v)
+					except: pass
+					if isinstance(v, dict): payload.update(v)
+					else: payload[k] = v
+				payload['chid'] = 2
+				payload['ip_address'] = '127.0.0.1'
+				payload['gateway_host'] = '127.0.0.1'
+
+				lgr.info('Service: %s | Gateway Profile: %s | Data: %s' % (service, gateway_profile, payload))
+				bridgetasks.background_service_call.delay(service.name, gateway_profile.id, payload)
+
+	except Exception, e: lgr.info('Push update Failure: %s ' % e)
+	#disconnect after loop
+	#msc.disconnect()
+
 @app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
@@ -3743,6 +3783,8 @@ def process_push_request():
 	try:
 
 		lgr.info('Start Push Request')
+		pu = push_update
+		#lgr.info('Push Update: %s' % pu)
 		#from celery.utils.log import get_task_logger
 		cols = []
 		rows = []
@@ -3761,10 +3803,6 @@ def process_push_request():
 
 			if data_list.exists():
 				#lgr.info('push notification datalists : %s' % data_list)
-
-				from secondary.channels.notify.mqtt import MqttServerClient
-				from primary.core.bridge import tasks as bridgetasks
-
 				payload = {}
 				payload['push_request'] = True
 				cols, rows, lines, groups, data, min_id, max_id, t_count, push = Wrappers().process_data_list(data_list, payload, gateway_profile, profile_tz, data)
@@ -3773,50 +3811,9 @@ def process_push_request():
 
 				for key,value in push.items():
 					lgr.info("%s PN: %s" % (key,value))
-					if value:
-						msc = MqttServerClient()
-						for k,v in value.items():
-							try:
-								channel = k
-								channel_list = channel.split('/')
-								if len(channel_list) == 3:
-									lgr.info('Channel: %s' % channel)
-									itms = json.dumps(v, cls=DjangoJSONEncoder)
-									lgr.info('Items: %s' % itms)
-
-									msc.publish(
-										channel,
-										itms
-									)
-								elif len(channel_list) == 4:
-									for i in v['data']:
-										params = i.copy()
-										service = Service.objects.get(name=channel_list[3])
-										gateway = Gateway.objects.get(id=channel_list[0])
-										if 'session_gateway_profile_id' in params.keys():
-											gateway_profile = GatewayProfile.objects.get(id=params['session_gateway_profile_id'])
-										elif 'gateway_profile_id' in params.keys():
-											gateway_profile = GatewayProfile.objects.get(id=params['gateway_profile_id'])
-										else:
-											gateway_profile = GatewayProfile.objects.get(gateway=gateway,user__username='System@User',status__name__in=['ACTIVATED'])
-
-										payload = {}
-										for k,v in params.items():
-											try: v = json.loads(v)
-											except: pass
-											if isinstance(v, dict): payload.update(v)
-											else: payload[k] = v
-										payload['chid'] = 2
-										payload['ip_address'] = '127.0.0.1'
-										payload['gateway_host'] = '127.0.0.1'
-
-										lgr.info('Service: %s | Gateway Profile: %s | Data: %s' % (service, gateway_profile, payload))
-										bridgetasks.background_service_call.delay(service.name, gateway_profile.id, payload)
-
-							except Exception, e: lgr.info('Push update Failure: %s ' % e)
-						#disconnect after loop
-						msc.disconnect()
-
+					#for k,v in value.items():
+					#	pu(k,v)
+					result = map(lambda kv: pu(kv[0],kv[1]), value.iteritems())
 
 		lgr.info('End Push Request')
 	except Exception, e: lgr.info('Error on process push request: %s' % e)
