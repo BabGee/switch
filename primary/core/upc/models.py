@@ -87,7 +87,6 @@ class Profile(models.Model):
 	postal_code = models.CharField(max_length=200, blank=True, null=True)
 	passport_number = models.CharField(max_length=45, blank=True, null=True)
 	passport_expiry_date = models.DateField(blank=True, null=True)
-	passport_expiry_notice = models.BooleanField(default=False)
 	postal_address = models.CharField(max_length=200, blank=True, null=True)
 	tax_pin = models.CharField(max_length=100, blank=True, null=True)
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
