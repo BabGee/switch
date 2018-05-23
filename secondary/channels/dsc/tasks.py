@@ -1126,6 +1126,7 @@ class Wrappers:
 						id_model_pk = id_model_pk + '__' + f if id_model_pk else f
 
 					id_model_data = id_model_data.related_model._meta.get_field(f)
+			else: id_model_pk = 'pk'
 
 			id_model_field = id_field_data[len(id_field_data)-1:][0]
 
@@ -1144,6 +1145,7 @@ class Wrappers:
 						update_model_pk = update_model_pk + '__' + f if update_model_pk else f
 
 					update_model_data = update_model_data.related_model._meta.get_field(f)
+			else: update_model_pk = 'pk'
 
 			update_model_field = update_field_data[len(update_field_data)-1:][0]
 			#selected_data[k.strip()] = "to_char("+ model_data.model._meta.app_label +"_"+ model_data.model._meta.model_name +"."+ field_data[len(field_data)-1:][0] +", 'DD, Month, YYYY')"
