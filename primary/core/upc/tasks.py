@@ -1267,8 +1267,8 @@ class System(Wrappers):
 					payload['response_status'] = '00'
 			else:
 				lgr.info('Invalid Email:%s' % payload)
-				payload['response'] = 'No Valid Email Found'
-				payload['response_status'] = '25'
+				payload['response'] = 'No Valid Email Found, Ignored Email Change'
+				payload['response_status'] = '00' # was 25
 		except Exception, e:
 			lgr.info('Error on Set Profile Pin: %s' % e)
 			payload['response_status'] = '96'
@@ -1298,8 +1298,8 @@ class System(Wrappers):
 					payload['response_status'] = '00'
 			else:
 				lgr.info('Invalid Phone Number:%s' % payload)
-				payload['response'] = 'No Valid Phone Number Found'
-				payload['response_status'] = '25'
+				payload['response'] = 'No Valid Phone Number Found, Ignored Phone Number Change'
+				payload['response_status'] = '00'
 		except Exception, e:
 			lgr.info('Error on Update Profile Phone Number: %s' % e)
 			payload['response_status'] = '96'
