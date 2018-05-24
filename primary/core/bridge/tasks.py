@@ -262,7 +262,9 @@ class System(Wrappers):
 				activity.approver_gateway_profile = gateway_profile
 
 				activity.save()
-				payload = self.background_service_call(activity.approval.service, activity.affected_gateway_profile, json.loads(activity.request))
+				payload.update(json.loads(activity.request))
+
+				payload = self.background_service_call(activity.approval.service, activity.affected_gateway_profile, payload)
 			else:
 				payload['response_status'] = '25'
 		except Exception, e:
