@@ -2270,6 +2270,31 @@ class System(Wrappers):
 		return payload
 
 
+	def update_gateway_profile(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+            		if 'session_gateway_profile_id' in payload.keys():
+                		gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+	            	user, payload = self.profile_update(gateway_profile.user, payload)
+	
+		    	if 'role_id' in payload.keys():
+				role = Role.objects.get(id=payload["role_id"])
+				access_level = role.access_level
+				gateway_profile.role = role
+				gateway_profile.access_level = access_level
+				gateway_profile.save()
+			payload['response_status'] = '00'
+			payload['response'] = 'Session Profile Updated'
+
+		except Exception, e:
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+			lgr.info("Error on getting session gateway Profile: %s" % e)
+
+		return payload
+
+
 	def get_change_identity_profile(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
