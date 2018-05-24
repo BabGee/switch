@@ -262,19 +262,16 @@ class System(Wrappers):
 				activity.approver_gateway_profile = gateway_profile
 
 				activity.save()
-
-				payload['trigger'] = 'approve_service%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
-
-
-			payload['response'] = "Activity Approval Logged. Wait to Process"
-			payload['response_status'] = '00'
+				payload = self.background_service_call(activity.approval.service, activity.affected_gateway_profile, json.loads(activity.request))
+			else:
+				payload['response_status'] = '25'
 		except Exception, e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Background Service Call: %s" % e)
 		return payload
 
 
-	def approve_service(self, payload, node_info):
+	def approve_service_deprecated(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			activities = ApprovalActivity.objects.filter(pk=payload['approval_activity_pk'])
