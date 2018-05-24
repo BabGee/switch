@@ -182,7 +182,8 @@ class System(Wrappers):
 				background_service = background_service.filter(Q(trigger=None))
 
 			if background_service.exists():
-				payload = self.background_service_call(activity.approval.service, activity.affected_gateway_profile, payload)
+				service = background_service[0].service
+				payload = self.background_service_call(service, session_gateway_profile, payload)
 			else:
 				#all are successes
 				payload['response'] = 'No Activity Service Found'
