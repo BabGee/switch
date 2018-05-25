@@ -343,7 +343,7 @@ class Approval(models.Model):
 
 
 class ApprovalActivityStatus(models.Model):
-	name = models.CharField(max_length=50) # CREATED APPROVED DENIED
+	name = models.CharField(max_length=50) # CREATED APPROVED REJECTED
 	description = models.CharField(max_length=200)
 	date_modified = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
