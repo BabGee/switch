@@ -347,7 +347,6 @@ class ApprovalActivityStatus(models.Model):
 	description = models.CharField(max_length=200)
 	date_modified = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-
 	def __unicode__(self):
 		return u'%s' % (self.name)
 
