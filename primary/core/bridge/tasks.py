@@ -194,6 +194,31 @@ class System(Wrappers):
 		return payload
 
 
+	def reject_activity(self, payload, node_info):
+		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+		try:
+			activities = ApprovalActivity.objects.filter(pk=payload['approval_activity_pk'])
+
+			if activities.exists():
+				activity = activities[0]
+
+				activity_status = ApprovalActivityStatus.objects.get(name='REJECTED')
+				activity.status = activity_status
+				activity.approver_gateway_profile = gateway_profile
+
+				activity.save()
+
+				payload['response'] = 'Activity Rejected'
+				payload['response_status'] = '00'
+
+			else:
+				payload['response_status'] = '25'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Background Service Call: %s" % e)
+		return payload
+
+
 	def approve_activity(self, payload, node_info):
 		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 		try:

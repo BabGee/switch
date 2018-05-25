@@ -122,6 +122,9 @@ class ApprovalAdmin(admin.ModelAdmin):
 			'service','details','cut_off_command','trigger_service_list','requestor','approver',)
 admin.site.register(Approval, ApprovalAdmin)
 
+class ApprovalActivityStatusAdmin(admin.ModelAdmin):
+        list_display = ('name','description',)
+admin.site.register(ApprovalActivityStatus, ApprovalActivityStatusAdmin)
 
 class ApprovalActivityAdmin(admin.ModelAdmin):
         list_display = ('id','approval','status','requestor_gateway_profile','affected_gateway_profile','approver_gateway_profile',\
