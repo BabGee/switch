@@ -225,6 +225,7 @@ class Wrappers:
 	    list_filter_data = {}
 
 	    case_values_data = {}
+	    link_values_data = {}
 
 	    #lgr.info('\n\n\n')
 	    #lgr.info('Model Name: %s' % data.query.name)
@@ -965,9 +966,42 @@ class Wrappers:
 	    if len(case_values_data.keys()):
 		    report_list = report_list.annotate(**case_values_data)
 
-
-
 	    #lgr.info('Case Values')
+	    link_query = DataListLinkQuery.objects.filter(query=data.query, link_inactive=False)
+
+	    for link in link_query:
+		link_name = link.link_name
+		link_action = link.link_action
+		link_service = link.link_service.name
+		link_icon = link.link_icon.icon
+	        link_case_field = link.link_case_field
+	        link_case_value = link.link_case_value
+		case_when = []
+
+		args.append(link_name.strip())
+		params['cols'].append({"label": link_name.strip(), "type": "href", "value": link_name.strip()})
+		link_value = '%s%%%s%%%s' % (link_action, link_service, link_icon)
+
+		#Final Case
+		if link_case_value and link_case_field:
+       	        	case_field = link_case_field
+			case_value = link_case_value
+
+			case_data = {}
+
+			case_data[case_field.strip()] =  case_value
+			case_data['then'] = Value(link_value)
+
+			case_when.append(When(**case_data))
+
+			link_values_data[link_name.strip()] = Case(*case_when, default=Value(''), output_field=CharField())
+		else:
+			link_values_data[link_name.strip()] = Value(link_value, output_field=CharField())
+
+	    if len(link_values_data.keys()):
+		    report_list = report_list.annotate(**link_values_data)
+
+	    #lgr.info('Link Values')
 
 	    if or_filters not in [None,'']:
                 # for a in filters.split("&"):
