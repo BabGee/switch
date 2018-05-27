@@ -52,8 +52,8 @@ class BindPositionAdmin(admin.ModelAdmin):
 admin.site.register(BindPosition, BindPositionAdmin)
 
 class PageInputGroupAdmin(admin.ModelAdmin):
-		list_display = ('id','name','icon_old','description','item_level','input_variable','style','section_size',\
-				'section_height','auto_submit','icon','bind_position','gateway_list',)
+		list_display = ('id','name','icon','description','item_level','input_variable','style','section_size',\
+				'section_height','auto_submit','bind_position','gateway_list',)
 	        search_fields = ('name','input_variable__name',)
 		list_filter = ('input_variable__service',)
 admin.site.register(PageInputGroup, PageInputGroupAdmin)
