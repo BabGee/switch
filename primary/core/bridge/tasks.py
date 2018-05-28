@@ -105,11 +105,12 @@ class Wrappers:
 			amount = payload['amount'] if 'amount' in payload.keys() and payload['amount']!='' else None
 			charges = payload['charges'] if 'charges' in payload.keys() and payload['charges']!='' else None
 			request = self.background_activity_payload(payload)
-
+			lgr.info('Request: %s' % request)
 			if details: #details can be used to inject triggers
 				try: request.update(details) #Triggers removed in previous call
-				except: pass
+				except Exception, e: lgr.info('Error on Updating Details: %s' % e)
 
+			lgr.info('Request: %s' % request)
 			activity = BackgroundServiceActivity(service=service, status=status,\
 					gateway_profile=gateway_profile,request=json.dumps(request),\
 					channel=channel, response_status=response_status, currency = currency,\
