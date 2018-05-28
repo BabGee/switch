@@ -107,8 +107,8 @@ class Wrappers:
 			request = self.background_activity_payload(payload)
 
 			if details: #details can be used to inject triggers
--				try: request.update(details) #Triggers removed in previous call
--				except: pass
+				try: request.update(details) #Triggers removed in previous call
+				except: pass
 
 			activity = BackgroundServiceActivity(service=service, status=status,\
 					gateway_profile=gateway_profile,request=json.dumps(request),\
