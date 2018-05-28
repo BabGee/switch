@@ -440,9 +440,7 @@ def process_background_service_call(background):
 		i.save()
 
 	except Exception, e:
-		payload['response_status'] = '96'
 		lgr.info('Unable to make service call: %s' % e)
-	return payload
 
 
 @app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
