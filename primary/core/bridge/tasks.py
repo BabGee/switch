@@ -189,8 +189,7 @@ class System(Wrappers):
 			if background_service.exists():
 				service = background_service[0].service
 				details = json.loads(background_service[0].details)
-				#payload = self.background_service_call(service, session_gateway_profile, payload, details)
-				payload = self.background_service_call(service, session_gateway_profile, payload)
+				payload = self.background_service_call(service, session_gateway_profile, payload, details)
 			else:
 				#all are successes
 				payload['response'] = 'No Activity Service Found'
