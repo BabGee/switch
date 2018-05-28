@@ -94,7 +94,7 @@ class Wrappers:
 			lgr.info('Unable to make service call: %s' % e)
 		return payload
 
-	def background_service_call(self, service, gateway_profile, payload):
+	def background_service_call(self, service, gateway_profile, payload, details={}):
 		try:
 			status = TransactionStatus.objects.get(name='CREATED')
 			response_status = ResponseStatus.objects.get(response='DEFAULT')
@@ -105,6 +105,11 @@ class Wrappers:
 			amount = payload['amount'] if 'amount' in payload.keys() and payload['amount']!='' else None
 			charges = payload['charges'] if 'charges' in payload.keys() and payload['charges']!='' else None
 			request = self.background_activity_payload(payload)
+
+			if details: #details can be used to inject triggers
+-				try: request.update(details) #Triggers removed in previous call
+-				except: pass
+
 			activity = BackgroundServiceActivity(service=service, status=status,\
 					gateway_profile=gateway_profile,request=json.dumps(request),\
 					channel=channel, response_status=response_status, currency = currency,\
@@ -183,6 +188,8 @@ class System(Wrappers):
 
 			if background_service.exists():
 				service = background_service[0].service
+				details = json.loads(background_service[0].details)
+				#payload = self.background_service_call(service, session_gateway_profile, payload, details)
 				payload = self.background_service_call(service, session_gateway_profile, payload)
 			else:
 				#all are successes
