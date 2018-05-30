@@ -60,8 +60,8 @@ class Wrappers:
 			payload['response_status'] = '63'
 			profile_error = True
 		elif session_gateway_profile.exists() and 'national_id' in payload.keys() and\
-		 GatewayProfile.objects.filter(user__profile__national_id__iexact=payload['national_id'].replace(' ','').strip(),\
-		 gateway=gateway_profile.gateway).exists() and\
+		 GatewayProfile.objects.filter(Q(user__profile__national_id__iexact=payload['national_id'].replace(' ','').strip()),\
+		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway)).exists() and\
 		 GatewayProfile.objects.filter(user__profile__national_id__iexact=payload['national_id'].replace(' ','').strip(),\
 		 gateway=gateway_profile.gateway)[0].user <> session_gateway_profile[0].user:
 			#check update national_id profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
@@ -69,15 +69,15 @@ class Wrappers:
 			payload['response_status'] = '63'
 			profile_error = True
 		elif session_gateway_profile.exists() == False and 'national_id' in payload.keys() and\
-		 GatewayProfile.objects.filter(user__profile__national_id__iexact=payload['national_id'].strip(),\
-		 gateway=gateway_profile.gateway).exists():
+		 GatewayProfile.objects.filter(Q(user__profile__national_id__iexact=payload['national_id'].strip()),\
+		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway)).exists():
 			#check create national_id profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile.
 			payload['response'] = 'Profile Error: National ID exists in another profile. Please contact us'
 			payload['response_status'] = '63'
 			profile_error = True
 		elif session_gateway_profile.exists() and 'passport_number' in payload.keys() and\
-		 GatewayProfile.objects.filter(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip(),\
-		 gateway=gateway_profile.gateway).exists() and\
+		 GatewayProfile.objects.filter(Q(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip()),\
+		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway)).exists() and\
 		 GatewayProfile.objects.filter(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip(),\
 		 gateway=gateway_profile.gateway)[0].user <> session_gateway_profile[0].user:
 			#check update passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
@@ -85,8 +85,8 @@ class Wrappers:
 			payload['response_status'] = '63'
 			profile_error = True
 		elif session_gateway_profile.exists() == False and 'passport_number' in payload.keys() and\
-		 GatewayProfile.objects.filter(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip(),\
-		 gateway=gateway_profile.gateway).exists():
+		 GatewayProfile.objects.filter(Q(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip()),\
+		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway)).exists():
 			#check create passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile.
 			payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
 			payload['response_status'] = '63'
@@ -216,8 +216,10 @@ class Wrappers:
 		lgr.info('Profile Capture')
 		if ('email' in payload.keys() and self.validateEmail(payload["email"]) ) and \
 		('msisdn' in payload.keys() and self.get_msisdn(payload)):
-			msisdn_session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.get_msisdn(payload)),Q(gateway=gateway_profile.gateway))
-			email_session_gateway_profile = GatewayProfile.objects.filter(Q(user__email__iexact=payload["email"]),Q(gateway=gateway_profile.gateway))
+			msisdn_session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.get_msisdn(payload)),\
+								~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
+			email_session_gateway_profile = GatewayProfile.objects.filter(Q(user__email__iexact=payload["email"]),\
+								~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 
 			if msisdn_session_gateway_profile.exists() and email_session_gateway_profile.exists():
 				if msisdn_session_gateway_profile[0] == email_session_gateway_profile[0]:

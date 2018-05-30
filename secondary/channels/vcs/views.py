@@ -302,17 +302,17 @@ class VAS:
 					init_nav_step= self.nav.menu.input_variable.init_nav_step
 
 					if ('Non-Existing Passport/National ID' in self.nav.menu.input_variable.name and \
-					GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
-					user__profile__national_id__iexact=self.payload['input'].strip()).exists()) or \
+					GatewayProfile.objects.filter(Q(gateway=self.code[0].gateway),~Q(status__name__in=['DEACTIVATED','DELETED']),\
+					Q(user__profile__national_id__iexact=self.payload['input'].strip())).exists()) or \
 					('Non-Existing Mobile Number' in self.nav.menu.input_variable.name and \
-					GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
-					msisdn__phone_number=UPCWrappers().simple_get_msisdn(self.payload['input'].strip(),self.payload)).exists()) or \
+					GatewayProfile.objects.filter(Q(gateway=self.code[0].gateway),~Q(status__name__in=['DEACTIVATED','DELETED']),\
+					Q(msisdn__phone_number=UPCWrappers().simple_get_msisdn(self.payload['input'].strip(),self.payload))).exists()) or \
 					('Non-Existing Passport/National ID' in self.nav.menu.input_variable.name and \
-					GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
-					user__profile__passport_number__iexact=self.payload['input'].strip()).exists()) or \
+					GatewayProfile.objects.filter(Q(gateway=self.code[0].gateway),~Q(status__name__in=['DEACTIVATED','DELETED']),\
+					Q(user__profile__passport_number__iexact=self.payload['input'].strip())).exists()) or \
 					('Non-Existing EMAIL' in self.nav.menu.input_variable.name and \
-					GatewayProfile.objects.filter(gateway=self.code[0].gateway,\
-					user__email__iexact=self.payload['input'].strip()).exists()):
+					GatewayProfile.objects.filter(Q(gateway=self.code[0].gateway),~Q(status__name__in=['DEACTIVATED','DELETED']),\
+					Q(user__email__iexact=self.payload['input'].strip())).exists()):
 						#Variables with an error page
 						if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
 						else: self.group_select = 96 #Fail menu as list not matching
