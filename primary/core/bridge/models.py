@@ -330,6 +330,7 @@ class Approval(models.Model):
 	trigger = models.ManyToManyField(Trigger, blank=True)
 	requestor = models.ForeignKey(Role)
 	approver = models.ForeignKey(Role, related_name='approver')
+	pending_count = models.IntegerField(null=True,blank=True,default=0) # null is unlimited
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.service)
 	def institution_list(self):
