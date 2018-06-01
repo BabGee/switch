@@ -229,10 +229,10 @@ class System(Wrappers):
 	def approve_activity(self, payload, node_info):
 		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 		try:
-			activities = ApprovalActivity.objects.filter(pk=payload['approval_activity_pk'])
+			activity = ApprovalActivity.objects.get(pk=payload['approval_activity_pk'])
 
-			if activities.exists():
-				activity = activities[0]
+			if gateway_profile.role == activity.approval.approver:
+				# activity = activities[0]
 
 				activity_status = ApprovalActivityStatus.objects.get(name='APPROVED')
 				activity.status = activity_status
@@ -243,6 +243,7 @@ class System(Wrappers):
 
 				payload = self.background_service_call(activity.approval.service, activity.affected_gateway_profile, payload)
 			else:
+				payload['response'] = 'You are not allowed to approve this activity'
 				payload['response_status'] = '25'
 		except Exception, e:
 			payload['response_status'] = '96'
@@ -280,6 +281,30 @@ class System(Wrappers):
 				approvals = approvals.filter(Q(trigger=None))
 
 			if approvals.exists():
+				approval = approvals[0]
+
+				# check if pending approvals exists
+				if approval.pending_count:
+					pending_approvals = ApprovalActivity.objects.filter(status__name='CREATED')
+					pending_approvals_count = pending_approvals.count()
+					if pending_approvals_count == approval.pending_count:
+						# enough pending approvals created
+						payload['response'] = "There is already Pending approvals for this service"
+						payload['response_status'] = '25'
+
+						return payload
+
+					elif pending_approvals_count > approval.pending_count:
+						# extra pending approvals exist
+						# Backward compatibility, delete extra pending, oldest first
+						extra_pending_approvals = pending_approvals.order_by('date_created')[:pending_approvals_count-approval.pending_count].values_list("id", flat=True)
+						ApprovalActivity.objects.filter(pk__in=list(extra_pending_approvals)).delete()
+
+						payload['response'] = "There is already Pending approvals for this service"
+						payload['response_status'] = '25'
+
+						return payload
+
 				status = ApprovalActivityStatus.objects.get(name='CREATED')
 				channel = Channel.objects.get(id=int(payload['chid']))
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
@@ -289,7 +314,7 @@ class System(Wrappers):
 				request = self.background_activity_payload(request)
 
 				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
-				try: request.update(json.loads(approvals[0].details)) #Triggers removed in previous call so no need to append
+				try: request.update(json.loads(approval.details)) #Triggers removed in previous call so no need to append
 				except: pass
 
 				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
@@ -300,7 +325,7 @@ class System(Wrappers):
 				activity.request=json.dumps(request)
 				activity.channel=channel
 				activity.gateway=gateway_profile.gateway
-				activity.approval=approvals[0]
+				activity.approval=approval
 				activity.response_status = response_status
 
 				if 'institution_id' in payload.keys():
@@ -309,6 +334,7 @@ class System(Wrappers):
 				activity.save()
 
 				payload['response'] = "Activity Logged. Wait to Process"
+
 			else:
 				payload['response'] = 'No Activity Service Found'
 			#all are successes
