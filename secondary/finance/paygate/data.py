@@ -32,7 +32,7 @@ from django.core import serializers
 
 from .models import *
 
-lgr = logging.getLogger('thirdparty.bidfather')
+lgr = logging.getLogger('secondary.finance.paygate')
 
 class List:
     def balance(self, payload, gateway_profile, profile_tz, data):
