@@ -640,12 +640,14 @@ class System(Wrappers):
 			else:
 				session_account = Account.objects.none()
 
+
+			'''
 			if 'account_type_id' in payload.keys():
 				session_account = session_account.filter(account_type__id=payload['account_type_id'])
 
 			if 'account_name' in payload.keys():
 				session_account = session_account.filter(account_type__name=payload['account_name'])
-
+			'''
 			if 'currency' in payload.keys():
 				session_account = session_account.filter(account_type__product_item__currency__code=payload['currency'])
 

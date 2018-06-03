@@ -1656,6 +1656,33 @@ class System(Wrappers):
 
 		return payload
 
+	def password_policy(self, payload, node_info):
+		try:
+			password = payload['password']
+			confirm_password = payload['confirm_password'] if 'confirm_password' in payload.keys() else None
+
+			error = ''
+
+			if re.search(r'\d', password) is None: error += 'Digit, ' 
+			if re.search(r'[A-Z]', password) is None: error += 'Uppercase, '
+			if re.search(r'[a-z]', password) is None: error += 'Lowercase, '
+			if len(password) >=6 is None: error += 'More than 6 Characters, '
+			if len(password) <=30 is None: error += 'Less than 30 Characters, '
+			if re.search(r"[ !@#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) is None: error += 'Special character, '
+			if confirm_password and password <> confirm_password: error += "Matching, " 
+			if error == '':
+				payload['response'] = 'Password Policy Succesful'
+				payload['response_status'] = '00'
+			else:
+				payload['response'] = 'Requires('+error+')'
+				payload['response_status'] = '30'
+		except Exception, e:
+			lgr.info('Error on Password Policy: %s' % e)
+			payload['response_status'] = '96'
+
+		return payload
+
+
 	def set_password(self, payload, node_info):
 		try:
 			password = payload['password']
@@ -1754,7 +1781,12 @@ class System(Wrappers):
 				longitude,latitude = coordinates.split(',', 1)
 				# institution.geometry = Point(x=longitude, y=latitude)
 				trans_point = Point(float(longitude), float(latitude))
-
+			else:
+				lng = payload['lng'] if 'lng' in payload.keys() else 0.0
+				lat = payload['lat'] if 'lat' in payload.keys() else 0.0
+	                	trans_point = Point(float(lng), float(lat))
+			#Set Location
+			institution.geometry = trans_point
 			if 'institution_description' in payload.keys(): institution.description = payload['institution_description']
 			else: institution.description = payload['institution_name']
 
@@ -1764,15 +1796,16 @@ class System(Wrappers):
 			if 'institution_tagline' in payload.keys(): institution.tagline = payload['institution_tagline']
 			else: institution.tagline=payload['institution_name']
 
-			try:
-				filename = payload['institution_logo']
-				fromdir_name = settings.MEDIA_ROOT + '/tmp/uploads/'
-				from_file = fromdir_name + str(filename)
-				with open(from_file, 'r') as f:
-					myfile = File(f)
-					institution.logo.save(filename, myfile, save=False)
-			except Exception, e:
-				lgr.info('Error on saving Institution Logo: %s' % e)
+			if 'institution_logo' in payload.keys():
+				try:
+					filename = payload['institution_logo']
+					fromdir_name = settings.MEDIA_ROOT + '/tmp/uploads/'
+					from_file = fromdir_name + str(filename)
+					with open(from_file, 'r') as f:
+						myfile = File(f)
+						institution.logo.save(filename, myfile, save=False)
+				except Exception, e:
+					lgr.info('Error on saving Institution Logo: %s' % e)
 
 		
 			if 'institution_default_color' in payload.keys(): institution.default_color = payload['institution_default_color']
@@ -1781,7 +1814,6 @@ class System(Wrappers):
 			else: institution.country = Country.objects.get(iso2='KE')
 			if 'institution_theme' in payload.keys(): institution.theme = Theme.objects.get(name=payload['institution_theme'])
 			else: institution.theme = Theme.objects.get(name='polymer2.0')
-			institution.geometry = trans_point
 
 			institution.save()
 
@@ -1789,7 +1821,8 @@ class System(Wrappers):
 				institution.industries.add(IndustryClass.objects.get(id=payload['industry_class_id']))
 
 			institution.gateway.add(gateway_profile.gateway)
-			institution.currency.add(Currency.objects.get(code=payload['institution_currency']))
+			if 'institution_currency' in payload.keys(): institution.currency.add(Currency.objects.get(code=payload['institution_currency']))
+			else: institution.currency.add(Currency.objects.get(code='KES'))
 
 			payload['institution_id'] = institution.id
 
@@ -2072,21 +2105,22 @@ class System(Wrappers):
 
 
 				username = ''
-
+				email = ''
 				if 'national_id' in payload.keys():
 					username = createUsername(payload["national_id"].replace(' ','').strip())
 				elif 'passport_number' in payload.keys():
 					username = createUsername(payload["passport_number"].replace(' ','').strip())
-				elif 'email' in payload.keys() and self.validateEmail(payload["email"]):
+				elif 'email' in payload.keys() and self.validateEmail(payload["email"].strip()):
 					username = createUsername(payload["email"].split('@')[0])
+					email = payload['email'].strip()
 				elif 'msisdn' in payload.keys() and self.get_msisdn(payload):
 					#username = '%s' % (time.time()*1000)
 					username = '%s' % self.get_msisdn(payload)
 					username = createUsername(username)
 
 				payload['username'] = username
-				username = username.lower()[:100]
-				user = User.objects.create_user(username, '','')#username,email,password
+				username = username.lower()
+				user = User.objects.create_user(username, email,'')#username,email,password
 				lgr.info("Created User: %s" % user)
 
 				chars = string.ascii_letters + string.punctuation + string.digits

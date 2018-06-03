@@ -29,16 +29,16 @@ CELERYD_CHDIR="/srv/applications/switch"
 #CELERYD_OPTS="-A switch --time-limit=300 -Ofair --concurrency=20 --loglevel=DEBUG -Q:switch-node_0 celery -Q:switch-node_1 commandline -Q:switch-node_2 messages -Q:switch-node_3 files -Q:switch-node_4 payments -Q:switch-node_5 commandline1 -Q:switch-node_6 messages1  -Q:switch-node_7 messages2 -Q:switch-node_8 services"
 #CELERYD_OPTS="--time-limit=300 -Ofair -c 2 -Q:switch-node_0 celery -Q:switch-node_1 commandline -Q:switch-node_2 sms -Q:switch-node_3 files -Q:switch-node_4 payments -Q:switch-node_5 commandline1 -Q:switch-node_6 spawned_sms -Q:switch-node_7 email -Q:switch-node_8 services -Q:switch-node_9 push_request"
 CELERYD_OPTS="--time-limit=300 -Ofair 
--Q:switch-node_0 celery  -c:switch-node_0 10
--Q:switch-node_1 commandline -c:switch-node_1 2
--Q:switch-node_2 sms -c:switch-node_2 20
--Q:switch-node_3 files -c:switch-node_3 2
--Q:switch-node_4 payments -c:switch-node_4 10
--Q:switch-node_5 commandline1 -c:switch-node_5 2
--Q:switch-node_6 spawned_sms -c:switch-node_6 30
--Q:switch-node_7 email -c:switch-node_7 20
--Q:switch-node_8 services -c:switch-node_8 10
--Q:switch-node_9 push_request -c:switch-node_9 10"
+-Q:switch-node_0 celery  -c:switch-node_0 5
+-Q:switch-node_1 commandline -c:switch-node_1 1
+-Q:switch-node_2 sms -c:switch-node_2 10
+-Q:switch-node_3 files -c:switch-node_3 1
+-Q:switch-node_4 payments -c:switch-node_4 5
+-Q:switch-node_5 commandline1 -c:switch-node_5 1
+-Q:switch-node_6 spawned_sms -c:switch-node_6 15
+-Q:switch-node_7 email -c:switch-node_7 10
+-Q:switch-node_8 services -c:switch-node_8 5
+-Q:switch-node_9 push_request -c:switch-node_9 5"
 
 
 
