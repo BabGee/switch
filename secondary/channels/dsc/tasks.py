@@ -1904,22 +1904,22 @@ class Wrappers:
 
 			    node_to_call = d.node_system.URL.lower()
 			    class_name = d.data_response_type.name.title()
-			    lgr.info("Node To Call: %s Class Name: %s" % (node_to_call, class_name))
+			    #lgr.info("Node To Call: %s Class Name: %s" % (node_to_call, class_name))
 
 			    class_command = 'from '+node_to_call+'.data import '+class_name+' as c'
-			    lgr.info('Class Command: %s' % class_command)
+			    #lgr.info('Class Command: %s' % class_command)
 			    try:exec class_command
 			    except Exception, e: lgr.info('Error on Exec: %s' % e)
 
-			    lgr.info("Class: %s" % class_name)
+			    #lgr.info("Class: %s" % class_name)
 			    fn = c()
 			    func = getattr(fn, d.command_function)
-			    lgr.info("Run Func: %s TimeOut: %s" % (func, d.node_system.timeout_time))
+			    #lgr.info("Run Func: %s TimeOut: %s" % (func, d.node_system.timeout_time))
 
 			    #responseParams = func(payload, node_info)
                             params,max_id,min_id,t_count,push[d.data_name] = func(payload, gateway_profile, profile_tz, d)
 
-			    lgr.info('After Call')
+			    #lgr.info('After Call')
 			    '''
                             func = getattr(self, d.function.strip())
                             params,max_id,min_id,t_count,push[d.data_name] = func(payload, gateway_profile, profile_tz, d)
