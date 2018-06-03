@@ -34,7 +34,7 @@ from .models import *
 
 lgr = logging.getLogger('primary.core.administration')
 
-class Data:
+class List:
     def industries_categories(self,payload,gateway_profile,profile_tz,data):
         r = []
 	iss = IndustrySection.objects.all()

@@ -1902,11 +1902,11 @@ class Wrappers:
                         #lgr.info('Is a Function: ')
                         try:
 
-			    node_to_call = str(d.node_system.URL.lower())
-			    class_name = 'Data'
+			    node_to_call = d.node_system.URL.lower()
+			    class_name = d.data_response_type.name.title()
 			    lgr.info("Node To Call: %s Class Name: %s" % (node_to_call, class_name))
 
-			    class_command = 'from '+node_to_call+'.tasks import '+class_name+' as c'
+			    class_command = 'from '+node_to_call+'.data import '+class_name+' as c'
 			    lgr.info('Class Command: %s' % class_command)
 			    try:exec class_command
 			    except Exception, e: lgr.info('Error on Exec: %s' % e)
