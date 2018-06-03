@@ -1914,12 +1914,12 @@ class Wrappers:
 			    lgr.info("Class: %s" % class_name)
 			    fn = c()
 			    func = getattr(fn, d.command_function)
-			    lgr.info("Run Func: %s TimeOut: %s" % (func, item.node_system.timeout_time))
+			    lgr.info("Run Func: %s TimeOut: %s" % (func, d.node_system.timeout_time))
 
 			    #responseParams = func(payload, node_info)
-
                             params,max_id,min_id,t_count,push[d.data_name] = func(payload, gateway_profile, profile_tz, d)
 
+			    lgr.info('After Call')
 			    '''
                             func = getattr(self, d.function.strip())
                             params,max_id,min_id,t_count,push[d.data_name] = func(payload, gateway_profile, profile_tz, d)
