@@ -44,7 +44,7 @@ class DataResponseTypeAdmin(admin.ModelAdmin):
 admin.site.register(DataResponseType, DataResponseTypeAdmin)
 
 class DataListAdmin(admin.ModelAdmin):
-	list_display = ('data_name','url','content','status','is_report','group','level','function',\
+	list_display = ('data_name','url','content','status','is_report','group','level','node_system','command_function',\
 			'title','query','pn_data','pn_id_field','pn_update_field','data_response_type',\
 			'ifnull_response','push_service','pn_action_list','access_level_list',\
 			'institution_list','channel_list','gateway_list',)

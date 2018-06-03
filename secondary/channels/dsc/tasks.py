@@ -1898,11 +1898,33 @@ class Wrappers:
                 #lgr.info('Fetching from Data List')
                 collection = {}
                 for d in data_list:
-                    if d.function not in ['', None]:
+                    if d.command_function not in ['', None]:
                         #lgr.info('Is a Function: ')
                         try:
+
+			    node_to_call = str(d.node_system.URL.lower())
+			    class_name = 'Data'
+			    lgr.info("Node To Call: %s Class Name: %s" % (node_to_call, class_name))
+
+			    class_command = 'from '+node_to_call+'.tasks import '+class_name+' as c'
+			    lgr.info('Class Command: %s' % class_command)
+			    try:exec class_command
+			    except Exception, e: lgr.info('Error on Exec: %s' % e)
+
+			    lgr.info("Class: %s" % class_name)
+			    fn = c()
+			    func = getattr(fn, d.command_function)
+			    lgr.info("Run Func: %s TimeOut: %s" % (func, item.node_system.timeout_time))
+
+			    #responseParams = func(payload, node_info)
+
+                            params,max_id,min_id,t_count,push[d.data_name] = func(payload, gateway_profile, profile_tz, d)
+
+			    '''
                             func = getattr(self, d.function.strip())
                             params,max_id,min_id,t_count,push[d.data_name] = func(payload, gateway_profile, profile_tz, d)
+			    '''
+
 			    cols = params['cols'] if 'cols' in params.keys() else []
 			    rowsParams = params['rows'] if 'rows' in params.keys() else []
                             dataParams = params['data'] if 'data' in params.keys() else []
