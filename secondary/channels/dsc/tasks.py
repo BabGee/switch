@@ -1898,7 +1898,7 @@ class Wrappers:
                 #lgr.info('Fetching from Data List')
                 collection = {}
                 for d in data_list:
-                    if d.command_function not in ['', None]:
+                    if d.command_function not in ['', None] and d.node_system:
                         #lgr.info('Is a Function: ')
                         try:
 
@@ -1958,7 +1958,7 @@ class Wrappers:
                         except Exception, e:
                             lgr.info('Error on Data List Function: %s' % e)
 
-                    elif d.query not in ['', None]:
+                    elif d.query:
                         #lgr.info('Is a Query: ')
                         try:
                             params,max_id,min_id,t_count,push[d.data_name] = self.report(payload, gateway_profile, profile_tz, d)
