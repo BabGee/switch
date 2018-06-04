@@ -253,7 +253,10 @@ class System(Wrappers):
 	def approval_service(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			if 'session_gateway_profile_id' in payload.keys:
+				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			else:
+				session_gateway_profile = gateway_profile
 
 			approvals = Approval.objects.filter(Q(trigger_service__name=payload['SERVICE']),\
 										Q(gateway=gateway_profile.gateway)|Q(gateway=None))
