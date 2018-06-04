@@ -5,6 +5,9 @@
     <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"
           rel="stylesheet"/>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2.css" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2-bootstrap.css" />
 
     <ol class="breadcrumb">
 
@@ -203,14 +206,22 @@
 
                                         <br>
 
-                                        {% if page_input.trigger.exists %}
-                                            <br>
-                                            Triggers {{ page_input.trigger_list }}
-                                            {% for trigger in page_input.trigger.all %}
-                                                <span class="badge badge-dark">{{ trigger.name }}</span>
-                                            {% endfor %}
+                                            <a href="#"
+                                               data-url="/iic_editor/page_inputs/"
+                                               id="tags"
+                                               data-type="select2"
+                                               data-pk="{{ page_input.pk }}"
+                                               data-name="trigger"
+                                               data-title="Triggers">{% for trigger in page_input.trigger.all %}{{ trigger.name }},{% endfor %}</a>
 
-                                        {% endif %}
+{#                                        {% if page_input.trigger.exists %}#}
+{#                                            <br>#}
+{#                                            Triggers#}
+{#                                            {% for trigger in page_input.trigger.all %}#}
+{#                                                <span class="badge badge-dark">#}
+{#                                                    {{ trigger.name }}</span>#}
+{#                                            {% endfor %}#}
+{#                                        {% endif %}#}
 
 
 
@@ -275,6 +286,7 @@
 {% endblock %}
 {% block script %}
     <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2.js"></script>
     <script type="text/javascript">
 
         $.fn.editable.defaults.mode = 'inline';
@@ -330,6 +342,15 @@
                     {value: 19, text: 'AGENT'},
                     {value: 20, text: 'SUPER AGENT'}
                 ]
+            });
+
+
+             $('#tags').editable({
+                inputclass: 'input-large',
+                select2: {
+                    tags: {{trigger_list|safe}}, // ['html', 'javascript', 'css', 'ajax']
+                    tokenSeparators: [",", " "]
+                }
             });
         });
     </script>

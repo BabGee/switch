@@ -36,6 +36,7 @@ from .forms import \
 
 from django.db.models import Q
 from primary.core.administration.models import Channel
+from primary.core.bridge.models import Trigger
 
 
 def query_page_inputs(gateway, service='HOME', institution=None):
@@ -71,7 +72,6 @@ def datalist_list(request):
 
 
 def trigger_list(request):
-    from primary.core.bridge.models import Trigger
     triggers = Trigger.objects.all().order_by('-id')
 
     return render(request, "iic/trigger/list.html", {'triggers': triggers})
@@ -463,6 +463,7 @@ def interface(request, gateway_pk, service_name, page_group_pk=None, page_pk=Non
     # all().order_by('item_level')
 
     return render(request, "iic/page_group/interface.html", {
+        'trigger_list': json.dumps(list(Trigger.objects.all().order_by('-id').values_list('name',flat=True))),
         'gateway': gateway,
         'service': service_name,
         'page_groups': page_groups,
@@ -1375,6 +1376,17 @@ def page_input_put(request):
     elif field == 'section_size':
         page_input.section_size = value
         page_input.save()
+
+    elif field == 'trigger':
+        new_triggers = [x for x in data.getlist('value[]')]
+
+        current_triggers = page_input.trigger.values_list('name', flat=True)
+
+        remove_triggers = list(set(current_triggers).difference(new_triggers))
+        add_triggers = list(set(new_triggers).difference(current_triggers))
+
+        page_input.trigger.add(*Trigger.objects.filter(name__in=add_triggers))
+        page_input.trigger.remove(*Trigger.objects.filter(name__in=remove_triggers))
 
     else:
         # TODO this should use name too and not be default
