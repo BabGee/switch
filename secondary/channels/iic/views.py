@@ -1146,6 +1146,7 @@ def page_input_list(request, gateway_pk, service_name, page_group_pk, page_pk, p
     ).order_by('item_level_int')
 
     return render(request, "iic/page_input/list.html", {
+        'trigger_list': json.dumps(list(Trigger.objects.all().order_by('-id').values_list('name', flat=True))),
         'gateway': gateway,
         'page': page,
         'service': service_name,
@@ -1375,6 +1376,10 @@ def page_input_put(request):
 
     elif field == 'section_size':
         page_input.section_size = value
+        page_input.save()
+
+    elif field == 'item_level':
+        page_input.item_level = value
         page_input.save()
 
     elif field == 'trigger':

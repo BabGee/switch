@@ -5,6 +5,10 @@
           rel="stylesheet"/>
 
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2-bootstrap.css" />
+
+
     <ol class="breadcrumb">
 
         <li class="breadcrumb-item"><a href="/iic_editor/gateways/">Gateways</a></li>
@@ -82,7 +86,11 @@
                     <a href="/iic_editor/gateways/4/{{page_input.input_variable.service.name }}">get_section</a>  |
                 {% endif %}
 
-                    level <strong>{{ page_input.item_level }}</strong> |
+                    level <strong class="editable"
+                                 data-type="text"
+                                 data-name="item_level"
+                                 data-pk="{{ page_input.pk }}"
+                                 data-url="/iic_editor/page_inputs/">{{ page_input.item_level }}</strong> |
                     icon <strong>{{ page_input.icon }}</strong> |
                     section_size <strong class="editable"
                                  data-type="text"
@@ -120,6 +128,17 @@
 
                     <br>
                 Triggers {{ page_input.trigger_list }}
+
+
+                                            <a data-url="/iic_editor/page_inputs/"
+                                               class="page_input_trigger"
+                                               href="#!"
+                                               data-type="select2"
+                                               data-pk="{{ page_input.pk }}"
+                                               data-name="trigger"
+                                               data-title="Triggers">X {% for trigger in page_input.trigger.all %}{{ trigger.name }}{% if not forloop.last %},{% endif %}{% endfor %}</a>
+
+
                 <br>
                     <a target="_blank" href="/admin/iic/pageinput/{{ page_input.pk }}/change/">Edit</a> |
                     <a target="_blank" href="/admin/iic/inputvariable/{{ page_input.input_variable.pk }}/change/">Edit Input Variable</a> |
@@ -138,6 +157,7 @@
 {% endblock %}
 {% block script %}
     <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2.js"></script>
     <script type="text/javascript">
 
         $.fn.editable.defaults.mode = 'inline';
@@ -193,6 +213,13 @@
                     {value: 19, text: 'AGENT'},
                     {value: 20, text: 'SUPER AGENT'}
                 ]
+            });
+            $('.page_input_trigger').editable({
+                {#inputclass: 'input-large',#}
+                select2: {
+                    tags: {{trigger_list|safe}}, // ['html', 'javascript', 'css', 'ajax']
+                    tokenSeparators: [",", " "]
+                }
             });
         });
     </script>

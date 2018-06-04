@@ -6,7 +6,6 @@
           rel="stylesheet"/>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2.css" />
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2-bootstrap.css" />
 
     <ol class="breadcrumb">
@@ -206,13 +205,13 @@
 
                                         <br>
 
-                                            <a href="#"
-                                               data-url="/iic_editor/page_inputs/"
-                                               id="tags"
+                                            <a data-url="/iic_editor/page_inputs/"
+                                               class="page_input_trigger"
+                                               href="#!"
                                                data-type="select2"
                                                data-pk="{{ page_input.pk }}"
                                                data-name="trigger"
-                                               data-title="Triggers">{% for trigger in page_input.trigger.all %}{{ trigger.name }},{% endfor %}</a>
+                                               data-title="Triggers">#### {% for trigger in page_input.trigger.all %}{{ trigger.name }},{% endfor %}</a>
 
 {#                                        {% if page_input.trigger.exists %}#}
 {#                                            <br>#}
@@ -286,6 +285,7 @@
 {% endblock %}
 {% block script %}
     <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+{#    <script src="https://rawgit.com/Talv/x-editable/develop/dist/bootstrap4-editable/js/bootstrap-editable.js"></script>#}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2.js"></script>
     <script type="text/javascript">
 
@@ -345,8 +345,8 @@
             });
 
 
-             $('#tags').editable({
-                inputclass: 'input-large',
+             $('.page_input_trigger').editable({
+                {#inputclass: 'input-large',#}
                 select2: {
                     tags: {{trigger_list|safe}}, // ['html', 'javascript', 'css', 'ajax']
                     tokenSeparators: [",", " "]
