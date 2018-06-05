@@ -285,7 +285,11 @@ class System(Wrappers):
 
 				# check if pending approvals exists
 				if approval.pending_count:
-					pending_approvals = ApprovalActivity.objects.filter(status__name='CREATED')
+					pending_approvals = ApprovalActivity.objects.filter(
+                        status__name='CREATED',
+                        affected_gateway_profile=session_gateway_profile,
+                        approval=approval
+                    )
 					pending_approvals_count = pending_approvals.count()
 					if pending_approvals_count == approval.pending_count:
 						# enough pending approvals created
@@ -341,7 +345,7 @@ class System(Wrappers):
 			payload['response_status'] = '00'
 		except Exception, e:
 			payload['response_status'] = '96'
-			lgr.info("Error on Background Service: %s" % e)
+			lgr.error("Error on Background Service: %s" % e, exc_info=True)
 		return payload
 
 
