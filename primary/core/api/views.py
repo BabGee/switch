@@ -14,6 +14,11 @@ import logging
 lgr = logging.getLogger('primary.core.api')
 
 @csrf_protect
+def default(request):
+	return HttpResponse("Protected Section")  
+
+
+@csrf_protect
 def service_call(request):
 		return HttpResponse("Protected Section")  
 
