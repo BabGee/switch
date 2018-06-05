@@ -15,7 +15,7 @@ lgr = logging.getLogger('primary.core.api')
 
 @csrf_protect
 def default(request):
-	return HttpResponse("Protected Section")  
+	return HttpResponse()  
 
 
 @csrf_protect
