@@ -105,6 +105,7 @@ def module_model_fields(request):
 
 import ast, os
 from django.conf import settings
+from django.db.models import Q
 # this two are used in the next two views
 
 def node_system_service_commands(request): # todo update url and pass id in  view args
@@ -332,7 +333,21 @@ def gateway_profile_list(request, gateway_pk):
 
     q = request.GET.get('q',None)
     if q:
-        gateway_profiles = gateway_profiles.filter(msisdn__phone_number__icontains=q)
+        q = q.strip()
+        if '@' in q:  # filter using email
+            gateway_profiles = gateway_profiles.filter(user__email__icontains=q)
+        else:  # filter username or phone number
+            qn = q[-9:]  # clean phone number, remove +254
+            if qn.isdigit():  # phone number
+                gateway_profiles = gateway_profiles.filter(
+                    Q(msisdn__phone_number__icontains=qn) |
+                    Q(user__username__icontains=qn)
+                )
+            else:  # username
+                gateway_profiles = gateway_profiles.filter(
+                    Q(msisdn__phone_number__icontains=q) |
+                    Q(user__username__icontains=q)
+                )
 
     paginator = Paginator(gateway_profiles, 50)
     try:
