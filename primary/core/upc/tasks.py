@@ -49,8 +49,6 @@ class Wrappers:
 		except ValidationError:
 			return False
 
-
-
 	def profile_state(self, session_gateway_profile, payload, profile_error):
 
 		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
@@ -146,7 +144,6 @@ class Wrappers:
 
 		return user, payload
 
-
 	def profile_update(self, user, payload):
 		if 'full_names' in payload.keys():
 			full_names = payload["full_names"].strip().split(" ")
@@ -209,8 +206,6 @@ class Wrappers:
 		profile.save()
 
 		return user, payload
-
-
 
 	def profile_capture(self, gateway_profile, payload, profile_error):
 		lgr.info('Profile Capture')
