@@ -13,6 +13,10 @@
             {% endfor %}
         {% endif %}
 
+    {% if service_command.node_system.name == 'NOTIFY' and service_command.command_function == 'get_notification' %}
+        <a target="_blank" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service_command.service.name }}/notify/">Notification</a>
+    {% endif %}
+
 
 
     <span class="fa fa-code view-code"

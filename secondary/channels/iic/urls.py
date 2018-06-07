@@ -1,5 +1,8 @@
 from django.conf.urls import *
-from .views import *
+from secondary.channels.iic.views import *
+
+# notify
+from secondary.channels.iic.editor_views.notify.views import service_notification
 
 page_patterns = [
     url(r'^$', page_list),
@@ -125,6 +128,10 @@ urlpatterns = [
                         url(r'^$', page_group_detail),
                         url(r'^pages/', include(page_patterns)),
                     ])),
+                ])),
+                url(r'^notify/', include([
+                    url(r'^$', service_notification),
+                    # url(r'^create/$', page_group_create),
                 ])),
             ])),
         ]

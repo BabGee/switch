@@ -85,6 +85,8 @@ class BackgroundServiceActivityAdmin(admin.ModelAdmin):
 			'gateway','institution','current_command',\
 			'scheduled_send','message','sends','ext_outbound_id',)
 	list_filter = ('service', 'status', 'gateway_profile__gateway', 'response_status',)
+	search_fields = ('gateway_profile__user__username','gateway_profile__msisdn__phone_number',\
+			'gateway_profile__user__last_name','gateway_profile__user__first_name','request',)
 admin.site.register(BackgroundServiceActivity, BackgroundServiceActivityAdmin)
 
 
