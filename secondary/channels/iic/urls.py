@@ -2,7 +2,10 @@ from django.conf.urls import *
 from secondary.channels.iic.views import *
 
 # notify
-from secondary.channels.iic.editor_views.notify.views import service_notification
+from secondary.channels.iic.editor_views.notify.views import (
+    service_notification,
+    notification_templates
+)
 
 page_patterns = [
     url(r'^$', page_list),
@@ -57,6 +60,14 @@ urlpatterns = [
         ])),
 
     ]), name='dsc'),
+
+    # url(r'notify/', include([
+    #
+    #
+    #
+    #
+    # ]), name='notify'),
+    #
     url(r'gateways/', include([
         url(r'^$', gateway_list),
         url(r'^(?P<gateway_pk>\d+)/', include([
@@ -148,6 +159,9 @@ urlpatterns = [
             url(r'^service_commands/$', service_command_list),
             url(r'^service_commands/from/$', service_command_copy),
             url(r'^service_commands/order/$', service_command_order),
+
+            url(r'^notification_templates/$', notification_templates),
+
         ])),
     ]), name='services'),
 

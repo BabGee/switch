@@ -1,0 +1,5 @@
+{% for notification_template in notification_templates %}
+<option value="{{ notification_template.pk }}">
+    {{ notification_template }}
+</option>
+{% endfor %}

@@ -1,0 +1,251 @@
+{% extends 'iic/base.html' %}
+{% block content %}
+    <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"
+          rel="stylesheet"/>
+
+    <ol class="breadcrumb">
+
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/">Gateways</a></li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway.name }} </a></li>
+
+        <li class="breadcrumb-item active">{{ service.name }}</li>
+
+    </ol>
+
+    <h4>Notification Products</h4>
+    <ul>
+
+        {% for notification_product in notification_products %}
+            <li>{{ notification_product }}</li>
+        {% empty %}
+            <li>Empty</li>
+        {% endfor %}
+
+
+    </ul>
+
+    <h4>Notification Templates</h4>
+    <ul>
+
+        {% for notification_template in notification_templates %}
+            <li>{{ notification_template }}</li>
+        {% empty %}
+            <li>
+
+
+                <!-- Button trigger modal -->
+                <button type="button"
+                        class="btn btn-primary"
+                        id="view-s-commands"
+                        data-service="{{ service.pk }}"
+                        data-toggle="modal"
+                        data-target="#notificationTemplatesModal">
+                    Add Notification Template
+                </button>
+
+            </li>
+
+        {% endfor %}
+    </ul>
+
+
+
+
+
+    <!-- Modal -->
+    <div class="modal fade"
+         id="notificationTemplatesModal"
+         tabindex="-1"
+         role="dialog"
+         aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"
+                        id="exampleModalLabel">{{ page_input_group.input_variable.service.name }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modal-body">
+
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active"
+                               id="home-tab"
+                               data-toggle="tab"
+                               href="#home"
+                               role="tab"
+                               aria-controls="home"
+                               aria-selected="true">From Existing</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               id="profile-tab"
+                               data-toggle="tab"
+                               href="#profile"
+                               role="tab"
+                               aria-controls="profile"
+                               aria-selected="false">Add New</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="myTabContent">
+                        <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                            <form class=" my-2 my-lg-0">
+
+                                <select id="template_service" class="form-control mr-sm-2">
+                                    {% for service in all_services %}
+                                        <option value="{{ service.pk }}">{{ service }}</option>
+                                    {% endfor %}
+                                </select>
+
+                                <div class="input-group mb-3 form-inline">
+                                    <select class="custom-select"
+                                            id="notification_templates"
+                                            name="notification_template">
+                                    </select>
+
+                                    <button class="btn btn-outline-success my-2 my-sm-0" id="add-command">Add</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                            <form class=" my-2 my-lg-0">
+
+                                <select id="node_systemN" class="form-control mr-sm-2">
+                                    {% for node_system in node_systems %}
+                                        <option value="{{ node_system.pk }}">{{ node_system }}</option>
+                                    {% endfor %}
+                                </select>
+
+                                <div class="input-group mb-3 form-inline">
+                                    <input class="form-control mr-sm-2"
+                                           type="text"
+                                           id="new_command_function"
+                                           placeholder="New Command Function">
+
+                                    <button class="btn btn-outline-success my-2 my-sm-0" id="add-command">Add</button>
+                                </div>
+
+
+                            </form>
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+                <div class="modal-footer">
+
+                    {#        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>#}
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+
+
+{% endblock %}
+
+{% block script %}
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+    <script type="text/javascript">
+
+        $.fn.editable.defaults.mode = 'inline';
+        $.fn.editableform.buttons = '' +
+            '<button type="submit" class="btn btn-info editable-submit"><i class="fa fa-fw fa-check"></i></button>' +
+            '<button type="button" class="btn editable-cancel"><i class="fa fa-fw fa-remove"></i></button>';
+
+        $.fn.editable.defaults.ajaxOptions = {
+            type: "POST",
+            beforeSend: function (xhr, settings) {
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+
+            }
+        };
+
+        jQuery(document).ready(function () {
+
+            /* inline service edit */
+            $('.editable').editable();
+
+                        /*Load Service Commands */
+            function loadNotificationTemplates(){
+                $.ajax({
+                    url: "/iic_editor/services/"+$('select#template_service').val()+"/notification_templates/", // todo service pk should be variable
+                    beforeSend: function (xhr, settings) {
+                        function getCookie(name) {
+                            var cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                var cookies = document.cookie.split(';');
+                                for (var i = 0; i < cookies.length; i++) {
+                                    var cookie = jQuery.trim(cookies[i]);
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+
+                        function csrfSafeMethod(method) {
+                            // these HTTP methods do not require CSRF protection
+                            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                        }
+
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                        }
+                        // todo btn.html('<img src="/static/loader.gif">');
+                    },
+                    // data: { node_system_id:$('select#node_system').val()},
+                    type: 'GET',
+                    success: function (data) {
+                       console.log(data);
+                       $('#notification_templates').html(data);
+                        // update selection
+
+
+
+                    }
+                });
+			}
+			$("select#template_service").change(loadNotificationTemplates);
+			// load models from templated selection
+			loadNotificationTemplates();
+			/*End Load Service Commands */
+
+
+        });
+    </script>
+{% endblock %}
