@@ -1,5 +1,7 @@
 from django.shortcuts import render
 
+from django.db.models import Q
+
 from secondary.channels.notify.models import (
     Notification,
     NotificationProduct,
@@ -28,7 +30,7 @@ def service_notification(request,gateway_pk, service_name):
 
     notification_templates = NotificationTemplate.objects.filter(
         product__notification__code__gateway=gateway,
-        product__service__name=service_name
+        service__name=service_name
     )
 
 
