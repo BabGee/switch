@@ -1,4 +1,7 @@
 {% extends 'iic/base.html' %}
+
+{% load notify_extras %}
+
 {% block content %}
     <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"
           rel="stylesheet"/>
@@ -16,19 +19,36 @@
     <ul>
 
         {% for notification_product in notification_products %}
-            <li>{{ notification_product }}</li>
+            <li >
+                {{ notification_product }}
+
+                {% if service|service_enabled:notification_product %}
+                    <button>Disable</button>
+                    {% else %}
+                    <button>Enable</button>
+                {% endif %}
+
+            <p>{{ notification_product.service_list }}</p>
+
+
+
+            </li>
         {% empty %}
             <li>Empty</li>
         {% endfor %}
 
-
     </ul>
+
 
     <h4>Notification Templates</h4>
     <ul>
+            <a target="_blank" href="/admin/notify/notificationtemplate/?service__id__exact={{ service.pk }}">Suit View</a>
 
         {% for notification_template in notification_templates %}
-            <li>{{ notification_template }}</li>
+            <li>
+                {{ notification_template }}
+            {{ notification_template.product.count }} Products
+            </li>
         {% empty %}
             <li>
 
