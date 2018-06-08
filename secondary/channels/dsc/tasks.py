@@ -419,10 +419,18 @@ class Wrappers:
 	    #lgr.info('Token Filters Report List Count: %s' % report_list.count())
 	    if list_filters not in [None,'']:
                 for f in list_filters.split("|"):
+		    '''
             	    if f in payload.keys():
                     	if f not in ['',None]: list_filter_data[f + '__iexact'] = payload[f]
             	    elif 'q' in payload.keys() and payload['q'] not in ['', None]:
                     	if f not in ['',None]: list_filter_data[f + '__icontains'] = payload['q']
+		    '''
+		    if getattr(model_class, f.split('__')[0], False):
+			if f in payload.keys():
+				if f not in ['',None]: list_filter_data[f + '__iexact'] = payload[f]
+			elif 'q' in payload.keys() and payload['q'] not in ['', None]:
+				if f not in ['',None]: list_filter_data[f + '__icontains'] = payload['q']
+
 
                 if len(list_filter_data):
                     and_query = reduce(operator.and_, (Q(k) for k in list_filter_data.items()))
