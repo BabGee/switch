@@ -70,7 +70,7 @@ class AccessLevelAdmin(admin.ModelAdmin):
 admin.site.register(AccessLevel, AccessLevelAdmin)
 
 class RoleAdmin(admin.ModelAdmin):
-	list_display = ('id','name','status','description','access_level',)
+	list_display = ('id','name','status','description','access_level','gateway',)
 admin.site.register(Role, RoleAdmin)
 
 class ChannelAdmin(admin.ModelAdmin):

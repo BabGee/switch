@@ -158,10 +158,11 @@ class AccessLevel(models.Model):
 class Role(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
+	name = models.CharField(max_length=45)
 	status = models.ForeignKey(AccessLevelStatus)
 	description = models.CharField(max_length=100)
 	access_level = models.ForeignKey(AccessLevel)
+	gateway = models.ForeignKey(Gateway)
 	def __unicode__(self):
 		return u'%s' % (self.name)  
        
