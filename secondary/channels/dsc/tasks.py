@@ -433,9 +433,10 @@ class Wrappers:
 
 
                 if len(list_filter_data):
+		    lgr.info('%s' % report_list.query)
                     and_query = reduce(operator.and_, (Q(k) for k in list_filter_data.items()))
                     report_list = report_list.filter(and_query)
-
+		    lgr.info('%s' % report_list.query)
 
 	    #lgr.info('Institution Filters Report List Count: %s' % report_list.count())
 	    if institution_filters not in ['',None]:
