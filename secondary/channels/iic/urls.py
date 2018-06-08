@@ -143,6 +143,7 @@ urlpatterns = [
                 url(r'^notify/', include([
                     url(r'^$', service_notification),
                     # url(r'^create/$', page_group_create),
+
                 ])),
             ])),
         ]
@@ -161,6 +162,7 @@ urlpatterns = [
             url(r'^service_commands/order/$', service_command_order),
 
             url(r'^notification_templates/$', notification_templates),
+
 
         ])),
     ]), name='services'),
@@ -193,6 +195,8 @@ urlpatterns = [
     url(r'page_input_groups/', include([
         url(r'^$', page_input_group_put),
 
-    ]), name='page_input_groups')
+    ]), name='page_input_groups'),
+
+    url('notify/',include('secondary.channels.iic.editor_urls.notify.urls'))
 
 ]

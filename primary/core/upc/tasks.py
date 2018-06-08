@@ -209,7 +209,10 @@ class Wrappers:
 
 	def profile_capture(self, gateway_profile, payload, profile_error):
 		lgr.info('Profile Capture')
-		if ('email' in payload.keys() and self.validateEmail(payload["email"]) ) and \
+
+		if 'session_gateway_profile_id' in payload.keys():
+			session_gateway_profile = GatewayProfile.objects.filter(id=payload['session_gateway_profile_id'])
+		elif ('email' in payload.keys() and self.validateEmail(payload["email"]) ) and \
 		('msisdn' in payload.keys() and self.get_msisdn(payload)):
 			msisdn_session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.get_msisdn(payload)),\
 								~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
@@ -231,40 +234,40 @@ class Wrappers:
 			else:
 				session_gateway_profile = msisdn_session_gateway_profile
 
-
 		elif 'email' in payload.keys() and self.validateEmail(payload["email"]):
-			session_gateway_profile = GatewayProfile.objects.filter(user__email__iexact=payload["email"],\
-					 gateway=gateway_profile.gateway)
+			session_gateway_profile = GatewayProfile.objects.filter(Q(user__email__iexact=payload["email"]),\
+					 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 		elif 'msisdn' in payload.keys() and self.get_msisdn(payload):
-			session_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=self.get_msisdn(payload),\
-					 gateway=gateway_profile.gateway)
+			session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.get_msisdn(payload)),\
+					 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 		elif 'national_id' in payload.keys() and payload['national_id'] not in ["",None,"None"]:
-			session_gateway_profile = GatewayProfile.objects.filter(user__profile__national_id__iexact=payload['national_id'].replace(' ','').strip(),\
-					 gateway=gateway_profile.gateway)
+			session_gateway_profile = GatewayProfile.objects.filter(Q(user__profile__national_id__iexact=payload['national_id'].replace(' ','').strip()),\
+					 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 		elif 'passport_number' in payload.keys() and payload['passport_number'] not in ["",None,"None"]:
-			session_gateway_profile = GatewayProfile.objects.filter(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip(),\
-					 gateway=gateway_profile.gateway)
+			session_gateway_profile = GatewayProfile.objects.filter(Q(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip()),\
+					 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 		elif 'reference' in payload.keys() and (self.validateEmail(payload['reference']) or self.simple_get_msisdn(payload['reference'], payload)):
 			if self.validateEmail(payload["reference"]):
-				session_gateway_profile = GatewayProfile.objects.filter(user__email__iexact=payload["reference"],\
-						 gateway=gateway_profile.gateway)
+				session_gateway_profile = GatewayProfile.objects.filter(Q(user__email__iexact=payload["reference"]),\
+						 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 			else:
 				msisdn = self.simple_get_msisdn(payload['reference'], payload)
 				if msisdn:
-					session_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=msisdn,\
-							 gateway=gateway_profile.gateway)
+					session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=msisdn),\
+							 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 					payload['msisdn'] = msisdn
 				else:
 					session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 
 		elif 'email_msisdn' in payload.keys() and  self.validateEmail(payload['email_msisdn'].strip()):
-			session_gateway_profile = GatewayProfile.objects.filter(user__email__iexact=payload['email_msisdn'].strip(), gateway=gateway_profile.gateway)
+			session_gateway_profile = GatewayProfile.objects.filter(Q(user__email__iexact=payload['email_msisdn'].strip()),\
+									~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 		elif  'email_msisdn' in payload.keys() and  self.simple_get_msisdn(payload['email_msisdn'].strip(), payload):
-			session_gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=self.simple_get_msisdn(payload['email_msisdn'].strip(), payload), gateway=gateway_profile.gateway)
+			session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.simple_get_msisdn(payload['email_msisdn'].strip(), payload)),\
+											 ~Q(status__name__in=['DEACTIVATED','DELETED']), Q(gateway=gateway_profile.gateway))
 		elif  'email_msisdn' in payload.keys() and  GatewayProfile.objects.filter(gateway=gateway_profile.gateway, user__username__iexact=payload['email_msisdn'].strip()).exists():
-			session_gateway_profile = GatewayProfile.objects.filter(user__username__iexact=payload['email_msisdn'].strip(), gateway=gateway_profile.gateway)
-		elif 'session_gateway_profile_id' in payload.keys():
-			session_gateway_profile = GatewayProfile.objects.filter(id=payload['session_gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.filter(Q(user__username__iexact=payload['email_msisdn'].strip()),\
+										~Q(status__name__in=['DEACTIVATED','DELETED']), Q(gateway=gateway_profile.gateway))
 		else:
 			session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 

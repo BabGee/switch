@@ -22,11 +22,13 @@
             <li >
                 {{ notification_product }}
 
+                <button id="{{ notification_product.pk }}" class="product-toggle">
                 {% if service|service_enabled:notification_product %}
-                    <button>Disable</button>
+                    Disable
                     {% else %}
-                    <button>Enable</button>
+                    Enable
                 {% endif %}
+                </button>
 
             <p>{{ notification_product.service_list }}</p>
 
@@ -53,7 +55,12 @@
             <li>
 
 
-                <!-- Button trigger modal -->
+
+
+            </li>
+
+        {% endfor %}
+     <!-- Button trigger modal -->
                 <button type="button"
                         class="btn btn-primary"
                         id="view-s-commands"
@@ -62,10 +69,6 @@
                         data-target="#notificationTemplatesModal">
                     Add Notification Template
                 </button>
-
-            </li>
-
-        {% endfor %}
     </ul>
 
 
@@ -115,19 +118,22 @@
                             <form class=" my-2 my-lg-0">
 
                                 <select id="template_service" class="form-control mr-sm-2">
-                                    {% for service in all_services %}
-                                        <option value="{{ service.pk }}">{{ service }}</option>
+                                    {% for service_l in all_services %}
+                                        <option value="{{ service_l.pk }}" {% if service_l == service %}selected{% endif %} >{{ service_l }}</option>
                                     {% endfor %}
                                 </select>
 
-                                <div class="input-group mb-3 form-inline">
+                                <input type="text" id="products" name="products" class="form-control">
+
+                                <div class="input-group form-control">
                                     <select class="custom-select"
                                             id="notification_templates"
                                             name="notification_template">
                                     </select>
 
-                                    <button class="btn btn-outline-success my-2 my-sm-0" id="add-command">Add</button>
+
                                 </div>
+                            <button class="btn btn-outline-success my-2 my-sm-0" id="add-command">Add</button>
                             </form>
                         </div>
                         <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
@@ -265,6 +271,101 @@
 			loadNotificationTemplates();
 			/*End Load Service Commands */
 
+            function toggleProduct(page_input) {
+                var btn = $('#' + page_input);
+                $.ajax({
+                    url: '/iic_editor/notify/notification_products/',
+                    beforeSend: function (xhr, settings) {
+                        function getCookie(name) {
+                            var cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                var cookies = document.cookie.split(';');
+                                for (var i = 0; i < cookies.length; i++) {
+                                    var cookie = jQuery.trim(cookies[i]);
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+
+                        function csrfSafeMethod(method) {
+                            // these HTTP methods do not require CSRF protection
+                            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                        }
+
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                        }
+                        // todo btn.html('<img src="/static/loader.gif">');
+                    },
+                    data: {"name": 'toggle_service','pk':page_input,'service_name':'{{service.name}}'},
+                    type: 'POST',
+                    success: function (data) {
+                        //console.log(data);
+                        btn.html(data.status);
+
+                    }
+                });
+            }
+
+            $('.product-toggle').on('click', function (e) {
+                e.preventDefault();//
+                toggleProduct($(this).attr('id'))
+
+            });
+
+
+            var addCommand = document.getElementById('add-command');
+            addCommand.addEventListener('click', function (event) {
+                event.preventDefault();
+
+                $.ajax({
+                    url: '/iic_editor/notify/notification_templates/',
+                    beforeSend: function (xhr, settings) {
+                        function getCookie(name) {
+                            var cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                var cookies = document.cookie.split(';');
+                                for (var i = 0; i < cookies.length; i++) {
+                                    var cookie = jQuery.trim(cookies[i]);
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+
+                        function csrfSafeMethod(method) {
+                            // these HTTP methods do not require CSRF protection
+                            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                        }
+
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                        }
+                        // todo btn.html('<img src="/static/loader.gif">');
+                    },
+                    data: {
+                        'name':'products',
+                        'pk': $('#notification_templates').val(),
+                        'value':$('#products').val()
+                    },
+                    type: 'POST',
+                    success: function (data) {
+                        console.log(data);
+                        // $('#copy-service').val('');
+                    }
+                });
+
+
+            });
 
         });
     </script>

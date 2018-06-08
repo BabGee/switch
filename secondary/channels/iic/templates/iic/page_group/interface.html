@@ -211,7 +211,7 @@
                                                data-type="select2"
                                                data-pk="{{ page_input.pk }}"
                                                data-name="trigger"
-                                               data-title="Triggers">#### {% for trigger in page_input.trigger.all %}{{ trigger.name }},{% endfor %}</a>
+                                               data-title="Triggers">{% for trigger in page_input.trigger.all %}{{ trigger.name }},{% endfor %}</a>
 
 {#                                        {% if page_input.trigger.exists %}#}
 {#                                            <br>#}

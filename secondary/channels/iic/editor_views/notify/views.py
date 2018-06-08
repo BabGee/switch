@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.shortcuts import render
 
 from django.db.models import Q
@@ -9,7 +10,7 @@ from secondary.channels.notify.models import (
 )
 
 from primary.core.bridge.models import (
-Service
+    Service
 )
 
 from primary.core.upc.models import (
@@ -17,7 +18,7 @@ from primary.core.upc.models import (
 )
 
 
-def service_notification(request,gateway_pk, service_name):
+def service_notification(request, gateway_pk, service_name):
     '''
     vcs.code->
     notify.notification->
@@ -38,22 +39,50 @@ def service_notification(request,gateway_pk, service_name):
 
     services = Service.objects.all()
 
-    #x = NotificationProduct()
-    #x.notification.code.gateway
+    # x = NotificationProduct()
+    # x.notification.code.gateway
 
-    return render(request,'notify/notification/list.html',{
+    return render(request, 'notify/notification/list.html', {
         'notification_products': notification_products,
         'notification_templates': templates,
-        'all_services':services, # todo can be a re-usable mixin
-        'service':service,
+        'all_services': services,  # todo can be a re-usable mixin
+        'service': service,
     })
 
 
-def notification_templates(request,service_pk):
-
+def notification_templates(request, service_pk):
     notification_templates = NotificationTemplate.objects.filter(service_id=service_pk)
 
-
-    return render(request,'notify/notification_template/partials/notification_templates.html',{
-        'notification_templates':notification_templates
+    return render(request, 'notify/notification_template/partials/notification_templates.html', {
+        'notification_templates': notification_templates
     })
+
+
+def notification_product_put(request):
+    data = request.POST
+    page_input = NotificationProduct.objects.get(pk=data.get('pk'))
+    field = data.get('name')
+    value = data.get('value')
+
+    if field == 'toggle_service':
+        service = Service.objects.get(name=data.get('service_name'))
+        exists = page_input.service.filter(name=service.name).exists()
+        if exists:
+            page_input.service.remove(service)
+        else:
+            page_input.service.add(service)
+
+    return HttpResponse(status=200)
+
+
+def notification_template_put(request):
+    data = request.POST
+    notification_template = NotificationTemplate.objects.get(pk=data.get('pk'))
+    field = data.get('name')
+    value = data.get('value')
+
+    if field == 'products':
+        products = NotificationProduct.objects.filter(pk__in=value.split(','))
+        notification_template.product.add(*list(products))
+
+    return HttpResponse(status=200)
