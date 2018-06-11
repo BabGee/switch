@@ -254,10 +254,14 @@ class Wrappers:
 			elif getattr(model_class, of_list[0].split('__')[0], False):
                     		k,v = of_list
 				v_list = v.split(',')
-				if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
-					v = True if v not in ['',None,'False',False,'false'] else False
-				elif len(v_list)>1:
-					v = v_list
+
+				if len(v_list)>1:
+					v = [l.strip() for l in v_list if l]
+				elif v.strip() == 'False':
+					v = False
+				elif v.strip() == 'True':
+					v = True
+
 				or_filter_data[k] = v if v not in ['',None] else None
 		    elif getattr(model_class, f.split('__')[0], False):
 			if f in payload.keys():
@@ -280,10 +284,14 @@ class Wrappers:
 			elif getattr(model_class, af_list[0].split('__')[0], False):
                     		k,v = af_list
 				v_list = v.split(',')
-				if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
-					v = True if v not in ['',None,'False',False,'false'] else False
-				elif len(v_list)>1:
-					v = v_list
+
+				if len(v_list)>1:
+					v = [l.strip() for l in v_list if l]
+				elif v.strip() == 'False':
+					v = False
+				elif v.strip() == 'True':
+					v = True
+
 				and_filter_data[k] = v if v not in ['',None] else None
 		    elif getattr(model_class, f.split('__')[0], False):
 			if f in payload.keys():
@@ -307,10 +315,14 @@ class Wrappers:
 			elif getattr(model_class, nf_list[0].split('__')[0], False):
                     		k,v = nf_list
 				v_list = v.split(',')
-				if model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
-					v = True if v not in ['',None,'False',False,'false'] else False
-				elif len(v_list)>1:
-					v = v_list
+
+				if len(v_list)>1:
+					v = [l.strip() for l in v_list if l]
+				elif v.strip() == 'False':
+					v = False
+				elif v.strip() == 'True':
+					v = True
+
 				not_filter_data[k] = v if v not in ['',None] else None
 		    elif getattr(model_class, f.split('__')[0], False):
 			if f in payload.keys():
@@ -567,10 +579,14 @@ class Wrappers:
 				    if len(of_list)==2 and getattr(join_model_class, of_list[0].split('__')[0], False):
 	                    		k,v = of_list
 					v_list = v.split(',')
-					if join_model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
-						v = True if v not in ['',None,'False',False,'false'] else False
-					elif len(v_list)>1:
-						v = v_list
+
+					if len(v_list)>1:
+						v = [l.strip() for l in v_list if l]
+					elif v.strip() == 'False':
+						v = False
+					elif v.strip() == 'True':
+						v = True
+
 					join_or_filter_data[k] = v if v not in ['',None] else None
 
 		                if len(join_or_filter_data):
@@ -584,10 +600,14 @@ class Wrappers:
 				    if len(af_list)==2 and getattr(join_model_class, af_list[0].split('__')[0], False):
 	                    		k,v = af_list
 					v_list = v.split(',')
-					if join_model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
-						v = True if v not in ['',None,'False',False,'false'] else False
-					elif len(v_list)>1:
-						v = v_list
+
+					if len(v_list)>1:
+						v = [l.strip() for l in v_list if l]
+					elif v.strip() == 'False':
+						v = False
+					elif v.strip() == 'True':
+						v = True
+
 					join_and_filter_data[k] = v if v not in ['',None] else None
 
 		                if len(join_and_filter_data):
@@ -603,10 +623,14 @@ class Wrappers:
 				    if len(nf_list)==2 and getattr(join_model_class, nf_list[0].split('__')[0], False):
 	                    		k,v = nf_list
 					v_list = v.split(',')
-					if join_model_class._meta.get_field(k.split('__')[0]).get_internal_type()=='BooleanField':
-						v = True if v not in ['',None,'False',False,'false'] else False
-					elif len(v_list)>1:
-						v = v_list
+
+					if len(v_list)>1:
+						v = [l.strip() for l in v_list if l]
+					elif v.strip() == 'False':
+						v = False
+					elif v.strip() == 'True':
+						v = True
+
 					join_not_filter_data[k] = v if v not in ['',None] else None
 
 		                if len(join_not_filter_data):
