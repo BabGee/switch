@@ -288,6 +288,10 @@ class System(Wrappers):
 							else:
 								balance_bf = Decimal((m.balance_bf + m.charge) + m.amount)
 
+						if m.credit_due_date and m.credit_time and m.credit_paid == False:
+							m.credit_paid = True
+							m.save()
+
 						manager = AccountManager(credit=credit, transaction_reference=payload['bridge__transaction_id'],\
 							is_reversal=True,source_account=m.source_account,dest_account=m.dest_account,\
 							amount=Decimal(m.amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
@@ -331,6 +335,9 @@ class System(Wrappers):
 							else:
 								balance_bf = Decimal((m.balance_bf + m.charge) + m.amount)
 
+						if m.credit_due_date and m.credit_time and m.credit_paid == False:
+							m.credit_paid = True
+							m.save()
 
 						manager = AccountManager(credit=credit, transaction_reference=payload['bridge__transaction_id'],\
 							is_reversal=True,source_account=m.source_account,dest_account=m.dest_account,\
@@ -438,48 +445,49 @@ class System(Wrappers):
 			gl_account_manager = AccountManager.objects.filter(dest_account = gl_acccount[0],dest_account__account_type=gl_account_type[0]).order_by('-date_created')
 
 
+			amount = Decimal(payload['amount']) if 'amount' in payload.keys() else Decimal(0)
 			#Get Charge amount and transfer charge amount to charge account (just like MIPAY LEDGER)
 			charge = Decimal(0)
-			charge_list = AccountCharge.objects.filter(account_type=session_account.account_type, min_amount__lte=Decimal(payload['amount']), service__name=payload['SERVICE'],\
-					max_amount__gte=Decimal(payload['amount']),credit=False)
+			charge_list = AccountCharge.objects.filter(account_type=session_account.account_type, min_amount__lte=Decimal(amount), service__name=payload['SERVICE'],\
+					max_amount__gte=Decimal(amount),credit=False)
 			if 'payment_method' in payload.keys():
 				charge_list = charge_list.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
 			for c in charge_list:
 				if c.is_percentage:
-					charge = charge + ((c.charge_value/100)*Decimal(payload['amount']))
+					charge = charge + ((c.charge_value/100)*Decimal(amount))
 				else:
 					charge = charge+c.charge_value		
 
 			#For loan Accounts (Adding Interest To Charge) #Loans only Debit accounts
 			'''
 			if account_type.loan_interest_rate and account_type.loan_time:
-				charge = charge + ((account_type.loan_interest_rate/100)*Decimal(payload['amount']))
+				charge = charge + ((account_type.loan_interest_rate/100)*Decimal(amount))
 			'''
 
 			#For loan Accounts (Adding Interest To Charge) #Loans only Debit accounts
 			if 'is_loan' in payload.keys() and payload['is_loan'] and 'loan_time' in payload.keys():
 				if 'interest_rate' in payload.keys() and 'interest_time' in payload.keys():
-					charget = charge + ((Decimal(payload['interest_rate'])/100)*(int(payload['loan_time'])/int(payload['interest_time']))*Decimal(payload['amount']))
+					charget = charge + ((Decimal(payload['interest_rate'])/100)*(int(payload['loan_time'])/int(payload['interest_time']))*Decimal(amount))
 				else:
 					credit_type = SavingsCreditType.objects.filter(account_type=session_account.account_type,\
 								 min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
 
 					for c in credit_type:
-						charge = charge + ((c.interest_rate/100)*(int(payload['loan_time'])/c.interest_time)*Decimal(payload['amount']))
+						charge = charge + ((c.interest_rate/100)*(int(payload['loan_time'])/c.interest_time)*Decimal(amount))
 
-				payload['quantity'] = Decimal(payload['amount'])+charge
+				payload['quantity'] = Decimal(amount)+charge
 	
 			#gl account #GL A/c ALWAYS adds Charges (GL also Charge Account)
 			if len(gl_account_manager)>0:
-				gl_balance_bf = Decimal(gl_account_manager[0].balance_bf) + (Decimal(payload['amount']) + charge)
+				gl_balance_bf = Decimal(gl_account_manager[0].balance_bf) + (Decimal(amount) + charge)
 			else:
-				gl_balance_bf = Decimal(payload['amount']) + charge
+				gl_balance_bf = Decimal(amount) + charge
 
 			#session account
 			if session_account_manager.exists():
-				session_balance_bf = Decimal(session_account_manager[0].balance_bf) - (Decimal(payload['amount']) + charge)
+				session_balance_bf = Decimal(session_account_manager[0].balance_bf) - (Decimal(amount) + charge)
 			else:
-				session_balance_bf = Decimal(0) - (Decimal(payload['amount']) + charge)
+				session_balance_bf = Decimal(0) - (Decimal(amount) + charge)
 
 			credit_overdue = None
 			if 'credit_overdue_id' in payload.keys() and 'product_item_id' in payload.keys():
@@ -494,7 +502,7 @@ class System(Wrappers):
 
 				session_manager = AccountManager(credit=False, transaction_reference=payload['bridge__transaction_id'],\
 					source_account=gl_acccount[0],dest_account=session_account,\
-					amount=Decimal(payload['amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
+					amount=Decimal(amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					balance_bf=session_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
 
@@ -509,7 +517,7 @@ class System(Wrappers):
 
 				gl_manager = AccountManager(credit=True, transaction_reference=payload['bridge__transaction_id'],\
 					source_account=session_account,dest_account=gl_acccount[0],\
-					amount=Decimal(payload['amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
+					amount=Decimal(amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
 				gl_manager.save()
@@ -551,29 +559,30 @@ class System(Wrappers):
 			session_account_manager = AccountManager.objects.select_for_update(nowait=True).filter(dest_account = session_account, dest_account__account_type=session_account.account_type).order_by('-date_created')
 			gl_account_manager = AccountManager.objects.filter(dest_account = gl_acccount[0], dest_account__account_type=gl_account_type[0]).order_by('-date_created')
 
+			amount = Decimal(payload['amount']) if 'amount' in payload.keys() else Decimal(0)
 			charge = Decimal(0)
-			charge_list = AccountCharge.objects.filter(account_type=session_account.account_type, min_amount__lte=Decimal(payload['amount']), service__name=payload['SERVICE'],\
-					max_amount__gte=Decimal(payload['amount']),credit=True)
+			charge_list = AccountCharge.objects.filter(account_type=session_account.account_type, min_amount__lte=Decimal(amount), service__name=payload['SERVICE'],\
+					max_amount__gte=Decimal(amount),credit=True)
 			if 'payment_method' in payload.keys():
 				charge_list = charge_list.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
 
 			for c in charge_list:
 				if c.is_percentage:
-					charge = charge + ((c.charge_value/100)*Decimal(payload['amount']))
+					charge = charge + ((c.charge_value/100)*Decimal(amount))
 				else:
 					charge = charge+c.charge_value		
 
 			#gl account #GL A/c ALWAYS adds Charges (GL also Charge Account)
 			if len(gl_account_manager)>0:
-				gl_balance_bf = Decimal((gl_account_manager[0].balance_bf + charge) - Decimal(payload['amount']))
+				gl_balance_bf = Decimal((gl_account_manager[0].balance_bf + charge) - Decimal(amount))
 			else:
-				gl_balance_bf = Decimal((Decimal(0) + charge) - Decimal(payload['amount']))
+				gl_balance_bf = Decimal((Decimal(0) + charge) - Decimal(amount))
 
 			#session account
 			if session_account_manager.exists():
-				session_balance_bf = Decimal(session_account_manager[0].balance_bf) + (Decimal(payload['amount']) - charge)
+				session_balance_bf = Decimal(session_account_manager[0].balance_bf) + (Decimal(amount) - charge)
 			else:
-				session_balance_bf = Decimal(payload['amount']) - charge
+				session_balance_bf = Decimal(amount) - charge
 
 			if Decimal(session_balance_bf) <= Decimal(session_account.account_type.max_balance) and Decimal(session_balance_bf) >= Decimal(session_account.account_type.min_balance):
 
@@ -582,7 +591,7 @@ class System(Wrappers):
 
 				session_manager = AccountManager(credit=True, transaction_reference=payload['bridge__transaction_id'],\
 					source_account=gl_acccount[0],dest_account=session_account,\
-					amount=Decimal(payload['amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
+					amount=Decimal(amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					balance_bf=session_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
 
@@ -593,7 +602,7 @@ class System(Wrappers):
 
 				gl_manager = AccountManager(credit=False, transaction_reference=payload['bridge__transaction_id'],\
 					source_account=session_account,dest_account=gl_acccount[0],\
-					amount=Decimal(payload['amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
+					amount=Decimal(amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
 
@@ -801,7 +810,7 @@ class Payments(System):
 			for i in savings_credit_manager:
 				amount = amount + (i.amount + i.charge)
 
-			credit_amount = Decimal(payload['amount'])
+			credit_amount = Decimal(payload['amount']) if 'amount' in payload.keys() else Decimal(0)
 			if savings_credit_manager.exists() and amount <= credit_amount:
 				#Capture account manager prior to updates which will clear the query
 				account_manager = savings_credit_manager[0].account_manager
@@ -820,8 +829,8 @@ class Payments(System):
 			elif savings_credit_manager.exists():
 				lgr.info('Credit Amount is less than credit')
 				for i in savings_credit_manager:
-					if credit_amount > i.outstanding:
-						lgr.info('Credit Amount is greater than outstanding')
+					if credit_amount >= i.outstanding:
+						lgr.info('Credit Amount is greater or equal to outstanding')
 						credit_amount = credit_amount - i.outstanding
 						i.paid = i.outstanding
 						i.outstanding = 0
@@ -947,8 +956,8 @@ class Payments(System):
 		try:
 
 
-			savings_credit_manager = SavingsCreditManager.objects.filter(credit_paid=False,outstanding__gt=0,\
-							account_manager__id=payload['account_manager_id']).\
+			#savings_credit_manager = SavingsCreditManager.objects.filter(credit_paid=False,outstanding__gt=0,\
+			savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id']).\
 							order_by('-date_created')
 
 			if savings_credit_manager.exists():

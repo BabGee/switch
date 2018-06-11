@@ -725,7 +725,7 @@ class PageString(ServiceCall, Wrappers):
 
 					params = payload
 
-					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'], credit_paid=False).\
+					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'], credit_paid=False, account_manager__credit_paid=False).\
 									order_by('-date_created')
 
 					currency = savings_credit_manager[0].account_manager.dest_account.account_type.product_item.currency.code
@@ -750,7 +750,7 @@ class PageString(ServiceCall, Wrappers):
 
 					params = payload
 
-					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'], credit_paid=False).\
+					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'], credit_paid=False, account_manager__credit_paid=False).\
 									order_by('-date_created')[:1]
 
 					account_type = savings_credit_manager[0].account_manager.dest_account.account_type.name
@@ -773,8 +773,8 @@ class PageString(ServiceCall, Wrappers):
 
 					params = payload
 
-					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'],credit_paid=False).\
-									order_by('-date_created')[:1]
+					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'],credit_paid=False, account_manager__credit_paid=False).\
+									order_by('installment_time','due_date')[:1]
 
 					account_type = savings_credit_manager[0].account_manager.dest_account.account_type.name
 					amount = savings_credit_manager[0].outstanding
@@ -796,8 +796,8 @@ class PageString(ServiceCall, Wrappers):
 
 					params = payload
 
-					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'],credit_paid=False).\
-									order_by('-date_created')[:1]
+					savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'],credit_paid=False, account_manager__credit_paid=False).\
+									order_by('installment_time','due_date')[:1]
 
 
 					savings_credit_manager = savings_credit_manager[:10]
@@ -850,7 +850,7 @@ class PageString(ServiceCall, Wrappers):
 					count = 1
 					if account_manager.exists():
 						for i in account_manager:
-							savings_credit_manager = SavingsCreditManager.objects.filter(account_manager=i, credit_paid=False).order_by('-date_created')
+							savings_credit_manager = SavingsCreditManager.objects.filter(account_manager=i, credit_paid=False, account_manager__credit_paid=False).order_by('-date_created')
 
 							amount = Decimal(0)
 							for a in savings_credit_manager:
@@ -881,10 +881,7 @@ class PageString(ServiceCall, Wrappers):
 
 					params = payload
 
-					loan = Loan.objects.filter(processed=False,\
-									account__profile=navigator.session.gateway_profile.user.profile,\
-									gateway_profile__user__profile=F('loan__account__profile'),\
-									gateway=code[0].gateway).\
+					loan = Loan.objects.filter(processed=False,gateway_profile=navigator.session.gateway_profile).\
 									order_by('-date_created')
 
 					if 'institution_id' in params.keys():
@@ -951,8 +948,7 @@ class PageString(ServiceCall, Wrappers):
 					params = payload
 
 					loan = Loan.objects.filter(Q(loan_status__name='CREATED'),Q(processed=False),\
-							Q(follow_on_loan__account__profile=navigator.session.gateway_profile.user.profile),\
-							Q(gateway=code[0].gateway)).\
+							Q(follow_on_loan__gateway_profile=navigator.session.gateway_profile)).\
 							order_by('-date_created')
 
 					lgr.info('Loan: %s' % loan)
@@ -1002,9 +998,7 @@ class PageString(ServiceCall, Wrappers):
 
 					loan = Loan.objects.filter(Q(status__name='CREATED'), Q(processed=False),\
 										Q(loan_status__name='CREATED'),Q(follow_on_loan=None),\
-										~Q(account__profile=navigator.session.gateway_profile.user.profile),\
-										Q(gateway_profile__user__profile=F('account__profile')),\
-										Q(gateway=code[0].gateway),\
+										~Q(gateway_profile=navigator.session.gateway_profile),\
 										Q(credit=True)).\
 										order_by('-date_created')
 
@@ -1056,9 +1050,7 @@ class PageString(ServiceCall, Wrappers):
 
 					loan = Loan.objects.filter(Q(status__name='CREATED'), Q(processed=False),\
 										Q(loan_status__name='CREATED'),Q(follow_on_loan=None),\
-										~Q(account__profile=navigator.session.gateway_profile.user.profile),\
-										Q(gateway_profile__user__profile=F('account__profile')),\
-										Q(gateway=code[0].gateway),\
+										~Q(gateway_profile=navigator.session.gateway_profile),\
 										Q(credit=False)).\
 										order_by('-date_created')
 
