@@ -436,7 +436,7 @@ class System(Wrappers):
 						outgoing.charge = Decimal(payload['charge'])
 
 					outgoing.save()
-
+					payload['paygate_outgoing_id'] = outgoing.id
 					if remittance_product[0].realtime and remittance_product[0].remittance.status.name == 'ACTIVE': #Process realtime & Active remittance 
 						lgr.info("Active Realtime Remit")
 						params = payload.copy()
@@ -444,7 +444,7 @@ class System(Wrappers):
 						params['account_id'] = remittance_product[0].endpoint.account_id
 						params['username'] = remittance_product[0].endpoint.username
 						params['password'] = remittance_product[0].endpoint.password
-						params['paygate_outgoing_id'] = outgoing.id
+
 						if remittance_product[0].endpoint.request not in [None, ""]:
 							try:params.update(json.loads(remittance_product[0].endpoint.request))
 							except:pass
