@@ -298,7 +298,7 @@ class System(Wrappers):
 					if pending_approvals_count == approval.pending_count:
 						# enough pending approvals created
 						payload['response'] = "There is already Pending approvals for this service"
-						payload['response_status'] = '25'
+						payload['response_status'] = '94'
 
 						return payload
 
@@ -309,7 +309,7 @@ class System(Wrappers):
 						ApprovalActivity.objects.filter(pk__in=list(extra_pending_approvals)).delete()
 
 						payload['response'] = "There is already Pending approvals for this service"
-						payload['response_status'] = '25'
+						payload['response_status'] = '94'
 
 						return payload
 
