@@ -41,6 +41,7 @@ admin.site.register(RoleRight, RoleRightAdmin)
 
 class RolePermissionAdmin(admin.ModelAdmin):
 		list_display = ('id','role','role_right','role_action_list',)
+		list_filter = ('role','role_action',)
 admin.site.register(RolePermission, RolePermissionAdmin)
 
 class PageInputStatusAdmin(admin.ModelAdmin):
