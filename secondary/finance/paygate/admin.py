@@ -65,7 +65,8 @@ admin.site.register(IncomingState, IncomingStateAdmin)
 
 class IncomingAdmin(admin.ModelAdmin):
 	list_display = ('id','remittance_product','reference','request','amount','charge','currency',\
-			'response_status','message','ext_inbound_id','inst_notified','inst_num_tries',\
+			'response_status','message','ext_inbound_id','ext_first_name','ext_middle_name',\
+			'ext_last_name','inst_notified','inst_num_tries',\
 			'state','processed','institution_incoming_service',\
 			'channel','institution',)
 	search_fields = ('request','reference','message',)

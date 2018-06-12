@@ -270,6 +270,9 @@ class System(Wrappers):
 					incoming = Incoming(remittance_product=remittance_product[0],reference=reference,\
 						request=self.transaction_payload(payload),channel=Channel.objects.get(id=payload['chid']),\
 						response_status=response_status, ext_inbound_id=payload['ext_inbound_id'],state=state)
+					if 'ext_first_name' in payload.keys() and payload['ext_first_name'] not in ["",None]: incoming.ext_first_name = payload['ext_first_name']
+					if 'ext_middle_name' in payload.keys() and payload['ext_middle_name'] not in ["",None]: incoming.ext_middle_name = payload['ext_middle_name']
+					if 'ext_last_name' in payload.keys() and payload['ext_last_name'] not in ["",None]: incoming.ext_last_name = payload['ext_last_name']
 					if 'currency' in payload.keys() and payload['currency'] not in ["",None]:
 						incoming.currency = Currency.objects.get(code=payload['currency'])
 					if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
@@ -314,6 +317,12 @@ class System(Wrappers):
 				o.message = self.transaction_payload(params)
 				o.response_status = ResponseStatus.objects.get(response='00')
 				o.state = OutgoingState.objects.get(name='DELIVERED')
+
+				if 'ext_outbound_id' in payload.keys() and payload['ext_outbound_id'] not in ["",None]:
+					o.ext_outbound_id = payload['ext_outbound_id']
+				elif 'bridge__transaction_id' in payload.keys():
+					o.ext_outbound_id = payload['bridge__transaction_id']
+
 				o.save()
 				payload['response_status'] = '00'
 				payload['response'] = 'Remit Confirmed'

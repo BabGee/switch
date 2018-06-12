@@ -207,6 +207,9 @@ class Incoming(models.Model):
 	response_status = models.ForeignKey(ResponseStatus)
 	message = models.CharField(max_length=3840, blank=True, null=True)
 	ext_inbound_id = models.CharField(max_length=200, blank=True, null=True) #External Transaction ID for use in duplicate transactions check
+	ext_first_name = models.CharField(max_length=200, blank=True, null=True)
+	ext_middle_name = models.CharField(max_length=200, blank=True, null=True)
+	ext_last_name = models.CharField(max_length=200, blank=True, null=True)
 	inst_notified = models.NullBooleanField(default=False)
 	inst_num_tries = models.IntegerField(null=True,blank=True)
 	state = models.ForeignKey(IncomingState, null=True, blank=True)
