@@ -365,6 +365,7 @@ class ApprovalActivity(models.Model):
 	response_status = models.ForeignKey(ResponseStatus)
 	gateway = models.ForeignKey(Gateway)
 	institution = models.ForeignKey(Institution, null=True, blank=True)
+	identifier = models.CharField(null=True,blank=True,max_length=20)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.approval)
 

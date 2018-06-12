@@ -290,6 +290,10 @@ class System(Wrappers):
                         affected_gateway_profile=session_gateway_profile,
                         approval=approval
                     )
+
+					if 'approval_identifier' in payload.keys():
+						pending_approvals = pending_approvals.filter(identifier=payload[payload['approval_identifier']])
+
 					pending_approvals_count = pending_approvals.count()
 					if pending_approvals_count == approval.pending_count:
 						# enough pending approvals created
@@ -331,6 +335,8 @@ class System(Wrappers):
 				activity.gateway=gateway_profile.gateway
 				activity.approval=approval
 				activity.response_status = response_status
+				if 'approval_identifier' in payload.keys():
+					activity.identifier = payload[payload['approval_identifier']]
 
 				if 'institution_id' in payload.keys():
 					activity.institution = Institution.objects.get(id=payload['institution_id'])
