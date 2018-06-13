@@ -54,6 +54,33 @@ class Wrappers:
 		return payload
 
 
+	def approval_activity_payload(self, payload):
+		new_payload, transaction, count = {}, None, 1
+
+		exempt_keys = ['card','credentials','new_pin','validate_pin','confirm_password','password','pin',\
+					   'access_level','response_status','sec_hash','ip_address','service' ,'lat','lng',\
+					   'chid','session','session_id','csrf_token','csrfmiddlewaretoken' , 'gateway_host' ,'gateway_profile' ,\
+					   'transaction_timestamp' ,'action_id' , 'bridge__transaction_id','merchant_data', 'signedpares',\
+					   'gpid','sec','fingerprint','ext_product_id','vpc_securehash',\
+					   'institution_id','response','input','trigger','send_minutes_period','send_hours_period',\
+					   'send_days_period','send_years_period','token']
+
+		for k, v in payload.items():
+			try:
+				value = json.loads(v)
+				if isinstance(value, list) or isinstance(value, dict):continue
+			except: pass
+			key = k.lower()
+			if key not in exempt_keys:
+				if count <= 100:
+					new_payload[str(k)[:30] ] = str(v)[:500]
+				else:
+					break
+				count = count+1
+
+		return new_payload
+
+
 	def background_activity_payload(self, payload):
 		new_payload, transaction, count = {}, None, 1
 
@@ -318,14 +345,10 @@ class System(Wrappers):
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
 
 				request = payload.copy()
-				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
-				request = self.background_activity_payload(request)
-
-				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
+				request = self.approval_activity_payload(request)
 				try: request.update(json.loads(approval.details)) #Triggers removed in previous call so no need to append
 				except: pass
 
-				lgr.info('\n\n\n\n\t########\BG.Request: %s\n\n' % request)
 				activity = ApprovalActivity()
 				activity.status=status
 				activity.requestor_gateway_profile = gateway_profile
