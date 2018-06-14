@@ -3753,7 +3753,13 @@ def process_file_upload_activity(payload):
 
                             if valid:
                                 try:
-                                    Wrappers().service_call(u.file_upload.activity_service, u.gateway_profile, payload)
+                                    #Wrappers().service_call(u.file_upload.activity_service, u.gateway_profile, payload)
+
+                                    service = u.file_upload.activity_service
+				    gateway_profile = u.gateway_profile
+
+				    bridgetasks.background_service_call.delay(service.name, gateway_profile.id, payload)
+
                                 except Exception, e:
                                     lgr.info('Error on Service Call: %s' % e)
 
