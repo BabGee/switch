@@ -312,11 +312,9 @@ class System(Wrappers):
 
 				# check if pending approvals exists
 				if approval.pending_count:
-					pending_approvals = ApprovalActivity.objects.filter(
-                        status__name='CREATED',
-                        affected_gateway_profile=session_gateway_profile,
-                        approval=approval
-                    )
+					pending_approvals = ApprovalActivity.objects.filter(Q(status__name='CREATED'),\
+									Q(affected_gateway_profile=session_gateway_profile),Q(approval=approval)\
+									|Q(approval__pending_related_service__name=payload['SERVICE']))
 
 					if 'approval_identifier' in payload.keys():
 						pending_approvals = pending_approvals.filter(identifier=payload[payload['approval_identifier']])

@@ -331,6 +331,7 @@ class Approval(models.Model):
 	requestor = models.ForeignKey(Role)
 	approver = models.ForeignKey(Role, related_name='approver')
 	pending_count = models.IntegerField(null=True,blank=True,default=0) # null is unlimited
+	pending_related_service = models.ManyToManyField(Service, related_name='pending_related_service', blank=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.service)
 	def institution_list(self):
@@ -341,6 +342,8 @@ class Approval(models.Model):
 		return "\n".join([a.name for a in self.access_level.all()])
 	def trigger_service_list(self):
 		return "\n".join([a.name for a in self.trigger_service.all()])
+	def pending_related_service_list(self):
+		return "\n".join([a.name for a in self.pending_related_service.all()])
 
 
 class ApprovalActivityStatus(models.Model):
