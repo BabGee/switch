@@ -312,6 +312,7 @@ class System(Wrappers):
 
 				# check if pending approvals exists
 				if approval.pending_count:
+					#Pending Related Added to ensure that related services are restricted (Mostly for multiple actions within the same row)
 					pending_approvals = ApprovalActivity.objects.filter(Q(status__name='CREATED'),\
 									Q(affected_gateway_profile=session_gateway_profile),Q(approval=approval)\
 									|Q(approval__pending_related_service__name=payload['SERVICE']))
