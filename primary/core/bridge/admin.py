@@ -131,7 +131,7 @@ admin.site.register(ApprovalActivityStatus, ApprovalActivityStatusAdmin)
 
 class ApprovalActivityAdmin(admin.ModelAdmin):
         list_display = ('id','approval','status','requestor_gateway_profile','affected_gateway_profile','approver_gateway_profile',\
-			'request','channel','response_status','gateway','institution',)
+			'request','channel','response_status','gateway','institution','identifier',)
 admin.site.register(ApprovalActivity, ApprovalActivityAdmin)
 
 class GatewayProfileChangeAdmin(admin.ModelAdmin):
