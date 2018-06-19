@@ -250,7 +250,7 @@ class Wrappers:
 		    of_list = f.split('%')
 		    if len(of_list)==2:
 			if of_list[0] in payload.keys() and getattr(model_class, of_list[1].split('__')[0], False):
-				or_filter_data[of_list[1] + '__icontains'] = payload[of_list[0]]
+				or_filter_data[of_list[1]] = payload[of_list[0]]
 			elif getattr(model_class, of_list[0].split('__')[0], False):
                     		k,v = of_list
 				v_list = v.split(',')
@@ -280,7 +280,7 @@ class Wrappers:
 		    af_list = f.split('%')
 		    if len(af_list)==2:
 			if af_list[0] in payload.keys() and getattr(model_class, af_list[1].split('__')[0], False):
-				and_filter_data[af_list[1] + '__icontains'] = payload[af_list[0]]
+				and_filter_data[af_list[1]] = payload[af_list[0]]
 			elif getattr(model_class, af_list[0].split('__')[0], False):
                     		k,v = af_list
 				v_list = v.split(',')
