@@ -317,8 +317,8 @@ class System(Wrappers):
 									Q(affected_gateway_profile=session_gateway_profile),Q(approval=approval)\
 									|Q(approval__pending_related_service__name=payload['SERVICE']))
 
-					if approvals.approval_identifier not in ['',None]:
-						pending_approvals = pending_approvals.filter(identifier=payload[approvals.approval_identifier.strip()])
+					if approval.approval_identifier not in ['',None]:
+						pending_approvals = pending_approvals.filter(identifier=payload[approval.approval_identifier.strip()])
 
 					pending_approvals_count = pending_approvals.count()
 					if pending_approvals_count == approval.pending_count:
@@ -357,7 +357,7 @@ class System(Wrappers):
 				activity.gateway=gateway_profile.gateway
 				activity.approval=approval
 				activity.response_status = response_status
-				if approvals.approval_identifier not in ['',None]:
+				if approval.approval_identifier not in ['',None]:
 					activity.identifier = payload[approvals.approval_identifier.strip()]
 
 				if 'institution_id' in payload.keys():
