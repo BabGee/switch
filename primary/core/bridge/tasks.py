@@ -318,7 +318,7 @@ class System(Wrappers):
 									|Q(approval__pending_related_service__name=payload['SERVICE']))
 
 					if approvals.approval_identifier not in ['',None]:
-						pending_approvals = pending_approvals.filter(identifier=approvals.approval_identifier)
+						pending_approvals = pending_approvals.filter(identifier=payload[approvals.approval_identifier.strip()])
 
 					pending_approvals_count = pending_approvals.count()
 					if pending_approvals_count == approval.pending_count:
@@ -358,7 +358,7 @@ class System(Wrappers):
 				activity.approval=approval
 				activity.response_status = response_status
 				if approvals.approval_identifier not in ['',None]:
-					activity.identifier = approvals.approval_identifier
+					activity.identifier = payload[approvals.approval_identifier.strip()]
 
 				if 'institution_id' in payload.keys():
 					activity.institution = Institution.objects.get(id=payload['institution_id'])
