@@ -71,7 +71,8 @@ class PageInputAdmin(admin.ModelAdmin):
 				'institution_list','input_variable','page_input_group', 'page_input_status','page',\
 				'gateway_list','product_type_list','channel_list','style','section_height','bind_position',\
 				'payment_method_list','enrollment_type_included_list','enrollment_type_excluded_list','role_action_list',)
-	        list_filter = ('page_input_group','page','channel','institution','gateway','payment_method','page__service','role_action',)
+	        list_filter = ('page_input_group','page','channel','institution','gateway','payment_method',\
+				'page__service','role_action','page__page_group','page_input_status',)
 	        search_fields = ('id','page_input','input_variable__name','trigger__name')
 
 admin.site.register(PageInput, PageInputAdmin)
