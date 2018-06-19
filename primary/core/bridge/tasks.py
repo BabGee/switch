@@ -358,7 +358,7 @@ class System(Wrappers):
 				activity.approval=approval
 				activity.response_status = response_status
 				if approval.approval_identifier not in ['',None]:
-					activity.identifier = payload[approvals.approval_identifier.strip()]
+					activity.identifier = payload[approval.approval_identifier.strip()]
 
 				if 'institution_id' in payload.keys():
 					activity.institution = Institution.objects.get(id=payload['institution_id'])
