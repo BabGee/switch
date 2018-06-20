@@ -512,7 +512,7 @@ class Wrappers:
 		    #MQTT doesn't filter institution for push notifications
 		    if data.pn_data and 'push_request' in payload.keys() and payload['push_request']:
 			pass
-		    else:
+		    elif gateway_profile.role: #Tep: Allow All roles functions to show if role=None
 			if f not in ['',None]: role_filter_data[f] = gateway_profile.role
 
                 if len(role_filter_data):
