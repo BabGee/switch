@@ -151,6 +151,7 @@ class NotificationTemplate(models.Model):
 	description = models.CharField(max_length=50)
 	status = models.ForeignKey(TemplateStatus)
 	template_file = models.ForeignKey(TemplateFile, null=True,blank=True)
+	protected = models.BooleanField(default=False)
 	trigger = models.ManyToManyField(Trigger, blank=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.product, self.template_message)

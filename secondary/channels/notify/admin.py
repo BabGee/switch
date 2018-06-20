@@ -63,7 +63,7 @@ admin.site.register(TemplateFile, TemplateFileAdmin)
 					
 class NotificationTemplateAdmin(admin.ModelAdmin):
 		list_display = ('id','template_heading','template_message','product_list',\
-		'service','description','status','template_file','trigger_list',)
+		'service','description','status','template_file','protected','trigger_list',)
 		search_fields = ('template_heading','template_message','description',)
 		list_filter = ('service','product','status',)
 admin.site.register(NotificationTemplate, NotificationTemplateAdmin)
