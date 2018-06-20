@@ -966,7 +966,7 @@ class Wrappers:
 	    for case in case_query:
 		case_name = case.case_name
 	        case_values = case.case_values
-	        case_default_value = case.case_default_value
+	        case_default_value = case.case_default_value.strip()
 		case_when = []
 
 		args.append(case_name.strip())
@@ -977,12 +977,16 @@ class Wrappers:
 			except: continue
 			case_data = {}
 
+			if case_value.strip() == 'False': case_value = False
+			elif case_value.strip() == 'True': case_value = True
+
 			case_data[case_field.strip()] =  case_value
 			case_data['then'] = F(case_newvalue) if getattr(model_class, case_newvalue.split('__')[0], False) else Value(case_newvalue)
 
 			case_when.append(When(**case_data))
 
 		#Final Case
+
 		case_values_data[case_name.strip()] = Case(*case_when, default=F(case_default_value) if getattr(model_class, case_default_value.split('__')[0], False) else Value(case_default_value), output_field=CharField())
 
 	    if len(case_values_data.keys()):
