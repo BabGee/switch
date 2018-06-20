@@ -1080,7 +1080,7 @@ class Wrappers:
 			params['cols'][count] = i
 			count += 1
 
-
+	    '''
 	    if data.query.links not in [None,'']:
 		    href = {"label": "Actions", "type": "href", "links": {}}
 
@@ -1101,7 +1101,7 @@ class Wrappers:
 					except: continue
 					href['links'][name]['params'] = {k:v}
 		    params['cols'].append(href)
-
+	    '''
 
 
 	    ###########################################################################
