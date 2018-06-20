@@ -978,12 +978,12 @@ class Wrappers:
 			case_data = {}
 
 			case_data[case_field.strip()] =  case_value
-			case_data['then'] = F(case_newvalue) if getattr(model_class, case_newvalue[0].split('__')[0], False) else Value(case_newvalue)
+			case_data['then'] = F(case_newvalue) if getattr(model_class, case_newvalue.split('__')[0], False) else Value(case_newvalue)
 
 			case_when.append(When(**case_data))
 
 		#Final Case
-		case_values_data[case_name.strip()] = Case(*case_when, default=F(case_default_value) if getattr(model_class, case_default_value[0].split('__')[0], False) else Value(case_default_value), output_field=CharField())
+		case_values_data[case_name.strip()] = Case(*case_when, default=F(case_default_value) if getattr(model_class, case_default_value.split('__')[0], False) else Value(case_default_value), output_field=CharField())
 
 	    if len(case_values_data.keys()):
 		    report_list = report_list.annotate(**case_values_data)
