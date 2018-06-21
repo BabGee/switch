@@ -75,7 +75,7 @@ class DataListLinkQuery(models.Model):
 	link_icon = models.ForeignKey(Icon)
         link_case_field = models.CharField(max_length=128, null=True, blank=True)
         link_case_value = models.CharField(max_length=128, null=True, blank=True)
-	link_params = models.CharField(max_length=512, blank=True, null=True) 
+	link_params = models.CharField(max_length=512) 
 	link_inactive = models.BooleanField(default=False)
         def __unicode__(self):
                 return u'%s %s' % (self.id, self.query)
