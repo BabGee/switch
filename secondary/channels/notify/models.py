@@ -144,7 +144,7 @@ class TemplateFile(models.Model):
 class NotificationTemplate(models.Model):
         date_modified  = models.DateTimeField(auto_now=True)
         date_created = models.DateTimeField(auto_now_add=True)
-	template_heading = models.CharField(max_length=45)
+	template_heading = models.CharField(max_length=200)
 	template_message = models.CharField(max_length=3840)
 	product = models.ManyToManyField(NotificationProduct, blank=True)#Product_type
 	service = models.ForeignKey(Service)
