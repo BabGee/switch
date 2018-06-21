@@ -1325,8 +1325,8 @@ class Wrappers:
 					push = get_pn_data(report_list, channel, group)
 
 	    else:
-		if data.limit not in [None,""]:
-			report_list = report_list[:data.limit]
+		if data.query.limit not in [None,""]:
+			report_list = report_list[:data.query.limit]
             	paginator = Paginator(report_list, payload.get('limit',50))
 
 		try:
