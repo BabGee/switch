@@ -310,6 +310,12 @@ class System(Wrappers):
 			if approvals.exists():
 				approval = approvals[0]
 
+				if gateway_profile.role == approval.requestor:
+					payload['response'] = "You Are Not Authorised to initiate this Approval Request."
+					payload['response_status'] = '63'
+
+					return payload
+
 				# check if pending approvals exists
 				if approval.pending_count:
 					#Pending Related Added to ensure that related services are restricted (Mostly for multiple actions within the same row)
