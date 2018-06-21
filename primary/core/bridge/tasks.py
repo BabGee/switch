@@ -310,7 +310,7 @@ class System(Wrappers):
 			if approvals.exists():
 				approval = approvals[0]
 
-				if gateway_profile.role == approval.requestor:
+				if gateway_profile.role != approval.requestor:
 					payload['response'] = "You Are Not Authorised to initiate this Approval Request."
 					payload['response_status'] = '63'
 
