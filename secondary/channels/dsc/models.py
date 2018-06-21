@@ -51,6 +51,7 @@ class DataListQuery(models.Model):
 	last_balance = models.CharField(max_length=512, blank=True, null=True)
 	order = models.CharField(max_length=512, blank=True, null=True)
 	distinct = models.CharField(max_length=512, blank=True, null=True)
+	limit = models.IntegerField(blank=True, null=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.name)  
 

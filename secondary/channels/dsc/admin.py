@@ -14,7 +14,7 @@ class DataListQueryAdmin(admin.ModelAdmin):
 			'month_year_values','avg_values','sum_values','count_values','custom_values','or_filters','and_filters',\
 			'not_filters','institution_filters','gateway_filters','gateway_profile_filters','profile_filters','role_filters',\
 			'list_filters','duration_days_filters','date_filters','duration_hours_filters','token_filters',\
-			'links','link_params','last_balance','order','distinct',)
+			'links','link_params','last_balance','order','distinct','limit',)
 	search_fields = ('name','description','model_name','module_name',)
 admin.site.register(DataListQuery, DataListQueryAdmin)
 
