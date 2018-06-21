@@ -1017,7 +1017,8 @@ class Wrappers:
 			
 		#link_value = '%s%%%s%%%s' % (link_action, link_service, link_icon)
 
-		link_value = json.dumps(href)
+		#link_value = json.dumps(href)
+		link_value = href
 
 		#Final Case
 		if link_case_value and link_case_field:
