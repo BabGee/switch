@@ -23,7 +23,7 @@ class DataListCaseQueryAdmin(admin.ModelAdmin):
 admin.site.register(DataListCaseQuery, DataListCaseQueryAdmin)
 
 class DataListLinkQueryAdmin(admin.ModelAdmin):
-        list_display = ('query','link_name','link_service','link_icon','link_case_field','link_case_value','link_inactive',)
+        list_display = ('query','link_name','link_service','link_icon','link_case_field','link_case_value','link_params','link_inactive',)
 admin.site.register(DataListLinkQuery, DataListLinkQueryAdmin)
 
 class DataListJoinQueryAdmin(admin.ModelAdmin):

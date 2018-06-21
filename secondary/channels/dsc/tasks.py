@@ -1002,11 +1002,22 @@ class Wrappers:
 		link_icon = link.link_icon.icon
 	        link_case_field = link.link_case_field
 	        link_case_value = link.link_case_value
+	        link_params = link.link_params
 		case_when = []
 
 		args.append(link_name.strip())
 		params['cols'].append({"label": link_name.strip(), "type": "href", "value": link_name.strip()})
-		link_value = '%s%%%s%%%s' % (link_action, link_service, link_icon)
+
+               	href = { "url":"/"+link_service+"/", "service": link_service, "icon": link_icon}
+
+          	for i in link_params.split('|'):
+			try:k,v = i.split('%')
+			except: continue
+			href['params'] = {k:v}
+			
+		#link_value = '%s%%%s%%%s' % (link_action, link_service, link_icon)
+
+		link_value = json.dumps(href)
 
 		#Final Case
 		if link_case_value and link_case_field:
