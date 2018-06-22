@@ -214,7 +214,7 @@ class System(Generator):
                 else:
                     payload['response'] = payload['redirect']
 
-            elif 'redirect' not in payload.keys() and payload['SERVICE'] in ['LOGIN','CONFIRM ONE TIME PASSWORD','SET PASSWORD']:
+            elif 'redirect' not in payload.keys() and payload['SERVICE'] in ['LOGIN','CONFIRM ONE TIME PASSWORD','SET PASSWORD','CONFIRM ONE TIME PIN']:
                 payload['response'] = '/index/'
             payload['response_status'] = '00'
         except Exception, e:
