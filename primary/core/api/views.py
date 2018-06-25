@@ -176,7 +176,7 @@ class Interface(Authorize, ServiceCall):
 							session_expiry = user_session.gateway_profile.gateway.session_expiry
 							#if True:#Check date_created/modified for expiry time
 
-							if session_expiry and timezone.now() < session.last_access + timezone.timedelta(minutes=session_expiry):
+							if session_expiry and timezone.now() < user_session.last_access + timezone.timedelta(minutes=session_expiry):
 								session_active = False
 								user_session.status = SessionStatus.objects.get(name='EXPIRED')
 								user_session.save()
