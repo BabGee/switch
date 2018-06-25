@@ -233,7 +233,7 @@ class Interface(Authorize, ServiceCall):
 						payload['response_status'] = '96'
 				elif session_active == False:
 					lgr.info('Session Has expired')
-					payload['response'] = {'overall_status': 'Session Has Expired', 'redirect': '/logout' }
+					payload['response'] = {'overall_status': 'Session Has Expired', 'redirect': '/logout' , 'logout': True}
 					payload['response_status'] = '58'
 				else:
 					lgr.info('Didnt Get Gateway Profile')
