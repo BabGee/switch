@@ -1982,6 +1982,7 @@ class System(Wrappers):
 				details['profile']['first_name'] = gateway_profile.user.first_name
 				details['profile']['last_name'] = gateway_profile.user.last_name
 				details['profile']['access_level'] = gateway_profile.access_level.name
+				if gateway_profile.role: details['profile']['role'] = gateway_profile.role.name
 				details['profile']['notification_channel'] = '{}/notifications/{}'.format(gateway.pk, gateway_profile.user.profile.pk)
 
 			institution = None
