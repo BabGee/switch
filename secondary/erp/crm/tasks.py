@@ -385,7 +385,17 @@ class System(Wrappers):
 						enrollment.profile = session_gateway_profile.user.profile
 						enrollment.save()
 
+				if 'expiry' in payload.keys():
+					#enrollment.expiry = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload['expiry'], '%d/%m/%Y'))
+					enrollment.expiry = datetime.strptime(payload['expiry'], '%Y-%m-%d')
+				elif 'expiry_days_period' in payload.keys():
+					enrollment.expiry = timezone.now()+timezone.timedelta(days=(int(payload['expiry_days_period'])))
+				elif 'expiry_years_period' in payload.keys():
+					enrollment.expiry = timezone.now()+timezone.timedelta(days=(365*int(payload['expiry_years_period'])))
+
 				payload['record'] = enrollment.record
+				payload['enrollment_expiry'] = enrollment.expiry.date().isoformat()
+
 			else:
 				lgr.info('Enrollment with record does not exist')
 
@@ -430,7 +440,7 @@ class System(Wrappers):
 
 					if 'expiry' in payload.keys():
 						#enrollment.expiry = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload['expiry'], '%d/%m/%Y'))
-						enrollment.expiry = datetime.strptime(payload['expiry'], '%d/%m/%Y')
+						enrollment.expiry = datetime.strptime(payload['expiry'], '%Y-%m-%d')
 					elif 'expiry_days_period' in payload.keys():
 						enrollment.expiry = timezone.now()+timezone.timedelta(days=(int(payload['expiry_days_period'])))
 					elif 'expiry_years_period' in payload.keys():
@@ -441,6 +451,7 @@ class System(Wrappers):
 	                                enrollment.save()
 
 					payload['record'] = enrollment.record
+					payload['enrollment_expiry'] = enrollment.expiry.date().isoformat()
 					payload['response_status'] = '00'
 					payload['response'] = 'Enrollment Captured'
 

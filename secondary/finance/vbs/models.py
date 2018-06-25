@@ -16,6 +16,7 @@ class AccountType(models.Model):
 	gateway = models.ForeignKey(Gateway)
 	institution = models.ForeignKey(Institution, blank=True, null=True)
 	disburse_deductions = models.BooleanField(default=False)
+	restrict_multiple_credit = models.BooleanField(default=False)
 	def __unicode__(self):
 		return u'%s %s' % (self.name, self.product_item.currency)
 	def credit_type_list(self):

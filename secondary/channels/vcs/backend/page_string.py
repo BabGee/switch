@@ -1569,19 +1569,19 @@ class PageString(ServiceCall, Wrappers):
 
 					item = ''
 					if  account_type.product_item.variable_unit and 'quantity' in params.keys():
-						unit_cost = unit_cost*Decimal(params['quantity'])	
+						total_cost = unit_cost*Decimal(params['quantity'])	
 					elif account_type.product_item.variable_unit and 'amount' in params.keys():
-						unit_cost = Decimal(params['amount'])	
+						total_cost = Decimal(params['amount'])	
 
 
 
-	                                cost = '{0:,.2f}'.format(unit_cost) if unit_cost > 0 else None
+	                                cost = '{0:,.2f}'.format(total_cost) if total_cost > 0 else None
 					item = '%s@%s %s' % (account_type.name,account_type.product_item.currency.code,\
 								cost )
 
 					charge = Decimal(0)
-					charge_list = AccountCharge.objects.filter(account_type__id=params['account_type_id'],min_amount__lte=unit_cost,\
-							max_amount__gte=unit_cost,service=navigator.menu.service)
+					charge_list = AccountCharge.objects.filter(account_type__id=params['account_type_id'],min_amount__lte=total_cost,\
+							max_amount__gte=total_cost,service=navigator.menu.service)
 					lgr.info('Charge List: %s' % charge_list)
 					lgr.info('Charge List: %s|%s' % (charge_list, params))
 
@@ -1599,25 +1599,44 @@ class PageString(ServiceCall, Wrappers):
 
 					for c in charge_list:
 						if c.is_percentage:
-							charge = charge + ((c.charge_value/100)*Decimal(unit_cost))
+							charge = charge + ((c.charge_value/100)*Decimal(total_cost))
 						else:
 							charge = charge+c.charge_value		
 
 					lgr.info('Charge: %s' % charge)
 
-					if charge>Decimal(0):
-						item = '%s\nCharges@%s %s' % (item,account_type.product_item.currency.code,'{0:,.2f}'.format(charge))
-
-					loan_amount = unit_cost
+					'''
+					interest = Decimal(0)
 					if 'loan_time' in payload.keys():
 						credit_type = SavingsCreditType.objects.filter(account_type=account_type,\
 									 min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
-
+						
 						for c in credit_type:
-							loan_amount = loan_amount + ((c.interest_rate/100)*(int(payload['loan_time'])/c.interest_time)*unit_cost)
+							interest = interest + ((c.interest_rate/100)*(int(payload['loan_time'])/c.interest_time)*unit_cost)
+					'''
 
-	                                loan_cost = '{0:,.2f}'.format(loan_amount) if loan_amount > 0 else None
-					item = '%s\nLoan Amount@%s %s' % (item,account_type.product_item.currency.code,loan_cost)
+					is_loan = False
+					if 'interest_rate' in payload.keys() and 'interest_time' in payload.keys():
+						is_loan = True
+						charge = charge + ((Decimal(payload['interest_rate'])/100)*(int(payload['loan_time'])/int(payload['interest_time']))*Decimal(total_cost))
+					else:
+						credit_type = SavingsCreditType.objects.filter(account_type=account_type,\
+								 min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
+
+						if credit_type.exists():
+							is_loan = True
+							c = credit_type[0]
+							charge = charge + ((c.interest_rate/100)*(int(payload['loan_time'])/c.interest_time)*Decimal(total_cost))
+
+
+					if charge>Decimal(0):
+						item = '%s\nCharges@%s %s' % (item,account_type.product_item.currency.code,'{0:,.2f}'.format(charge))
+					amount = total_cost + charge
+	                                loan_cost = '{0:,.2f}'.format(amount) if amount > 0 else None
+					if is_loan:
+						item = '%s\nPayable Amount@%s %s' % (item,account_type.product_item.currency.code,loan_cost)
+					else:
+						item = '%s\nTotalAmount@%s %s' % (item,account_type.product_item.currency.code,loan_cost)
 
 					page_string = page_string.replace('['+v+']',item)
 

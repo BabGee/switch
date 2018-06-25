@@ -6,7 +6,8 @@ from django import forms
 
 class AccountTypeAdmin(admin.ModelAdmin):
 	list_display = ('id','name','deposit_taking', 'min_balance','max_balance', 'description',\
-			 'daily_withdrawal_limit','product_item','gateway','institution','disburse_deductions',)
+			 'daily_withdrawal_limit','product_item','gateway','institution',\
+			 'disburse_deductions','restrict_multiple_credit',)
 	list_filter = ('product_item__institution','institution',)
 admin.site.register(AccountType, AccountTypeAdmin)
 

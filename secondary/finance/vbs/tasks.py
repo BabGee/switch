@@ -81,10 +81,19 @@ class System(Wrappers):
 			savings_credit_list = []
 			chunks,chunk_size = 0, 0
 			count = 0
+			current_installment_time = 30
+			current_installment_amount = 0
+
 			if credit_type.exists() and account_manager.credit_time > credit_type[0].installment_time:
+				current_installment_time = credit_type[0].installment_time
 				chunks, chunk_size = account_manager.credit_time, credit_type[0].installment_time
 				for i in range(0, chunks, chunk_size): count += 1
+
+			elif credit_type.exists() and account_manager.credit_time <= credit_type[0].installment_time:
+				current_installment_time = account_manager.credit_time
+
 			elif 'installment_time' in payload.keys() and account_manager.credit_time > int(payload['installment_time']):
+				current_installment_time = int(payload['installment_time'])
 				chunks, chunk_size = account_manager.credit_time, int(payload['installment_time'])
 				for i in range(0, chunks, chunk_size): count += 1
 
@@ -93,6 +102,7 @@ class System(Wrappers):
 					installment_time = i+chunk_size
 					installment_amount = amount/count
 					installment_charge = charge/count
+					if current_installment_time == installment_time: current_installment_amount = installment_amount+installment_charge
 					due_date = timezone.now()+timezone.timedelta(days=installment_time)
 					savings_credit_manager = SavingsCreditManager(account_manager=account_manager,\
 								credit=account_manager.credit,installment_time=installment_time,\
@@ -102,6 +112,7 @@ class System(Wrappers):
 					savings_credit_list.append(savings_credit_manager)
 			else:
 
+					current_installment_amount = account_manager.amount + account_manager.charge
 					savings_credit_manager = SavingsCreditManager(account_manager=account_manager,\
 								credit=account_manager.credit,installment_time=account_manager.credit_time,\
 								amount=account_manager.amount,charge=account_manager.charge,\
@@ -110,6 +121,13 @@ class System(Wrappers):
 					savings_credit_list.append(savings_credit_manager)
 
 			if len(savings_credit_list)>0: SavingsCreditManager.objects.bulk_create(savings_credit_list)
+
+			current_due_date = (timezone.localtime(timezone.now())+timezone.timedelta(days=current_installment_time)).date()
+
+			current_due_date = current_due_date.isoformat()
+			payload['current_due_date'] = current_due_date
+			payload['current_due_amount'] = current_installment_amount.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+
 			payload['response_status'] = '00'
 			payload['response'] = 'Installment Logged'
 
@@ -411,7 +429,7 @@ class System(Wrappers):
 			due_date = due_date.strftime("%d/%b/%Y")
 			payload['due_date'] = due_date
 
-			payload['quantity'] = interest.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+			#payload['quantity'] = interest.quantize(Decimal('.01'), rounding=ROUND_DOWN)
 			payload['amount'] = interest.quantize(Decimal('.01'), rounding=ROUND_DOWN)
 
 			payload['response_status'] = '00'
@@ -467,7 +485,7 @@ class System(Wrappers):
 			#For loan Accounts (Adding Interest To Charge) #Loans only Debit accounts
 			if 'is_loan' in payload.keys() and payload['is_loan'] and 'loan_time' in payload.keys():
 				if 'interest_rate' in payload.keys() and 'interest_time' in payload.keys():
-					charget = charge + ((Decimal(payload['interest_rate'])/100)*(int(payload['loan_time'])/int(payload['interest_time']))*Decimal(amount))
+					charge = charge + ((Decimal(payload['interest_rate'])/100)*(int(payload['loan_time'])/int(payload['interest_time']))*Decimal(amount))
 				else:
 					credit_type = SavingsCreditType.objects.filter(account_type=session_account.account_type,\
 								 min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
@@ -475,7 +493,7 @@ class System(Wrappers):
 					for c in credit_type:
 						charge = charge + ((c.interest_rate/100)*(int(payload['loan_time'])/c.interest_time)*Decimal(amount))
 
-				payload['quantity'] = Decimal(amount)+charge
+				#payload['quantity'] = Decimal(amount)+charge
 	
 			#gl account #GL A/c ALWAYS adds Charges (GL also Charge Account)
 			if len(gl_account_manager)>0:
@@ -866,7 +884,7 @@ class Payments(System):
 			account_manager_list = AccountManager.objects.filter(credit=False,dest_account=account,dest_account__account_type__id=payload['account_type_id'],credit_paid=False)
 
 			available_credit,credit_total = Decimal(0),Decimal(0)
-			overdue_credit, credit_info = False,'Principal-Loan-Due Date'
+			overdue_credit, credit_info = False,'Principal-Charges-Payable'
 
 			if account_manager_list.exists():
 				credit = {}
@@ -874,13 +892,13 @@ class Payments(System):
 				overdue, due_date = False, None
 				currency = account.account_type.product_item.currency.code
 				for a in account_manager_list:
-					principal, total = Decimal(0), Decimal(0)
+					principal, charge, total = Decimal(0), Decimal(0), Decimal(0)
 					if a.dest_account.account_type.product_item.currency.code == currency:
 						lgr.info('Got status logic: %s' % a)
 
 						lgr.info('Got status logic')
 						principal = a.amount
-
+						charge = a.charge
 						lgr.info('Got status logic')
 						total = Decimal(a.charge)+Decimal(a.amount)
 
@@ -899,7 +917,7 @@ class Payments(System):
 					else:
 						lgr.info('Currency Conversion to Happen')
 
-					credit_info = '%s\n%s %s-%s %s-%s' % (credit_info,currency,'{0:,.2f}'.format(principal),currency,'{0:,.2f}'.format(total),due_date)
+					credit_info = '%s\n%s %s-%s-%s' % (credit_info,currency,'{0:,.2f}'.format(principal),'{0:,.2f}'.format(charge),'{0:,.2f}'.format(total))
 					if overdue:
 						overdue_credit = True
 						credit_info = '%s-Overdue' % credit_info
@@ -1031,6 +1049,9 @@ class Payments(System):
 				available_limit = payload['available_limit']
 				account_type = AccountType.objects.get(id=payload['account_type_id'])
 
+				existing_loan = AccountManager.objects.filter(credit=False, dest_account__id=payload['session_account_id'],\
+						dest_account__account_type=account_type,credit_paid=False).order_by('-date_created')[:1]
+
 				if Decimal(payload['amount'])<account_type.product_item.unit_limit_min:
 					payload['response'] = 'Min Amount: %s' % account_type.product_item.unit_limit_min
 					payload['response_status'] = '13'
@@ -1040,6 +1061,9 @@ class Payments(System):
 				elif (credit_total+Decimal(payload['amount'])) > credit_limit or Decimal(payload['amount'])>available_limit:
 					lgr.info('Max Limit Amount Reached: ct:%s|wl:%s|ac:%s' % (credit_total, available_limit, available_credit))
 					payload['response_status'] = '61'
+				elif existing_loan.exists() and account_type.restrict_multiple_credit:
+					lgr.info('A loan Exists and multiple credits not allow for account type')
+					payload['response_status'] = '39'
 				else:
 					lgr.info('Succesfully Captured Amount')
 
@@ -1059,27 +1083,32 @@ class Payments(System):
 						loan_amount = Decimal(payload['amount'])
 
 						if 'interest_rate' in payload.keys() and 'interest_time' in payload.keys():
-							interest = ((Decimal(payload['interest_rate'])/100)*(int(payload['loan_time'])/int(payload['interest_time']))*Decimal(payload['amount']))
-
+							interest_time = int(payload['interest_time'])
+							interest = ((Decimal(payload['interest_rate'])/100)*(int(payload['loan_time'])/interest_time)*Decimal(payload['amount']))
 						else:
 							credit_type = SavingsCreditType.objects.filter(account_type=account_type,\
 									 min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
 
 							interest = Decimal(0)
-							for c in credit_type:
-								interest = ((c.interest_rate/100)*(int(payload['loan_time'])/c.interest_time)*Decimal(payload['amount']))
+							c = credit_type[0]
+							interest_time = c.interest_time
+							interest = ((c.interest_rate/100)*(int(payload['loan_time'])/interest_time)*Decimal(payload['amount']))
+
 							#loan_cost = '{0:,.2f}'.format(loan_amount) if loan_amount > 0 else None #Formatter
 
-						due_date = timezone.localtime(timezone.now())+timezone.timedelta(days=int(payload['loan_time']))
-						due_date = due_date.strftime("%d/%b/%Y")
+						due_date = (timezone.localtime(timezone.now())+timezone.timedelta(days=int(payload['loan_time']))).date()
+						due_date = due_date.isoformat()
 						payload['due_date'] = due_date
+
 						payload['is_loan'] = True
+						'''
 						if account_type.disburse_deductions:
 							payload['quantity'] = loan_amount + interest
 							payload['float_amount'] = loan_amount
 						else:
 							payload['quantity'] = loan_amount
 							payload['float_amount'] = loan_amount - interest
+						'''
 
 						payload['response'] = 'Captured'
 						payload['response_status'] = '00'
