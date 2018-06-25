@@ -3,6 +3,7 @@ from primary.core.administration.models import *
 from primary.core.api.models import *
 from django.core.validators import RegexValidator
 
+from django.utils import timezone
 
 class InstitutionStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
@@ -149,46 +150,6 @@ class ChangeProfileMSISDN(models.Model):
 	def __unicode__(self):
 		return u'%s %s %s' % (self.gateway_profile, self.msisdn, self.expiry)
 
-'''
-class TillTypeStatus(models.Model):
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
-		return u'%s' % (self.name)
-
-#Whether Online or Shop Till	
-class TillType(models.Model):
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	status = models.ForeignKey(TillTypeStatus)
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
-		return u'%s' % (self.name)
-		
-class InstitutionTill(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45) #Each institution to have unique names within its list, enforced on code.
-	institution = models.ForeignKey(Institution)
-	image = models.ImageField(upload_to='upc_institutiontill_image/', max_length=200, blank=True, null=True)
-	till_type = models.ForeignKey(TillType)
-	till_number = models.IntegerField()
-	till_currency = models.ForeignKey(Currency)
-	description = models.CharField(max_length=100)	
-	qr_code = models.CharField(max_length=200, blank=True, null=True)
-	city = models.CharField(max_length=200, blank=True, null=True, help_text="City/Town")
-	physical_address = models.CharField(max_length=200, blank=True, null=True)
-	is_default = models.BooleanField(default=False)
-	geometry = models.PointField(srid=4326)
-	details = models.CharField(max_length=1200, null=True, blank=True)
-	objects = models.GeoManager()
-	def __unicode__(self):
-		return '%s %s %s' % (self.name, self.institution, self.till_currency)
-'''
-
 class PasswordStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
@@ -226,6 +187,7 @@ class Session(models.Model):
 	num_of_tries = models.IntegerField(null=True, blank=True)
 	num_of_sends = models.IntegerField(null=True, blank=True)
 	status = models.ForeignKey(SessionStatus)
+	last_access = models.DateTimeField(default=timezone.now)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.session_id, self.gateway_profile, self.reference)
 

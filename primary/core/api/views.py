@@ -116,6 +116,8 @@ class Interface(Authorize, ServiceCall):
 			try:
 				lgr.info("SERVICE: %s" % SERVICE)
 				gateway_profile_list, service = GatewayProfile.objects.none(), Service.objects.none()
+				session_active = True
+
 				if 'session_id' not in payload.keys() and 'credentials' not in payload.keys():
 					#To use this access, one would require the System@User API_KEY
 					#This access can create any user's session thus get any users API_KEY
@@ -160,7 +162,8 @@ class Interface(Authorize, ServiceCall):
 					try:
 						lgr.info('SessionID: %s' % payload['session_id'])
 						session_id = base64.urlsafe_b64decode(str(payload['session_id']))
-						session = Session.objects.filter(Q(session_id=session_id.decode('hex')), Q(channel__id=payload['chid']),\
+						session = Session.objects.filter(Q(session_id=session_id.decode('hex')),\
+							Q(channel__id=payload['chid']),\
 							Q(gateway_profile__allowed_host__host=payload['gateway_host'],\
 							gateway_profile__allowed_host__status__name='ENABLED')|\
 							Q(gateway_profile__gateway__default_host__host=payload['gateway_host'],\
@@ -169,8 +172,17 @@ class Interface(Authorize, ServiceCall):
 							prefetch_related('gateway_profile')[:1]
 
 						if session.exists():
-							if True:#Check date_created/modified for expiry time
-								try: gateway_profile_list = GatewayProfile.objects.filter(id=session[0].gateway_profile.id).\
+							user_session = session[0]
+							session_expiry = user_session.gateway_profile.gateway.session_expiry
+							#if True:#Check date_created/modified for expiry time
+
+							if session_expiry and timezone.now() < session.last_access + timezone.timedelta(minutes=session_expiry):
+								session_active = False
+								user_session.status = SessionStatus.objects.get(name='EXPIRED')
+								user_session.save()
+
+							if (session_expiry == None) or (session_expiry and session_active):
+								try: gateway_profile_list = GatewayProfile.objects.filter(id=user_session.gateway_profile.id).\
 										prefetch_related('user','msisdn','gateway')
 								except: pass
 							else:
@@ -219,6 +231,10 @@ class Interface(Authorize, ServiceCall):
 					else: 
 						payload['response'] = {'overall_status': 'Service Does not Exist' }
 						payload['response_status'] = '96'
+				elif session_active == False:
+					lgr.info('Session Has expired')
+					payload['response'] = {'overall_status': 'Session Has Expired', 'redirect': '/logout' }
+					payload['response_status'] = '58'
 				else:
 					lgr.info('Didnt Get Gateway Profile')
 					payload['response'] = {'overall_status': 'Profile Does not Exist' }

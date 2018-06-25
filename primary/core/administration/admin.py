@@ -57,8 +57,8 @@ admin.site.register(Theme, ThemeAdmin)
 
 class GatewayAdmin(admin.ModelAdmin):
 	list_display = ('id','name', 'logo', 'description','background_image','default_color',\
-			'default_host_list','theme',\
-			'primary_color','secondary_color','accent_color','max_pin_retries',)
+			'default_host_list','theme','primary_color','secondary_color',\
+			'accent_color','max_pin_retries','session_expiry',)
 admin.site.register(Gateway, GatewayAdmin)
 
 class AccessLevelStatusAdmin(admin.ModelAdmin):
