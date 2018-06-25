@@ -94,6 +94,6 @@ class SessionAdmin(admin.ModelAdmin):
 	list_display = ('id','session_id', 'channel','gateway_profile', 'reference','num_of_tries',\
 			'num_of_sends','status','last_access',)
 	search_fields = ('gateway_profile__msisdn__phone_number','reference',)
-	list_filter = ('channel',)
+	list_filter = ('channel','status',)
 admin.site.register(Session, SessionAdmin)
 
