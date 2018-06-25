@@ -74,7 +74,7 @@ admin.site.register(InBoundState, InBoundStateAdmin)
 
 class InboundAdmin(admin.ModelAdmin):
 		list_display = ('contact','heading','message',\
-			'state','inst_notified','inst_num_tries','attachment_list',)
+			'state','inst_notified','inst_num_tries','attachment_list','recipient',)
 admin.site.register(Inbound, InboundAdmin)
 
 class OutBoundStateAdmin(admin.ModelAdmin):
