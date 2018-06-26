@@ -186,7 +186,7 @@ class Interface(Authorize, ServiceCall):
 								user_session.status = SessionStatus.objects.get(name='EXPIRED')
 								user_session.save()
 							else:
-								user_session.last_access = timestamp.now()
+								user_session.last_access = timezone.now()
 								user_session.save()
 
 
