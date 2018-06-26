@@ -164,6 +164,7 @@ class Interface(Authorize, ServiceCall):
 						session_id = base64.urlsafe_b64decode(str(payload['session_id']))
 						session = Session.objects.filter(Q(session_id=session_id.decode('hex')),\
 							Q(channel__id=payload['chid']),\
+							Q(status__name='CREATED'),\
 							Q(gateway_profile__allowed_host__host=payload['gateway_host'],\
 							gateway_profile__allowed_host__status__name='ENABLED')|\
 							Q(gateway_profile__gateway__default_host__host=payload['gateway_host'],\
