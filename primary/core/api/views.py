@@ -184,6 +184,10 @@ class Interface(Authorize, ServiceCall):
 								session_active = False
 								user_session.status = SessionStatus.objects.get(name='EXPIRED')
 								user_session.save()
+							else:
+								user_session.last_access = timestamp.now()
+								user_session.save()
+
 
 							if (session_expiry == None) or (session_expiry and session_active):
 								try: gateway_profile_list = GatewayProfile.objects.filter(id=user_session.gateway_profile.id).\
