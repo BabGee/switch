@@ -172,11 +172,15 @@ class Interface(Authorize, ServiceCall):
 							prefetch_related('gateway_profile')[:1]
 
 						if session.exists():
+							lgr.info('Session Exists')
 							user_session = session[0]
+							lgr.info('User Session: %s' % user_session)
 							session_expiry = user_session.gateway_profile.gateway.session_expiry
+							lgr.info('Session Expiry: %s' % session_expiry)
 							#if True:#Check date_created/modified for expiry time
-
+							if session_expiry: lgr.info('Last Access: %s | Expiration time: %s' % (user_session.last_access, user_session.last_access + timezone.timedelta(minutes=session_expiry)))
 							if session_expiry and timezone.now() < user_session.last_access + timezone.timedelta(minutes=session_expiry):
+								lgr.info('Expired Session')
 								session_active = False
 								user_session.status = SessionStatus.objects.get(name='EXPIRED')
 								user_session.save()
