@@ -58,7 +58,7 @@ admin.site.register(Theme, ThemeAdmin)
 class GatewayAdmin(admin.ModelAdmin):
 	list_display = ('id','name', 'logo', 'description','background_image','default_color',\
 			'default_host_list','theme','primary_color','secondary_color',\
-			'accent_color','max_pin_retries',)
+			'accent_color','max_pin_retries','session_expiry',)
 admin.site.register(Gateway, GatewayAdmin)
 
 class AccessLevelStatusAdmin(admin.ModelAdmin):
@@ -66,11 +66,11 @@ class AccessLevelStatusAdmin(admin.ModelAdmin):
 admin.site.register(AccessLevelStatus, AccessLevelStatusAdmin)
 
 class AccessLevelAdmin(admin.ModelAdmin):
-	list_display = ('id','name','status','description', 'hierarchy','session_expiry',)
+	list_display = ('id','name','status','description', 'hierarchy',)
 admin.site.register(AccessLevel, AccessLevelAdmin)
 
 class RoleAdmin(admin.ModelAdmin):
-	list_display = ('id','name','status','description','access_level','gateway',)
+	list_display = ('id','name','status','description','access_level','gateway','session_expiry',)
 admin.site.register(Role, RoleAdmin)
 
 class ChannelAdmin(admin.ModelAdmin):
