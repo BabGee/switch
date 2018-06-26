@@ -132,7 +132,6 @@ class Gateway(models.Model):
 	secondary_color = models.CharField(max_length=100, blank=True, null=True)
 	accent_color = models.CharField(max_length=100, blank=True, null=True)
 	max_pin_retries = models.SmallIntegerField(default=3)
-	session_expiry = models.IntegerField(blank=True, null=True, help_text='In Minutes')
 	def __unicode__(self):
 		return u'%s' % (self.name)
 	def default_host_list(self):
@@ -153,6 +152,7 @@ class AccessLevel(models.Model):
 	status = models.ForeignKey(AccessLevelStatus)
 	description = models.CharField(max_length=100)
 	hierarchy = models.IntegerField()
+	session_expiry = models.IntegerField(blank=True, null=True, help_text='In Minutes')
 	def __unicode__(self):
 		return u'%s' % (self.name)  
        
