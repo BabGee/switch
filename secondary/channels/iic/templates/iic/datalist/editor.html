@@ -90,11 +90,12 @@
 
                 <p>Links</p>
                 <div id="links">
-                    {% for link in links %}
+                    {% for link in data_list.query.datalistlinkquery_set.all %}
                         <div>
-                            <input type="text" value="{{ link.label }}"> :
-                            <input type="text" value="{{ link.service }}"> :
-                            <input type="text" value="{{ link.icon }}">
+                            <input type="text" value="{{ link.link_name }}"> :
+                            <input type="text" value="{{ link.link_service.name }}"> :
+                            <input type="text" value="{{ link.link_icon }}">
+                            <input type="text" value="{{ link.link_params }}">
                             <!-- TODO add link params -->
                             <button>-</button>
                         </div>
