@@ -194,9 +194,6 @@ class Interface(Authorize, ServiceCall):
 								try: gateway_profile_list = GatewayProfile.objects.filter(id=user_session.gateway_profile.id).\
 										prefetch_related('user','msisdn','gateway')
 								except: pass
-							else:
-								#Expired Session
-								lgr.info('session_id expired and is Customer')#Prompt For Credentials to Login
 					except Exception, e:
 						lgr.info('Error: %s' % e)
 					#session should be encrypted and salted in base64
@@ -242,7 +239,7 @@ class Interface(Authorize, ServiceCall):
 						payload['response_status'] = '96'
 				elif session_active == False:
 					lgr.info('Session Has expired')
-					payload['response'] = {'overall_status': 'Session Has Expired', 'redirect': '/logout' , 'logout': True}
+					payload['response'] = {'overall_status': 'Session Has Expired', 'redirect': '/logout'}
 					payload['response_status'] = '58'
 				else:
 					lgr.info('Didnt Get Gateway Profile')
