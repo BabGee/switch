@@ -179,7 +179,7 @@ class Interface(Authorize, ServiceCall):
 							lgr.info('Session Expiry: %s' % session_expiry)
 							#if True:#Check date_created/modified for expiry time
 							if session_expiry: lgr.info('Last Access: %s | Expiration time: %s' % (user_session.last_access, user_session.last_access + timezone.timedelta(minutes=session_expiry)))
-							if session_expiry and timezone.now() < user_session.last_access + timezone.timedelta(minutes=session_expiry):
+							if session_expiry and timezone.now() > user_session.last_access + timezone.timedelta(minutes=session_expiry):
 								lgr.info('Expired Session')
 								session_active = False
 								user_session.status = SessionStatus.objects.get(name='EXPIRED')
