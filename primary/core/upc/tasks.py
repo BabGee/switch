@@ -1694,10 +1694,22 @@ class System(Wrappers):
 
 	def set_password(self, payload, node_info):
 		try:
+
+
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
 			password = payload['password']
-			confirm_password = payload['confirm_password']
+			confirm_password = payload['confirm_password'] if 'confirm_password' in payload.keys() else None
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 
 			error = ''
+
+			password_history = UserPasswordHistory.objects.filter(user=session_gateway_profile.user).order_by('-date_created')[:3]
+			if password_history.exists():
+				for ph in password_history:
+					if check_password(password, ph.password): 
+						error += 'New Password not allowed to match previous 3 passwords, ' 
+						break
 
 			if re.search(r'\d', password) is None: error += 'Digit, ' 
 			if re.search(r'[A-Z]', password) is None: error += 'Uppercase, '
