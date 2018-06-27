@@ -322,11 +322,10 @@ class System(Wrappers):
 					pending_approvals = ApprovalActivity.objects.filter(Q(status__name='CREATED'),\
 									Q(affected_gateway_profile=session_gateway_profile),Q(approval=approval)\
 									|Q(approval__pending_related_service__name=payload['SERVICE']))
-					lgr.info('Pendin Approvals: %s' % pending_approvals)
+
 					if approval.approval_identifier not in ['',None]:
 						pending_approvals = pending_approvals.filter(identifier=payload[approval.approval_identifier.strip()])
 
-					lgr.info('Pendin Approvals: %s' % pending_approvals)
 					pending_approvals_count = pending_approvals.count()
 					if pending_approvals_count == approval.pending_count:
 						# enough pending approvals created
