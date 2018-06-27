@@ -25,6 +25,7 @@ from django.conf import settings
 from django.core.files import File
 import base64, re, crypt
 from django.utils.http import urlquote
+from django.contrib.auth.hashers import check_password
 
 from django.db import transaction
 from primary.core.bridge.models import *
