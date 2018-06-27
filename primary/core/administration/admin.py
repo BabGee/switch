@@ -2,15 +2,15 @@ from django.contrib.gis import admin
 from primary.core.administration.models import *
 from django.forms.widgets import TextInput, Textarea
 from django import forms
-
-class UserPasswordHistoryAdmin(admin.ModelAdmin):
+'''
+class UserPasswordHistoryAdmin(admin.OSMGeoAdmin):
 	list_display = ('id','date_modified','date_created','user','password',)
 admin.site.register(UserPasswordHistory, UserPasswordHistoryAdmin)
 
-class CountryStatusAdmin(admin.ModelAdmin):
+class CountryStatusAdmin(admin.OSMGeoAdmin):
 	list_display = ('id','name','description')
 admin.site.register(CountryStatus, CountryStatusAdmin)
-
+'''
 class CountryAdmin(admin.OSMGeoAdmin):
 	list_display = ('name','area','pop2005','fips','iso2','iso3','un','region','subregion','lon','lat','ccode',)
         search_fields = ('name',)
@@ -22,9 +22,9 @@ class CurrencyAdmin(admin.ModelAdmin):
 	search_fields = ('currency','code',)
 admin.site.register(Currency, CurrencyAdmin)
 
-class languageadmin(admin.ModelAdmin):
+class LanguageAdmin(admin.ModelAdmin):
 	list_display = ('id','name','description','date_modified','date_created')
-admin.site.register(language, languageadmin)
+admin.site.register(Language, LanguageAdmin)
 
 class IndustrySectionAdmin(admin.ModelAdmin):
 	list_display = ('isic_code','description',)
