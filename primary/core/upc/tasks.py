@@ -1643,7 +1643,7 @@ class System(Wrappers):
 	def verify_password(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-			if gateway_profile.user.is_active and gateway_profile.user.check_password(payload['current password']):
+			if gateway_profile.user.is_active and gateway_profile.user.check_password(payload['current_password']):
 				payload['response'] = 'Password Verified'
 				payload['response_status'] = '00'
 			else:
