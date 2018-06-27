@@ -5,6 +5,14 @@ from django.utils import timezone
 
 #User._meta.get_field('email')._unique = False
 User._meta.get_field("username").max_length = 100
+class UserPasswordHistory(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	user = models.ForeignKey(User)
+	password = models.CharField(max_length=200)
+	def __unicode__(self):
+		return u'%s %s' % (self.user, self.date_created.isoformat())
+
 
 class CountryStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
