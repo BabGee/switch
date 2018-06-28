@@ -1993,7 +1993,7 @@ class Wrappers:
                                     lines.append(item)
 
                         except Exception, e:
-                            lgr.info('Error on Data List Function: %s' % e)
+                            lgr.info('Error on Data List Function: %s' % e,exc_info=True)
 
                     elif d.query:
                         #lgr.info('Is a Query: ')
