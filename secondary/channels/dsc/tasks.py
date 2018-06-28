@@ -3912,6 +3912,7 @@ def process_push_request():
 				#lgr.info('push notification datalists : %s' % data_list)
 				payload = {}
 				payload['push_request'] = True
+				payload['chid'] = 2
 				cols, rows, lines, groups, data, min_id, max_id, t_count, push = Wrappers().process_data_list(data_list, payload, gateway_profile, profile_tz, data)
 
 				#lgr.info("MQTT task: %s" % push)
