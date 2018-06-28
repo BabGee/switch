@@ -78,8 +78,23 @@ class DataListLinkQuery(models.Model):
         link_case_value = models.CharField(max_length=128, null=True, blank=True)
 	link_params = models.CharField(max_length=512) 
 	link_inactive = models.BooleanField(default=False)
+	access_level = models.ManyToManyField(AccessLevel, blank=True)
+	institution = models.ManyToManyField(Institution, blank=True)
+	channel = models.ManyToManyField(Channel, blank=True)
+	gateway = models.ManyToManyField(Gateway, blank=True)
+	role = models.ManyToManyField(Role, blank=True)
         def __unicode__(self):
                 return u'%s %s' % (self.id, self.query)
+	def access_level_list(self):
+		return "\n".join([a.name for a in self.access_level.all()])
+	def institution_list(self):
+		return "\n".join([a.name for a in self.institution.all()])
+	def channel_list(self):
+		return "\n".join([a.name for a in self.channel.all()])
+	def gateway_list(self):
+		return "\n".join([a.name for a in self.gateway.all()])
+	def role_list(self):
+		return "\n".join([a.name for a in self.role.all()])
 
 class DataListJoinQuery(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)

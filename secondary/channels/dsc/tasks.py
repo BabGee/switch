@@ -993,7 +993,13 @@ class Wrappers:
 		    report_list = report_list.annotate(**case_values_data)
 
 	    #lgr.info('Case Values')
-	    link_query = DataListLinkQuery.objects.filter(query=data.query, link_inactive=False)
+	    link_query = DataListLinkQuery.objects.filter(Q(query=data.query), Q(link_inactive=False),\
+	    				   Q(Q(gateway=gateway_profile.gateway) | Q(gateway=None)),\
+                                           Q(Q(channel__id=payload['chid']) | Q(channel=None)),\
+                                           Q(Q(access_level=gateway_profile.access_level) | Q(access_level=None)))
+
+	    if gateway_profile.role:
+		link_query = link_query.filter(Q(role=None) | Q(role=gateway_profile.role))
 
 	    for link in link_query:
 		link_name = link.link_name
