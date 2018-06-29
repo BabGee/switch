@@ -310,9 +310,14 @@ class Wrappers:
 
 		msisdn = str(msisdn)
 		msisdn = msisdn.strip().replace(' ','').replace('-','')
-		if len(msisdn) >= 9 and msisdn[:1] == '+':
+		is_num = False
+		if msisdn[:1]=='0' or msisdn[:1]=='+' and isinstance(int(msisdn[1:])): is_num = True
+		elif msisdn[:1]!='0' or msisdn[:1]!='+' and isinstance(int(msisdn)): is_num = True
+ 
+
+		if is_num and len(msisdn) >= 9 and msisdn[:1] == '+':
 			msisdn = str(msisdn)
-		elif len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
+		elif is_num and len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
 			country_list = Country.objects.filter(mpoly__intersects=trans_point)
 			ip_point = g.geos(str(payload['ip_address']))
 			#Allow Country from web and apps
@@ -326,7 +331,7 @@ class Wrappers:
 					msisdn = None
 			else:
 				msisdn = '+254%s' % msisdn[1:]
-		elif len(msisdn) >=10  and msisdn[:1] <> '0' and msisdn[:1] <> '+':
+		elif is_num and len(msisdn) >=10  and msisdn[:1] <> '0' and msisdn[:1] <> '+':
 			msisdn = '+%s' % msisdn #clean msisdn for lookup
 		else:
 			msisdn = None
@@ -344,9 +349,15 @@ class Wrappers:
 		if "msisdn" in payload.keys():
 			msisdn = str(payload['msisdn'])
 			msisdn = msisdn.strip().replace(' ','').replace('-','')
-			if len(msisdn) >= 9 and msisdn[:1] == '+':
+
+
+			is_num = False
+			if msisdn[:1]=='0' or msisdn[:1]=='+' and isinstance(int(msisdn[1:])): is_num = True
+			elif msisdn[:1]!='0' or msisdn[:1]!='+' and isinstance(int(msisdn)): is_num = True
+ 
+			if is_num and len(msisdn) >= 9 and msisdn[:1] == '+':
 				msisdn = str(msisdn)
-			elif len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
+			elif is_num and len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
 				country_list = Country.objects.filter(mpoly__intersects=trans_point)
 				ip_point = g.geos(str(payload['ip_address']))
 				#Allow Country from web and apps
@@ -360,7 +371,7 @@ class Wrappers:
 						msisdn = None
 				else:
 					msisdn = '+254%s' % msisdn[1:]
-			elif len(msisdn) >=10  and msisdn[:1] <> '0' and msisdn[:1] <> '+':
+			elif is_num and len(msisdn) >=10  and msisdn[:1] <> '0' and msisdn[:1] <> '+':
 				msisdn = '+%s' % msisdn #clean msisdn for lookup
 			else:
 				msisdn = None
