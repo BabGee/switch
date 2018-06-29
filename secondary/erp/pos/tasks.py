@@ -914,9 +914,11 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
-			cart_item = CartItem.objects.get(id=payload['cart_item_id'])
-			product_item = cart_item.product_item
-			institution = product_item.institution
+
+			if 'delivery_location_coord' not in payload.keys() and 'delivery_location_name' not in payload.keys():
+				payload["response_status"] = "00"
+				payload["response"] = "Delivery Not Created, No Location Specified"
+				return payload
 
 			# delivery_types = DeliveryType.objects.filter(institution=institution)
 			# if delivery_types.exists():
@@ -941,8 +943,8 @@ class System(Wrappers):
 					longitude, latitude = coordinates.split(',', 1)
 					trans_point = Point(float(longitude), float(latitude))
 					delivery.destination_coord = trans_point
-
-				delivery.destination_name = payload['delivery_location_name']
+				if 'delivery_location_name' in payload.keys():
+					delivery.destination_name = payload['delivery_location_name']
 
 
 				delivery.save()
