@@ -211,7 +211,7 @@ class Interface(Authorize, ServiceCall):
 					service = service.filter(Q(access_level__in=[gateway_profile.access_level for gateway_profile in gateway_profile_list])|Q(access_level=None))
 					if service.exists():
 						payload_check = service_call(request)
-						lgr.info(payload_check)
+						#lgr.info(payload_check)
 						if payload_check.status_code == 403:
 							lgr.info('Did Not Pass Onsite Check')
 							API_KEY = gateway_profile_list[0].user.profile.api_key
