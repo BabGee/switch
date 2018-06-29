@@ -311,8 +311,10 @@ class Wrappers:
 		msisdn = str(msisdn)
 		msisdn = msisdn.strip().replace(' ','').replace('-','')
 		is_num = False
-		if msisdn[:1]=='0' or msisdn[:1]=='+' and isinstance(int(msisdn[1:]), int): is_num = True
-		elif msisdn[:1]!='0' or msisdn[:1]!='+' and isinstance(int(msisdn), int): is_num = True
+		try:
+			if (msisdn[:1]=='0' or msisdn[:1]=='+') and isinstance(int(msisdn[1:]), int): is_num = True
+			elif msisdn[:1]<>'0' and msisdn[:1]<>'+' and isinstance(int(msisdn), int): is_num = True
+		except: pass
  
 
 		if is_num and len(msisdn) >= 9 and msisdn[:1] == '+':
