@@ -1889,6 +1889,22 @@ class System(Wrappers):
 		return payload
 
 
+	def set_profile_deleted(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.get(pk=payload['session_gateway_profile_id'])
+			session_gateway_profile.status = ProfileStatus.objects.get(name='DELETED')
+			session_gateway_profile.save()
+
+			payload['response'] = 'Profile Deleted'
+			payload['response_status'] = '00'
+		except Exception as e:
+			lgr.info('Error on Deleting Profile: %s' % e,exc_info=True)
+			payload['response_status'] = '96'
+
+		return payload
+
+
 	def update_institution_details(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
