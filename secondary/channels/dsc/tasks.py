@@ -53,7 +53,6 @@ from secondary.channels.dsc.models import *
 
 lgr = logging.getLogger('secondary.channels.dsc')
 
-msc = MqttServerClient()
 
 class Wrappers:
     def validateEmail(self, email):
@@ -3843,6 +3842,9 @@ def process_file_upload():
 
 def push_update(k, v):
 	try:
+
+		msc = MqttServerClient()
+
 		channel = k
 		channel_list = channel.split('/')
 		if len(channel_list) == 3:
@@ -3878,9 +3880,9 @@ def push_update(k, v):
 				lgr.info('Service: %s | Gateway Profile: %s | Data: %s' % (service, gateway_profile, payload))
 				bridgetasks.background_service_call.delay(service.name, gateway_profile.id, payload)
 
+		msc.disconnect()
 	except Exception, e: lgr.info('Push update Failure: %s ' % e)
 	#disconnect after loop
-	#msc.disconnect()
 
 @app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
 @transaction.atomic
@@ -3909,13 +3911,13 @@ def process_push_request():
 						Q(Q(gateway=gateway_profile.gateway) | Q(gateway=None))).order_by('level')
 
 			if data_list.exists():
-				#lgr.info('push notification datalists : %s' % data_list)
+				lgr.info('push notification datalists : %s' % data_list)
 				payload = {}
 				payload['push_request'] = True
 				payload['chid'] = 2
 				cols, rows, lines, groups, data, min_id, max_id, t_count, push = Wrappers().process_data_list(data_list, payload, gateway_profile, profile_tz, data)
 
-				#lgr.info("MQTT task: %s" % push)
+				lgr.info("MQTT task: %s" % push)
 
 				for key,value in push.items():
 					lgr.info("%s PN: %s" % (key,value))

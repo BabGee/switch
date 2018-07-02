@@ -257,7 +257,7 @@ class Interface(Authorize, ServiceCall):
 					del payload[k]
 
 			json_results = json.dumps(payload)
-			lgr.info(json_results)
+			#lgr.info(json_results)
 			return HttpResponse(json_results, content_type='application/json')
 		else:
                         raise PermissionDenied
