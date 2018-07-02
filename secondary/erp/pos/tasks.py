@@ -639,8 +639,11 @@ class System(Wrappers):
 					 status=CartStatus.objects.get(name='UNPAID'))
 
 			if cart_items.exists():
-
-				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+				if 'session_gateway_profile_id' in payload.keys():
+					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+				else:
+					session_gateway_profile = GatewayProfile.objects.get(gateway=gateway_profile.gateway,
+																		 user__username='System@User',status__name='ACTIVATED')
 
 				#creates reference from un-expired&unpaid list (expiry after 15days)
 
