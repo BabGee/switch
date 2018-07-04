@@ -700,7 +700,7 @@ class System(Wrappers):
 		except Exception, e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
-			lgr.info("Error on creating purchase order: %s" % e)
+			lgr.info("Error on creating purchase order: %s" % e,exc_info=True)
 		return payload
 
 	def add_product_to_cart(self, payload, node_info):
