@@ -215,6 +215,14 @@ class PageString(ServiceCall, Wrappers):
 					lgr.info('Your List: %s' % item)
 					page_string = page_string.replace('['+v+']',item)
 
+				elif variable_key == 'today':
+
+					item = timezone.now().date().isoformat() 
+
+					lgr.info('Your List: %s' % item)
+					page_string = page_string.replace('['+v+']',item)
+
+
 				elif variable_key == 'attempts_left':
 					item = ''
 
