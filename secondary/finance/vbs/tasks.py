@@ -485,8 +485,12 @@ class System(Wrappers):
 			#For loan Accounts (Adding Interest To Charge) #Loans only Debit accounts
 			if 'is_loan' in payload.keys() and payload['is_loan'] and 'loan_time' in payload.keys():
 				if 'interest_rate' in payload.keys() and 'interest_time' in payload.keys():
-					charge = charge + ((Decimal(payload['interest_rate'])/100)*(int(payload['loan_time'])/int(payload['interest_time']))*Decimal(amount))
+					lgr.info('Got Interest Rate & Time: %s : %s : %s' % (payload['loan_time'], payload['interest_rate'], payload['interest_time']))
+					lgr.info('Charge:%s' % charge)
+					charge = charge + ((Decimal(payload['interest_rate'])/100)*(Decimal(payload['loan_time'])/Decimal(payload['interest_time']))*Decimal(amount))
+					lgr.info('Charge:%s' % charge)
 				else:
+					lgr.info('For Saving Credit Type')
 					credit_type = SavingsCreditType.objects.filter(account_type=session_account.account_type,\
 								 min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
 
@@ -821,8 +825,11 @@ class Payments(System):
 
 	def loan_repayment(self, payload, node_info):
 		try:
-			savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'],\
+			if 'account_manager__id' in payload.keys():
+				savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'],\
 								credit_paid=False).order_by('date_created')
+			else:
+				savings_credit_manager = SavingsCreditManager.obects.none()
 
 			amount = Decimal(0)
 			for i in savings_credit_manager:
@@ -1072,11 +1079,11 @@ class Payments(System):
 					#debit_account - Add credit loan Account
 					#payload['ext_service_id'] = payload['Payment']
 					if account_item.exists():
-						product_item = account_type.product_item
-						payload['institution_id'] = product_item.institution.id
-						payload['product_item_id'] = product_item.id
+						#product_item = account_type.product_item
+						#payload['institution_id'] = product_item.institution.id
+						#payload['product_item_id'] = product_item.id
 						#payload['till_number'] = product_item.product_type.institution_till.till_number
-						payload['currency'] = product_item.currency.code
+						#payload['currency'] = product_item.currency.code
 
 
 
@@ -1088,12 +1095,12 @@ class Payments(System):
 						else:
 							credit_type = SavingsCreditType.objects.filter(account_type=account_type,\
 									 min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
-
-							interest = Decimal(0)
-							c = credit_type[0]
-							interest_time = c.interest_time
-							interest = ((c.interest_rate/100)*(int(payload['loan_time'])/interest_time)*Decimal(payload['amount']))
-
+							if credit_type.exists():
+								interest = Decimal(0)
+								c = credit_type[0]
+								interest_time = c.interest_time
+								interest = ((c.interest_rate/100)*(int(payload['loan_time'])/interest_time)*Decimal(payload['amount']))
+							else: pass
 							#loan_cost = '{0:,.2f}'.format(loan_amount) if loan_amount > 0 else None #Formatter
 
 						due_date = (timezone.localtime(timezone.now())+timezone.timedelta(days=int(payload['loan_time']))).date()

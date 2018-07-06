@@ -2408,7 +2408,15 @@ class System(Wrappers):
 				profile.passport_number = ''
 				profile.passport_expiry_date = None
 				profile.national_id = ''
+				profile.middle_name = ''
+				profile.gender = None
 				profile.save()
+
+				user = profile.user
+				user.first_name = ''
+				user.last_name = ''
+				user.save()
+				
 
 				user, payload = self.profile_update(session_gateway_profile[0].user, payload)
 

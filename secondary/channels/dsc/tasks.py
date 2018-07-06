@@ -3848,9 +3848,9 @@ def push_update(k, v):
 		channel = k
 		channel_list = channel.split('/')
 		if len(channel_list) == 3:
-			lgr.info('Channel: %s' % channel)
+			#lgr.info('Channel: %s' % channel)
 			itms = json.dumps(v, cls=DjangoJSONEncoder)
-			lgr.info('Items: %s' % itms)
+			#lgr.info('Items: %s' % itms)
 
 			msc.publish(
 				channel,

@@ -4,7 +4,8 @@ from secondary.channels.iic.views import *
 # notify
 from secondary.channels.iic.editor_views.notify.views import (
     service_notification,
-    notification_templates
+    notification_templates,
+    outbound_list
 )
 
 page_patterns = [
@@ -48,6 +49,10 @@ urlpatterns = [
     ]), name='dsc'),
     url(r'triggers/', include([
         url(r'^$', trigger_list),
+
+    ]), name='dsc'),
+    url(r'outbound/', include([
+        url(r'^$', outbound_list),
 
     ]), name='dsc'),
     url(r'node_systems/', include([

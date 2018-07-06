@@ -6,7 +6,8 @@ from django.db.models import Q
 from secondary.channels.notify.models import (
     Notification,
     NotificationProduct,
-    NotificationTemplate
+    NotificationTemplate,
+    Outbound
 )
 
 from primary.core.bridge.models import (
@@ -86,3 +87,11 @@ def notification_template_put(request):
         notification_template.product.add(*list(products))
 
     return HttpResponse(status=200)
+
+
+def outbound_list(request):
+    outbounds = Outbound.objects.filter().order_by('-id')[:10]
+
+    return render(request, 'notify/outbound/list.html', {
+        'outbounds': outbounds
+    })
