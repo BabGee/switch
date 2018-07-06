@@ -315,7 +315,10 @@ class System(Wrappers):
 				try:params.update(json.loads(o.message))
 				except:pass
 				o.message = self.transaction_payload(params)
-				o.response_status = ResponseStatus.objects.get(response='00')
+				if 'request_status' in payload.keys():
+					o.response_status = ResponseStatus.objects.get(response=payload['request_status'])
+				else:
+					o.response_status = ResponseStatus.objects.get(response='00')
 				o.state = OutgoingState.objects.get(name='DELIVERED')
 
 				if 'ext_outbound_id' in payload.keys() and payload['ext_outbound_id'] not in ["",None]:
