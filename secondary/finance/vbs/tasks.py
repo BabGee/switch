@@ -825,7 +825,7 @@ class Payments(System):
 
 	def loan_repayment(self, payload, node_info):
 		try:
-			if 'account_manager__id' in payload.keys():
+			if 'account_manager_id' in payload.keys():
 				savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'],\
 								credit_paid=False).order_by('date_created')
 			else:
