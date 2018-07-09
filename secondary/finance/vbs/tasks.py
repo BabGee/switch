@@ -829,7 +829,7 @@ class Payments(System):
 				savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'],\
 								credit_paid=False).order_by('date_created')
 			else:
-				savings_credit_manager = SavingsCreditManager.obects.none()
+				savings_credit_manager = SavingsCreditManager.objects.none()
 
 			amount = Decimal(0)
 			for i in savings_credit_manager:

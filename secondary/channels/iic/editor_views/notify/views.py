@@ -95,3 +95,13 @@ def outbound_list(request):
     return render(request, 'notify/outbound/list.html', {
         'outbounds': outbounds
     })
+
+
+def outbound_list_updates(request):
+    outbound = Outbound.objects.order_by('-id').filter(id__gt=int(request.GET.get('after'))).last()
+    if outbound:
+        return render(request, 'notify/outbound/item.html', {
+            'outbound': outbound
+        })
+    
+    return HttpResponse('')
