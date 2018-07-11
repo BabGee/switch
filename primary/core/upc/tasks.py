@@ -1887,6 +1887,91 @@ class System(Wrappers):
 		return payload
 
 
+	def create_role(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			role = Role()
+			role.name = payload['role_name']
+			role.description = payload['role_description']
+			role.access_level = AccessLevel.objects.get(pk=payload['role_access_level'])
+			role.gateway = gatewa_profile.gateway
+			role.status = AccessLevelStatus.objects.get(name='ACTIVE')
+			if 'role_session_expiry' in  payload.keys():
+				role.session_expiry = payload['role_session_expiry']
+
+			role.save()
+
+			payload['response'] = 'Role Created'
+			payload['response_status'] = '00'
+		except Exception as e:
+			lgr.info('Error on Creating Role: %s' % e)
+			payload['response_status'] = '96'
+
+		return payload
+
+
+
+	def edit_role(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			role = Role.objects.get(pk=payload['role_id'])
+			role.name = payload['role_name']
+			role.description = payload['role_description']
+			role.access_level = AccessLevel.objects.get(pk=payload['role_access_level'])
+			if 'role_session_expiry' in  payload.keys():
+				role.session_expiry = payload['role_session_expiry']
+
+			role.save()
+
+			payload['response'] = 'Role Updated'
+			payload['response_status'] = '00'
+		except Exception as e:
+			lgr.info('Error on Updating Role: %s' % e)
+			payload['response_status'] = '96'
+
+		return payload
+
+
+
+	def delete_role(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			role = Role.objects.get(pk=payload['role_id'])
+			role.status = AccessLevelStatus.objects.get(name='DELETED')
+			role.save()
+
+			payload['response'] = 'Role Deleted'
+			payload['response_status'] = '00'
+		except Exception as e:
+			lgr.info('Error on Deleting Role: %s' % e)
+			payload['response_status'] = '96'
+
+		return payload
+
+
+
+	def get_role_details(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			role = Role.objects.get(pk=payload['role_id'])
+			payload['role_name'] = role.name
+			payload['role_description']= role.description
+			payload['role_access_level_id'] = role.access_level.pk 
+			payload['role_status_id'] = role.status.pk
+			payload['role_session_expiry'] = role.session_expiry
+
+
+			payload['response'] = 'Got Role Details'
+			payload['response_status'] = '00'
+		except Exception as e:
+			lgr.info('Error on Getting Role Details: %s' % e)
+			payload['response_status'] = '96'
+
+		return payload
+
+
+
+
 	def delete_institution(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
