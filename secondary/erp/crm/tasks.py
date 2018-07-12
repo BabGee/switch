@@ -149,7 +149,7 @@ class System(Wrappers):
 						payload['response_status'] = '13'
 					elif product_item[0].unit_limit_max is not None and Decimal(payload['amount']) > product_item[0].unit_limit_max:
 						payload['response'] = 'Max Amount: %s' % product_item[0].unit_limit_max
-						payload['response_status'] = '13'
+						payload['response_status'] = '61'
 					else:
 						lgr.info('Variable Unit with Amount')
 						payload['response'] = 'Successful'

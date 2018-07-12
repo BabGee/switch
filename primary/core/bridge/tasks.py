@@ -505,7 +505,7 @@ def process_background_service_call(background):
 				else:
 					i.status = TransactionStatus.objects.get(name='CREATED')
 					i.response_status = ResponseStatus.objects.get(response='DEFAULT')
-					retry_in = (i.service.retry.max_retry_hours)/(i.service.retry.max_retry+1)
+					retry_in = (i.service.retry.max_retry_hours)/(i.service.retry.max_retry)
 					i.scheduled_send = timezone.now()+timezone.timedelta(hours=float(retry_in))
 
 		i.save()

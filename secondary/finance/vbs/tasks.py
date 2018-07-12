@@ -848,11 +848,13 @@ class Payments(System):
 				account_manager.credit_paid = True
 				account_manager.save()
 
+				payload['trigger'] = 'credit_fully_paid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				payload['response'] = 'Loan Repaid'
 				payload['response_status'] = '00'
 
 			elif savings_credit_manager.exists():
 				lgr.info('Credit Amount is less than credit')
+				outstanding_credit_amount = Decimal(0)
 				for i in savings_credit_manager:
 					if credit_amount >= i.outstanding:
 						lgr.info('Credit Amount is greater or equal to outstanding')
@@ -865,9 +867,16 @@ class Payments(System):
 						i.paid = credit_amount
 						i.outstanding = i.outstanding - credit_amount
 						credit_amount = Decimal(0)
-
 					#save installment updates
 					i.save()
+					outstanding_credit_amount = outstanding_credit_amount + i.outstanding
+
+				if outstanding_credit_amount > 0:
+					payload['outstanding_credit_amount'] = outstanding_credit_amount
+					payload['trigger'] = 'credit_partially_paid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				else:
+					payload['trigger'] = 'credit_fully_paid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
 				payload['response'] = 'Loan Repaid'
 				payload['response_status'] = '00'
 			else:
@@ -889,37 +898,41 @@ class Payments(System):
 			profile_tz = pytz.timezone(session_gateway_profile.user.profile.timezone)
 
 			account_manager_list = AccountManager.objects.filter(credit=False,dest_account=account,dest_account__account_type__id=payload['account_type_id'],credit_paid=False)
+			savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__credit=False,\
+							account_manager__dest_account=account,credit_paid=False,\
+							account_manager__dest_account__account_type__id=payload['account_type_id'])
 
 			available_credit,credit_total = Decimal(0),Decimal(0)
 			overdue_credit, credit_info = False,'Principal-Charges-Payable'
 
-			if account_manager_list.exists():
+			amount = Decimal(0)
+			for i in savings_credit_manager:
+				amount = amount + i.outstanding
+
+			if amount > 0:
 				credit = {}
 				available = account.credit_limit
 				overdue, due_date = False, None
 				currency = account.account_type.product_item.currency.code
-				for a in account_manager_list:
+				for s in savings_credit_manager:
 					principal, charge, total = Decimal(0), Decimal(0), Decimal(0)
-					if a.dest_account.account_type.product_item.currency.code == currency:
-						lgr.info('Got status logic: %s' % a)
+					if s.account_manager.dest_account.account_type.product_item.currency.code == currency:
+						lgr.info('Got status logic: %s' % s)
 
 						lgr.info('Got status logic')
-						principal = a.amount
-						charge = a.charge
+						principal = s.amount
+						charge = s.charge
 						lgr.info('Got status logic')
-						total = Decimal(a.charge)+Decimal(a.amount)
+						total = s.outstanding
+						credit_total = credit_total + total
+						lgr.info('Got status logic')
+						due_date = timezone.localtime(s.due_date)
+						overdue = timezone.now()>due_date
+						due_date = profile_tz.normalize(due_date.astimezone(profile_tz)).strftime("%d/%b/%Y")
 
 						lgr.info('Got status logic')
-						if a.credit_due_date:
-							due_date = timezone.localtime(a.credit_due_date)
-							overdue = timezone.now()>due_date
-							due_date = profile_tz.normalize(due_date.astimezone(profile_tz)).strftime("%d/%b/%Y")
-						else:
-							due_date = None
-
-						lgr.info('Got status logic')
-						available = available - a.amount
-	
+						available = available - s.outstanding
+						available_credit = available_credit + available	
 						lgr.info('Got status logic.2')
 					else:
 						lgr.info('Currency Conversion to Happen')

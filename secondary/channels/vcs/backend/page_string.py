@@ -865,7 +865,7 @@ class PageString(ServiceCall, Wrappers):
 								amount = amount + a.outstanding
 
        		                                        amount = '{0:,.2f}'.format(amount)
-               		                                name = '%s %s %s - %s' % (i.dest_account.account_type.product_item.currency.code, i.dest_account.account_type.product_item.currency.code, amount, i.credit_due_date.strftime("%d/%b/%Y"))
+               		                                name = '%s %s %s - %s' % (i.dest_account.account_type.name, i.dest_account.account_type.product_item.currency.code, amount, i.credit_due_date.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
