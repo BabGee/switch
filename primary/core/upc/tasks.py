@@ -1894,9 +1894,9 @@ class System(Wrappers):
 			role.name = payload['role_name']
 			role.description = payload['role_description']
 			role.access_level = AccessLevel.objects.get(pk=payload['role_access_level'])
-			role.gateway = gatewa_profile.gateway
+			role.gateway = gateway_profile.gateway
 			role.status = AccessLevelStatus.objects.get(name='ACTIVE')
-			if 'role_session_expiry' in  payload.keys():
+			if 'role_session_expiry' in  payload.keys() and payload['role_session_expiry'].isdigit():
 				role.session_expiry = payload['role_session_expiry']
 
 			role.save()
