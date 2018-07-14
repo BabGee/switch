@@ -582,7 +582,10 @@ class System(Wrappers):
 
 			if cart_items.exists():
 				#get greates reference from un-expired/unpaid list (expiry after 15days)
-				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+				if 'session_gateway_profile_id' in payload.keys():
+					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+				else:
+					session_gateway_profile = gateway_profile
 
 				bill_manager = BillManager.objects.filter(order__gateway_profile=session_gateway_profile).order_by('-date_created')
 
@@ -625,7 +628,7 @@ class System(Wrappers):
 
 		except Exception, e:
 			payload['response_status'] = '96'
-			lgr.info("Error on creating purchase order: %s" % e)
+			lgr.info("Error on creating purchase order: %s" % e,exc_info=True)
 		return payload
 
 
@@ -642,7 +645,8 @@ class System(Wrappers):
 				if 'session_gateway_profile_id' in payload.keys():
 					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 				else:
-					session_gateway_profile = GatewayProfile.objects.get(gateway=gateway_profile.gateway,
+					session_gateway_profile = gateway_profile
+					session_gateway_profile_system = GatewayProfile.objects.get(gateway=gateway_profile.gateway,
 																		 user__username='System@User',status__name='ACTIVATED')
 
 				#creates reference from un-expired&unpaid list (expiry after 15days)
