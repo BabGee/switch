@@ -1617,6 +1617,7 @@ class System(Wrappers):
 
 			session_gateway_profile.pin = hash_pin
 			session_gateway_profile.status = ProfileStatus.objects.get(name='RESET PIN')
+			session_gateway_profile.pin_retries = 0
 			session_gateway_profile.save()
 
 			payload['reset_pin'] = pin
