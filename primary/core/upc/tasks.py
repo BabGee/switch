@@ -261,12 +261,17 @@ class Wrappers:
 					session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
 
 		elif 'email_msisdn' in payload.keys() and  self.validateEmail(payload['email_msisdn'].strip()):
+			lgr.info('profile capture using email')
 			session_gateway_profile = GatewayProfile.objects.filter(Q(user__email__iexact=payload['email_msisdn'].strip()),\
 									~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 		elif  'email_msisdn' in payload.keys() and  self.simple_get_msisdn(payload['email_msisdn'].strip(), payload):
+			lgr.info('profile capture using msisdn')
 			session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.simple_get_msisdn(payload['email_msisdn'].strip(), payload)),\
 											 ~Q(status__name__in=['DEACTIVATED','DELETED']), Q(gateway=gateway_profile.gateway))
 		elif  'email_msisdn' in payload.keys() and  GatewayProfile.objects.filter(gateway=gateway_profile.gateway, user__username__iexact=payload['email_msisdn'].strip()).exists():
+			lgr.info('profile capture using username')
+			lgr.info(payload['email_msisdn'])
+			lgr.info(gateway_profile.gateway)
 			session_gateway_profile = GatewayProfile.objects.filter(Q(user__username__iexact=payload['email_msisdn'].strip()),\
 										~Q(status__name__in=['DEACTIVATED','DELETED']), Q(gateway=gateway_profile.gateway))
 		else:
@@ -1306,8 +1311,10 @@ class System(Wrappers):
 					payload['response'] = 'Profile With Phone Number Already exists'
 					payload['response_status'] = '26'
 				else:
-					session_gateway_profile.msisdn.phone_number = msisdn
-					session_gateway_profile.msisdn.save()
+					try:msisdn = MSISDN.objects.get(phone_number=msisdn)
+					except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
+					session_gateway_profile.msisdn = msisdn
+					session_gateway_profile.save()
 
 					payload['response'] = 'Phone Number Updated'
 					payload['response_status'] = '00'
@@ -2339,7 +2346,7 @@ class System(Wrappers):
 		except Exception, e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
-			lgr.info("Error on Creating User Profile: %s" % e)
+			lgr.info("Error on Creating User Profile: %s" % e,exc_info=True)
 		return payload
 
 	def get_profile(self, payload, node_info):
@@ -2349,6 +2356,7 @@ class System(Wrappers):
 			profile_error = None
 			session_gateway_profile, payload, profile_error = self.profile_capture(gateway_profile, payload, profile_error)
 			session_gateway_profile, payload, profile_error = self.profile_state(session_gateway_profile, payload, profile_error)
+			lgr.info(session_gateway_profile)
 
 			if profile_error: pass
 			elif session_gateway_profile.exists():
