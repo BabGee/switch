@@ -300,8 +300,8 @@ class ServiceProcessor:
 							new_payload['institution_id'] = t.institution.id
 						new_payload.update(payload)
 						payload = new_payload.copy()
-					response_tree = transact(transaction, t.service, payload)
-					#lgr.info('Repeat Bridge Transaction')
+					#response_tree = transact(transaction, t.service, payload)
+					lgr.info('Repeat Bridge Transaction')
 					#response_tree['response_status'] = '05'
 
 			else:
