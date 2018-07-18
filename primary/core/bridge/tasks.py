@@ -415,10 +415,13 @@ class Payments(System):
 @app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
-def process_pending_transactions():
-	from celery.utils.log import get_task_logger
-        lgr = get_task_logger(__name__)
-        transactions = Transaction.objects.select_for_update().filter(id__in=[123])
+
+'''
+def process_pending_transactions(id_list):
+	#from celery.utils.log import get_task_logger
+        #lgr = get_task_logger(__name__)
+        #transactions = Transaction.objects.select_for_update().filter(id__in=id_list)
+        transactions = Transaction.objects.filter(id__in=id_list)
 
         for t in transactions:
                 try:
@@ -435,7 +438,6 @@ def process_pending_transactions():
 			t.save()
 
                         lgr.info('Error processing file upload: %s | %s' % (u,e))
-'''
 
 
 @app.task(ignore_result=True)
