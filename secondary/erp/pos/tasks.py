@@ -219,7 +219,7 @@ class Wrappers:
 			 key <> 'gpid' and key <> 'sec' and \
 			 key not in ['ext_product_id','vpc_securehash','currency','amount'] and \
 			 'institution_id' not in key and key <> 'response' and key <> 'input' and \
-			 key <> 'repeat_bridge_transaction':
+			 key <> 'repeat_bridge_transaction' and key <> 'transaction_auth':
 
 				if count <= 30:
 					new_payload[str(k)[:30] ] = str(v)[:40]
