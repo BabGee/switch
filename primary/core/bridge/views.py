@@ -217,7 +217,7 @@ class ServiceProcessor:
 
 		try:
 			lgr.info('Service: %s, Service Status: %s, Access Level: %s' % (service.name, service.status.name, service.access_level_list()))
-			def transact(transaction, service, payload):
+			def transact(gateway_profile, transaction, service, payload):
 				transaction_object = transaction['transaction']
 				profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
 				timestamp = profile_tz.normalize(transaction_object.date_modified.astimezone(profile_tz)).isoformat()
@@ -276,7 +276,7 @@ class ServiceProcessor:
 						new_payload.update(payload)
 						payload = new_payload.copy()
 
-					response_tree = transact(transaction, t.service, payload)
+					response_tree = transact(gateway_profile, transaction, t.service, payload)
 			elif 'repeat_bridge_transaction' in payload.keys() and payload['repeat_bridge_transaction'] not in [None,'']:
 				transaction_list = Transaction.objects.filter(id__in=str(payload['repeat_bridge_transaction']).split(","))
 				lgr.info("Repeat Transaction List: %s" % transaction_list)
@@ -300,14 +300,14 @@ class ServiceProcessor:
 							new_payload['institution_id'] = t.institution.id
 						new_payload.update(payload)
 						payload = new_payload.copy()
-					#response_tree = transact(transaction, t.service, payload)
+					response_tree = transact(t.gateway_profile, transaction, t.service, payload)
 					lgr.info('Repeat Bridge Transaction')
 					#response_tree['response_status'] = '05'
 
 			else:
 				if service.status.name == 'ENABLED':
 					transaction = Loggers().log_transaction(service, gateway_profile, payload)
-					response_tree = transact(transaction, service, payload)
+					response_tree = transact(gateway_profile, transaction, service, payload)
 
 				elif service.status.name == 'POLLER':
 					response_tree = self.action_exec(service, gateway_profile, payload, None) 
