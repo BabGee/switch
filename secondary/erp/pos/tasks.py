@@ -1297,8 +1297,8 @@ def process_paid_order():
 		processing = orig_order.filter(id__in=order).update(cart_processed=True, date_modified=timezone.now())
 		for od in order:
 			lgr.info('Order: %s' % od)
-			transaction.on_commit(lambda: order_background_service_call.delay(od))
-
+			#transaction.on_commit(lambda: order_background_service_call.delay(od))
+			order_background_service_call.delay(od)
 	except DatabaseError, e:
 		lgr.info('Transaction Rolled Back')
 		transaction.set_rollback(True)
