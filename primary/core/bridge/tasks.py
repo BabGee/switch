@@ -424,7 +424,7 @@ def process_pending_transactions(id_list):
 
         transactions.update(transaction_status = TransactionStatus.objects.get(name='PENDING'))
 	payload = {}
-	payload['repeat_bridge_transaction'] = ','.join(transactions.values_list('id', flat=True))
+	payload['repeat_bridge_transaction'] = ','.join(map(str, transactions.values_list('id', flat=True)))
 	payload['gateway_host'] = '127.0.0.1'
 	Wrappers().service_call(t.service, t.gateway_profile, payload)
 
