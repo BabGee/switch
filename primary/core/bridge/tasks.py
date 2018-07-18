@@ -426,7 +426,7 @@ def process_pending_transactions(id_list):
 	payload = {}
 	payload['repeat_bridge_transaction'] = ','.join(map(str, transactions.values_list('id', flat=True)))
 	payload['gateway_host'] = '127.0.0.1'
-	Wrappers().service_call(t.service, t.gateway_profile, payload)
+	Wrappers().service_call(Service.objects.get(name='BOOTSTRAP'), GatewayProfile.objects.get(id=1), payload)
 
 	lgr.info("Transaction Processed")
 
