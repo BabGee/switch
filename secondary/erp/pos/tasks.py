@@ -1299,6 +1299,7 @@ def process_paid_order():
 			transaction.on_commit(lambda: order_background_service_call.delay(od))
 
 	except DatabaseError, e:
+		lgr.info('Transaction Rolled Back')
 		transaction.set_rollback(True)
 
 	except Exception, e: lgr.info('Error on process paid order: %s' % e)
