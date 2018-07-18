@@ -1230,6 +1230,7 @@ def order_service_call(order):
 	lgr = get_task_logger(__name__)
 	from primary.core.api.views import ServiceCall
 	try:
+		lgr.info('OrderID: %s' % order)
 		o = PurchaseOrder.objects.get(id=order)
 		lgr.info('Captured Order: %s' % o)
 		cart_item = o.cart_item.all()
