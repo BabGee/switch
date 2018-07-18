@@ -1182,7 +1182,7 @@ def order_background_service_call(order):
 	try:
 		from primary.core.bridge.tasks import Wrappers as BridgeWrappers
 		#o = PurchaseOrder.objects.get(id=order)
-		lgr.info('Started Order Service Call')
+		lgr.info('Started Order Service Call: %s' % order)
 		bill = BillManager.objects.filter(order__id=order).last()
 		o = bill.order
 		lgr.info('Captured Order: %s' % o)
