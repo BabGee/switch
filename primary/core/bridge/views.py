@@ -253,6 +253,7 @@ class ServiceProcessor:
 						~Q(next_command=None),Q(next_command__access_level=gateway_profile.access_level)).\
 						prefetch_related('service','institution')
 				lgr.info("Auth Transaction List: %s" % transaction_list)
+				del payload['transaction_auth']
 				for t in transaction_list:
 					transaction = {}
 					transaction['response_status'] = '00'
@@ -280,6 +281,7 @@ class ServiceProcessor:
 			elif 'repeat_bridge_transaction' in payload.keys() and payload['repeat_bridge_transaction'] not in [None,'']:
 				transaction_list = Transaction.objects.filter(id__in=str(payload['repeat_bridge_transaction']).split(","))
 				lgr.info("Repeat Transaction List: %s" % transaction_list)
+				del payload['repeat_bridge_transaction']
 				for t in transaction_list:
 					transaction = {}
 					transaction['response_status'] = '00'
@@ -302,7 +304,6 @@ class ServiceProcessor:
 						payload = new_payload.copy()
 					response_tree = transact(t.gateway_profile, transaction, t.service, payload)
 					lgr.info('Repeat Bridge Transaction')
-					#response_tree['response_status'] = '05'
 
 			else:
 				if service.status.name == 'ENABLED':
