@@ -109,7 +109,6 @@ class Wrappers:
 
 
 
-	@app.task(ignore_result=True)
 	def service_call(self, service, gateway_profile, payload):
 		lgr = get_task_logger(__name__)
 		from primary.core.api.views import ServiceCall
@@ -430,7 +429,7 @@ def process_pending_transactions(id_list):
 			payload = {}
 			payload['repeat_bridge_transaction'] = str(t.id)
 			payload['gateway_host'] = '127.0.0.1'
-			Wrappers().service_call.delay(t.service, t.gateway_profile, payload)
+			Wrappers().service_call(t.service, t.gateway_profile, payload)
 
 			lgr.info("Transaction Processed")
                 except Exception, e:
