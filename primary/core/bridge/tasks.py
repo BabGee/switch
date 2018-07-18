@@ -422,21 +422,13 @@ def process_pending_transactions(id_list):
         #transactions = Transaction.objects.select_for_update().filter(id__in=id_list)
         transactions = Transaction.objects.filter(id__in=id_list)
 
-        for t in transactions:
-                try:
-			t.transaction_status = TransactionStatus.objects.get(name='PENDING')
-			t.save()
-			payload = {}
-			payload['repeat_bridge_transaction'] = str(t.id)
-			payload['gateway_host'] = '127.0.0.1'
-			Wrappers().service_call(t.service, t.gateway_profile, payload)
+        transactions.update(transaction_status = TransactionStatus.objects.get(name='PENDING'))
+	payload = {}
+	payload['repeat_bridge_transaction'] = ','.join(transactions.values_list('id', flat=True))
+	payload['gateway_host'] = '127.0.0.1'
+	Wrappers().service_call(t.service, t.gateway_profile, payload)
 
-			lgr.info("Transaction Processed")
-                except Exception, e:
-			t.transaction_status = TransactionStatus.objects.get(name='FAILED')
-			t.save()
-
-                        lgr.info('Error processing pending transaction: %s' % e)
+	lgr.info("Transaction Processed")
 
 
 @app.task(ignore_result=True)
