@@ -437,7 +437,7 @@ def process_pending_transactions(id_list):
 			t.transaction_status = TransactionStatus.objects.get(name='FAILED')
 			t.save()
 
-                        lgr.info('Error processing file upload: %s | %s' % (u,e))
+                        lgr.info('Error processing pending transaction: %s' % e)
 
 
 @app.task(ignore_result=True)
