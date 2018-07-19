@@ -259,24 +259,23 @@ class ServiceProcessor:
 					transaction['response_status'] = '00'
 					transaction['transaction'] = t
 					lgr.info("Transaction: %s" % transaction)
-					if t.request not in [None,'']:
-						lgr.info("Request: %s" % t.request)
-						new_payload = json.loads(t.request).copy()
-						new_payload = json.loads(t.request).copy()
-						new_payload['chid'] = t.channel.id
-						new_payload['ip_address'] = t.ip_address
+					lgr.info("Request: %s" % t.request)
+					new_payload = json.loads(t.request).copy()
+					new_payload = json.loads(t.request).copy()
+					new_payload['chid'] = t.channel.id
+					new_payload['ip_address'] = t.ip_address
 
-						if t.amount:
-							new_payload['amount'] = t.amount
-						if t.currency:
-							new_payload['currency'] = t.currency.code
+					if t.amount:
+						new_payload['amount'] = t.amount
+					if t.currency:
+						new_payload['currency'] = t.currency.code
 
-						if t.institution:
-							new_payload['institution_id'] = t.institution.id
+					if t.institution:
+						new_payload['institution_id'] = t.institution.id
 
-						new_payload.update(payload)
-						payload = new_payload.copy()
+					new_payload.update(payload)
 
+					lgr.info('New Payload: %s' % new_payload)
 					response_tree = transact(gateway_profile, transaction, t.service, payload)
 			elif 'repeat_bridge_transaction' in payload.keys() and payload['repeat_bridge_transaction'] not in [None,'']:
 				transaction_list = Transaction.objects.filter(id__in=str(payload['repeat_bridge_transaction']).split(","))
@@ -287,22 +286,22 @@ class ServiceProcessor:
 					transaction['response_status'] = '00'
 					transaction['transaction'] = t
 					lgr.info("Transaction: %s" % transaction)
-					if t.request not in [None,'']:
-						lgr.info("Request: %s" % t.request)
-						new_payload = json.loads(t.request).copy()
-						new_payload['chid'] = t.channel.id
-						new_payload['ip_address'] = t.ip_address
 
-						if t.amount:
-							new_payload['amount'] = t.amount
-						if t.currency:
-							new_payload['currency'] = t.currency.code
+					lgr.info("Request: %s" % t.request)
+					new_payload = json.loads(t.request).copy()
+					new_payload['chid'] = t.channel.id
+					new_payload['ip_address'] = t.ip_address
 
-						if t.institution:
-							new_payload['institution_id'] = t.institution.id
-						new_payload.update(payload)
-						payload = new_payload.copy()
-					response_tree = transact(t.gateway_profile, transaction, t.service, payload)
+					if t.amount:
+						new_payload['amount'] = t.amount
+					if t.currency:
+						new_payload['currency'] = t.currency.code
+
+					if t.institution:
+						new_payload['institution_id'] = t.institution.id
+					new_payload.update(payload)
+					lgr.info('New Payload: %s' % new_payload)
+					#response_tree = transact(t.gateway_profile, transaction, t.service, new_payload)
 					lgr.info('Repeat Bridge Transaction')
 
 			else:
