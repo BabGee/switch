@@ -333,20 +333,27 @@ class ServiceProcessor:
 				lgr.info("Auth Transaction List: %s" % transaction_list)
 				del payload['transaction_auth']
 				for t in transaction_list:
-					response_tree = background_transact.delay(gateway_profile.id, t.id, t.service.id, payload, response_tree)
+					try:
+						background_transact.delay(gateway_profile.id, t.id, t.service.id, payload, response_tree)
+						lgr.info('Transaction Auth: %s' % t)
+					except Exception, e:
+						lgr.info('Error On Background Transact')
 
-				payload['response_status'] = '00'
-				payload['response'] = 'Auth Transaction Captured'
+				response_tree['response_status'] = '00'
+				response_tree['response'] = 'Auth Transaction Captured'
 
 			elif 'repeat_bridge_transaction' in payload.keys() and payload['repeat_bridge_transaction'] not in [None,'']:
 				transaction_list = Transaction.objects.filter(id__in=str(payload['repeat_bridge_transaction']).split(","))
 				lgr.info("Repeat Transaction List: %s" % transaction_list)
 				del payload['repeat_bridge_transaction']
 				for t in transaction_list:
-					response_tree = background_transact.delay(t.gateway_profile.id, t.id, t.service.id, payload, response_tree)
-					lgr.info('Repeat Bridge Transaction')
-				payload['response_status'] = '00'
-				payload['response'] = 'Repeat Transaction Captured'
+					try:
+						background_transact.delay(t.gateway_profile.id, t.id, t.service.id, payload, response_tree)
+						lgr.info('Repeat Bridge Transaction: %s' % t)
+					except Exception, e:
+						lgr.info('Error On Background Transact')
+				response_tree['response_status'] = '00'
+				response_tree['response'] = 'Auth Transaction Captured'
 			else:
 				if service.status.name == 'ENABLED':
 					transaction = Loggers().log_transaction(service, gateway_profile, payload)
