@@ -1,3 +1,12 @@
+from __future__ import absolute_import
+from celery import shared_task
+#from celery.contrib.methods import task_method
+from celery import task
+from switch.celery import app
+from celery.utils.log import get_task_logger
+from switch.celery import single_instance_task
+
+
 from primary.core.bridge.models import *
 from primary.core.bridge.backend.loggers import Loggers
 from primary.core.bridge.backend.wrappers import Wrappers
@@ -42,6 +51,17 @@ def transact(gateway_profile, transaction, service, payload, response_tree):
 
 	response_tree['timestamp'] = timestamp
 	response_tree['transaction_reference'] = transaction_object.id
+	return response_tree
+
+@app.task(ignore_result=True)
+def background_transact(gateway_profile, transaction, service, payload, response_tree):
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+		response_tree = transact(gateway_profile, transaction, service, payload, response_tree)
+	except Exception, e:
+		lgr.info('Error on BackgroundService Call: %s' % e)
+
 	return response_tree
 
 
@@ -310,7 +330,11 @@ class ServiceProcessor:
 					new_payload.update(payload)
 
 					lgr.info('New Payload: %s' % new_payload)
-					response_tree = transact(gateway_profile, transaction, t.service, payload, response_tree)
+					response_tree = background_transact.delay(gateway_profile, transaction, t.service, payload, response_tree)
+
+				payload['response_status'] = '00'
+				payload['response'] = 'Auth Transaction Captured'
+
 			elif 'repeat_bridge_transaction' in payload.keys() and payload['repeat_bridge_transaction'] not in [None,'']:
 				transaction_list = Transaction.objects.filter(id__in=str(payload['repeat_bridge_transaction']).split(","))
 				lgr.info("Repeat Transaction List: %s" % transaction_list)
@@ -335,9 +359,10 @@ class ServiceProcessor:
 						new_payload['institution_id'] = t.institution.id
 					new_payload.update(payload)
 					lgr.info('New Payload: %s' % new_payload)
-					response_tree = transact(t.gateway_profile, transaction, t.service, new_payload, response_tree)
+					response_tree = background_transact.delay(t.gateway_profile, transaction, t.service, new_payload, response_tree)
 					lgr.info('Repeat Bridge Transaction')
-
+				payload['response_status'] = '00'
+				payload['response'] = 'Repeat Transaction Captured'
 			else:
 				if service.status.name == 'ENABLED':
 					transaction = Loggers().log_transaction(service, gateway_profile, payload)
