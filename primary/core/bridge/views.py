@@ -82,7 +82,7 @@ def background_transact(gateway_profile_id, transaction_id, service_id, payload,
 
 		gateway_profile = GatewayProfile.objects.get(id=gateway_profile_id)
 		service = Service.objects.get(id=service_id)
-		#response_tree = transact(gateway_profile, transaction, service, new_payload, response_tree)
+		response_tree = transact(gateway_profile, transaction, service, new_payload, response_tree)
 	except Exception, e:
 		lgr.info('Error on BackgroundService Call: %s' % e)
 
