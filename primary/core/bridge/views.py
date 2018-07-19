@@ -54,11 +54,35 @@ def transact(gateway_profile, transaction, service, payload, response_tree):
 	return response_tree
 
 @app.task(ignore_result=True)
-def background_transact(gateway_profile, transaction, service, payload, response_tree):
+def background_transact(gateway_profile_id, transaction_id, service_id, payload, response_tree):
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
-		response_tree = transact(gateway_profile, transaction, service, payload, response_tree)
+
+		transaction = {}
+		transaction['response_status'] = '00'
+		t = Transaction.objects.get(id=transaction_id)
+		transaction['transaction'] = t
+		lgr.info("Transaction: %s" % transaction)
+
+		lgr.info("Request: %s" % t.request)
+		new_payload = json.loads(t.request).copy()
+		new_payload['chid'] = t.channel.id
+		new_payload['ip_address'] = t.ip_address
+
+		if t.amount:
+			new_payload['amount'] = t.amount
+		if t.currency:
+			new_payload['currency'] = t.currency.code
+
+		if t.institution:
+			new_payload['institution_id'] = t.institution.id
+		new_payload.update(payload)
+		lgr.info('New Payload: %s' % new_payload)
+
+		gateway_profile = GatewayProfile.objects.get(id=gateway_profile_id)
+		service = Service.objects.get(id=service_id)
+		response_tree = transact(gateway_profile, transaction, service, new_payload, response_tree)
 	except Exception, e:
 		lgr.info('Error on BackgroundService Call: %s' % e)
 
@@ -309,28 +333,7 @@ class ServiceProcessor:
 				lgr.info("Auth Transaction List: %s" % transaction_list)
 				del payload['transaction_auth']
 				for t in transaction_list:
-					transaction = {}
-					transaction['response_status'] = '00'
-					transaction['transaction'] = t
-					lgr.info("Transaction: %s" % transaction)
-					lgr.info("Request: %s" % t.request)
-					new_payload = json.loads(t.request).copy()
-					new_payload = json.loads(t.request).copy()
-					new_payload['chid'] = t.channel.id
-					new_payload['ip_address'] = t.ip_address
-
-					if t.amount:
-						new_payload['amount'] = t.amount
-					if t.currency:
-						new_payload['currency'] = t.currency.code
-
-					if t.institution:
-						new_payload['institution_id'] = t.institution.id
-
-					new_payload.update(payload)
-
-					lgr.info('New Payload: %s' % new_payload)
-					response_tree = background_transact.delay(gateway_profile, transaction, t.service, payload, response_tree)
+					response_tree = background_transact.delay(gateway_profile.id, t.id, t.service.id, payload, response_tree)
 
 				payload['response_status'] = '00'
 				payload['response'] = 'Auth Transaction Captured'
@@ -340,26 +343,7 @@ class ServiceProcessor:
 				lgr.info("Repeat Transaction List: %s" % transaction_list)
 				del payload['repeat_bridge_transaction']
 				for t in transaction_list:
-					transaction = {}
-					transaction['response_status'] = '00'
-					transaction['transaction'] = t
-					lgr.info("Transaction: %s" % transaction)
-
-					lgr.info("Request: %s" % t.request)
-					new_payload = json.loads(t.request).copy()
-					new_payload['chid'] = t.channel.id
-					new_payload['ip_address'] = t.ip_address
-
-					if t.amount:
-						new_payload['amount'] = t.amount
-					if t.currency:
-						new_payload['currency'] = t.currency.code
-
-					if t.institution:
-						new_payload['institution_id'] = t.institution.id
-					new_payload.update(payload)
-					lgr.info('New Payload: %s' % new_payload)
-					response_tree = background_transact.delay(t.gateway_profile, transaction, t.service, new_payload, response_tree)
+					response_tree = background_transact.delay(t.gateway_profile.id, t.id, t.service.id, payload, response_tree)
 					lgr.info('Repeat Bridge Transaction')
 				payload['response_status'] = '00'
 				payload['response'] = 'Repeat Transaction Captured'
