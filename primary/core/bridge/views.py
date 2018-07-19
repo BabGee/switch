@@ -34,7 +34,7 @@ def transact(gateway_profile, transaction, service, payload, response_tree):
 		#payload['transaction_timestamp'] = profile_tz.normalize(transaction.date_modified.astimezone(profile_tz)).strftime("%Y-%m-%dT%H:%M:%SZ")
 		payload['transaction_timestamp'] = timestamp 
 
-		response_tree = self.action_exec(service, gateway_profile, payload, transaction_object) 
+		response_tree = ServiceProcessor().action_exec(service, gateway_profile, payload, transaction_object) 
 		if Loggers().update_transaction(transaction_object, payload, response_tree) is False:
 			lgr.critical('Transaction Update Failed')
 			response_tree['response_status'] = '96'
