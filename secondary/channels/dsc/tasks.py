@@ -975,12 +975,11 @@ class Wrappers:
        	        	try:case_field, case_value, case_newvalue = i.split('%')
 			except: continue
 			case_data = {}
+			case_value = payload[case_value.strip()] if case_value.strip() in payload.keys() else case_value.strip()
+			if case_value == 'False': case_value = False
+			elif case_value == 'True': case_value = True
 
-			if case_value.strip() == 'False': case_value = False
-			elif case_value.strip() == 'True': case_value = True
-
-			#case_data[case_field.strip()] =  case_value
-                        case_data[case_field.strip()] =  payload[case_value.strip()] if case_value.strip() in payload.keys() else case_value
+			case_data[case_field.strip()] =  case_value
 			case_data['then'] = F(case_newvalue) if getattr(model_class, case_newvalue.split('__')[0], False) else Value(case_newvalue)
 
 			case_when.append(When(**case_data))
@@ -1031,9 +1030,9 @@ class Wrappers:
 			case_value = link_case_value
 
 			case_data = {}
+			case_value = payload[case_value.strip()] if case_value.strip() in payload.keys() else case_value.strip()
 
-			#case_data[case_field.strip()] =  case_value
-                        case_data[case_field.strip()] =  payload[case_value.strip()] if case_value.strip() in payload.keys() else case_value
+			case_data[case_field.strip()] =  case_value
 			case_data['then'] = Value(link_value)
 
 			case_when.append(When(**case_data))
