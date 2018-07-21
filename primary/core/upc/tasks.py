@@ -61,8 +61,8 @@ class Wrappers:
 		elif session_gateway_profile.exists() and 'national_id' in payload.keys() and\
 		 GatewayProfile.objects.filter(Q(user__profile__national_id__iexact=payload['national_id'].replace(' ','').strip()),\
 		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway)).exists() and\
-		 GatewayProfile.objects.filter(user__profile__national_id__iexact=payload['national_id'].replace(' ','').strip(),\
-		 gateway=gateway_profile.gateway)[0].user <> session_gateway_profile[0].user:
+		 GatewayProfile.objects.filter(Q(user__profile__national_id__iexact=payload['national_id'].replace(' ','').strip()),\
+		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))[0].user <> session_gateway_profile[0].user:
 			#check update national_id profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
 			payload['response'] = 'Profile Error: National ID exists in another profile. Please contact us'
 			payload['response_status'] = '63'
@@ -77,8 +77,8 @@ class Wrappers:
 		elif session_gateway_profile.exists() and 'passport_number' in payload.keys() and\
 		 GatewayProfile.objects.filter(Q(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip()),\
 		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway)).exists() and\
-		 GatewayProfile.objects.filter(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip(),\
-		 gateway=gateway_profile.gateway)[0].user <> session_gateway_profile[0].user:
+		 GatewayProfile.objects.filter(Q(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip()),\
+		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))[0].user <> session_gateway_profile[0].user:
 			#check update passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
 			payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
 			payload['response_status'] = '63'
