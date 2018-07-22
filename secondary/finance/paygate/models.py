@@ -135,30 +135,6 @@ class RemittanceProduct(models.Model):
 	def currency_list(self):
 		return "\n".join([a.code for a in self.currency.all()])
 
-
-class PollerFrequency(models.Model):
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
-		return u'%s' % (self.name)
-
-class Poller(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	request = models.CharField(max_length=1920)
-	url = models.CharField(max_length=640)
-	account_id = models.CharField(max_length=128)
-	username = models.CharField(max_length=128)
-	password = models.CharField(max_length=256)
-	remittance_product = models.ForeignKey(RemittanceProduct)
-	frequency = models.ForeignKey(PollerFrequency)
-	def __unicode__(self):
-		return u'%s' % (self.name)
-
 class InstitutionNotification(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
@@ -219,6 +195,25 @@ class Incoming(models.Model):
 	institution = models.ForeignKey(Institution, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s %s %s %s' % (self.remittance_product, self.amount, self.currency, self.ext_inbound_id)
+
+class PollerFrequency(models.Model):
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
+class IncomingPoller(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	request = models.CharField(max_length=1920)
+	endpoint = models.ForeignKey(Endpoint)
+	frequency = models.ForeignKey(PollerFrequency)
+	def __unicode__(self):
+		return u'%s' % (self.name)
 
 class OutgoingState(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)

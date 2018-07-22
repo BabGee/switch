@@ -42,15 +42,6 @@ class RemittanceProductAdmin(admin.ModelAdmin):
 	list_filter = ('remittance','service','payment_method',)
 admin.site.register(RemittanceProduct, RemittanceProductAdmin)
 
-class PollerFrequencyAdmin(admin.ModelAdmin):
-	list_display = ('name','description',)
-admin.site.register(PollerFrequency, PollerFrequencyAdmin)
-
-class PollerAdmin(admin.ModelAdmin):
-	list_display = ('name','description','request','url','account_id','username',\
-			'password','remittance_product','frequency')
-admin.site.register(Poller, PollerAdmin)
- 
 class InstitutionNotificationAdmin(admin.ModelAdmin):
 	list_display = ('id','institution','remittance_product','description','request','url','account_id','username','password',)
 admin.site.register(InstitutionNotification, InstitutionNotificationAdmin)
@@ -72,6 +63,14 @@ class IncomingAdmin(admin.ModelAdmin):
 	search_fields = ('request','reference','message',)
 admin.site.register(Incoming, IncomingAdmin)
 
+class PollerFrequencyAdmin(admin.ModelAdmin):
+	list_display = ('name','description',)
+admin.site.register(PollerFrequency, PollerFrequencyAdmin)
+
+class IncomingPollerAdmin(admin.ModelAdmin):
+	list_display = ('name','description','request','endpoint','frequency')
+admin.site.register(IncomingPoller, IncomingPollerAdmin)
+ 
 class OutgoingStateAdmin(admin.ModelAdmin):
 		list_display = ('name','description','date_modified','date_created',)
 admin.site.register(OutgoingState, OutgoingStateAdmin)
