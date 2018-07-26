@@ -1291,6 +1291,23 @@ class System(Wrappers):
 				contact = Contact.objects.get(id=payload['contact_id'])
 				state = InBoundState.objects.get(name='CREATED')
 				inbound = Inbound(contact=contact,message=str(payload['message'][:3839]),state=state)
+				if contact.product.notification.code.channel.name == 'SMS':
+					msisdn = UPCWrappers().get_msisdn(payload)
+					if msisdn:
+						inbound.recipient = msisdn
+					elif contact.gateway_profile.msisdn:
+						inbound.recipient = contact.gateway_profile.msisdn.phone_number
+				elif contact.product.notification.code.channel.name == 'EMAIL':
+					if 'email' in payload.keys() and self.validateEmail(payload["email"]):
+						inbound.recipient = payload['email']
+					else:
+						inbound.recipient = contact.gateway_profile.user.email
+				elif contact.product.notification.code.channel.name == 'MQTT':
+					if 'pn_notification_id' in payload.keys() and payload['pn_notification_id'] not in ['',None]:
+						inbound.recipient = payload['pn_notification_id']
+					else:
+						inbound.recipient = contact.gateway_profile.user.profile.id
+
 				inbound.save()
 				#notify institution
 				if inbound.contact.product.notification.institution_url not in [None, ""]:
