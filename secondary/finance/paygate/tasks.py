@@ -26,6 +26,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.core import serializers
 from primary.core.upc.tasks import Wrappers as UPCWrappers
 
+from primary.core.bridge import tasks as bridgetasks
 from primary.core.administration.views import WebService
 from .models import *
 
@@ -141,7 +142,7 @@ class Wrappers:
 			 'action_id' not in key and 'bridge__transaction_id' not in key and \
 			 'merchant_data' not in key and 'signedpares' not in key and \
 			 key <> 'gpid' and key <> 'sec' and \
-			 key not in ['ext_product_id','vpc_securehash','currency','amount'] and \
+			 key not in ['vpc_securehash','currency','amount'] and \
 			 'institution_id' not in key and key <> 'response' and key <> 'input' and 'url' not in key and \
 			 'availablefund' not in key and key <> 'repeat_bridge_transaction' and key <> 'transaction_auth':
 				if count <= 30:
@@ -291,7 +292,7 @@ class System(Wrappers):
 					payload['response_status'] = '00'
 					payload['response'] = 'Payment Received'
 			else:
-					payload['response_status'] = '00'
+					payload['response_status'] = '25'
 					payload['response'] = 'Remittance Product Not Found'
 		except Exception, e:
 			payload['response_status'] = '96'
@@ -1117,6 +1118,90 @@ def service_call(payload):
 		payload['response_status'] = '96'
 		lgr.info('Unable to make service call: %s' % e)
 	return payload
+
+
+
+
+@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def process_incoming_poller(ic):
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+
+		lgr.info('Poller 3')
+		ip = IncomingPoller.objects.get(id=ic)
+		#API Request
+
+		params = json.loads(ip.remittance_product.endpoint.request)
+
+		try:params.update(json.loads(ip.request))
+		except Exception, e: lgr.info('Failed to update Request: %s' % e)
+
+		params['account_id'] = ip.remittance_product.endpoint.account_id
+		params['username'] = ip.remittance_product.endpoint.username
+		params['password'] = ip.remittance_product.endpoint.password
+
+		node = ip.remittance_product.endpoint.url
+
+		lgr.info('Poller 4')
+		params = WebService().post_request(params, node)
+		if 'response_status' in params.keys() and params['response_status'] =='00':
+
+			lgr.info('Poller 5')
+			#Background Request
+			service = ip.service
+
+			for i in range(len(params['response']['rows'])):
+				payload = {}
+				for j in range(len(params['response']['cols'])):
+					key = params['response']['cols'][j]['label'].lower().replace(" ", "_").replace("/", "_")
+					payload[key] = params['response']['rows'][i][j]
+
+				lgr.info('Payload: %s' % payload)
+				if Incoming.objects.filter(remittance_product=ip.inbound_remittance_product,ext_inbound_id=payload['ext_inbound_id']).exists(): pass
+				else:
+					payload['chid'] = 2
+					payload['ip_address'] = '127.0.0.1'
+					payload['gateway_host'] = ip.gateway.default_host.all()[0].host
+
+					lgr.info('Service: %s | Payload: %s' % (service, payload))
+					gateway_profile = GatewayProfile.objects.get(gateway=ip.gateway,user__username='System@User', status__name='ACTIVATED',user__is_active=True)
+
+					bridgetasks.background_service_call.delay(service.name, gateway_profile.id, payload)
+
+					break # Break for test
+		else: lgr.info('SFTP Request failed: %s' % params)
+		ip.status = IncomingPollerStatus.objects.get(name='PROCESSED')
+		ip.next_run = timezone.now() + timezone.timedelta(seconds=ip.frequency.run_every)
+		ip.save()
+	except Exception, e:
+		lgr.info('Error processing incoming_poller: %s ' % e)
+
+@app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def incoming_poller():
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	#Check for created outbounds or processing and gte(last try) 4 hours ago within the last 3 days| Check for failed transactions within the last 10 minutes
+	try:
+		lgr.info('Poller 1')
+
+		orig_incoming_poller = IncomingPoller.objects.select_for_update().filter(Q(status__name='PROCESSED'),Q(next_run__lte=timezone.now()))
+
+		lgr.info('Poller 1.1: %s' % orig_incoming_poller)
+		incoming = list(orig_incoming_poller.values_list('id',flat=True)[:100])
+
+		lgr.info('Poller 1.2: %s' % incoming)
+		processing = orig_incoming_poller.filter(id__in=incoming).update(status=IncomingPollerStatus.objects.get(name='PROCESSING'), date_modified=timezone.now())
+		for ic in incoming:
+			lgr.info('Poller 2: %s' % ic)
+			process_incoming_poller.delay(ic)
+			lgr.info('Poller 2.1: %s' % ic)
+	except Exception, e:
+		lgr.info('Error on Incoming Poller: %s' % e)
 
 
 

@@ -61,7 +61,7 @@ class Wrappers:
 					   'access_level','response_status','sec_hash','ip_address','service' ,'lat','lng',\
 					   'chid','session','session_id','csrf_token','csrfmiddlewaretoken' , 'gateway_host' ,'gateway_profile' ,\
 					   'transaction_timestamp' ,'action_id' , 'bridge__transaction_id','merchant_data', 'signedpares',\
-					   'gpid','sec','fingerprint','ext_product_id','vpc_securehash',\
+					   'gpid','sec','fingerprint','vpc_securehash',\
 					   'institution_id','response','input','trigger','send_minutes_period','send_hours_period',\
 					   'send_days_period','send_years_period','token','repeat_bridge_transaction','transaction_auth']
 
@@ -88,7 +88,7 @@ class Wrappers:
 					   'access_level','response_status','sec_hash','ip_address','service' ,'lat','lng',\
 					   'chid','session','session_id','csrf_token','csrfmiddlewaretoken' , 'gateway_host' ,'gateway_profile' ,\
 					   'transaction_timestamp' ,'action_id' , 'bridge__transaction_id','merchant_data', 'signedpares',\
-					   'gpid','sec','fingerprint','ext_product_id','vpc_securehash','currency','amount',\
+					   'gpid','sec','fingerprint','vpc_securehash','currency','amount',\
 					   'institution_id','response','input','trigger','send_minutes_period','send_hours_period',\
 					   'send_days_period','send_years_period','token','repeat_bridge_transaction','transaction_auth']
 

@@ -64,11 +64,15 @@ class IncomingAdmin(admin.ModelAdmin):
 admin.site.register(Incoming, IncomingAdmin)
 
 class PollerFrequencyAdmin(admin.ModelAdmin):
-	list_display = ('name','description',)
+	list_display = ('name','description','run_every',)
 admin.site.register(PollerFrequency, PollerFrequencyAdmin)
 
+class IncomingPollerStatusAdmin(admin.ModelAdmin):
+		list_display = ('name','description','date_modified','date_created',)
+admin.site.register(IncomingPollerStatus, IncomingPollerStatusAdmin)
+
 class IncomingPollerAdmin(admin.ModelAdmin):
-	list_display = ('name','description','request','endpoint','frequency')
+	list_display = ('name','description','request','remittance_product','inbound_remittance_product','frequency','service','next_run','status','gateway',)
 admin.site.register(IncomingPoller, IncomingPollerAdmin)
  
 class OutgoingStateAdmin(admin.ModelAdmin):

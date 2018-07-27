@@ -197,10 +197,19 @@ class Incoming(models.Model):
 		return u'%s %s %s %s' % (self.remittance_product, self.amount, self.currency, self.ext_inbound_id)
 
 class PollerFrequency(models.Model):
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	run_every = models.IntegerField(help_text='In Seconds')
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
+class IncomingPollerStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
 	def __unicode__(self):
 		return u'%s' % (self.name)
 
@@ -210,8 +219,13 @@ class IncomingPoller(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
 	request = models.CharField(max_length=1920)
-	endpoint = models.ForeignKey(Endpoint)
+	remittance_product = models.ForeignKey(RemittanceProduct)
+	inbound_remittance_product = models.ForeignKey(RemittanceProduct, related_name='inbound_remittance_product')
 	frequency = models.ForeignKey(PollerFrequency)
+	service = models.ForeignKey(Service)
+	next_run = models.DateTimeField()
+	status = models.ForeignKey(IncomingPollerStatus)
+	gateway = models.ForeignKey(Gateway)
 	def __unicode__(self):
 		return u'%s' % (self.name)
 
