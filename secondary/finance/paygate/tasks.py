@@ -1171,7 +1171,7 @@ def process_incoming_poller(ic):
 
 					bridgetasks.background_service_call.delay(service.name, gateway_profile.id, payload)
 
-					break # Break for test
+					#break # Break for test
 		else: lgr.info('SFTP Request failed: %s' % params)
 		ip.status = IncomingPollerStatus.objects.get(name='PROCESSED')
 		ip.next_run = timezone.now() + timezone.timedelta(seconds=ip.frequency.run_every)
