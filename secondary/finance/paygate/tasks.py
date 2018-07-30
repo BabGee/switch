@@ -1307,7 +1307,7 @@ def process_incoming_payments():
 			service = c.institution_incoming_service.service
 
 			payload['paygate_incoming_id'] = c.id
-			payload['service_id'] = service.id
+			#payload['service_id'] = service.id
 			payload['product_item_id'] = c.institution_incoming_service.product_item.id
 			payload['institution_id'] = c.institution_incoming_service.product_item.institution.id
 			payload['currency'] = c.currency.code
@@ -1324,11 +1324,13 @@ def process_incoming_payments():
 			else:
 				gateway_profile_list = GatewayProfile.objects.filter(gateway=c.institution_incoming_service.gateway,user__username='System@User', status__name__in=['ACTIVATED'])
 				if len(gateway_profile_list) > 0 and gateway_profile_list[0].user.is_active:
-					payload['gateway_profile_id'] = gateway_profile_list[0].id
+					#payload['gateway_profile_id'] = gateway_profile_list[0].id
+	    				#payload = json.dumps(payload, cls=DjangoJSONEncoder)
 
-	    				payload = json.dumps(payload, cls=DjangoJSONEncoder)
+					bridgetasks.background_service_call.delay(service.name, gateway_profile_list[0].id, payload)
+					'''
 					try:service_call(payload)
 					except Exception, e: lgr.info('Error on Service Call: %s' % e)
-
+					'''
 		except Exception, e:
 			lgr.info('Error processing paid order item: %s | %s' % (c,e))
