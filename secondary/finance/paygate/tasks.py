@@ -442,6 +442,8 @@ class System(Wrappers):
 
 					outgoing.save()
 					payload['paygate_outgoing_id'] = outgoing.id
+					payload['sends'] = outgoing.sends
+
 					if remittance_product[0].realtime and remittance_product[0].remittance.status.name == 'ACTIVE': #Process realtime & Active remittance 
 						lgr.info("Active Realtime Remit")
 						params = payload.copy()
