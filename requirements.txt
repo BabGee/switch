@@ -33,7 +33,7 @@ librabbitmq==1.6.1
 # M2Crypto==0.21.1
 nose==1.3.0
 # ntplib==0.3.2
-#####  numpy==1.7.1 # commented out on windows
+numpy==1.7.1 # commented out on windows
 paho-mqtt==1.2
 # pciutils==1.7.3
 perf==0.1
