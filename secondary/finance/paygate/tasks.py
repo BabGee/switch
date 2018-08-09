@@ -306,7 +306,8 @@ class System(Wrappers):
 
 
 			p = payload['paygate_outgoing_id'].split('-')
-			paygate_outgoing_id =  p[len(p)-1]
+			try: paygate_outgoing_id =  int(p[len(p)-1])
+			except: paygate_outgoing_id = 0
 
 			outgoing = Outgoing.objects.filter(id=paygate_outgoing_id,response_status__response='09')
 
