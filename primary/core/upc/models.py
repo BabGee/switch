@@ -33,6 +33,7 @@ class Institution(models.Model):
 	status = models.ForeignKey(InstitutionStatus)
 	tagline = models.CharField(max_length=140)
 	logo = models.ImageField(upload_to='upc_institution_logo/', max_length=200, blank=True, null=True)
+	icon_image = models.ImageField(upload_to='upc_institution_icon_image/', max_length=200, blank=True, null=True)
 	documents = models.FileField(upload_to='upc_institution_documents/', max_length=200, blank=True, null=True)
 	details = models.CharField(max_length=1200, null=True, blank=True)
 	industries = models.ManyToManyField(IndustryClass,related_name='industries')
