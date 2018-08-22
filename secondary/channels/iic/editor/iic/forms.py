@@ -1,24 +1,10 @@
-from django.forms import ModelForm
 from django import forms
-from .models import Page, PageInput,PageInputGroup,PageGroup
-from primary.core.bridge.models import Service
-from secondary.channels.dsc.models import DataList,DataListQuery
 
-class PageOrderConfigForm(forms.Form):
-    config = forms.CharField(widget = forms.HiddenInput(), required = True)
-
-
-class PageInputOrderConfigForm(forms.Form):
-    config = forms.CharField(widget = forms.HiddenInput(), required = True)
-
-
-class ServiceForm(forms.Form):
-    name = forms.CharField(widget = forms.TextInput(), required = True)
-    gateway = forms.CharField(widget=forms.HiddenInput())
+from secondary.channels.iic.models import Page, PageInput,PageInputGroup,PageGroup
 
 
 # Create the form class.
-class PageForm(ModelForm):
+class PageForm(forms.ModelForm):
     description = forms.CharField(required=False,max_length=100)
     item_level = forms.IntegerField(required=False)
 
@@ -27,7 +13,7 @@ class PageForm(ModelForm):
         fields = ['name','item_level','description','icon']
 
 
-class PageInputGroupForm(ModelForm):
+class PageInputGroupForm(forms.ModelForm):
     # input_variable_name = forms.IntegerField(required=False)
 
     name = forms.CharField(max_length=45, required=False)
@@ -43,7 +29,7 @@ class PageInputGroupForm(ModelForm):
         # exclude = []
 
 
-class PageInputForm(ModelForm):
+class PageInputForm(forms.ModelForm):
 
     class Meta:
         model = PageInput
@@ -52,7 +38,7 @@ class PageInputForm(ModelForm):
 
 class PageGroupPageForm(forms.ModelForm):
     # page = forms.CharField(max_length=50)
-    # menu = forms.ModelChoiceField(queryset=PageGroup.objects.all())
+    item_level = forms.IntegerField(required=False,initial=0)
 
 
     class Meta:
@@ -66,7 +52,9 @@ class PageGroupPageForm(forms.ModelForm):
 
         # create page
         page.description = page.name
-        # page.item_level = 1
+        page_group = self.cleaned_data['page_group']
+        if not bool(self.cleaned_data['item_level']):
+            page.item_level =  page_group.page_set.order_by('item_level').last().item_level + 1
         # page.page_group = page_group
 
         if commit:
@@ -75,7 +63,7 @@ class PageGroupPageForm(forms.ModelForm):
 
 
 # todo should extend
-class PageInputVariableForm(ModelForm):
+class PageInputVariableForm(forms.ModelForm):
     input_variable_id = forms.IntegerField(required=False)
     item_level = forms.IntegerField(required=False)
 
@@ -91,12 +79,10 @@ class PageInputVariableForm(ModelForm):
         fields = ['page_input', 'item_level']
 
 
-class DataListForm(ModelForm):
-    class Meta:
-        model = DataList
-        exclude = []
+class PageOrderConfigForm(forms.Form):
+    config = forms.CharField(widget = forms.HiddenInput(), required = True)
 
-class DataListQueryForm(ModelForm):
-    class Meta:
-        model = DataListQuery
-        exclude = []
+
+class PageInputOrderConfigForm(forms.Form):
+    config = forms.CharField(widget = forms.HiddenInput(), required = True)
+

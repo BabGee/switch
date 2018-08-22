@@ -1,7 +1,7 @@
 from django.conf.urls import *
 
 # notify
-from secondary.channels.iic.editor_views.notify.views import (
+from secondary.channels.iic.editor.notify.views import (
     notification_product_put,
     notification_template_put,
 )
