@@ -2145,6 +2145,7 @@ class System(Wrappers):
 				institution = gateway_profile.institution
 			if institution is not None:
 				details['logo'] =institution.logo.name
+				details['icon_image'] =institution.icon_image.name
 				details['name'] =institution.name
 				details['tagline'] =institution.tagline
 				details['background_image'] = institution.background_image
@@ -2161,6 +2162,7 @@ class System(Wrappers):
 
 			else:
 				details['logo'] =gateway.logo.name
+				details['icon_image'] =gateway.icon_image.name
 				details['name'] =gateway.name
 				details['tagline'] =gateway.description
 				details['background_image'] =gateway.background_image
