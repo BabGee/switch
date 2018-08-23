@@ -133,6 +133,7 @@ class Gateway(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	logo = models.ImageField(upload_to='administration_gateway_logo/', max_length=200, blank=True, null=True)
+	icon_image = models.ImageField(upload_to='administration_gateway_icon_image/', max_length=200, blank=True, null=True)
 	description = models.CharField(max_length=100)
 	background_image = models.CharField(max_length=200)
 	default_color = models.CharField(max_length=100)
