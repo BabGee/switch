@@ -1,14 +1,14 @@
 {% extends 'editor/administration/gateway/layout.html' %}
 
 {% block nav_form %}
-            <form class="form-inline my-2 my-lg-0">
-                <input class="form-control mr-sm-2"
-                       type="search"
-                       name="q"
-                       value="{% if request.GET.q %}{{ request.GET.q }}{% endif %}"
-                       placeholder="Search {{ gateway_profiles.paginator.count }} Profiles" aria-label="Search">
+    <form class="form-inline my-2 my-lg-0">
+        <input class="form-control mr-sm-2"
+               type="search"
+               name="q"
+               value="{% if request.GET.q %}{{ request.GET.q }}{% endif %}"
+               placeholder="Search {{ gateway_profiles.paginator.count }} Profiles" aria-label="Search">
 
-            </form>
+    </form>
 {% endblock %}
 {% block tab %}
 
@@ -28,47 +28,57 @@
     <ul>
         {% for page_group in gateway_profiles %}
             <li>
-            <strong> uid {{ page_group.user.pk}}</strong>
-            <strong> {{ page_group.pk}}</strong>
-                <a href="/iic_editor/gateways/{{ gateway.pk }}/gateway_profiles/{{ page_group.pk }}/">
-                    {{ page_group.user.username }} ({{ page_group.user.first_name }} {{ page_group.user.last_name }})</a>
+                <strong> uid {{ page_group.user.pk }}</strong>
+                <strong> gpid {{ page_group.pk }}</strong>
 
-                msisdn : {{ page_group.msisdn }}
-                email : {{ page_group.user.email }}
+                <a href="/iic_editor/gateways/{{ gateway.pk }}/gateway_profiles/{{ page_group.pk }}/">
+                    {{ page_group.user.username }}
+                    ({{ page_group.user.first_name }} {{ page_group.user.last_name }})</a> <br>
+
+                <strong> msisdn </strong>: {{ page_group.msisdn }}
+                <strong> email </strong> : {{ page_group.user.email }} <br>
                 institution : {{ page_group.institution }}
 
-                    <strong class="editableT"
-                                 data-type="text"
-                                 data-name="institution"
+                <strong class="editableT"
+                        data-type="text"
+                        data-name="institution"
+                        data-pk="{{ page_group.pk }}"
+                        data-url="/iic_editor/gateway_profiles/">{{ page_group.institution.pk }}</strong> <br>
+
+
+                status : <strong class="editable status"
+                                 data-type="select"
+                                 data-name="status"
                                  data-pk="{{ page_group.pk }}"
-                                 data-url="/iic_editor/gateway_profiles/">{{ page_group.institution.pk }}</strong>
+                                 data-value="{{ page_group.status.pk }}"
+                                 data-url="/iic_editor/gateway_profiles/">{{ page_group.status.name }}</strong> <br>
 
 
+                PIN RETRIES : <strong class="editableT"
+                                      data-type="text"
+                                      data-name="pin_retries"
+                                      data-pk="{{ page_group.pk }}"
+                                      data-url="/iic_editor/gateway_profiles/">{{ page_group.pin_retries }}</strong> <br>
 
-                     status : <strong class="editable status"
-                                         data-type="select"
-                                         data-name="status"
-                                         data-pk="{{ page_group.pk }}"
-                                         data-value="{{ page_group.status.pk }}"
-                                         data-url="/iic_editor/gateway_profiles/">{{ page_group.status.name }}</strong>
+                Access Level
+                <strong class="editable access_level"
+                        data-type="select"
+                        data-name="access_level"
+                        data-pk="{{ page_group.pk }}"
+                        data-value="{{ page_group.access_level.pk }}"
+                        data-url="/iic_editor/gateway_profiles/">{{ page_group.access_level.name }}</strong>
+                Role
+                <strong class="editable role"
+                        data-type="select"
+                        data-name="role"
+                        data-pk="{{ page_group.pk }}"
+                        data-value="{% if page_group.role %}{{ page_group.role.pk }}{% else %}0{% endif %}"
+                        data-url="/iic_editor/gateway_profiles/">
+                    {% if page_group.role %}{{ page_group.role.name }}{% else %}None{% endif %}
+                </strong> <br>
 
-
-                     PIN RETRIES : <strong class="editableT"
-                                 data-type="text"
-                                 data-name="pin_retries"
-                                 data-pk="{{ page_group.pk }}"
-                                 data-url="/iic_editor/gateway_profiles/">{{ page_group.pin_retries }}</strong>
-
-
-
-                    <strong class="editable access_level"
-                                         data-type="select"
-                                         data-name="access_level"
-                                         data-pk="{{ page_group.pk }}"
-                                         data-value="{{ page_group.access_level.pk }}"
-                                         data-url="/iic_editor/gateway_profiles/">{{ page_group.access_level.name }}</strong>
-
- <a target="_blank" href="/admin/auth/user/{{ page_group.user.pk }}/delete/">Delete</a>
+                Actions
+                <a target="_blank" href="/admin/auth/user/{{ page_group.user.pk }}/delete/">Delete</a>
             </li>
         {% empty %}
             <li>No items</li>
@@ -79,26 +89,26 @@
 
 
     {% if gateway_profiles.has_other_pages %}
-  <ul class="pagination">
-    {% if gateway_profiles.has_previous %}
-      <li><a href="?page={{ gateway_profiles.previous_page_number }}">&laquo;</a></li>
-    {% else %}
-      <li class="disabled"><span>&laquo;</span></li>
+        <ul class="pagination">
+            {% if gateway_profiles.has_previous %}
+                <li><a href="?page={{ gateway_profiles.previous_page_number }}">&laquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&laquo;</span></li>
+            {% endif %}
+            {% for i in gateway_profiles.paginator.page_range %}
+                {% if gateway_profiles.number == i %}
+                    <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                {% else %}
+                    <li><a href="?page={{ i }}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if gateway_profiles.has_next %}
+                <li><a href="?page={{ gateway_profiles.next_page_number }}">&raquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&raquo;</span></li>
+            {% endif %}
+        </ul>
     {% endif %}
-    {% for i in gateway_profiles.paginator.page_range %}
-      {% if gateway_profiles.number == i %}
-        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
-      {% else %}
-        <li><a href="?page={{ i }}">{{ i }}</a></li>
-      {% endif %}
-    {% endfor %}
-    {% if gateway_profiles.has_next %}
-      <li><a href="?page={{ gateway_profiles.next_page_number }}">&raquo;</a></li>
-    {% else %}
-      <li class="disabled"><span>&raquo;</span></li>
-    {% endif %}
-  </ul>
-{% endif %}
 
 
 
@@ -147,18 +157,19 @@
         $(document).ready(function () {
             $('.access_level').editable({
                 source: [
-                    {value: 1, text: 'CUSTOMER'},
-                    {value: 3, text: 'SYSTEM'},
-                    {value: 7, text: 'MANAGER'},
-                    {value: 8, text: 'OPERATOR'},
-                    {value: 11, text: 'ADMINISTRATOR'},
-                    {value: 14, text: 'SUPERVISOR'},
-                    {value: 15, text: 'SUPER ADMINISTRATOR'},
-                    {value: 16, text: 'API USER'},
-                    {value: 17, text: 'SALES'},
-                    {value: 18, text: 'DELIVERY'},
-                    {value: 19, text: 'AGENT'},
-                    {value: 20, text: 'SUPER AGENT'}
+                    {% for access_level in access_levels %}
+                    {value: {{ access_level.pk }}, text: '{{ access_level.name }}'},
+                    {% endfor %}
+                ]
+            });
+
+            $('.role').editable({
+                source: [
+                    {value: 0, text: 'None'},
+
+                    {% for role in roles %}
+                    {value: {{ role.pk }}, text: '{{ role.name }}'},
+                    {% endfor %}
                 ]
             });
 

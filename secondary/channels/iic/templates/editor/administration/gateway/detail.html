@@ -57,7 +57,8 @@
                     {% for host in gateway.default_host.all %}
                         <li>
                             {{ host }}
-                            <a href="{{ host }}" target="_blank">Open</a>
+                            <a href="https://{{ host }}" target="_blank">Https</a>
+                            <a href="http://{{ host }}" target="_blank">Http</a>
                         </li>
                     {% endfor %}
 
@@ -65,10 +66,6 @@
                 </ul>
 
             </div>
-
-
-
-
 
 
 

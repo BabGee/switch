@@ -5,9 +5,12 @@ from django.db.models import Q
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
+from primary.core.administration.models import Role, AccessLevel
+
 from primary.core.upc.models import (
-    Gateway,GatewayProfile,Institution
+    Gateway, GatewayProfile, Institution,ProfileStatus
 )
+
 
 def gateway_profile_list(request, gateway_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
@@ -16,7 +19,7 @@ def gateway_profile_list(request, gateway_pk):
     gateway_profiles = GatewayProfile.objects.filter(gateway=gateway).order_by('-id')
     page = request.GET.get('page', 1)
 
-    q = request.GET.get('q',None)
+    q = request.GET.get('q', None)
     if q:
         q = q.strip()
         if '@' in q:  # filter using email
@@ -44,9 +47,10 @@ def gateway_profile_list(request, gateway_pk):
 
     return render(request, "iic/gateway_profile/list.html", {
         'gateway': gateway,
+        'access_levels': AccessLevel.objects.all(),
+        'roles': Role.objects.filter(status__name='ACTIVE'),
         'gateway_profiles': gateway_profiles
     })
-
 
 
 def gateway_profile_list_export(request, gateway_pk):
@@ -76,7 +80,7 @@ def gateway_profile_list_export(request, gateway_pk):
     for li in gateway_profiles:
         writer.writerow([
             li.id,
-            li.user.first_name +' '+li.user.last_name,
+            li.user.first_name + ' ' + li.user.last_name,
             li.user.email,
             li.institution.name if li.institution else 'XXXX',
             li.access_level.name
@@ -97,7 +101,6 @@ def gateway_institution_list(request, gateway_pk):
     })
 
 
-
 def institution_detail(request, gateway_pk, institution_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     institution = gateway.institution_set.get(pk=institution_pk)
@@ -112,18 +115,16 @@ def institution_detail(request, gateway_pk, institution_pk):
     })
 
 
-
-def institution_profile_list(request, gateway_pk,institution_pk):
-
+def institution_profile_list(request, gateway_pk, institution_pk):
     gateway = Gateway.objects.get(pk=gateway_pk)
     institution = gateway.institution_set.get(pk=institution_pk)
 
     # page_groups = gateway.pagegroup_set.all()
 
-    gateway_profiles = GatewayProfile.objects.filter(gateway=gateway,institution=institution).order_by('-id')
+    gateway_profiles = GatewayProfile.objects.filter(gateway=gateway, institution=institution).order_by('-id')
     page = request.GET.get('page', 1)
 
-    q = request.GET.get('q',None)
+    q = request.GET.get('q', None)
     if q:
         gateway_profiles = gateway_profiles.filter(msisdn__phone_number__icontains=q)
 
@@ -163,17 +164,25 @@ def gateway_profile_put(request):
     value = data.get('value')
     if field == 'access_level':
         access_level = AccessLevel.objects.get(pk=value)
-        gateway_profile.access_level=access_level
+        gateway_profile.access_level = access_level
+
+    if field == 'role':
+        if int(value) == 0:
+            gateway_profile.role = None
+        else:
+            role = Role.objects.get(pk=value)
+            gateway_profile.role = role
+            gateway_profile.access_level = role.access_level
 
     elif field == 'status':
         status = ProfileStatus.objects.get(pk=value)
-        gateway_profile.status=status
+        gateway_profile.status = status
 
     elif field == 'pin_retries':
-        gateway_profile.pin_retries=value
+        gateway_profile.pin_retries = value
 
     elif field == 'institution':
-        gateway_profile.institution_id =value
+        gateway_profile.institution_id = value
 
     gateway_profile.save()
     return HttpResponse(status=200)
