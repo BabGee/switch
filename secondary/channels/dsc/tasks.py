@@ -256,9 +256,9 @@ class Wrappers:
 
 				if len(v_list)>1:
 					v = [l.strip() for l in v_list if l]
-				elif v.strip() == 'False':
+				elif v.strip().lower() == 'false':
 					v = False
-				elif v.strip() == 'True':
+				elif v.strip().lower() == 'true':
 					v = True
 
 				or_filter_data[k] = v if v not in ['',None] else None
@@ -286,9 +286,9 @@ class Wrappers:
 
 				if len(v_list)>1:
 					v = [l.strip() for l in v_list if l]
-				elif v.strip() == 'False':
+				elif v.strip().lower() == 'false':
 					v = False
-				elif v.strip() == 'True':
+				elif v.strip().lower() == 'true':
 					v = True
 
 				and_filter_data[k] = v if v not in ['',None] else None
@@ -317,9 +317,9 @@ class Wrappers:
 
 				if len(v_list)>1:
 					v = [l.strip() for l in v_list if l]
-				elif v.strip() == 'False':
+				elif v.strip().lower() == 'false':
 					v = False
-				elif v.strip() == 'True':
+				elif v.strip().lower() == 'true':
 					v = True
 
 				not_filter_data[k] = v if v not in ['',None] else None
@@ -581,9 +581,9 @@ class Wrappers:
 
 					if len(v_list)>1:
 						v = [l.strip() for l in v_list if l]
-					elif v.strip() == 'False':
+					elif v.strip().lower() == 'false':
 						v = False
-					elif v.strip() == 'True':
+					elif v.strip().lower() == 'true':
 						v = True
 
 					join_or_filter_data[k] = v if v not in ['',None] else None
@@ -602,9 +602,9 @@ class Wrappers:
 
 					if len(v_list)>1:
 						v = [l.strip() for l in v_list if l]
-					elif v.strip() == 'False':
+					elif v.strip().lower() == 'false':
 						v = False
-					elif v.strip() == 'True':
+					elif v.strip().lower() == 'true':
 						v = True
 
 					join_and_filter_data[k] = v if v not in ['',None] else None
@@ -625,9 +625,9 @@ class Wrappers:
 
 					if len(v_list)>1:
 						v = [l.strip() for l in v_list if l]
-					elif v.strip() == 'False':
+					elif v.strip().lower() == 'false':
 						v = False
-					elif v.strip() == 'True':
+					elif v.strip().lower() == 'true':
 						v = True
 
 					join_not_filter_data[k] = v if v not in ['',None] else None
