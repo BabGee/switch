@@ -64,6 +64,24 @@ class Wrappers:
 		return json.dumps(new_payload)
 
 class System(Wrappers):
+
+        def update_outgoing_payment(self, payload, node_info):
+                try:
+                        gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+                        session_account_manager = AccountManager.objects.filter(id__in=payload['account_manager_id'].split(','))
+
+                        session_account_manager.update(outgoing_payment=Outgoing.objects.get(id=payload['paygate_outgoing_id']))
+                        payload['response'] = 'Outgoing Payment Updated'
+                        payload['response_status'] = '00'
+                except Exception, e:
+                        payload['response'] = str(e)
+                        payload['response_status'] = '96'
+                        lgr.info("Error on Update Outgoing Payment: %s" % e)
+
+                return payload
+
+
 	def log_installment(self, payload, node_info):
 		try:
 
@@ -532,6 +550,11 @@ class System(Wrappers):
 					session_manager.credit_time = int(payload['loan_time'])
 					session_manager.credit_due_date = timezone.now() + timezone.timedelta(days=int(payload['loan_time']))
 
+				if 'paygate_incoming_id' in payload.keys():
+					session_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
+                        	if 'paygate_outgoing_id' in payload.keys():
+                                	session_manager.outgoing_payment = Incoming.objects.get(id=payload['paygate_outgoing_id'])
+
 				session_manager.save()
 
 				if 'credit_overdue_id' in payload.keys():
@@ -619,6 +642,8 @@ class System(Wrappers):
 
 				if 'paygate_incoming_id' in payload.keys():
 					session_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
+                        	if 'paygate_outgoing_id' in payload.keys():
+                                	session_manager.outgoing_payment = Incoming.objects.get(id=payload['paygate_outgoing_id'])
 
 				session_manager.save()
 

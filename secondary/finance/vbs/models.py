@@ -147,6 +147,7 @@ class AccountManager(models.Model):
 	updated = models.BooleanField(default=False, help_text="True for record that is not the last record")
 	credit_overdue_update = models.BooleanField(default=False, help_text="True for record that is not the last record")
 	incoming_payment = models.ForeignKey(Incoming, null=True, blank=True)
+        outgoing_payment = models.ForeignKey(Outgoing, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.id, self.credit, self.credit_paid)
 	def credit_overdue_list(self):
