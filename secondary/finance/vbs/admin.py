@@ -38,7 +38,7 @@ admin.site.register(InstitutionAccount, InstitutionAccountAdmin)
 class AccountAdmin(admin.ModelAdmin):
 	list_display = ('id','is_default',\
 			'account_status','credit_limit','account_type',\
-			'profile',)
+			'profile','gateway_profile_list',)
 	search_fields = ('profile__user__username','profile__user__first_name','profile__user__last_name',)
 	list_filter = ('account_type','is_default','account_status')
 admin.site.register(Account, AccountAdmin)

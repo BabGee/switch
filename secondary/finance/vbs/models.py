@@ -85,9 +85,12 @@ class Account(models.Model):
 	credit_limit = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	account_type = models.ForeignKey(AccountType)
 	profile = models.ForeignKey(Profile, null=True, blank=True) #Account Owner
+	gateway_profile = models.ManyToManyField(GatewayProfile, blank=True)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.profile, self.is_default, self.account_type)
-  
+	def gateway_profile_list(self):
+		return "\n".join([a.msisdn.phone_number for a in self.gateway_profile.all() if a.msisdn])
+ 
  
 class CreditOverdueStatus(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)

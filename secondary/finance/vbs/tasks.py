@@ -705,12 +705,12 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			if 'session_gateway_profile_id' in payload.keys():
-				session_gateway_profile = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,id=payload['session_gateway_profile_id'])
+				session_gateway_profile_list = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,id=payload['session_gateway_profile_id'])
 			else:
-				session_gateway_profile = GatewayProfile.objects.none()
+				session_gateway_profile_list = GatewayProfile.objects.none()
 
-			if session_gateway_profile.exists():
-				session_account = Account.objects.filter(account_status__name='ACTIVE', profile=session_gateway_profile[0].user.profile)
+			if session_gateway_profile_list.exists():
+				session_account = Account.objects.filter(account_status__name='ACTIVE', profile=session_gateway_profile_list[0].user.profile)
 			else:
 				session_account = Account.objects.filter(account_status__name='ACTIVE', profile=gateway_profile.user.profile)
 
@@ -734,11 +734,12 @@ class System(Wrappers):
 				payload['response'] = 'Account Captured'
 
 			else:
-				if session_gateway_profile.exists():
-					profile = session_gateway_profile[0].user.profile
+				if session_gateway_profile_list.exists():
+					profile = session_gateway_profile_list[0].user.profile
+					session_gateway_profile = session_gateway_profile_list[0]
 				else:
 					profile = gateway_profile.user.profile
-
+					session_gateway_profile = gateway_profile
 
 				#create account
 				if 'currency' in payload.keys():
@@ -775,6 +776,8 @@ class System(Wrappers):
 						session_account.is_default = True
 
 					session_account.save()
+					session_account.gateway_profile.add(session_gateway_profile)
+
 					payload['session_account_id'] = session_account.id
 					payload['response_status'] = '00'
 					payload['response'] = 'Account Captured'
