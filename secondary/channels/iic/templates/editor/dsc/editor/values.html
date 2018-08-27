@@ -1,0 +1,331 @@
+{% extends 'editor/dsc/editor/layout.html' %}
+{% load static %}
+
+{% block tab %}
+
+    <div class="row">
+        <div class="col-md-12">
+             {% if data_list.query %}
+
+                <label for="module">Module</label>
+                <select id="module" name="module">
+                    {% for node_system in modules %}
+                        <option {% if node_system.name == data_list.query.module_name|upper %}selected{% endif %}
+                                value="{{ node_system.URL }}">{{ node_system.name }}</option>
+                    {% endfor %}
+
+                </select>
+
+                <label for="model">Model</label>
+                <select id="model" name="model"></select>
+
+                <p>Values</p>
+
+
+                <values-editor id="values"></values-editor>
+
+                <br>
+
+            {% else %}
+                Function <a href="#">{{ data_list.function }}</a>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+{% endblock %}
+
+
+
+{% block tab_script %}
+ <script src="https://unpkg.com/@webcomponents/webcomponentsjs@next/webcomponents-loader.js"></script>
+<script type="module">
+    import {LitElement, html} from 'https://unpkg.com/@polymer/lit-element@latest/lit-element.js?module';
+
+    class ValuesEditor extends LitElement {
+
+      static get properties() {
+          return {
+              columns:Array,
+              module:String,
+              model:String,
+        }
+      }
+
+
+      _render({columns,module,model}) {
+
+        return html`
+        <div id='columns'>
+
+        ${columns.map((i) => html`<value-column label=${i.label}
+                                                module=${module}
+                                                model=${model}
+                                                path=${i.path}></value-column>`)}
+        </div>
+
+        <button on-click="${(e) => this._onAddNewColumn(e)}">Add</button>
+        <button id="saveValues">Save</button>`;
+      }
+
+      constructor(){
+          super();
+          this.columns = [
+              {% for value in values %}
+                  {'label':"{{ value.label }}",'path':"{{ value.path }}"},
+              {% endfor %}
+          ];
+           this.module = 'SECONDARY.CHANNELS.IIC';
+            this.model = 'Page';
+      }
+
+      _onAddNewColumn(e) {
+            // Load field options
+          // console.log(e);
+
+          this.columns = [...this.columns, {'label':'Column '+this.columns.length,'path':''}];
+
+
+        }
+
+    }
+    customElements.define('values-editor', ValuesEditor);
+
+
+    // Values Column
+    class ColumnLabel extends LitElement {
+
+      static get properties() { return {
+          label: String
+      }}
+
+      _render({label}) {
+        return html`
+<style>
+        :host {
+          display: inline-block;
+        }
+        :host([hidden]) {
+          display: none;
+        }
+      </style>
+        <div>
+            <input type="text" value="${label}">
+        </div>`;
+      }
+
+    }
+    customElements.define('column-label', ColumnLabel);
+
+    // Values Column
+    class PathField extends LitElement {
+
+      static get properties() { return {
+          model: String,
+          module: String,
+          fields: Array,
+          field: String,
+
+      }}
+
+      constructor(){
+          super();
+          this.fields = [];
+         // this.module = 'SECONDARY.CHANNELS.IIC';
+
+      }
+
+      _render({model,module,field,fields}) {
+
+          // console.log(field);
+
+          if(model && module && !fields.length ) {this._loadFields(field);}
+
+              return html`<style>
+        :host {
+          display: inline-block;
+        }
+        :host([hidden]) {
+          display: none;
+        }
+      </style><div>
+
+            <strong>${model}</strong>
+            <select on-change="${(e) => this._onFieldOptionChange(e)}">
+                <option>-----</option>
+                ${fields.map((i) => html`<option  field=${i} selected?="${i['selected']}" >${i.name}</option>`)}
+            </select>
+
+
+        </div>`;
+
+      }
+
+      _onFieldOptionChange(e){
+          let select = e.currentTarget;
+
+          let option = select.options[select.selectedIndex];
+          //console.log(option);
+            //var text = e.options[e.selectedIndex].text;
+          let field = option['field'];
+
+          if(field['many_to_one']) {
+              // console.log(option['field']);
+              this.dispatchEvent(new CustomEvent('many-to-one', {detail: {field: field}}));
+          }
+
+      }
+
+       _loadFields(path) {
+            // Load field options
+           let self= this;
+
+            $.ajax({
+                url: "/iic_editor/dsc/fields/",
+
+                data: {module: this.module, model: this.model},
+                type: 'GET',
+                success: function (data) {
+                    // console.log(data);
+                    let fields = [];
+                    if(path) {
+                        let pathParts = path.split('__');
+                        for (let i = 0; i < data['fields'].length; i++) {
+
+                            let field = data['fields'][i];
+                            if (field['name'] === pathParts[0]) {
+                                field['selected'] = path;
+
+                                if (pathParts.length > 1) {
+                                    self.dispatchEvent(new CustomEvent('many-to-one', {detail: {field: field}}));
+                                }
+
+                            }
+
+                            fields.push(field)
+
+                        }
+                    }else {
+                        fields = data['fields']
+                    }
+
+                    self.fields = fields
+                }
+            });
+
+        }
+
+    }
+    customElements.define('path-field', PathField);
+
+    // Values Column
+    class ColumnPath extends LitElement {
+
+        constructor(){
+            super();
+
+            this.paths = [
+
+            ];
+
+            // console.log(this.path)
+
+        }
+
+      static get properties() { return {
+          module: String,
+          model: String,
+          path: String,
+          paths:Array
+      }}
+
+      _render({module,model,paths,path}) {
+
+            if(!model || !module){
+                return html``
+            }
+
+            if(model && module && !paths.length){
+                if(path) {
+                    // parse and re-create paths
+                    let pathParts = path.split('__');
+                    for (let i = 0; i < pathParts.length; i++) {
+                        let pathPart = pathParts[i];
+
+                    }
+
+                    this.paths.push({'model': model, 'module': module,'field':path});
+
+                }else {
+                    this.paths.push({'model': model, 'module': module,'field':undefined});
+                }
+
+            }
+
+            //console.log(paths);
+
+        return html`<style>
+        :host {
+          display: inline-block;
+        }
+        :host([hidden]) {
+          display: none;
+        }
+      </style><div>
+        ${paths.map((path) => html`<path-field module=${path['module']}
+                                               model=${path['model']}
+                                               field=${path['field']}
+                                               on-many-to-one="${(e) => this._onManyToOneField(e)}"></path-field>`)}
+
+        </div>`;
+      }
+
+      _onManyToOneField(e){
+            console.log(e.detail);
+
+            let relModel = e.detail['field']['related_model'];
+
+            if(e.detail['field']['selected']){
+                let path =  e.detail['field']['selected'];
+                let pathParts = path.split('__');
+                if(pathParts.length > 1) {
+                    relModel['field'] = pathParts.slice(1, pathParts.length).join('__');
+                }else {
+                    relModel['field'] = pathParts[1]
+                }
+            }
+
+            this.paths = [...this.paths,relModel];
+
+      }
+
+    }
+    customElements.define('column-path', ColumnPath);
+
+    // Values Column
+    class ValuesColumn extends LitElement {
+
+      static get properties() { return {
+           module: String,
+          model: String,
+          label: String,
+          path: String,
+      }}
+
+      _render({label,path,model,module}) {
+
+
+
+        return html`<div>
+            <column-label label="${label}"></column-label> :
+            <column-path path="${path}" module=${module} model="${model}"></column-path>
+        </div>`;
+      }
+
+    }
+    customElements.define('value-column', ValuesColumn);
+
+    </script>
+
+{% endblock %}

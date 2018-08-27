@@ -1,0 +1,101 @@
+{% extends 'iic/base.html' %}
+{% load static %}
+
+{% block content %}
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/iic_editor/dsc/">Datalists</a></li>
+        <li class="breadcrumb-item active">{{ data_list.title }}</li>
+    </ol>
+
+    <a href="/admin/dsc/datalist/{{ data_list.pk }}/change/" target="_blank">Datalist Edit</a>
+    <a href="/admin/dsc/datalistquery/{{ data_list.query.pk }}/change/" target="_blank">Query Edit</a>
+
+    <button type="button"
+            class="btn btn-primary"
+            id="duplicate"
+            data-pk="{{ data_list.pk }}"
+            data-toggle="modal"
+            data-target="#duplicateDataListModal">
+        Duplicate
+    </button>
+
+    <br>
+
+
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link active" href="/iic_editor/dsc/{{ data_name }}/">Details</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/iic_editor/dsc/{{ data_name }}/filters">Filters</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/iic_editor/dsc/{{ data_name }}/values">Columns</a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="/iic_editor/dsc/{{ data_name }}/actions">Actions</a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="/iic_editor/dsc/{{ data_name }}/usage">Usages</a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="#">Test</a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link disabled" href="#">Disabled</a>
+        </li>
+    </ul>
+
+
+    {% block tab %}{% endblock %}
+
+{% endblock %}
+
+
+{% block script %}
+
+    <script type="text/javascript">
+
+    $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+                // todo btn.html('<img src="/static/loader.gif">');
+            },
+        });
+
+
+
+    </script>
+
+
+    {% block tab_script %}
+
+    {% endblock %}
+{% endblock %}

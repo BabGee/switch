@@ -1,0 +1,37 @@
+{% extends 'editor/dsc/editor/layout.html' %}
+
+
+{% block tab %}
+  <div class="col-md-5">
+            <h3>Page Inputs Usage</h3>
+            <ul class="list-group">
+                {% for page_input in usages %}
+                    <li class="list-group-item list-group-item-
+                        {% if page_input.page_input_status.name == 'ACTIVE' %}{% else %}danger{% endif %}">
+                        {{ page_input.page_input }}
+                        <strong>{{ page_input.input_variable.variable_type }}</strong>
+                        {{ page_input.input_variable.pk }}
+                        <a href="/iic_editor/gateways/{{ page_input.page.gateway.first.pk }}/{{ page_input.page.service.first.name }}/interface/{{ page_input.page.page_group.pk }}/{{ page_input.page.pk }}/{{ page_input.page_input_group.pk }}/">view</a>
+                        <br>
+                        {% for link in links %}
+                            <div>
+                                <a href="/iic_editor/gateways/{{ request.GET.gateway_pk }}/{{ link.service }}/interface/">
+                                    {{ link.label }} <span class="fa fa-caret-right"></span>
+                                </a>
+                            </div>
+                        {% endfor %}
+
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">No items</li>
+                {% endfor %}
+
+            </ul>
+        </div>
+
+{% endblock %}
+
+
+{% block tab_script %}
+
+{% endblock %}

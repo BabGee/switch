@@ -613,7 +613,7 @@ def page_input_create(request, gateway_pk, service_name, page_group_pk, page_pk,
             )
     else:
         form = PageInputVariableForm(initial={'input_variable_validate_min': '1', 'input_variable_validate_max': '100'})
-    return render(request, "iic/page_input/create.html", {
+    return render(request, "iic/page_input/create{}.html".format(request.GET.get('editor','')), {
         'gateway': gateway,
         'page': page,
         'variable_types': VariableType.objects.all(),
