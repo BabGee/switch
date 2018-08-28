@@ -45,11 +45,12 @@ def module_model_fields(request):
         import re
         field_str = str(field.related_model)
         # <class 'secondary.channels.iic.models.PageGroup'>
+        # <class 'thirdparty.i_invest.models.PostalAddress'>
         model_module_path = re.findall(r"'(.*?)'", field_str)[0]
         model_module_path_parts = model_module_path.split('.')
 
         return dict(
-            module='.'.join(model_module_path_parts[:3]),
+            module='.'.join(model_module_path_parts[0:len(model_module_path_parts)-2]),
             model=model_module_path_parts[-1]
         )
 
