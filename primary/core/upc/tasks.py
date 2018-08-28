@@ -20,10 +20,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import authenticate
 from django.db import IntegrityError
 from django.contrib.gis.geos import Point
-from django.contrib.gis.geoip import GeoIP
+
 from django.conf import settings
 from django.core.files import File
-import base64, re, crypt
+
 from django.utils.http import urlquote
 from django.contrib.auth.hashers import check_password
 
@@ -32,6 +32,19 @@ from primary.core.bridge.models import *
 
 import logging
 lgr = logging.getLogger('primary.core.upc')
+
+import base64, re
+
+try:
+	# hack for modules not installable on windows
+	from django.contrib.gis.geoip import GeoIP
+	import crypt
+except ImportError:
+	if os.name == 'nt':
+		lgr.error('Ignored Import Error',exc_info=True)
+	else:
+		# raise on Linux
+		raise
 
 #from celery import shared_task
 #from celery.contrib.methods import task_method
