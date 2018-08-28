@@ -858,13 +858,13 @@ class System(Wrappers):
 
 				if not valid:
 					payload['response'] = 'Passport Expiry Date Required'
-					payload['response_status'] = '26'
-					return
+					payload['response_status'] = '96'
+					return payload
 
 			payload['response'] = 'Passport Expiry Validated'
 			payload['response_status'] = '00'
 		except Exception, e:
-			lgr.info('Error on Validating Passport Expiry: %s' % e)
+			lgr.info('Error on Validating Passport Expiry: %s' % e,exc_info=True)
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 		return payload
