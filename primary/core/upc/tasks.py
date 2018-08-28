@@ -828,6 +828,35 @@ class System(Wrappers):
 		return payload
 
 
+	def validate_passport_expiry(self, payload, node_info):
+		try:
+			# gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			if 'passport_number' in payload.keys():
+				valid = False
+				if 'passport_expiry_date' in payload.keys():
+					try:
+						# try parsing as a date
+						# TODO should the date be in the future?
+						datetime.strptime(payload['passport_expiry_date'], '%Y-%m-%d').date()
+						valid = True
+					except Exception, e:
+						lgr.info('Error on Passport Expiry Date: %s' % e)
+						valid = False
+
+				if not valid:
+					payload['response'] = 'Passport Expiry Date Required'
+					payload['response_status'] = '26'
+					return
+
+			payload['response'] = 'Passport Expiry Validated'
+			payload['response_status'] = '00'
+		except Exception, e:
+			lgr.info('Error on Validating Passport Expiry: %s' % e)
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+		return payload
+
+
 	def get_profile_details(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
