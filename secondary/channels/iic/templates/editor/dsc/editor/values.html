@@ -39,6 +39,48 @@
 
 
 {% block tab_script %}
+
+    <script type="text/javascript">
+
+
+
+        function loadModelFields() {
+
+            var module = $('select#module').val();
+            var model = $('select#model').val();
+
+            let vE = $('#values');
+            vE.module = module;
+            vE.model = model;
+        }
+
+        function loadModels() {
+            $.ajax({
+                url: "/iic_editor/dsc/models/",
+
+                data: {module: $('select#module').val(), model: '{{ data_list.query.model_name }}'},
+                type: 'GET',
+                success: function (data) {
+                    // console.log(data);
+                    $('#model').html(data);
+                    loadModelFields();
+                }
+            });
+        }
+
+        $(function () {
+
+
+            $("select#module").change(loadModels);
+
+            // load models from templated selection
+            loadModels();
+
+        })
+
+    </script>
+
+
  <script src="https://unpkg.com/@webcomponents/webcomponentsjs@next/webcomponents-loader.js"></script>
 <script type="module">
     import {LitElement, html} from 'https://unpkg.com/@polymer/lit-element@latest/lit-element.js?module';
@@ -76,8 +118,8 @@
                   {'label':"{{ value.label }}",'path':"{{ value.path }}"},
               {% endfor %}
           ];
-           this.module = 'SECONDARY.CHANNELS.IIC';
-            this.model = 'Page';
+           this.module = '{{ data_list.query.module_name|upper }}'; // SECONDARY.CHANNELS.IIC';
+            this.model = '{{ data_list.query.model_name }}'; // 'Page';
       }
 
       _onAddNewColumn(e) {
