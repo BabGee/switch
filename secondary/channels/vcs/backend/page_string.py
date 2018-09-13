@@ -1627,7 +1627,7 @@ class PageString(ServiceCall, Wrappers):
 					if 'interest_rate' in payload.keys() and 'interest_time' in payload.keys():
 						is_loan = True
 						charge = charge + ((Decimal(payload['interest_rate'])/100)*(int(payload['loan_time'])/int(payload['interest_time']))*Decimal(total_cost))
-					else:
+					elif 'loan_time' in payload.keys():
 						credit_type = SavingsCreditType.objects.filter(account_type=account_type,\
 								 min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
 

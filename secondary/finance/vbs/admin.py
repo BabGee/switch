@@ -39,7 +39,7 @@ class AccountAdmin(admin.ModelAdmin):
 	list_display = ('id','is_default',\
 			'account_status','credit_limit','account_type',\
 			'profile','gateway_profile_list',)
-	search_fields = ('profile__user__username','profile__user__first_name','profile__user__last_name',)
+	search_fields = ('profile__user__username','profile__user__first_name','profile__user__last_name','gateway_profile__msisdn__phone_number',)
 	list_filter = ('account_type','is_default','account_status')
 admin.site.register(Account, AccountAdmin)
   
@@ -73,7 +73,9 @@ class AccountManagerAdmin(admin.ModelAdmin):
 			'source_account__profile__user__first_name',\
 			'dest_account__profile__user__first_name',\
 			'source_account__profile__user__username',\
-			'dest_account__profile__user__username',)
+			'dest_account__profile__user__username',
+			'source_account__gateway_profile__msisdn__phone_number',
+			'dest_account__gateway_profile__msisdn__phone_number',)
 admin.site.register(AccountManager, AccountManagerAdmin)  
   
 class SavingsCreditManagerAdmin(admin.ModelAdmin):
