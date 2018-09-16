@@ -543,19 +543,6 @@ class System(Wrappers):
 				if charge:
 					gl_amount = charge
 
-					#Get Charge amount and transfer charge amount to charge account (just like MIPAY LEDGER)
-					gl_charge = Decimal(0)
-					gl_charge_list = AccountCharge.objects.filter(account_type=session_account.account_type, min_amount__lte=Decimal(amount), service__name=payload['SERVICE'],\
-							max_amount__gte=Decimal(amount),credit=False)
-					if 'payment_method' in payload.keys():
-						gl_charge_list = gl_charge_list.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
-					for c in gl_charge_list:
-						if c.is_percentage:
-							gl_charge = gl_charge + ((c.charge_value/100)*Decimal(amount))
-						else:
-							gl_charge = gl_charge+c.charge_value		
-
-
 					#Ensure Branch does not conflict to give more than one result
 					gl_account_type = AccountType.objects.filter(product_item__currency__code=payload['currency'],\
 								product_item__product_type__name='Ledger Account',\
@@ -567,6 +554,19 @@ class System(Wrappers):
 
 					gl_account_manager = AccountManager.objects.filter(dest_account = gl_acccount[0],dest_account__account_type=gl_account_type[0]).order_by('-date_created')
 	
+					#Get Charge amount and transfer charge amount to charge account (just like MIPAY LEDGER)
+					gl_charge = Decimal(0)
+					gl_charge_list = AccountCharge.objects.filter(account_type=gl_acccount[0].account_type, min_amount__lte=Decimal(gl_amount), service__name=payload['SERVICE'],\
+							max_amount__gte=Decimal(gl_amount),credit=False)
+					if 'payment_method' in payload.keys():
+						gl_charge_list = gl_charge_list.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
+					for c in gl_charge_list:
+						if c.is_percentage:
+							gl_charge = gl_charge + ((c.charge_value/100)*Decimal(gl_amount))
+						else:
+							gl_charge = gl_charge+c.charge_value		
+
+
 					#gl account #GL A/c ALWAYS adds Charges (GL also Charge Account)
 					if len(gl_account_manager)>0:
 						gl_balance_bf = Decimal(gl_account_manager[0].balance_bf) + (Decimal(gl_amount) + gl_charge)
@@ -644,19 +644,6 @@ class System(Wrappers):
 				if charge:
 					gl_amount = charge
 
-					gl_charge = Decimal(0)
-					gl_charge_list = AccountCharge.objects.filter(account_type=session_account.account_type, min_amount__lte=Decimal(amount), service__name=payload['SERVICE'],\
-							max_amount__gte=Decimal(amount),credit=True)
-					if 'payment_method' in payload.keys():
-						gl_charge_list = gl_charge_list.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
-
-					for c in gl_charge_list:
-						if c.is_percentage:
-							gl_charge = gl_charge + ((c.charge_value/100)*Decimal(amount))
-						else:
-							gl_charge = gl_charge+c.charge_value		
-
-
 					#Ensure Branch does not conflict to give more than one result
 					gl_account_type = AccountType.objects.filter(product_item__currency__code=payload['currency'],\
 								product_item__product_type__name='Ledger Account',\
@@ -667,6 +654,19 @@ class System(Wrappers):
 					gl_acccount = Account.objects.filter(account_status__name='ACTIVE',account_type=gl_account_type[0])
 
 					gl_account_manager = AccountManager.objects.filter(dest_account = gl_acccount[0], dest_account__account_type=gl_account_type[0]).order_by('-date_created')
+
+					gl_charge = Decimal(0)
+					gl_charge_list = AccountCharge.objects.filter(account_type=gl_acccount[0].account_type, min_amount__lte=Decimal(gl_amount), service__name=payload['SERVICE'],\
+							max_amount__gte=Decimal(gl_amount),credit=True)
+					if 'payment_method' in payload.keys():
+						gl_charge_list = gl_charge_list.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
+
+					for c in gl_charge_list:
+						if c.is_percentage:
+							gl_charge = gl_charge + ((c.charge_value/100)*Decimal(gl_amount))
+						else:
+							gl_charge = gl_charge+c.charge_value		
+
 
 
 					#gl account #GL A/c ALWAYS adds Charges (GL also Charge Account)
