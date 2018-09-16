@@ -578,6 +578,12 @@ class System(Wrappers):
 						amount=Decimal(gl_amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
 						charge=gl_charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
 						balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
+	
+					if 'paygate_incoming_id' in payload.keys():
+						gl_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
+                        		if 'paygate_outgoing_id' in payload.keys():
+                                		gl_manager.outgoing_payment = Incoming.objects.get(id=payload['paygate_outgoing_id'])
+
 					gl_manager.save()
 
 				payload['account_manager_id'] = session_manager.id
@@ -667,8 +673,6 @@ class System(Wrappers):
 						else:
 							gl_charge = gl_charge+c.charge_value		
 
-
-
 					#gl account #GL A/c ALWAYS adds Charges (GL also Charge Account)
 					if len(gl_account_manager)>0:
 						gl_balance_bf = Decimal((gl_account_manager[0].balance_bf + gl_charge) - Decimal(gl_amount))
@@ -680,6 +684,11 @@ class System(Wrappers):
 						amount=Decimal(gl_amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
 						charge=gl_charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
 						balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
+	
+					if 'paygate_incoming_id' in payload.keys():
+						gl_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
+                        		if 'paygate_outgoing_id' in payload.keys():
+                                		gl_manager.outgoing_payment = Incoming.objects.get(id=payload['paygate_outgoing_id'])
 
 					gl_manager.save()
 
@@ -724,14 +733,6 @@ class System(Wrappers):
 			else:
 				session_account = Account.objects.none()
 
-
-			'''
-			if 'account_type_id' in payload.keys():
-				session_account = session_account.filter(account_type__id=payload['account_type_id'])
-
-			if 'account_name' in payload.keys():
-				session_account = session_account.filter(account_type__name=payload['account_name'])
-			'''
 			if 'currency' in payload.keys():
 				session_account = session_account.filter(account_type__product_item__currency__code=payload['currency'])
 
@@ -795,6 +796,95 @@ class System(Wrappers):
 			payload['response_status'] = '96'
 			lgr.info("Error on get ledger account: %s" % e)
 		return payload
+
+
+	def get_institution_account(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			if 'session_gateway_profile_id' in payload.keys():
+				session_gateway_profile_list = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,id=payload['session_gateway_profile_id'])
+			else:
+				session_gateway_profile_list = GatewayProfile.objects.none()
+
+			if session_gateway_profile_list.exists():
+				session_account = Account.objects.filter(account_status__name='ACTIVE', institution=session_gateway_profile_list[0].institution)
+			else:
+				session_account = Account.objects.filter(account_status__name='ACTIVE', institution=gateway_profile.institution)
+
+			#Filters
+			if 'account_type_id' in payload.keys():
+				session_account = session_account.filter(account_type__id=payload['account_type_id'])
+
+			if 'account_name' in payload.keys():
+				session_account = session_account.filter(account_type__name=payload['account_name'])
+
+			if 'currency' in payload.keys():
+				session_account = session_account.filter(account_type__product_item__currency__code=payload['currency'])
+
+			if 'institution_id' in payload.keys():
+				session_account = session_account.filter(Q(account_type__institution__id=payload['institution_id'])|Q(account_type__institution=None))
+
+			if session_account.exists():
+				payload['session_account_id'] = session_account[0].id
+
+				payload['response_status'] = '00'
+				payload['response'] = 'Account Captured'
+
+			else:
+				if session_gateway_profile_list.exists():
+					institution = session_gateway_profile_list[0].institution
+				else:
+					institution = gateway_profile.institution
+
+				#create account
+				if 'currency' in payload.keys():
+					currency = Currency.objects.get(code=payload['currency'])
+				else:
+					currency = Currency.objects.get(code='KES')
+
+				status = AccountStatus.objects.get(name='ACTIVE')
+
+				account_type = AccountType.objects.filter(Q(product_item__currency=currency),\
+						Q(gateway=gateway_profile.gateway),\
+						~Q(product_item__product_type__name='Ledger Account'))
+
+				lgr.info('Account Type: %s' % account_type)
+				if 'account_type' in payload.keys():
+					account_type = account_type.filter(name=payload['account_type'])
+
+				lgr.info('Account Type: %s' % account_type)
+				if 'account_type_id' in payload.keys():
+					account_type = account_type.filter(id=payload['account_type_id'])
+
+				lgr.info('Account Type: %s' % account_type)
+				if 'institution_id' in payload.keys():
+					account_type = account_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+
+				lgr.info('Account Type: %s' % account_type)
+				if account_type.exists():
+					session_account = Account(institution=institution,\
+							account_status=status, account_type=account_type[0])
+
+					#Check if institution account is first then default
+					if Account.objects.filter(institution=institution,\
+					 account_type__gateway=gateway_profile.gateway, account_type__deposit_taking=True).exists() == False and account_type[0].deposit_taking:
+						session_account.is_default = True
+
+					session_account.save()
+
+					payload['session_account_id'] = session_account.id
+					payload['response_status'] = '00'
+					payload['response'] = 'Account Captured'
+				else:
+					payload['response_status'] = '25'
+					payload['response'] = 'Account Type Does not Exist'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on get account: %s" % e)
+		return payload
+
+
 
 
 

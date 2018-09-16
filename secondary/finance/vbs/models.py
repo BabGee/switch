@@ -65,18 +65,6 @@ class AccountStatus(models.Model):
 	def __unicode__(self):
 		return u'%s' % (self.name)
 
-class InstitutionAccount(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	institution = models.ForeignKey(Institution, null=True, blank=True) #Account Owner
-	is_default = models.NullBooleanField(default=False)
-	account_status = models.ForeignKey(AccountStatus)	
-	credit_limit = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
-	account_type = models.ForeignKey(AccountType)
-	def __unicode__(self):
-		return u'%s %s %s' % (self.institution, self.is_default, self.account_type)
-  
- 
 class Account(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
@@ -85,6 +73,7 @@ class Account(models.Model):
 	credit_limit = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	account_type = models.ForeignKey(AccountType)
 	profile = models.ForeignKey(Profile, null=True, blank=True) #Account Owner
+	institution = models.ForeignKey(Institution, null=True, blank=True) #Account Owner
 	gateway_profile = models.ManyToManyField(GatewayProfile, blank=True)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.profile, self.is_default, self.account_type)

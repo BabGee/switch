@@ -27,18 +27,10 @@ class AccountStatusAdmin(admin.ModelAdmin):
 	list_display = ('name','description',)
 admin.site.register(AccountStatus, AccountStatusAdmin)
 
-class InstitutionAccountAdmin(admin.ModelAdmin):
-	list_display = ('id','institution', 'is_default',\
-			'account_status','credit_limit','account_type',)
-	search_fields = ('institution__name',)
-	list_filter = ('account_type','is_default','account_status')
-admin.site.register(InstitutionAccount, InstitutionAccountAdmin)
-  
-
 class AccountAdmin(admin.ModelAdmin):
 	list_display = ('id','is_default',\
 			'account_status','credit_limit','account_type',\
-			'profile','gateway_profile_list',)
+			'profile','institution','gateway_profile_list',)
 	search_fields = ('profile__user__username','profile__user__first_name','profile__user__last_name','gateway_profile__msisdn__phone_number',)
 	list_filter = ('account_type','is_default','account_status')
 admin.site.register(Account, AccountAdmin)
@@ -55,7 +47,7 @@ class AccountManagerAdmin(admin.ModelAdmin):
 	list_display = ('id','credit','transaction_reference','is_reversal','source_account','dest_account',\
 			'amount','charge','balance_bf','credit_paid','credit_time',\
 			'credit_due_date','credit_overdue_list','date_modified','date_created','updated',\
-			'incoming_payment','outgoing_payment',)
+			'incoming_payment','outgoing_payment','status',)
 	list_filter = ('credit','source_account__account_type__gateway','dest_account__account_type__gateway',\
 			'source_account__account_type','dest_account__account_type','credit_paid','credit_overdue','updated','status',)
         search_fields = ('id','transaction_reference','source_account__profile__user__username',\
