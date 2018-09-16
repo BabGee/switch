@@ -569,9 +569,9 @@ class System(Wrappers):
 
 					#gl account #GL A/c ALWAYS adds Charges (GL also Charge Account)
 					if len(gl_account_manager)>0:
-						gl_balance_bf = Decimal(gl_account_manager[0].balance_bf) + (Decimal(gl_amount) + gl_charge)
+						gl_balance_bf = Decimal(gl_account_manager[0].balance_bf) + (Decimal(gl_amount) - gl_charge)
 					else:
-						gl_balance_bf = Decimal(gl_amount) + gl_charge
+						gl_balance_bf = Decimal(gl_amount) - gl_charge
 
 					gl_manager = AccountManager(credit=True, transaction_reference=payload['bridge__transaction_id'],\
 						source_account=session_account,dest_account=gl_acccount[0],\
