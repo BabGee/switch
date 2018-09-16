@@ -541,7 +541,7 @@ class System(Wrappers):
 				if 'credit_overdue_id' in payload.keys():
 					session_manager.credit_overdue.add(CreditOverdue.objects.get(id=payload['credit_overdue_id']))
 				if charge:
-					gl_amount = charge
+					gl_amount = amount + charge
 
 					#Ensure Branch does not conflict to give more than one result
 					gl_account_type = AccountType.objects.filter(product_item__currency__code=payload['currency'],\
@@ -648,7 +648,7 @@ class System(Wrappers):
 
 				session_manager.save()
 				if charge:
-					gl_amount = charge
+					gl_amount = amount + charge
 
 					#Ensure Branch does not conflict to give more than one result
 					gl_account_type = AccountType.objects.filter(product_item__currency__code=payload['currency'],\
