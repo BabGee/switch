@@ -113,21 +113,14 @@ class CreditOverdue(models.Model):
 	def __unicode__(self):
 		return u'%s' % (self.description)
 
-
-class InstitutionAccountManager(models.Model):
-        date_modified = models.DateTimeField(auto_now=True)
-        date_created = models.DateTimeField(auto_now_add=True)
-	credit = models.BooleanField(default=False) #Dr | Cr
-	transaction_reference = models.CharField(max_length=45, null=True, blank=True) #Transaction ID
-	is_reversal = models.BooleanField(default=False)
-	source_account = models.ForeignKey(Account)
-	dest_account = models.ForeignKey(Account, related_name="institution_dest_account")
-	amount = models.DecimalField(max_digits=19, decimal_places=2)
-	charge = models.DecimalField(max_digits=19, decimal_places=2)
-	balance_bf = models.DecimalField(max_digits=19, decimal_places=2)
-	updated = models.BooleanField(default=False, help_text="True for record that is not the last record")
+ 
+class ManagerStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
 	def __unicode__(self):
-		return u'%s %s %s' % (self.id, self.credit, self.credit_paid)
+		return u'%s' % (self.name)
 
 class AccountManager(models.Model):
         date_modified = models.DateTimeField(auto_now=True)
@@ -135,7 +128,7 @@ class AccountManager(models.Model):
 	credit = models.BooleanField(default=False) #Dr | Cr
 	transaction_reference = models.CharField(max_length=45, null=True, blank=True) #Transaction ID
 	is_reversal = models.BooleanField(default=False)
-	source_account = models.ForeignKey(Account)
+	source_account = models.ForeignKey(Account, null=True, blank=True)
 	dest_account = models.ForeignKey(Account, related_name="dest_account")
 	amount = models.DecimalField(max_digits=19, decimal_places=2)
 	charge = models.DecimalField(max_digits=19, decimal_places=2)
@@ -148,6 +141,7 @@ class AccountManager(models.Model):
 	credit_overdue_update = models.BooleanField(default=False, help_text="True for record that is not the last record")
 	incoming_payment = models.ForeignKey(Incoming, null=True, blank=True)
         outgoing_payment = models.ForeignKey(Outgoing, null=True, blank=True)
+	status = models.ForeignKey(ManagerStatus, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.id, self.credit, self.credit_paid)
 	def credit_overdue_list(self):

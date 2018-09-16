@@ -465,20 +465,7 @@ class System(Wrappers):
 			session_account = Account.objects.get(id=payload['session_account_id'])
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			#Ensure Branch does not conflict to give more than one result
-			gl_account_type = AccountType.objects.filter(product_item__currency__code=payload['currency'],\
-						product_item__product_type__name='Ledger Account',\
-						gateway=session_account.account_type.gateway)
-			if 'institution_id' in payload.keys():
-				gl_account_type = gl_account_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
-
-
-			gl_acccount = Account.objects.filter(account_status__name='ACTIVE',account_type=gl_account_type[0])
-
-
-
 			session_account_manager = AccountManager.objects.select_for_update(nowait=True).filter(dest_account = session_account,dest_account__account_type=session_account.account_type).order_by('-date_created')
-			gl_account_manager = AccountManager.objects.filter(dest_account = gl_acccount[0],dest_account__account_type=gl_account_type[0]).order_by('-date_created')
 
 
 			amount = Decimal(payload['amount']) if 'amount' in payload.keys() else Decimal(0)
@@ -516,12 +503,6 @@ class System(Wrappers):
 						charge = charge + ((c.interest_rate/100)*(int(payload['loan_time'])/c.interest_time)*Decimal(amount))
 
 				#payload['quantity'] = Decimal(amount)+charge
-	
-			#gl account #GL A/c ALWAYS adds Charges (GL also Charge Account)
-			if len(gl_account_manager)>0:
-				gl_balance_bf = Decimal(gl_account_manager[0].balance_bf) + (Decimal(amount) + charge)
-			else:
-				gl_balance_bf = Decimal(amount) + charge
 
 			#session account
 			if session_account_manager.exists():
@@ -541,7 +522,7 @@ class System(Wrappers):
 				if session_account_manager.exists():session_account_manager.filter(id=session_account_manager[:1][0].id).update(updated=True)
 
 				session_manager = AccountManager(credit=False, transaction_reference=payload['bridge__transaction_id'],\
-					source_account=gl_acccount[0],dest_account=session_account,\
+					dest_account=session_account,\
 					amount=Decimal(amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					balance_bf=session_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
@@ -559,13 +540,45 @@ class System(Wrappers):
 
 				if 'credit_overdue_id' in payload.keys():
 					session_manager.credit_overdue.add(CreditOverdue.objects.get(id=payload['credit_overdue_id']))
+				if charge:
+					gl_amount = charge
 
-				gl_manager = AccountManager(credit=True, transaction_reference=payload['bridge__transaction_id'],\
-					source_account=session_account,dest_account=gl_acccount[0],\
-					amount=Decimal(amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
-					charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
-					balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
-				gl_manager.save()
+					#Get Charge amount and transfer charge amount to charge account (just like MIPAY LEDGER)
+					gl_charge = Decimal(0)
+					gl_charge_list = AccountCharge.objects.filter(account_type=session_account.account_type, min_amount__lte=Decimal(amount), service__name=payload['SERVICE'],\
+							max_amount__gte=Decimal(amount),credit=False)
+					if 'payment_method' in payload.keys():
+						gl_charge_list = gl_charge_list.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
+					for c in gl_charge_list:
+						if c.is_percentage:
+							gl_charge = gl_charge + ((c.charge_value/100)*Decimal(amount))
+						else:
+							gl_charge = gl_charge+c.charge_value		
+
+
+					#Ensure Branch does not conflict to give more than one result
+					gl_account_type = AccountType.objects.filter(product_item__currency__code=payload['currency'],\
+								product_item__product_type__name='Ledger Account',\
+								gateway=session_account.account_type.gateway)
+					if 'institution_id' in payload.keys():
+						gl_account_type = gl_account_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+
+					gl_acccount = Account.objects.filter(account_status__name='ACTIVE',account_type=gl_account_type[0])
+
+					gl_account_manager = AccountManager.objects.filter(dest_account = gl_acccount[0],dest_account__account_type=gl_account_type[0]).order_by('-date_created')
+	
+					#gl account #GL A/c ALWAYS adds Charges (GL also Charge Account)
+					if len(gl_account_manager)>0:
+						gl_balance_bf = Decimal(gl_account_manager[0].balance_bf) + (Decimal(gl_amount) + gl_charge)
+					else:
+						gl_balance_bf = Decimal(gl_amount) + gl_charge
+
+					gl_manager = AccountManager(credit=True, transaction_reference=payload['bridge__transaction_id'],\
+						source_account=session_account,dest_account=gl_acccount[0],\
+						amount=Decimal(gl_amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
+						charge=gl_charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
+						balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
+					gl_manager.save()
 
 				payload['account_manager_id'] = session_manager.id
 				payload['balance_out'] = session_manager.amount
@@ -591,18 +604,7 @@ class System(Wrappers):
 
 			session_account = Account.objects.get(id=payload['session_account_id'])
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-
-			#Ensure Branch does not conflict to give more than one result
-			gl_account_type = AccountType.objects.filter(product_item__currency__code=payload['currency'],\
-						product_item__product_type__name='Ledger Account',\
-						gateway=session_account.account_type.gateway)
-			if 'institution_id' in payload.keys():
-				gl_account_type = gl_account_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
-
-			gl_acccount = Account.objects.filter(account_status__name='ACTIVE',account_type=gl_account_type[0])
-
 			session_account_manager = AccountManager.objects.select_for_update(nowait=True).filter(dest_account = session_account, dest_account__account_type=session_account.account_type).order_by('-date_created')
-			gl_account_manager = AccountManager.objects.filter(dest_account = gl_acccount[0], dest_account__account_type=gl_account_type[0]).order_by('-date_created')
 
 			amount = Decimal(payload['amount']) if 'amount' in payload.keys() else Decimal(0)
 			charge = Decimal(0)
@@ -616,13 +618,6 @@ class System(Wrappers):
 					charge = charge + ((c.charge_value/100)*Decimal(amount))
 				else:
 					charge = charge+c.charge_value		
-
-			#gl account #GL A/c ALWAYS adds Charges (GL also Charge Account)
-			if len(gl_account_manager)>0:
-				gl_balance_bf = Decimal((gl_account_manager[0].balance_bf + charge) - Decimal(amount))
-			else:
-				gl_balance_bf = Decimal((Decimal(0) + charge) - Decimal(amount))
-
 			#session account
 			if session_account_manager.exists():
 				session_balance_bf = Decimal(session_account_manager[0].balance_bf) + (Decimal(amount) - charge)
@@ -635,7 +630,7 @@ class System(Wrappers):
 				if session_account_manager.exists():session_account_manager.filter(id=session_account_manager[:1][0].id).update(updated=True)
 
 				session_manager = AccountManager(credit=True, transaction_reference=payload['bridge__transaction_id'],\
-					source_account=gl_acccount[0],dest_account=session_account,\
+					dest_account=session_account,\
 					amount=Decimal(amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
 					balance_bf=session_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
@@ -646,14 +641,47 @@ class System(Wrappers):
                                 	session_manager.outgoing_payment = Incoming.objects.get(id=payload['paygate_outgoing_id'])
 
 				session_manager.save()
+				if charge:
+					gl_amount = charge
 
-				gl_manager = AccountManager(credit=False, transaction_reference=payload['bridge__transaction_id'],\
-					source_account=session_account,dest_account=gl_acccount[0],\
-					amount=Decimal(amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
-					charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
-					balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
+					gl_charge = Decimal(0)
+					gl_charge_list = AccountCharge.objects.filter(account_type=session_account.account_type, min_amount__lte=Decimal(amount), service__name=payload['SERVICE'],\
+							max_amount__gte=Decimal(amount),credit=True)
+					if 'payment_method' in payload.keys():
+						gl_charge_list = gl_charge_list.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
 
-				gl_manager.save()
+					for c in gl_charge_list:
+						if c.is_percentage:
+							gl_charge = gl_charge + ((c.charge_value/100)*Decimal(amount))
+						else:
+							gl_charge = gl_charge+c.charge_value		
+
+
+					#Ensure Branch does not conflict to give more than one result
+					gl_account_type = AccountType.objects.filter(product_item__currency__code=payload['currency'],\
+								product_item__product_type__name='Ledger Account',\
+								gateway=session_account.account_type.gateway)
+					if 'institution_id' in payload.keys():
+						gl_account_type = gl_account_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+
+					gl_acccount = Account.objects.filter(account_status__name='ACTIVE',account_type=gl_account_type[0])
+
+					gl_account_manager = AccountManager.objects.filter(dest_account = gl_acccount[0], dest_account__account_type=gl_account_type[0]).order_by('-date_created')
+
+
+					#gl account #GL A/c ALWAYS adds Charges (GL also Charge Account)
+					if len(gl_account_manager)>0:
+						gl_balance_bf = Decimal((gl_account_manager[0].balance_bf + gl_charge) - Decimal(gl_amount))
+					else:
+						gl_balance_bf = Decimal((Decimal(0) + gl_charge) - Decimal(gl_amount))
+
+					gl_manager = AccountManager(credit=False, transaction_reference=payload['bridge__transaction_id'],\
+						source_account=session_account,dest_account=gl_acccount[0],\
+						amount=Decimal(gl_amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
+						charge=gl_charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
+						balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
+
+					gl_manager.save()
 
 				payload['account_manager_id'] = session_manager.id
 				payload['balance_in'] = session_manager.amount
@@ -722,6 +750,51 @@ class System(Wrappers):
 			lgr.info("Error on get account: %s" % e)
 		return payload
 
+
+
+
+	def get_ledger_account(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			if 'session_gateway_profile_id' in payload.keys():
+				session_gateway_profile_list = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,id=payload['session_gateway_profile_id'])
+			else:
+				session_gateway_profile_list = GatewayProfile.objects.none()
+
+			if session_gateway_profile_list.exists():
+				session_account = Account.objects.filter(account_status__name='ACTIVE', profile=None, account_type__product_item__product_type__name='Ledger Account',\
+								account_type__product_item__institution=session_gateway_profile_list[0].institution)
+			else:
+				session_account = Account.objects.filter(account_status__name='ACTIVE',  profile=None,account_type__product_item__product_type__name='Ledger Account',\
+								account_type__product_item__institution=gateway_profile.institution)
+
+			#Filters
+			if 'account_type_id' in payload.keys():
+				session_account = session_account.filter(account_type__id=payload['account_type_id'])
+
+			if 'account_name' in payload.keys():
+				session_account = session_account.filter(account_type__name=payload['account_name'])
+
+			if 'currency' in payload.keys():
+				session_account = session_account.filter(account_type__product_item__currency__code=payload['currency'])
+
+			if 'institution_id' in payload.keys():
+				session_account = session_account.filter(Q(account_type__institution__id=payload['institution_id'])|Q(account_type__institution=None))
+
+			if session_account.exists():
+				payload['session_account_id'] = session_account[0].id
+
+				payload['response_status'] = '00'
+				payload['response'] = 'Account Captured'
+
+			else:
+				payload['response_status'] = '25'
+				payload['response'] = 'Ledger Account Does not Exist'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on get ledger account: %s" % e)
+		return payload
 
 
 

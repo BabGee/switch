@@ -50,14 +50,6 @@ admin.site.register(CreditOverdueStatus, CreditOverdueStatusAdmin)
 class CreditOverdueAdmin(admin.ModelAdmin):
 	list_display = ('id','description','overdue_time','notification_details','service','account_type','status','product_item')
 admin.site.register(CreditOverdue, CreditOverdueAdmin)
-     
-class InstitutionAccountManagerAdmin(admin.ModelAdmin):
-	list_display = ('id','credit','transaction_reference','is_reversal','source_account','dest_account',\
-			'amount','charge','balance_bf','date_modified','date_created','updated',)
-	list_filter = ('credit','updated',)
-        search_fields = ('id','transaction_reference',)
-admin.site.register(InstitutionAccountManager, InstitutionAccountManagerAdmin)  
-
    
 class AccountManagerAdmin(admin.ModelAdmin):
 	list_display = ('id','credit','transaction_reference','is_reversal','source_account','dest_account',\
@@ -65,7 +57,7 @@ class AccountManagerAdmin(admin.ModelAdmin):
 			'credit_due_date','credit_overdue_list','date_modified','date_created','updated',\
 			'incoming_payment','outgoing_payment',)
 	list_filter = ('credit','source_account__account_type__gateway','dest_account__account_type__gateway',\
-			'source_account__account_type','dest_account__account_type','credit_paid','credit_overdue','updated',)
+			'source_account__account_type','dest_account__account_type','credit_paid','credit_overdue','updated','status',)
         search_fields = ('id','transaction_reference','source_account__profile__user__username',\
 			'dest_account__profile__user__username',\
 			'source_account__profile__user__last_name',\
