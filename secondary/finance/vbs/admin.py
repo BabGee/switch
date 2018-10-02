@@ -20,7 +20,7 @@ admin.site.register(SavingsCreditType, SavingsCreditTypeAdmin)
 class AccountChargeAdmin(admin.ModelAdmin):
 	list_display = ('name','account_type', 'min_amount','max_amount',\
 			'charge_value','is_percentage','description','credit',\
-			'payment_method_list','service_list',)
+			'for_charge','payment_method_list','service_list',)
 admin.site.register(AccountCharge, AccountChargeAdmin)
 
 class AccountStatusAdmin(admin.ModelAdmin):
@@ -47,7 +47,7 @@ class AccountManagerAdmin(admin.ModelAdmin):
 	list_display = ('id','credit','transaction_reference','is_reversal','source_account','dest_account',\
 			'amount','charge','balance_bf','credit_paid','credit_time',\
 			'credit_due_date','credit_overdue_list','date_modified','date_created','updated',\
-			'incoming_payment','outgoing_payment','status',)
+			'incoming_payment','outgoing_payment','status','purchase_order',)
 	list_filter = ('credit','source_account__account_type__gateway','dest_account__account_type__gateway',\
 			'source_account__account_type','dest_account__account_type','credit_paid','credit_overdue','updated','status',)
         search_fields = ('id','transaction_reference','source_account__profile__user__username',\

@@ -535,56 +535,61 @@ class System(Wrappers):
 					session_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
                         	if 'paygate_outgoing_id' in payload.keys():
                                 	session_manager.outgoing_payment = Incoming.objects.get(id=payload['paygate_outgoing_id'])
+				if 'purchase_order_id' in payload.keys():
+					session_manager.purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 
 				session_manager.save()
 
 				if 'credit_overdue_id' in payload.keys():
 					session_manager.credit_overdue.add(CreditOverdue.objects.get(id=payload['credit_overdue_id']))
-				if charge:
-					gl_amount = amount + charge
 
-					#Ensure Branch does not conflict to give more than one result
-					gl_account_type = AccountType.objects.filter(product_item__currency__code=payload['currency'],\
-								product_item__product_type__name='Ledger Account',\
-								gateway=session_account.account_type.gateway)
-					if 'institution_id' in payload.keys():
-						gl_account_type = gl_account_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+				gl_amount = amount + charge
 
-					gl_acccount = Account.objects.filter(account_status__name='ACTIVE',account_type=gl_account_type[0])
+				#Ensure Branch does not conflict to give more than one result
+				gl_account_type = AccountType.objects.filter(product_item__currency__code=payload['currency'],\
+							product_item__product_type__name='Ledger Account',\
+							gateway=session_account.account_type.gateway)
+				if 'institution_id' in payload.keys():
+					gl_account_type = gl_account_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
 
-					gl_account_manager = AccountManager.objects.filter(dest_account = gl_acccount[0],dest_account__account_type=gl_account_type[0]).order_by('-date_created')
+				gl_acccount = Account.objects.filter(account_status__name='ACTIVE',account_type=gl_account_type[0])
+
+				gl_account_manager = AccountManager.objects.filter(dest_account = gl_acccount[0],dest_account__account_type=gl_account_type[0]).order_by('-date_created')
 	
-					#Get Charge amount and transfer charge amount to charge account (just like MIPAY LEDGER)
-					gl_charge = Decimal(0)
-					gl_charge_list = AccountCharge.objects.filter(account_type=gl_acccount[0].account_type, min_amount__lte=Decimal(gl_amount), service__name=payload['SERVICE'],\
-							max_amount__gte=Decimal(gl_amount),credit=False)
-					if 'payment_method' in payload.keys():
-						gl_charge_list = gl_charge_list.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
-					for c in gl_charge_list:
-						if c.is_percentage:
-							gl_charge = gl_charge + ((c.charge_value/100)*Decimal(gl_amount))
-						else:
-							gl_charge = gl_charge+c.charge_value		
-
-
-					#gl account #GL A/c ALWAYS adds Charges (GL also Charge Account)
-					if len(gl_account_manager)>0:
-						gl_balance_bf = Decimal(gl_account_manager[0].balance_bf) + (Decimal(gl_amount) - gl_charge)
+				#Get Charge amount and transfer charge amount to charge account (just like MIPAY LEDGER)
+				gl_charge = Decimal(0)
+				gl_charge_list = AccountCharge.objects.filter(account_type=gl_acccount[0].account_type, min_amount__lte=Decimal(gl_amount), service__name=payload['SERVICE'],\
+						max_amount__gte=Decimal(gl_amount),credit=False)
+				if 'payment_method' in payload.keys():
+					gl_charge_list = gl_charge_list.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
+				for c in gl_charge_list:
+					if c.is_percentage:
+						charge_amount = charge if c.for_charge else gl_amount
+						gl_charge = gl_charge + ((c.charge_value/100)*Decimal(charge_amount))
 					else:
-						gl_balance_bf = Decimal(gl_amount) - gl_charge
+						gl_charge = gl_charge+c.charge_value		
 
-					gl_manager = AccountManager(credit=True, transaction_reference=payload['bridge__transaction_id'],\
-						source_account=session_account,dest_account=gl_acccount[0],\
-						amount=Decimal(gl_amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
-						charge=gl_charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
-						balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
+
+				#gl account #GL A/c ALWAYS adds Charges (GL also Charge Account)
+				if len(gl_account_manager)>0:
+					gl_balance_bf = Decimal(gl_account_manager[0].balance_bf) + (Decimal(gl_amount) - gl_charge)
+				else:
+					gl_balance_bf = Decimal(gl_amount) - gl_charge
+
+				gl_manager = AccountManager(credit=True, transaction_reference=payload['bridge__transaction_id'],\
+					source_account=session_account,dest_account=gl_acccount[0],\
+					amount=Decimal(gl_amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
+					charge=gl_charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
+					balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
 	
-					if 'paygate_incoming_id' in payload.keys():
-						gl_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
-                        		if 'paygate_outgoing_id' in payload.keys():
-                                		gl_manager.outgoing_payment = Incoming.objects.get(id=payload['paygate_outgoing_id'])
+				if 'paygate_incoming_id' in payload.keys():
+					gl_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
+                       		if 'paygate_outgoing_id' in payload.keys():
+                               		gl_manager.outgoing_payment = Incoming.objects.get(id=payload['paygate_outgoing_id'])
+				if 'purchase_order_id' in payload.keys():
+					gl_manager.purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 
-					gl_manager.save()
+				gl_manager.save()
 
 				payload['account_manager_id'] = session_manager.id
 				payload['balance_out'] = session_manager.amount
@@ -645,52 +650,57 @@ class System(Wrappers):
 					session_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
                         	if 'paygate_outgoing_id' in payload.keys():
                                 	session_manager.outgoing_payment = Incoming.objects.get(id=payload['paygate_outgoing_id'])
+				if 'purchase_order_id' in payload.keys():
+					session_manager.purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 
 				session_manager.save()
-				if charge:
-					gl_amount = amount + charge
 
-					#Ensure Branch does not conflict to give more than one result
-					gl_account_type = AccountType.objects.filter(product_item__currency__code=payload['currency'],\
-								product_item__product_type__name='Ledger Account',\
-								gateway=session_account.account_type.gateway)
-					if 'institution_id' in payload.keys():
-						gl_account_type = gl_account_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+				gl_amount = amount + charge
 
-					gl_acccount = Account.objects.filter(account_status__name='ACTIVE',account_type=gl_account_type[0])
+				#Ensure Branch does not conflict to give more than one result
+				gl_account_type = AccountType.objects.filter(product_item__currency__code=payload['currency'],\
+							product_item__product_type__name='Ledger Account',\
+							gateway=session_account.account_type.gateway)
+				if 'institution_id' in payload.keys():
+					gl_account_type = gl_account_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
 
-					gl_account_manager = AccountManager.objects.filter(dest_account = gl_acccount[0], dest_account__account_type=gl_account_type[0]).order_by('-date_created')
+				gl_acccount = Account.objects.filter(account_status__name='ACTIVE',account_type=gl_account_type[0])
 
-					gl_charge = Decimal(0)
-					gl_charge_list = AccountCharge.objects.filter(account_type=gl_acccount[0].account_type, min_amount__lte=Decimal(gl_amount), service__name=payload['SERVICE'],\
-							max_amount__gte=Decimal(gl_amount),credit=True)
-					if 'payment_method' in payload.keys():
-						gl_charge_list = gl_charge_list.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
+				gl_account_manager = AccountManager.objects.filter(dest_account = gl_acccount[0], dest_account__account_type=gl_account_type[0]).order_by('-date_created')
 
-					for c in gl_charge_list:
-						if c.is_percentage:
-							gl_charge = gl_charge + ((c.charge_value/100)*Decimal(gl_amount))
-						else:
-							gl_charge = gl_charge+c.charge_value		
+				gl_charge = Decimal(0)
+				gl_charge_list = AccountCharge.objects.filter(account_type=gl_acccount[0].account_type, min_amount__lte=Decimal(gl_amount), service__name=payload['SERVICE'],\
+						max_amount__gte=Decimal(gl_amount),credit=True)
+				if 'payment_method' in payload.keys():
+					gl_charge_list = gl_charge_list.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
 
-					#gl account #GL A/c ALWAYS adds Charges (GL also Charge Account)
-					if len(gl_account_manager)>0:
-						gl_balance_bf = Decimal((gl_account_manager[0].balance_bf + gl_charge) - Decimal(gl_amount))
+				for c in gl_charge_list:
+					if c.is_percentage:
+						charge_amount = charge if c.for_charge else gl_amount
+						gl_charge = gl_charge + ((c.charge_value/100)*Decimal(charge_amount))
 					else:
-						gl_balance_bf = Decimal((Decimal(0) + gl_charge) - Decimal(gl_amount))
+						gl_charge = gl_charge+c.charge_value		
 
-					gl_manager = AccountManager(credit=False, transaction_reference=payload['bridge__transaction_id'],\
-						source_account=session_account,dest_account=gl_acccount[0],\
-						amount=Decimal(gl_amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
-						charge=gl_charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
-						balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
+				#gl account #GL A/c ALWAYS adds Charges (GL also Charge Account)
+				if len(gl_account_manager)>0:
+					gl_balance_bf = Decimal((gl_account_manager[0].balance_bf + gl_charge) - Decimal(gl_amount))
+				else:
+					gl_balance_bf = Decimal((Decimal(0) + gl_charge) - Decimal(gl_amount))
+
+				gl_manager = AccountManager(credit=False, transaction_reference=payload['bridge__transaction_id'],\
+					source_account=session_account,dest_account=gl_acccount[0],\
+					amount=Decimal(gl_amount).quantize(Decimal('.01'), rounding=ROUND_DOWN),
+					charge=gl_charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
+					balance_bf=gl_balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN))
 	
-					if 'paygate_incoming_id' in payload.keys():
-						gl_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
-                        		if 'paygate_outgoing_id' in payload.keys():
-                                		gl_manager.outgoing_payment = Incoming.objects.get(id=payload['paygate_outgoing_id'])
+				if 'paygate_incoming_id' in payload.keys():
+					gl_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
+                       		if 'paygate_outgoing_id' in payload.keys():
+                               		gl_manager.outgoing_payment = Incoming.objects.get(id=payload['paygate_outgoing_id'])
+				if 'purchase_order_id' in payload.keys():
+					gl_manager.purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 
-					gl_manager.save()
+				gl_manager.save()
 
 				payload['account_manager_id'] = session_manager.id
 				payload['balance_in'] = session_manager.amount
@@ -808,9 +818,9 @@ class System(Wrappers):
 				session_gateway_profile_list = GatewayProfile.objects.none()
 
 			if session_gateway_profile_list.exists():
-				session_account = Account.objects.filter(account_status__name='ACTIVE', institution=session_gateway_profile_list[0].institution)
+				session_account = Account.objects.filter(account_status__name='ACTIVE', institution=session_gateway_profile_list[0].institution, profile=None)
 			else:
-				session_account = Account.objects.filter(account_status__name='ACTIVE', institution=gateway_profile.institution)
+				session_account = Account.objects.filter(account_status__name='ACTIVE', institution=gateway_profile.institution, profile=None)
 
 			#Filters
 			if 'account_type_id' in payload.keys():
@@ -867,7 +877,7 @@ class System(Wrappers):
 							account_status=status, account_type=account_type[0])
 
 					#Check if institution account is first then default
-					if Account.objects.filter(institution=institution,\
+					if Account.objects.filter(institution=institution,profile=None,\
 					 account_type__gateway=gateway_profile.gateway, account_type__deposit_taking=True).exists() == False and account_type[0].deposit_taking:
 						session_account.is_default = True
 

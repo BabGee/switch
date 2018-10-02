@@ -1554,10 +1554,15 @@ class System(Wrappers):
 			payload['response_status'] = '96'
 		return payload
 
+
 	def update_profile_institution(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			if 'session_gateway_profile_id' in payload.keys():
+				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			else:
+				session_gateway_profile = gateway_profile
+			
 
 			if 'institution_id' in payload.keys():
 				session_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])

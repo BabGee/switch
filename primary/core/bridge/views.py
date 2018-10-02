@@ -212,7 +212,7 @@ class ServiceProcessor:
 
 				#process action
 				payload = Wrappers().create_payload(item, gateway_profile, payload)
-				lgr.info('#process action')
+				lgr.info('#process action \n {}\n'.format(payload))
 				if node_system.node_status.name == 'LOCAL API':
 					payload = Wrappers().call_api(item, item.command_function, payload)
 				elif node_system.node_status.name == 'EXT API':	

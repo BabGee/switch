@@ -48,6 +48,7 @@ class AccountCharge(models.Model):#Add either withdrawal/deposit charge, add ins
 	is_percentage = models.BooleanField(default=False)
 	description = models.CharField(max_length=50, blank=True)	
 	credit = models.BooleanField(default=False) #Dr | Cr (Credit/Debit Charge to amount)
+	for_charge = models.BooleanField(default=False) #Dr | Cr (Credit/Debit Charge to amount)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	service = models.ManyToManyField(Service, blank=True)	
  	def __unicode__(self):
@@ -131,6 +132,7 @@ class AccountManager(models.Model):
 	incoming_payment = models.ForeignKey(Incoming, null=True, blank=True)
         outgoing_payment = models.ForeignKey(Outgoing, null=True, blank=True)
 	status = models.ForeignKey(ManagerStatus, null=True, blank=True)
+	purchase_order = models.ForeignKey(PurchaseOrder, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.id, self.credit, self.credit_paid)
 	def credit_overdue_list(self):
