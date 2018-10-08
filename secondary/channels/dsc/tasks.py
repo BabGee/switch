@@ -2055,7 +2055,9 @@ class Wrappers:
 
         except Exception, e:
             lgr.info('Error on process_data_list: %s' % e)
-
+	#lgr.info(2058)
+	#lgr.info(cols)
+	#lgr.info(rows)
 	return cols,rows,lines,groups,data,min_id,max_id,t_count, push
 
 
@@ -2100,6 +2102,9 @@ class System(Wrappers):
 
             if data_list.exists():
 		cols, rows, lines, groups, data, min_id, max_id, t_count, push = self.process_data_list(data_list, payload, gateway_profile, profile_tz, data)
+		lgr.info(2105)
+		lgr.info(cols)
+		lgr.info(rows)
             else:
                 lgr.info('Not a Data List')
                 if 'survey' in data_name:
@@ -3343,20 +3348,6 @@ class System(Wrappers):
 
                     groups = sorted(collection)
                     data = rows
-
-                elif data_name == 'bid_ranking':
-
-		    from thirdparty.bidfather.models import Bid, BidApplication, BidRequirement, BidDocumentApplication, BidDocument, BidInvoice, BidRequirementApplication
-                    #bid_application_list = BidApplication.objects.filter(bid__id=payload['bid_id'])
-                    bid = Bid.objects.get(pk=payload['bid_id'])
-
-
-                    collection = []
-
-                    groups = sorted(collection)
-                    #data = rows
-                    data = bid.app_rankings(gateway_profile.institution,gateway_profile)
-
                 elif data_name == 'float_manager_list':
 
                     float_manager_list = FloatManager.objects.filter(institution=gateway_profile.institution)
