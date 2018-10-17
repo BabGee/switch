@@ -534,7 +534,7 @@ class System(Wrappers):
 				if 'paygate_incoming_id' in payload.keys():
 					session_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
                         	if 'paygate_outgoing_id' in payload.keys():
-                                	session_manager.outgoing_payment = Incoming.objects.get(id=payload['paygate_outgoing_id'])
+                                	session_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
 				if 'purchase_order_id' in payload.keys():
 					session_manager.purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 
@@ -585,7 +585,7 @@ class System(Wrappers):
 				if 'paygate_incoming_id' in payload.keys():
 					gl_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
                        		if 'paygate_outgoing_id' in payload.keys():
-                               		gl_manager.outgoing_payment = Incoming.objects.get(id=payload['paygate_outgoing_id'])
+                               		gl_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
 				if 'purchase_order_id' in payload.keys():
 					gl_manager.purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 
@@ -649,7 +649,7 @@ class System(Wrappers):
 				if 'paygate_incoming_id' in payload.keys():
 					session_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
                         	if 'paygate_outgoing_id' in payload.keys():
-                                	session_manager.outgoing_payment = Incoming.objects.get(id=payload['paygate_outgoing_id'])
+                                	session_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
 				if 'purchase_order_id' in payload.keys():
 					session_manager.purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 
@@ -696,7 +696,7 @@ class System(Wrappers):
 				if 'paygate_incoming_id' in payload.keys():
 					gl_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
                        		if 'paygate_outgoing_id' in payload.keys():
-                               		gl_manager.outgoing_payment = Incoming.objects.get(id=payload['paygate_outgoing_id'])
+                               		gl_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
 				if 'purchase_order_id' in payload.keys():
 					gl_manager.purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 
