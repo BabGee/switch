@@ -1,0 +1,36 @@
+{% extends 'editor/administration/gateway/layout.html' %}
+{% block tab %}
+
+
+
+    <div class="row">
+
+        <div class="col-md-12">
+
+            <ul>
+                {% for code in codes %}
+                    <li>
+
+                    {{ code }}
+
+                    {% if code.channel.name == 'USSD' %}
+
+                        <a href="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd">USSD</a>
+
+                    {% endif %}
+
+                    <hr>
+                    <a href="/admin/vcs/code/{{ code.pk }}/change/">/change</a>
+                    </li>
+                {% endfor %}
+            </ul>
+
+
+        </div>
+
+
+    </div>
+
+
+
+{% endblock %}

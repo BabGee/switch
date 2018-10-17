@@ -464,6 +464,12 @@ class System(Wrappers):
 						params = WebService().post_request(params, node)
 
 						if 'response' in params.keys(): outgoing.message = str(self.response_payload(params['response']))[:3839]
+						if 'ext_outbound_id' in params.keys(): 
+							payload['ext_outbound_id'] = params['ext_outbound_id']
+							outgoing.ext_outbound_id = payload['ext_outbound_id']
+							outgoing.save()
+						if 'ext_inbound_id' in params.keys(): payload['ext_inbound_id'] = params['ext_inbound_id']
+
 						if 'response_status' in params.keys() and params['response_status'] not in [None,""]:
 							try:outgoing.response_status = ResponseStatus.objects.get(response=str(params['response_status']))
 							except:params['response_status']='06';outgoing.response_status = ResponseStatus.objects.get(response='06')

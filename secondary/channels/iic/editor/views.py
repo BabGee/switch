@@ -109,10 +109,10 @@ def node_system_service_commands_code(request, node_system_pk, service_command_p
         file_contents = fd.readlines()
         in_block = False
         for line in file_contents:
-            if (not in_block) and 'def' in line and service_command.command_function in line:
+            if (not in_block) and 'def ' in line and service_command.command_function == line.split('(')[0].split(' ')[1].strip():
                 code.append('\n')
                 in_block = True
-            elif (in_block) and ('class' in line or (
+            elif (in_block) and ('class ' in line or (
                     'def' in line and end_line_contains in line)):  # (class_node and (class_def is not class_node))
                 break
 

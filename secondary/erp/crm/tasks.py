@@ -536,6 +536,32 @@ class System(Wrappers):
 		return payload
 
 
+	def add_till_product(self,payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			product = ProductItem()
+			product.name = 'Till Amount'
+			product.description = 'Till Amount'
+			product.status =  ProductStatus.objects.get(name='ACTIVE') # ACTIVE
+                        product.product_type_id = 117
+			product.unit_cost = 1
+			product.variable_unit = True
+			product.institution = Institution.objects.get(id=payload['institution_id']) if 'institution_id' in payload.keys() else gateway_profile.institution
+			product.currency = Currency.objects.get(code='KES') # KES
+			product.product_display = ProductDisplay.objects.get(name='SHOP') # DEFAULT
+
+			product.save()
+
+
+			payload['response_status'] = '00'
+			payload['response'] = 'Till Product Added Succefully'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Add Till Product: %s" % e)
+		return payload
+
+
 	def add_product(self,payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])

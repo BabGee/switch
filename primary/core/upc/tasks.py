@@ -2246,6 +2246,7 @@ class System(Wrappers):
 			elif gateway_profile.institution is not None:
 				institution = gateway_profile.institution
 			if institution is not None:
+				details['institution_id'] =institution.id
 				details['institution_logo'] =institution.logo.name
 				details['institution_name'] =institution.name
 				details['institution_reg_number'] =institution.registration_number

@@ -1,0 +1,162 @@
+{% extends 'iic/base.html' %}
+{% load iic_extras %}
+
+{% block content %}
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"
+          rel="stylesheet"/>
+
+    <h4>{{ code }}</h4>
+    <h5>{{ access_level }}</h5>
+    <div><strong >Level</strong> <span >{{ level }}</span>,
+        <strong>Select</strong> <span >{{ select }}</span></div>
+    <div class="row">
+        <div class="col-md-12">
+
+            <ul>
+
+                {% for menu in menus %}
+                    <li>
+                        {% include 'editor/vcs/menu/item.html' %}
+
+                        <br>
+                        <a href="/admin/vcs/menu/{{ menu.pk }}/delete">/Delete</a>
+                        <a href="/admin/vcs/menu/{{ menu.pk }}/change">/Change</a>
+
+                    </li>
+
+                        <h6>Add Menu Item</h6>
+                        <form method="POST"
+                              action="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/{{ menu.pk }}/menu_items/create/" >{% csrf_token %}
+                            {% for field in item_form %}
+
+                                    {% if field.errors %}
+                                        {% for error in field.errors %}
+                                            <p style="color: red">Error {{ error }}</p>
+                                        {% endfor %}
+                                    {% endif %}
+
+                                    <div class="form-group">
+                                        <label for="{{ field.id_for_label }}" {% if field.field.required %}required{% endif %}>{{ field.label }}</label>
+                                        {{ field|add_class:'form-control' }}
+                                        <span class="form-text text-muted">{{ field.help_text }}</span>
+                                    </div>
+
+                            {% endfor %}
+                            <input type="hidden" name="access_level_name" value="{{ access_level }}">
+                            <input type="hidden" name="profile_status_name" value="{{ profile_status }}">
+
+
+                            <div class="form-group row">
+                                <div class="col-sm-10">
+                                    <button type="submit" class="btn btn-primary">Add</button>
+                                </div>
+                            </div>
+                        </form>
+                    {% empty %}
+
+                    <h5>Create Menu</h5>
+
+                    <form method="POST" class="post-form">{% csrf_token %}
+                        {{ form.as_p }}
+                        <div class="form-group row">
+                            <div class="col-sm-10">
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                        </div>
+                    </form>
+
+
+                {% endfor %}
+
+
+            </ul>
+
+        <a href="?level={{ level|add:-1  }}{% for key, value in request.GET.items %}{% if key != 'level' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Back</a>
+        <a href="?level={{ level|add:1 }}{% for key, value in request.GET.items %}{% if key != 'level' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+
+        </div>
+
+    </div>
+
+{% endblock %}
+{% block script %}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+    <script type="text/javascript">
+
+        $.fn.editable.defaults.mode = 'inline';
+        $.fn.editableform.buttons = '' +
+            '<button type="submit" class="btn btn-info editable-submit"><i class="fa fa-fw fa-check"></i></button>' +
+            '<button type="button" class="btn editable-cancel"><i class="fa fa-fw fa-remove"></i></button>';
+
+        $.fn.editable.defaults.ajaxOptions = {
+            type: "POST",
+            beforeSend: function (xhr, settings) {
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+
+            }
+        };
+
+        $(document).ready(function () {
+
+            $('.status').editable({
+                source: [
+                    {% for menu_status in menu_status_qs %}
+                    {value: {{ menu_status.pk }}, text: '{{ menu_status.name }}'},
+                    {% endfor %}
+                ]
+            });
+
+            {% comment %}
+
+            $('.access_level').editable({
+                source: [
+                    {% for access_level in access_levels %}
+                    {value: {{ access_level.pk }}, text: '{{ access_level.name }}'},
+                    {% endfor %}
+                ]
+            });
+
+            $('.status').editable({
+                source: [
+                    {value: 1, text: 'ACTIVATED'},
+                    {value: 2, text: 'DEACTIVATED'},
+                    {value: 3, text: 'ONE TIME PIN'},
+                    {value: 4, text: 'DELETED'},
+                    {value: 5, text: 'REGISTERED'},
+                    {value: 6, text: 'LOCKED'},
+                    {value: 7, text: 'ONE TIME PASSWORD'},
+                    {value: 8, text: 'FIRST ACCESS'}
+                ]
+            });
+            {% endcomment %}
+
+            $('.editableT').editable();
+
+
+        });
+    </script>
+{% endblock %}
