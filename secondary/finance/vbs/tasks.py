@@ -1033,8 +1033,14 @@ class Payments(System):
 				savings_credit_manager = SavingsCreditManager.objects.none()
 
 			amount = Decimal(0)
+
+			outstanding_amount = savings_credit_manager.aggregate(Sum('outstanding'))
+			amount = outstanding_amount['outstanding__sum'] if outstanding_amount['outstanding__sum'] else Decimal(0)
+
+			'''
 			for i in savings_credit_manager:
 				amount = amount + (i.amount + i.charge)
+			'''
 
 			credit_amount = Decimal(payload['amount']) if 'amount' in payload.keys() else Decimal(0)
 			if savings_credit_manager.exists() and amount <= credit_amount:
@@ -1043,7 +1049,7 @@ class Payments(System):
 				lgr.info('Credit Amount is Greater or equal to credit')
 
 				outstanding = Decimal(0)
-				savings_credit_manager.update(credit_paid=True,paid=F('outstanding'),outstanding=outstanding)
+				savings_credit_manager.update(credit_paid=True,paid=F('paid')+F('outstanding'),outstanding=outstanding)
 
 				#Set paid on Account Manager
 				account_manager.credit_paid = True
@@ -1060,12 +1066,12 @@ class Payments(System):
 					if credit_amount >= i.outstanding:
 						lgr.info('Credit Amount is greater or equal to outstanding')
 						credit_amount = credit_amount - i.outstanding
-						i.paid = i.outstanding
+						i.paid = i.paid+i.outstanding
 						i.outstanding = 0
 						i.credit_paid = True
 					elif credit_amount > Decimal(0):
 						lgr.info('Credit Amount is less than outstanding')
-						i.paid = credit_amount
+						i.paid = i.paid+credit_amount
 						i.outstanding = i.outstanding - credit_amount
 						credit_amount = Decimal(0)
 					#save installment updates
@@ -1076,6 +1082,10 @@ class Payments(System):
 					payload['outstanding_credit_amount'] = outstanding_credit_amount
 					payload['trigger'] = 'credit_partially_paid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				else:
+					#Set paid on Account Manager
+					account_manager.credit_paid = True
+					account_manager.save()
+
 					payload['trigger'] = 'credit_fully_paid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
 				payload['response'] = 'Loan Repaid'
@@ -1084,7 +1094,6 @@ class Payments(System):
 
 				payload['response'] = 'No Loan Installment Found'
 				payload['response_status'] = '25'
-
 
 		except Exception, e:
 			payload['response_status'] = '96'
