@@ -409,6 +409,44 @@ class System(Wrappers):
 		return payload
 
 
+	def check_order_status(self, payload, node_info):
+		try:
+			if 'reference' in payload.keys():
+
+				#An order will ALWAYS have an initial bill manager, hence
+				reference = payload['reference'].strip()
+				bill_manager_list = BillManager.objects.filter(order__reference__iexact=reference,order__status__name__in=['UNPAID','PAID']).order_by("-date_created")
+				if bill_manager_list.exists():
+					cart_items = bill_manager_list[0].order.cart_item.all()
+					if cart_items.exists():
+						#Takes up the institution with the most products
+						product_institution = cart_items.values('product_item__institution__id').annotate(Count('product_item__institution__id')).order_by('-product_item__institution__id__count')
+						if product_institution.count() == 1:
+							payload['institution_id'] = product_institution[0]['product_item__institution__id']
+					payload['amount'] = str(bill_manager_list[0].balance_bf)
+                                        payload['currency'] = bill_manager_list[0].order.currency.code
+					payload['purchase_order_id'] = bill_manager_list[0].order.id
+
+					payload["response_status"] = "00"
+					if bill_manager_list.filter(order__status__name='UNPAID').exists():
+						payload['trigger'] = 'unpaid_order%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+						payload["response"] = "Unpaid Order"
+					else:
+						payload['trigger'] = 'paid_order%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+						payload["response"] = "Paid Order"
+				else:
+					payload["response_status"] = "25"
+					payload["response"] = "No Purchase Order with given reference"
+			else:
+				payload["response_status"] = "25"
+				payload["response"] = "No Purchase Order reference was given"
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on pay bill: %s" % e)
+		return payload
+
+
+
 	def get_bill(self, payload, node_info):
 		try:
 			if 'reference' in payload.keys():
