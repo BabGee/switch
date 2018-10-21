@@ -150,6 +150,7 @@ class SavingsCreditManager(models.Model):
 	credit_paid = models.BooleanField(default=False)
 	paid = models.DecimalField(max_digits=19, decimal_places=2)
 	outstanding = models.DecimalField(max_digits=19, decimal_places=2)
+	processed_overdue_credit = models.BooleanField(default=False)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.account_manager, self.installment_time, self.due_date)
 
@@ -159,7 +160,6 @@ class CreditOverdueManager(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	savings_credit_manager = models.ForeignKey(SavingsCreditManager)
 	credit_overdue = models.ForeignKey(CreditOverdue)
-	response_status = models.ForeignKey(ResponseStatus)
 	processed = models.BooleanField(default=False)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.account_manager, self.credit_overdue, self.status)

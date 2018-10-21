@@ -63,11 +63,11 @@ class AccountManagerAdmin(admin.ModelAdmin):
 admin.site.register(AccountManager, AccountManagerAdmin)  
   
 class SavingsCreditManagerAdmin(admin.ModelAdmin):
-	list_display = ('account_manager','credit','installment_time','amount','charge','due_date','credit_paid','paid','outstanding',)
+	list_display = ('account_manager','credit','installment_time','amount','charge','due_date','credit_paid','paid','outstanding','processed_overdue_credit',)
 admin.site.register(SavingsCreditManager, SavingsCreditManagerAdmin)
 
 class CreditOverdueManagerAdmin(admin.ModelAdmin):
-	list_display = ('savings_credit_manager','credit_overdue','response_status','processed',)
+	list_display = ('savings_credit_manager','credit_overdue','processed',)
 admin.site.register(CreditOverdueManager, CreditOverdueManagerAdmin)
 
 class InvestmentAccountTypeAdmin(admin.ModelAdmin):

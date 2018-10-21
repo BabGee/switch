@@ -25,6 +25,8 @@ from decimal import Decimal, ROUND_DOWN, ROUND_UP
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core import serializers
 
+from primary.core.bridge import tasks as bridgetasks
+import numpy as np
 from secondary.finance.vbs.models import *
 from primary.core.upc.tasks import Wrappers as UPCWrappers
 import logging
@@ -401,20 +403,35 @@ class System(Wrappers):
 
 			#Check loan exists
 			#session_manager = AccountManager.objects.get(id=payload['account_manager_id'], credit_paid=False, credit_due_date__lte=timezone.now())
-			session_manager = AccountManager.objects.get(id=payload['account_manager_id'], credit_paid=False)
+			session_manager = SavingsCreditManager.objects.get(id=payload['savings_credit_manager_id'], credit_paid=False)
+
+			credit_overdue = CreditOverdue.objects.get(id=payload['credit_overdue_id'])
+
+			#Add to Credit Overdue Manager
+			credit_overdue_manager = CreditOverdueManager(savings_credit_manager=session_manager, credit_overdue=credit_overdue)
+
+			credit_overdue_manager.save()
+
+			#Release session manager lock
+			session_manager.processed_overdue_credit = False
+			session_manager.save()
 
 			#Find the last loan amount
+			'''
 			session_manager_list = AccountManager.objects.filter(id__gte=payload['account_manager_id'],credit=False,\
 						dest_account=session_manager.dest_account, dest_account__account_type=session_manager.dest_account.account_type,\
 						credit_paid=False).order_by('-date_created')[:1]
-			o = session_manager_list[0]
-			amount = o.balance_bf*Decimal(-1)
 
-			due_date = session_manager.credit_due_date
+			o = session_manager_list[0]
+			'''
+
+			amount = session_manager.outstanding
+
+			due_date = session_manager.due_date
 			due_date = due_date.strftime("%d/%b/%Y")
 			payload['due_date'] = due_date
 
-			payload['currency'] = session_manager.dest_account.account_type.product_item.currency.code
+			payload['currency'] = session_manager.account_manager.dest_account.account_type.product_item.currency.code
 			payload['amount'] = amount.quantize(Decimal('.01'), rounding=ROUND_DOWN)
 
 			payload['response_status'] = '00'
@@ -422,7 +439,7 @@ class System(Wrappers):
 
 		except Exception, e:
 			payload['response_status'] = '96'
-			lgr.info("Error on loan rollover details: %s" % e)
+			lgr.info("Error on loan notification details: %s" % e)
 		return payload
 
 
@@ -431,24 +448,24 @@ class System(Wrappers):
 			#Edit Debit Account
 			session_account = Account.objects.get(id=payload['session_account_id'])
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			try:
+				session_manager = AccountManager.objects.get(id=payload['account_manager_id'], credit_paid=False, credit_due_date__lte=timezone.now())
+				amount = session_manager.amount + session_manager.charge
 
-			session_manager = AccountManager.objects.get(id=payload['account_manager_id'], credit_paid=False, credit_due_date__lte=timezone.now())
-			amount = session_manager.amount + session_manager.charge
+				credit_type = SavingsCreditType.objects.filter(account_type=session_manager.dest_account.account_type,\
+						 min_time__lte=int(payload['rollover_loan_time']), max_time__gte=int(payload['rollover_loan_time']))
 
+				interest = Decimal(0)
+				for c in credit_type:
+					interest =  interest + ((c.interest_rate/100)*(int(payload['rollover_loan_time'])/c.interest_time)*Decimal(amount))
 
-			credit_type = SavingsCreditType.objects.filter(account_type=session_manager.dest_account.account_type,\
-					 min_time__lte=int(payload['rollover_loan_time']), max_time__gte=int(payload['rollover_loan_time']))
+				due_date = session_manager.credit_due_date
+				due_date = due_date.strftime("%d/%b/%Y")
+				payload['due_date'] = due_date
 
-			interest = Decimal(0)
-			for c in credit_type:
-				interest =  interest + ((c.interest_rate/100)*(int(payload['rollover_loan_time'])/c.interest_time)*Decimal(amount))
-
-			due_date = session_manager.credit_due_date
-			due_date = due_date.strftime("%d/%b/%Y")
-			payload['due_date'] = due_date
-
-			#payload['quantity'] = interest.quantize(Decimal('.01'), rounding=ROUND_DOWN)
-			payload['amount'] = interest.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+				#payload['quantity'] = interest.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+				payload['amount'] = interest.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+			except AccountManager.DoesNotExist: pass
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Rollover Details Captured'
@@ -1452,6 +1469,58 @@ def service_call(payload):
 
 
 
+@app.task(ignore_result=True)
+def overdue_credit(sc, co):
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+		lgr.info('Started Overdue Credit')
+		a = SavingsCreditManager.objects.get(id=sc)
+		c = CreditOverdue.objects.get(id=co)
+
+		lgr.info('%s|%s|%s|%s' % (a.id, (timezone.now()-a.due_date).days, a.amount, a.outstanding))
+
+		payload = json.loads(c.notification_details)	
+		profile= a.account_manager.dest_account.profile
+		gateway_profile_list = GatewayProfile.objects.filter(gateway=a.account_manager.dest_account.account_type.gateway,user=profile.user)
+		gateway_profile = gateway_profile_list[0]
+		service = c.service
+
+		payload['service_id'] = service.id
+		payload['gateway_profile_id'] = gateway_profile.id
+		payload['credit_overdue_id'] = c.id
+
+		if c.product_item:
+			payload['product_item_id'] = c.product_item.id
+			payload['institution_id'] = c.product_item.institution.id
+			#payload['till_number'] = c.product_item.product_type.institution_till.till_number
+			payload['currency'] = c.product_item.currency.code
+
+		payload['session_account_id'] = a.account_manager.dest_account.id
+		payload['session_gateway_profile_id'] = gateway_profile.id
+		payload['transaction_reference'] = a.account_manager.transaction_reference
+		payload['account_manager_id'] = a.account_manager.id
+		payload['savings_credit_manager_id'] = a.id
+		payload['account_type_id'] = a.account_manager.dest_account.account_type.id
+		payload['chid'] = 2
+		payload['ip_address'] = '127.0.0.1'
+		payload['gateway_host'] = '127.0.0.1'
+		payload['lat'] = '0.0'
+		payload['lng'] = '0.0'
+
+		lgr.info('Service: %s | Payload: %s' % (service, payload))
+		if service is None:
+			lgr.info('No Service to process for product: %s' % c.product_type)
+		else:
+			bridgetasks.background_service_call.delay(service.name, gateway_profile.id, payload)
+			'''
+			payload = json.dumps(payload, cls=DjangoJSONEncoder)
+			try: service_call(payload)
+			except Exception, e: lgr.info('Error on Service Call: %s' % e)
+			'''
+	except Exception, e:
+		lgr.info("Error on Overdue Credit: %s" % e)
+
 
 @app.task(ignore_result=True, soft_time_limit=25920) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
 @transaction.atomic
@@ -1465,48 +1534,22 @@ def process_overdue_credit():
 	for c in credit_overdue:
 		try:
 			lgr.info('Credit Overdue: %s' % c)
-			account_manager = AccountManager.objects.filter(Q(credit_due_date__lte=(timezone.now()-timezone.timedelta(days=c.overdue_time))),\
-					Q(credit_due_date__gte=(timezone.now()-timezone.timedelta(days=(c.overdue_time+3) ))),Q(credit_paid=False),\
-					~Q(credit_overdue=c))[:10]
-			for a in account_manager:
-				lgr.info('%s|%s|%s|%s' % (a.id, (timezone.now()-a.credit_due_date).days, a.amount, a.balance_bf))
-				a.credit_overdue.add(c)
+			orig_savings_credit_manager = SavingsCreditManager.objects.select_for_update().filter(Q(due_date__lte=(timezone.now()-timezone.timedelta(days=c.overdue_time))),\
+					Q(due_date__gte=(timezone.now()-timezone.timedelta(days=(c.overdue_time+3) ))),\
+					Q(credit_paid=False, processed_overdue_credit=False))
 
-				payload = json.loads(c.notification_details)	
-				profile= a.dest_account.profile
-				gateway_profile_list = GatewayProfile.objects.filter(gateway=a.dest_account.account_type.gateway,user=profile.user)
-				gateway_profile = gateway_profile_list[0]
-				service = c.service
+			savings_credit_manager = orig_savings_credit_manager.values_list('id',flat=True)[:500]
 
-				payload['service_id'] = service.id
-				payload['gateway_profile_id'] = gateway_profile.id
-				payload['credit_overdue_id'] = c.id
+			credit_overdue = CreditOverdueManager.objects.filter(savings_credit_manager__id__in=savings_credit_manager, credit_overdue=c).values_list('savings_credit_manager__id', flat=True)
+			lgr.info('SavingsCredit: %s' % savings_credit_manager)
+			savings_credit_manager = np.setdiff1d(np.asarray(savings_credit_manager),np.asarray(credit_overdue)).tolist()
 
-				if c.product_item:
-					payload['product_item_id'] = c.product_item.id
-					payload['institution_id'] = c.product_item.institution.id
-					#payload['till_number'] = c.product_item.product_type.institution_till.till_number
-					payload['currency'] = c.product_item.currency.code
+			lgr.info('SavingsCredit: %s' % savings_credit_manager)
+			processing = orig_savings_credit_manager.filter(id__in=savings_credit_manager).update(processed_overdue_credit=True, date_modified=timezone.now())
 
-				payload['session_account_id'] = a.dest_account.id
-				payload['session_gateway_profile_id'] = gateway_profile.id
-				payload['transaction_reference'] = a.transaction_reference
-				payload['account_manager_id'] = a.id
-				payload['account_type_id'] = a.dest_account.account_type.id
-				payload['chid'] = 2
-				payload['ip_address'] = '127.0.0.1'
-				payload['gateway_host'] = '127.0.0.1'
-				payload['lat'] = '0.0'
-				payload['lng'] = '0.0'
-
-				lgr.info('Service: %s | Payload: %s' % (service, payload))
-				if service is None:
-					lgr.info('No Service to process for product: %s' % c.product_type)
-				else:
-
-	    				payload = json.dumps(payload, cls=DjangoJSONEncoder)
-					try:service_call(payload)
-					except Exception, e: lgr.info('Error on Service Call: %s' % e)
+			for a in savings_credit_manager:
+				lgr.info('Savings Credit: %s | %s' % (a, c))
+				overdue_credit.delay(a,c.id)
 
 		except Exception, e:
 			lgr.info('Error processing overdue credit: %s | %s' % (c,e))
