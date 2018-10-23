@@ -63,6 +63,7 @@ class ProductType(models.Model):
 	service = models.ForeignKey(Service, null=True, blank=True) #For Processing LOCAL endpoints
 	icon_old= models.CharField(max_length=45, null=True, blank=True)
 	icon = models.ForeignKey(Icon, null=True, blank=True)
+	settlement_service = models.ForeignKey(Service, related_name='settlement_service', null=True, blank=True) #For Processing LOCAL endpoints
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.name)

@@ -1216,7 +1216,7 @@ class Payments(System):
 	pass
 
 @app.task(ignore_result=True)
-def order_background_service_call(order):
+def order_background_service_call(order, status):
 	lgr = get_task_logger(__name__)
 	try:
 		from primary.core.bridge.tasks import Wrappers as BridgeWrappers
@@ -1225,7 +1225,7 @@ def order_background_service_call(order):
 		bill = BillManager.objects.filter(order__id=order).last()
 		o = bill.order
 		lgr.info('Captured Order: %s' % o)
-		cart_item = o.cart_item.filter(Q(status__name='PAID'), ~Q(product_item__product_type__service=None))
+		cart_item = o.cart_item.filter(Q(status__name=status), ~Q(product_item__product_type__service=None))
 		lgr.info('Cart Item: %s' % cart_item)
 		for c in cart_item:
 			lgr.info('Captured Cart Item: %s | %s' % (c,c.product_item.product_type.service))
@@ -1327,6 +1327,26 @@ def service_call(payload):
 @app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
+def process_settled_order():
+	lgr = get_task_logger(__name__)
+	try:
+		orig_order = PurchaseOrder.objects.select_for_update(nowait=True).filter(Q(status__name='SETTLED'),Q(cart_processed=False))
+		order = list(orig_order.values_list('id',flat=True)[:500])
+
+		processing = orig_order.filter(id__in=order).update(cart_processed=True, date_modified=timezone.now())
+		for od in order:
+			lgr.info('Order: %s' % od)
+			order_background_service_call.delay(od, 'SETTLED')
+	except DatabaseError, e:
+		lgr.info('Transaction Rolled Back')
+		transaction.set_rollback(True)
+
+	except Exception, e: lgr.info('Error on process settled order: %s' % e)
+
+
+@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
 def process_paid_order():
 	lgr = get_task_logger(__name__)
 	try:
@@ -1336,7 +1356,7 @@ def process_paid_order():
 		processing = orig_order.filter(id__in=order).update(cart_processed=True, date_modified=timezone.now())
 		for od in order:
 			lgr.info('Order: %s' % od)
-			order_background_service_call.delay(od)
+			order_background_service_call.delay(od, 'PAID')
 	except DatabaseError, e:
 		lgr.info('Transaction Rolled Back')
 		transaction.set_rollback(True)

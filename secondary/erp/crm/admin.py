@@ -23,7 +23,7 @@ admin.site.register(ProductionFrequency, ProductionFrequencyAdmin)
 
 class ProductTypeAdmin(admin.ModelAdmin):
 		list_display = ('id','name','product_category','metric','description',\
-				'status','service','payment_method_list')
+				'status','service','settlement_service','payment_method_list')
 		search_fields = ('name','description',)
 		list_filter = ('product_category','metric','payment_method',)
 admin.site.register(ProductType, ProductTypeAdmin)
