@@ -162,7 +162,7 @@ class CreditOverdueManager(models.Model):
 	credit_overdue = models.ForeignKey(CreditOverdue)
 	processed = models.BooleanField(default=False)
 	def __unicode__(self):
-		return u'%s %s %s' % (self.account_manager, self.credit_overdue, self.status)
+		return u'%s %s %s' % (self.savings_credit_manager, self.credit_overdue, self.status)
 
 class InvestmentAccountType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
