@@ -559,7 +559,7 @@ class System(Wrappers):
 
 				if 'credit_overdue_id' in payload.keys():
 					session_manager.credit_overdue.add(CreditOverdue.objects.get(id=payload['credit_overdue_id']))
-
+				'''
 				gl_amount = amount + charge
 
 				#Ensure Branch does not conflict to give more than one result
@@ -607,6 +607,7 @@ class System(Wrappers):
 					gl_manager.purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 
 				gl_manager.save()
+				'''
 
 				payload['account_manager_id'] = session_manager.id
 				payload['balance_out'] = session_manager.amount
@@ -672,6 +673,7 @@ class System(Wrappers):
 
 				session_manager.save()
 
+				'''
 				gl_amount = amount + charge
 
 				#Ensure Branch does not conflict to give more than one result
@@ -718,6 +720,8 @@ class System(Wrappers):
 					gl_manager.purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 
 				gl_manager.save()
+				'''
+
 
 				payload['account_manager_id'] = session_manager.id
 				payload['balance_in'] = session_manager.amount

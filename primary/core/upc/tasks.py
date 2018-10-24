@@ -2197,10 +2197,10 @@ class System(Wrappers):
 				details['tagline'] =institution.tagline
 				details['background_image'] = institution.background_image
 				details['host'] =gateway.default_host.all()[0].host
-				details['default_color'] = institution.default_color
-				details['primary_color'] = institution.primary_color
-				details['secondary_color'] = institution.secondary_color
-				details['accent_color'] = institution.accent_color
+				details['default_color'] = institution.default_color if institution.default_color else gateway.default_color
+				details['primary_color'] = institution.primary_color if institution.primary_color else gateway.primary_color
+				details['secondary_color'] = institution.secondary_color if institution.secondary_color else gateway.secondary_color
+				details['accent_color'] = institution.accent_color if institution.accent_color else gateway.accent_color
 
 				if gateway_profile.access_level.name == 'SYSTEM':
 					details['theme'] = institution.theme.name
@@ -2510,6 +2510,105 @@ class System(Wrappers):
 			lgr.info("Error on getting session gateway Profile: %s" % e)
 		return payload
 
+	def get_social_profile(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			if 'oauth_token_verified' in payload.keys():del payload['oauth_token_verified']
+
+			payload['oauth_token_verified'] = False
+
+			if 'facebook_access_token' in payload.keys():
+				# verify token and retrieve profile from facebook
+				# requires pip install facebook-sdk==3.0.0
+				import facebook
+				access_token = payload['facebook_access_token']
+				graph = facebook.GraphAPI(access_token=access_token, version="3.0")
+				profile = graph.get_object(id='me', fields='name,email')
+
+				payload['full_name'] = profile['name']
+				payload['email'] = profile['email']
+
+				# update token verified flag
+				payload['oauth_token_verified'] = True
+				payload['response_status'] = '00'
+				payload['response'] = 'Social Profile Facebook Verified'
+
+
+			elif 'google_access_token' in payload.keys():
+				# verify token and retrieve profile from google
+				# requires pip install google-auth==1.5.1
+				from google.oauth2 import id_token
+				from google.auth.transport import requests
+
+				# (Receive token by HTTPS POST)
+				access_token = payload['google_access_token']
+				try:
+					# Specify the CLIENT_ID of the app that accesses the backend:
+					idinfo = id_token.verify_oauth2_token(access_token, requests.Request(), payload['google_client_id'])
+
+					# Or, if multiple clients access the backend server:
+					# idinfo = id_token.verify_oauth2_token(token, requests.Request())
+					# if idinfo['aud'] not in [CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]:
+					#     raise ValueError('Could not verify audience.')
+
+					if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+						raise ValueError('Wrong issuer.')
+
+					# If auth request is from a G Suite domain:
+					# if idinfo['hd'] != GSUITE_DOMAIN_NAME:
+					#     raise ValueError('Wrong hosted domain.')
+
+					# ID token is valid. Get the user's Google Account ID from the decoded token.
+					userid = idinfo['sub']
+
+					payload['full_name'] = ''
+					payload['email'] = idinfo['email']
+
+					# update token verified flag
+					payload['oauth_token_verified'] = True
+					payload['response_status'] = '00'
+					payload['response'] = 'Social Profile Google Verified'
+
+
+				except ValueError:
+					# Invalid token
+					raise 
+
+
+			else:
+				# Error. no token passed
+				payload['response'] = 'No Auth Token Provided'
+				payload['response_status'] = 25
+
+		except Exception, e:
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+			lgr.info("Error on Verifying Social Profile: %s" % e)
+		return payload
+
+
+	def set_registered_social_profile_activated(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			if 'oauth_token_verified' in payload.keys() and payload['oauth_token_verified']:
+				# Only activate initial registrations
+				if session_gateway_profile.status.name == 'REGISTERED':
+					session_gateway_profile.status = ProfileStatus.objects.get(name='ACTIVATED')
+					session_gateway_profile.save()
+
+			else:
+				# invalid service command usage
+				payload['response_status'] = '00'
+
+			payload['response'] = 'Profile Activated'
+			payload['response_status'] = '00'
+
+		except Exception, e:
+			lgr.info('Error on Validating One Time Pin: %s' % e)
+			payload['response_status'] = '96'
+		return payload
+
 
 	def update_gateway_profile(self, payload, node_info):
 		try:
@@ -2609,7 +2708,7 @@ class System(Wrappers):
                         #Check if LOGIN or SIGN UP
 			authorized_gateway_profile = None
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			if ('email_msisdn' in payload.keys() or 'username' in payload.keys() or ('email' in payload.keys() and self.validateEmail(payload['email']))) and 'password' in payload.keys():
+			if ('email_msisdn' in payload.keys() or 'username' in payload.keys() or ('email' in payload.keys() and self.validateEmail(payload['email']))) and ('password' in payload.keys() or payload.get('oauth_token_verified',False)):
 				lgr.info("Returning User")
 				#CHECK CREDENTIALS and 
 				if 'email' in payload.keys() and self.validateEmail(payload['email']):
@@ -2635,7 +2734,9 @@ class System(Wrappers):
 					gateway_login_profile = GatewayProfile.objects.none()
 
 				for p in gateway_login_profile: #Loop through all profils matching username
-					if p.user.is_active and p.user.check_password(payload['password']):
+					if p.user.is_active and (
+							payload.get('oauth_token_verified', False) or # Social auth will provide an email, is unique
+							p.user.check_password(payload['password']) ): # or a password
 						authorized_gateway_profile = p
 						break
 

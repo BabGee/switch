@@ -11,7 +11,7 @@ from secondary.erp.pos.models import *
 from django.utils import timezone
 from django.utils.timezone import utc
 from django.contrib.gis.geos import Point
-from django.db import IntegrityError
+from django.db import IntegrityError, DatabaseError
 from django.db import transaction
 
 import time, json
