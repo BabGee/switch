@@ -19,7 +19,7 @@ import base64, re
 from django.core.files import File
 from django.db.models import Count, Sum
 from django.db import transaction
-
+import numpy as np
 from django.db.models import Q, F
 import operator
 #from secondary.channels.notify.mqtt import MqttServerClient
@@ -244,35 +244,37 @@ class System(Wrappers):
 			else:
 				bill_manager_list = bill_manager_list.none()
 
-			lgr.info('Got Here')
 			if 'product_type_list' in payload.keys():
 				#product_type_list = '23,65,123,35,563,34,42'
 				bill_manager_list = bill_manager_list.filter(order__cart_item__product_item__product_type__id__in=[p for p in payload['product_type_list'].split(',') if p])
 
-			lgr.info('Got Here')
 			settled_amount = Decimal(0)
 			if bill_manager_list.exists():			
 				settled_amount = bill_manager_list.aggregate(Sum('balance_bf'))['balance_bf__sum']
 
-				lgr.info('Got Here')
-				for bill in bill_manager_list:
-					order = bill.order
-					order.status = OrderStatus.objects.get(name='SETTLED')
-					order.save()
+				@app.task(ignore_result=True)
+				@transaction.atomic
+				def settle_orders(order_list):
 
-					lgr.info('Got Here')
-					order.cart_item.all().update(status=CartStatus.objects.get(name='SETTLED'))
+					lgr.info('Got Here: 3')
+					for o in order_list:
 
-			lgr.info('Got Here')
+						lgr.info('Got Here: 3')
+						order = PurchaseOrder.objects.get(id=o)
+						order.status = OrderStatus.objects.get(name='SETTLED')
+						order.save()
+
+						lgr.info('Got Here')
+						order.cart_item.all().update(status=CartStatus.objects.get(name='SETTLED'))
+
+
+				settle_orders.delay(np.unique(np.asarray(bill_manager_list.values_list('order__id',flat=True))).tolist())
 			payload['settled_amount'] = settled_amount
 
-			lgr.info('Got Here: 1')
 			payload["response_status"] = "00"
 
-			lgr.info('Got Here: 2')
 			payload['response'] = "Settled: %s" % settled_amount
 
-			lgr.info('Got Here: 3')
 		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("error settling paid ordes: %s" % e)
