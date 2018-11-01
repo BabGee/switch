@@ -117,6 +117,14 @@ class PurchaseOrder(models.Model):
 	def cart_item_list(self):
 		return "\n".join([a.product_item.name for a in self.cart_item.all()])
 
+class BillManagerStatus(models.Model):
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
 class BillManager(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
@@ -130,8 +138,60 @@ class BillManager(models.Model):
 	incoming_payment = models.ForeignKey(Incoming, null=True, blank=True)
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
+	status = models.ForeignKey(BillManagerStatus, null=True, blank=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.credit)
+
+class OrderProduct(models.Model):
+        date_modified  = models.DateTimeField(auto_now=True)
+        date_created = models.DateTimeField(auto_now_add=True)
+        name = models.CharField(max_length=45)
+        description = models.CharField(max_length=100)
+        ext_product_id = models.CharField(max_length=250, null=True, blank=True)
+        product_type = models.ManyToManyField(ProductType, blank=True) #Add all products that process service on account number
+        service = models.ManyToManyField(Service, blank=True)
+        details = models.CharField(max_length=512, default=json.dumps({}))
+        realtime = models.BooleanField(default=False)
+        show_message = models.BooleanField(default=False)
+        payment_method = models.ManyToManyField(PaymentMethod, blank=True)
+        currency = models.ManyToManyField(Currency, blank=True) #Allowed Currencies
+        trigger = models.ManyToManyField(Trigger, blank=True)
+        def __unicode__(self):
+                return u'%s %s' % (self.name, self.investment)
+        def product_type_list(self):
+                return "\n".join([a.name for a in self.product_type.all()])
+        def service_list(self):
+                return "\n".join([a.name for a in self.service.all()])
+        def payment_method_list(self):
+                return "\n".join([a.name for a in self.payment_method.all()])
+        def currency_list(self):
+                return "\n".join([a.code for a in self.currency.all()])
+        def trigger_list(self):
+                return "\n".join([a.name for a in self.trigger.all()])
+
+class OrderActivity(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	order_product = models.ForeignKey(OrderProduct)
+	order = models.ForeignKey(PurchaseOrder)
+	status = models.ForeignKey(TransactionStatus)
+	gateway_profile = models.ForeignKey(GatewayProfile)
+	request = models.CharField(max_length=10240)
+	channel = models.ForeignKey(Channel)
+	response_status = models.ForeignKey(ResponseStatus)
+	transaction_reference = models.CharField(max_length=256, null=True, blank=True) #Transaction ID
+	currency = models.ForeignKey(Currency, null=True, blank=True)
+	amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	charges = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	gateway = models.ForeignKey(Gateway)
+	institution = models.ForeignKey(Institution, null=True, blank=True)
+	scheduled_send = models.DateTimeField(blank=True, null=True)
+	message = models.CharField(max_length=3840, blank=True, null=True)
+	sends = models.IntegerField()
+	ext_inbound_id = models.CharField(max_length=256, blank=True, null=True)
+	def __unicode__(self):
+		return u'%s %s' % (self.order_type, self.gateway_profile)
+
 
 class DeliveryStatus(models.Model):
 	# CREATED

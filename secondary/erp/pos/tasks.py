@@ -249,30 +249,12 @@ class System(Wrappers):
 				bill_manager_list = bill_manager_list.filter(order__cart_item__product_item__product_type__id__in=[p for p in payload['product_type_list'].split(',') if p])
 
 			settled_amount = Decimal(0)
-			if bill_manager_list.exists():			
+			if bill_manager_list.exists():
 				settled_amount = bill_manager_list.aggregate(Sum('balance_bf'))['balance_bf__sum']
-
-				@app.task(ignore_result=True)
-				@transaction.atomic
-				def settle_orders(order_list):
-
-					lgr.info('Got Here: 3')
-					for o in order_list:
-
-						lgr.info('Got Here: 3')
-						order = PurchaseOrder.objects.get(id=o)
-						order.status = OrderStatus.objects.get(name='SETTLED')
-						order.save()
-
-						lgr.info('Got Here')
-						order.cart_item.all().update(status=CartStatus.objects.get(name='SETTLED'))
-
-
 				settle_orders.delay(np.unique(np.asarray(bill_manager_list.values_list('order__id',flat=True))).tolist())
+
 			payload['settled_amount'] = settled_amount
-
 			payload["response_status"] = "00"
-
 			payload['response'] = "Settled: %s" % settled_amount
 
 		except Exception as e:
@@ -1263,6 +1245,18 @@ class Trade(System):
 
 class Payments(System):
 	pass
+
+
+@app.task(ignore_result=True)
+@transaction.atomic
+def settle_orders(order_list):
+	for o in order_list:
+		order = PurchaseOrder.objects.get(id=o)
+		order.status = OrderStatus.objects.get(name='SETTLED')
+		order.save()
+
+		order.cart_item.update(status=CartStatus.objects.get(name='SETTLED'))
+
 
 @app.task(ignore_result=True)
 def order_background_service_call(order, status):

@@ -48,6 +48,16 @@ class BillManagerAdmin(admin.ModelAdmin):
 		list_filter = ('order__cart_item__product_item__institution','order__cart_item__product_item__product_type',)
 admin.site.register(BillManager, BillManagerAdmin)
 
+class OrderProductAdmin(admin.ModelAdmin):
+		list_display = ('id','name','description','ext_product_id','product_type_list','service_list','details','realtime',\
+				'show_message','payment_method_list','currency_list','trigger_list',)
+admin.site.register(OrderProduct, OrderProductAdmin)
+
+class OrderActivityAdmin(admin.ModelAdmin):
+		list_display = ('id','order_product','order','status','gateway_profile','request','channel','response_status','transaction_reference',\
+				'currency','amount','charges','gateway','institution','scheduled_send','message','sends','ext_inbound_id',)
+admin.site.register(OrderActivity, OrderActivityAdmin)
+
 class DeliveryStatusAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description')
 admin.site.register(DeliveryStatus, DeliveryStatusAdmin)
