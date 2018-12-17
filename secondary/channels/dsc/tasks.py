@@ -3745,15 +3745,34 @@ def process_file_upload_activity(payload):
                         header.append(i)
                 else:
                     if len(c) == len(header):
-                        for i in range(len(header)):
-                            if c[i] not in [None, ""]:
-                                key = header[i].lower().replace(" ", "_").replace("/", "_")
-                                payload[key] = c[i]
+			lgr.info('HEader: %s' % header)
+
+			lgr.info('Row: %s' % c)
+			try:
+        	                for i in range(len(header)):
+	                            if c[i] not in [None, ""]:
+					key = header[i]
+					lgr.info('Key: %s' % key)
+					key = key.decode('utf-8','ignore').strip()
+					lgr.info('Key: %s' % key)
+	                                key = key.lower().replace(" ", "_").replace("/", "_")
+					lgr.info('Key: %s' % key)
+        	                        value = c[i]
+					lgr.info('Value: %s' % value)
+        	                        value = value.decode('utf-8','ignore').strip()
+        	                        #value = c[i].encode('ascii','ignore').decode('utf-8','ignore').strip()
+					lgr.info('Value: %s' % value)
+	                                payload[key] = value
+			except Exception, e:
+				lgr.info('Error: %s' % e)
+				continue
 
                         # exec payload
                         payload['chid'] = u.channel.id
                         payload['ip_address'] = '127.0.0.1'
                         payload['gateway_host'] = '127.0.0.1'
+
+			lgr.info('Payload: %s' % payload)
 
                         try:
                             valid = False

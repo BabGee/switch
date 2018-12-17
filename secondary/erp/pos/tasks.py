@@ -230,8 +230,135 @@ class Wrappers:
 		return json.dumps(new_payload)
 
 
-
 class System(Wrappers):
+	def log_order_activity(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			try:
+				order_product = OrderProduct.objects.filter(service__name=payload['SERVICE'])
+
+				lgr.info('Got HEre')
+				if 'currency' in payload.keys():
+					order_product = order_product.filter(Q(currency__code=payload['currency'])|Q(currency=None))
+
+				if 'payment_method' in payload.keys():
+					order_product = order_product.filter(Q(payment_method__name=payload['payment_method'])\
+								|Q(payment_method=None))
+
+				if 'product_type_id' in payload.keys():
+					order_product = order_product.filter(Q(product_type__id=payload['product_type_id'])\
+								|Q(product_type=None))
+
+				if 'product_item_id' in payload.keys():
+					product_item = ProductItem.objects.get(id=payload['product_item_id'])
+					order_product = order_product.filter(Q(product_type=product_item.product_type)\
+								|Q(product_type=None))
+
+				if 'ext_product_id' in payload.keys():
+					order_product = order_product.filter(ext_product_id=payload['ext_product_id'])
+
+				lgr.info('Got HEre')
+				if order_product.exists():
+					#log 
+					response_status = ResponseStatus.objects.get(response='DEFAULT')
+					status = TransactionStatus.objects.get(name="CREATED")
+					order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
+					channel = Channel.objects.get(id=payload['chid'])
+					lgr.info('Got HEre')
+
+					reference = payload['bridge__transaction_id'] if 'bridge__transaction_id' in payload.keys() else ''
+					
+					order_activity = OrderActivity(order_product=order_product[0], order=order, transaction_reference=reference,\
+							gateway_profile=gateway_profile, request=self.transaction_payload(payload),\
+							response_status=response_status, sends=0, status=status, \
+							channel=channel, gateway=gateway_profile.gateway)
+
+					lgr.info('Got HEre')
+					if 'scheduled_send' in payload.keys() and payload['scheduled_send'] not in ["",None]:
+						try:date_obj = datetime.strptime(payload["scheduled_send"], '%d/%m/%Y %I:%M %p')
+						except: date_obj = None
+						if date_obj is not None:		
+							profile_tz = pytz.timezone(gateway_profile.profile.timezone)
+							scheduled_send = pytz.timezone(gateway_profile.profile.timezone).localize(date_obj)
+							lgr.info("Send Scheduled: %s" % scheduled_send)
+						else:
+							scheduled_send = timezone.now()+timezone.timedelta(seconds=1)
+					else:
+						scheduled_send = timezone.now()+timezone.timedelta(seconds=1)
+
+					order_activity.scheduled_send = scheduled_send
+
+					lgr.info('Got HEre')
+					if 'ext_inbound_id' in payload.keys() and payload['ext_inbound_id'] not in ["",None]:
+						order_activity.ext_inbound_id = payload['ext_inbound_id']
+					elif 'bridge__transaction_id' in payload.keys():
+						order_activity.ext_inbound_id = payload['bridge__transaction_id']
+
+					if 'currency' in payload.keys() and payload['currency'] not in ["",None]:
+						order_activity.currency = Currency.objects.get(code=payload['currency'])
+					if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
+						order_activity.amount = Decimal(payload['amount'])
+					if 'charge' in payload.keys() and payload['charge'] not in ["",None]:
+						order_activity.charge = Decimal(payload['charge'])
+
+					order_activity.save()
+
+					lgr.info('Got HEre')
+					payload['response'] = 'Order Activity Logged'
+					payload['response_status'] = '00'
+				else:
+					payload['response'] = 'Order Activity product not found'
+					payload['response_status'] = '92'
+
+			except ProductItem.DoesNotExist:
+				lgr.info("ProdutItem Does not Exist")
+                        	payload['response_status'] = '25'
+
+                except Exception, e:
+                        payload['response_status'] = '96'
+                        lgr.info("Error on Order Activity: %s" % e)
+                return payload
+
+
+	def settle_order_charges(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			amount = Decimal(payload['amount'])
+			charge = Decimal(0)
+
+			if 'institution_id' in payload.keys():
+				charge_list = OrderCharge.objects.filter(institution__id=payload['institution_id'], min_amount__lte=Decimal(amount), order_product__service__name=payload['SERVICE'],\
+						max_amount__gte=Decimal(amount))
+			elif 'product_item_id' in payload.keys():
+				product_item = ProductItem.objects.get(id=payload['product_item_id'])
+				payload['institution_id'] = product_item.institution.id
+				charge_list = OrderCharge.objects.filter(institution=product_item.institution, min_amount__lte=Decimal(amount), order_product__service__name=payload['SERVICE'],\
+						max_amount__gte=Decimal(amount))
+			else:
+				charge_list = OrderCharge.objects.none()
+
+
+			if 'payment_method' in payload.keys():
+				charge_list = charge_list.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
+
+			for c in charge_list:
+				if c.is_percentage:
+					charge = charge + ((c.charge_value/100)*Decimal(amount))
+				else:
+					charge = charge+c.charge_value		
+
+			payload['amount'] = amount - charge
+			payload['charge'] = charge
+
+			payload["response_status"] = "00"
+			payload['response'] = "Order Charges Settled"
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("error settle order charges: %s" % e)
+
+		return payload
+
+
 	def settle_paid_orders(self, payload, node_info):
 		try:
 			
@@ -1253,6 +1380,7 @@ def settle_orders(order_list):
 	for o in order_list:
 		order = PurchaseOrder.objects.get(id=o)
 		order.status = OrderStatus.objects.get(name='SETTLED')
+		order.cart_processed = False
 		order.save()
 
 		order.cart_item.update(status=CartStatus.objects.get(name='SETTLED'))
@@ -1268,15 +1396,15 @@ def order_background_service_call(order, status):
 		bill = BillManager.objects.filter(order__id=order).last()
 		o = bill.order
 		lgr.info('Captured Order: %s' % o)
-		cart_item = o.cart_item.filter(Q(status__name=status), ~Q(product_item__product_type__service=None))
+		cart_item = o.cart_item.filter(Q(status__name=status), ~Q(Q(product_item__product_type__service=None),Q(product_item__product_type__settlement_service=None)))
 		lgr.info('Cart Item: %s' % cart_item)
 		for c in cart_item:
-			lgr.info('Captured Cart Item: %s | %s' % (c,c.product_item.product_type.service))
+			lgr.info('Captured Cart Item: %s | %s | %s' % (c,c.product_item.product_type.service, c.product_item.product_type.settlement_service))
 			product_item = c.product_item
 			payload = json.loads(c.details)	
 
 			gateway_profile = c.gateway_profile
-			service = product_item.product_type.service
+			service = product_item.product_type.settlement_service if status == 'SETTLED' else product_item.product_type.service 
 
 			payload['cart_item_id'] = c.id
 			payload['purchase_order_id'] = o.id

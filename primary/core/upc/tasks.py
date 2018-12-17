@@ -326,8 +326,10 @@ class Wrappers:
                	trans_point = Point(float(lng), float(lat))
 		g = GeoIP()
 
-		msisdn = str(msisdn)
-		msisdn = msisdn.strip().replace(' ','').replace('-','')
+		#try: msisdn = msisdn.encode('ascii','ignore').decode('utf-8','ignore')
+		#except: pass
+		msisdn = msisdn.strip()
+		msisdn = msisdn.replace(' ','').replace('-','')
 		is_num = False
 		try:
 			if (msisdn[:1]=='0' or msisdn[:1]=='+') and isinstance(int(msisdn[1:]), int): is_num = True
@@ -367,8 +369,12 @@ class Wrappers:
 
 		msisdn = None
 		if "msisdn" in payload.keys():
-			msisdn = str(payload['msisdn'])
-			msisdn = msisdn.strip().replace(' ','').replace('-','')
+			msisdn = payload['msisdn']
+
+			#try: msisdn = msisdn.encode('ascii','ignore').decode('utf-8','ignore')
+			#except: pass
+			msisdn = msisdn.strip()
+			msisdn = msisdn.replace(' ','').replace('-','')
 
 			is_num = False
  			try:

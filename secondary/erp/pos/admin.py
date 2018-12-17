@@ -53,6 +53,12 @@ class OrderProductAdmin(admin.ModelAdmin):
 				'show_message','payment_method_list','currency_list','trigger_list',)
 admin.site.register(OrderProduct, OrderProductAdmin)
 
+class OrderChargeAdmin(admin.ModelAdmin):
+	list_display = ('institution','expiry','min_amount','max_amount','charge_value','is_percentage','description','order_product_list',\
+			'payment_method_list','product_type_list','gateway_list',)
+
+admin.site.register(OrderCharge, OrderChargeAdmin)
+
 class OrderActivityAdmin(admin.ModelAdmin):
 		list_display = ('id','order_product','order','status','gateway_profile','request','channel','response_status','transaction_reference',\
 				'currency','amount','charges','gateway','institution','scheduled_send','message','sends','ext_inbound_id',)

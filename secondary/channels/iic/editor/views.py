@@ -75,12 +75,14 @@ def node_system_service_commands_code(request, node_system_pk, service_command_p
     service_command = ServiceCommand.objects.get(pk=service_command_pk)
 
     ast_filename = os.path.join(settings.BASE_DIR, node_system.URL.lower().replace('.', '/'), 'tasks.py')
+    print(ast_filename)
 
     with open(ast_filename) as fd:
         file_contents = fd.read()
 
     module = ast.parse(file_contents)
     class_definitions = [node for node in module.body if isinstance(node, ast.ClassDef)]
+    print(class_definitions)
 
     service_commands = []
 
@@ -103,13 +105,17 @@ def node_system_service_commands_code(request, node_system_pk, service_command_p
     code = []
 
     # code.append(end_line_contains)
+    print(service_command.command_function)
 
     # parse the code fragment #
     with open(ast_filename) as fd:
         file_contents = fd.readlines()
         in_block = False
         for line in file_contents:
-            if (not in_block) and 'def ' in line and service_command.command_function == line.split('(')[0].split(' ')[1].strip():
+            # print(line)
+
+            # if (not in_block) and 'def ' in line and service_command.command_function == line.split('(')[0].split(' ')[1].strip():
+            if (not in_block) and 'def ' in line and service_command.command_function in line:
                 code.append('\n')
                 in_block = True
             elif (in_block) and ('class ' in line or (

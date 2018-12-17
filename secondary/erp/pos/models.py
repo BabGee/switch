@@ -157,7 +157,7 @@ class OrderProduct(models.Model):
         currency = models.ManyToManyField(Currency, blank=True) #Allowed Currencies
         trigger = models.ManyToManyField(Trigger, blank=True)
         def __unicode__(self):
-                return u'%s %s' % (self.name, self.investment)
+                return u'%s %s' % (self.name, self.description)
         def product_type_list(self):
                 return "\n".join([a.name for a in self.product_type.all()])
         def service_list(self):
@@ -168,6 +168,31 @@ class OrderProduct(models.Model):
                 return "\n".join([a.code for a in self.currency.all()])
         def trigger_list(self):
                 return "\n".join([a.name for a in self.trigger.all()])
+
+class OrderCharge(models.Model):
+        date_modified = models.DateTimeField(auto_now=True)
+        date_created = models.DateTimeField(auto_now_add=True)
+	institution = models.ForeignKey(Institution)
+	expiry = models.DateTimeField(null=True, blank=True)
+	min_amount = models.IntegerField()
+	max_amount = models.IntegerField()
+	charge_value = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	is_percentage = models.BooleanField(default=False)
+	description = models.CharField(max_length=256, null=True, blank=True)
+	order_product = models.ManyToManyField(OrderProduct)
+	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
+	product_type = models.ManyToManyField(ProductType, blank=True)
+	gateway = models.ManyToManyField(Gateway, blank=True)
+        def __unicode__(self):
+                return u'%s %s %s' % (self.id, self.institution, self.charge_value)
+	def order_product_list(self):
+		return "\n".join([a.name for a in self.order_product.all()])
+	def payment_method_list(self):
+		return "\n".join([a.name for a in self.payment_method.all()])
+	def product_type_list(self):
+		return "\n".join([a.name for a in self.product_type.all()])
+	def gateway_list(self):
+		return "\n".join([a.name for a in self.gateway.all()])
 
 class OrderActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -191,7 +216,6 @@ class OrderActivity(models.Model):
 	ext_inbound_id = models.CharField(max_length=256, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.order_type, self.gateway_profile)
-
 
 class DeliveryStatus(models.Model):
 	# CREATED

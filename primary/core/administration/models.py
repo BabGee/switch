@@ -177,7 +177,7 @@ class Role(models.Model):
 	gateway = models.ForeignKey(Gateway)
 	session_expiry = models.IntegerField(blank=True, null=True, help_text='In Minutes')
 	def __unicode__(self):
-		return u'%s' % (self.name)  
+		return u'%s %s' % (self.name, self.gateway)
        
 class Channel(models.Model):
 	name = models.CharField(max_length=50, unique=True)	

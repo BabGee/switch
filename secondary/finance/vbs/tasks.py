@@ -838,7 +838,9 @@ class System(Wrappers):
 			else:
 				session_gateway_profile_list = GatewayProfile.objects.none()
 
-			if session_gateway_profile_list.exists():
+			if 'institution_id' in payload.keys():
+				session_account = Account.objects.filter(account_status__name='ACTIVE', institution__id=payload['institution_id'], profile=None)
+			elif session_gateway_profile_list.exists():
 				session_account = Account.objects.filter(account_status__name='ACTIVE', institution=session_gateway_profile_list[0].institution, profile=None)
 			else:
 				session_account = Account.objects.filter(account_status__name='ACTIVE', institution=gateway_profile.institution, profile=None)
@@ -853,9 +855,6 @@ class System(Wrappers):
 			if 'currency' in payload.keys():
 				session_account = session_account.filter(account_type__product_item__currency__code=payload['currency'])
 
-			if 'institution_id' in payload.keys():
-				session_account = session_account.filter(Q(account_type__institution__id=payload['institution_id'])|Q(account_type__institution=None))
-
 			if session_account.exists():
 				payload['session_account_id'] = session_account[0].id
 
@@ -863,10 +862,14 @@ class System(Wrappers):
 				payload['response'] = 'Account Captured'
 
 			else:
-				if session_gateway_profile_list.exists():
+				if 'institution_id' in payload.keys():
+					institution = Institution.objects.get(id=payload['institution_id'])
+				elif session_gateway_profile_list.exists() and session_gateway_profile_list[0].institution:
 					institution = session_gateway_profile_list[0].institution
-				else:
+				elif gateway_profile.institution:
 					institution = gateway_profile.institution
+				else:
+					institution = 'Unknown'
 
 				#create account
 				if 'currency' in payload.keys():
