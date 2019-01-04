@@ -162,6 +162,8 @@ class PageInput(models.Model):
 	enrollment_type_included = models.ManyToManyField(EnrollmentType, blank=True)
 	enrollment_type_excluded = models.ManyToManyField(EnrollmentType, blank=True, related_name='pageinput_enrollment_type_excluded')
 	role_action = models.ManyToManyField(RoleAction, blank=True)
+	structure = models.ManyToManyField(Structure, blank=True)
+	template = models.ManyToManyField(Template, blank=True)
 	def __unicode__(self):
 		return u'%s' % (self.page_input)
 	def trigger_list(self):
@@ -186,4 +188,8 @@ class PageInput(models.Model):
 		return "\n".join([a.name for a in self.enrollment_type_excluded.all()])
 	def role_action_list(self):
 		return "\n".join([a.name for a in self.role_action.all()])
+	def structure_list(self):
+		return "\n".join([a.name for a in self.structure.all()])
+	def template_list(self):
+		return "\n".join([a.name for a in self.template.all()])
 

@@ -273,6 +273,31 @@ class System(Wrappers):
 			lgr.info("Error on awards registration: %s" % e)
 		return payload
 
+
+	def set_enrollment_status(self, payload, node_info):
+		try:
+			# gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			enrollment = Enrollment.objects.get(
+				#profile=gateway_profile.user.profile,
+				#enrollment_type__product_item=payload['product_item_id'],
+				#updated=False
+                id=payload['enrollment_id']
+			)
+			enrollment_status = EnrollmentStatus.objects.get(name=payload['enrollment_status'])
+			enrollment.status = enrollment_status
+
+			enrollment.save()
+
+			payload['response'] = 'Enrollment Captured'
+			payload['response_status'] = '00'
+		except Exception, e:
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+			lgr.info("Error on setting enrollment status: %s" % e)
+		return payload
+
+
 	def get_details(self, payload, node_info):
 		try:
 			enrollment = Enrollment.objects.get(id=payload['id'])
@@ -295,7 +320,7 @@ class System(Wrappers):
 				profile.national_id = payload['id_number']
 				profile.save()
 
-			
+
 			payload['first_name'] = profile.user.first_name
 			m_n = profile.middle_name
 			payload['middle_name'] = m_n if m_n else ''
@@ -451,6 +476,7 @@ class System(Wrappers):
 	                                enrollment.save()
 
 					payload['record'] = enrollment.record
+					payload['enrollment_id'] = enrollment.pk
 					payload['enrollment_expiry'] = enrollment.expiry.date().isoformat()
 					payload['response_status'] = '00'
 					payload['response'] = 'Enrollment Captured'

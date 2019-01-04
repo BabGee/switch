@@ -847,6 +847,29 @@ class System(Wrappers):
 		return payload
 
 
+	def email_registered_check(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			if 'email' in payload.keys() and self.validateEmail(payload["email"]):
+				lgr.info('With Email')
+				gateway_profile_list = GatewayProfile.objects.filter(user__email__iexact=payload['email'], gateway=gateway_profile.gateway)
+				if gateway_profile_list.exists():
+					payload['response'] = 'Profile Found'
+					payload['response_status'] = '00'
+				else:
+					payload['response'] = 'Email not Registered'
+					payload['response_status'] = '63'
+			else:
+				payload['response'] = 'Invalid Email or Not Found'
+				payload['response_status'] = '40'
+
+		except Exception, e:
+			lgr.info('Error on email registration check: %s' % e)
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+		return payload
+
+
 	def validate_passport_expiry(self, payload, node_info):
 		try:
 			# gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])

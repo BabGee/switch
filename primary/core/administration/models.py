@@ -120,6 +120,14 @@ class Host(models.Model):
 	def __unicode__(self):
 		return u'%s' % (self.host)
 
+class Structure(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
 class Theme(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
@@ -144,10 +152,20 @@ class Gateway(models.Model):
 	accent_color = models.CharField(max_length=100, blank=True, null=True)
 	max_pin_retries = models.SmallIntegerField(default=3)
 	session_expiry = models.IntegerField(blank=True, null=True, help_text='In Minutes')
+	structure = models.ForeignKey(Structure, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)
 	def default_host_list(self):
 		return "\n".join([a.host for a in self.default_host.all()])
+
+class Template(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	gateway = models.ForeignKey(Gateway)
+	def __unicode__(self):
+		return u'%s' % (self.name)
 
 class AccessLevelStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)

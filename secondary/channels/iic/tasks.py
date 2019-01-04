@@ -254,6 +254,21 @@ class System(Generator):
                 prefetch_related('trigger', 'page', 'access_level', 'institution', 'input_variable', 'page_input_group',
                                  'gateway', 'channel', 'payment_method')
 
+	    #Structure Filters | If gateway has structure, only load where structure exists
+	    if gateway_profile.gateway.structure:
+	    	this_page_inputs = this_page_inputs.filter(structure=gateway_profile.gateway.structure)
+	    else:
+	    	this_page_inputs = this_page_inputs.filter(structure=None)
+	    #Template Filters | If institution has template, only load where template exists or where institution is explicitly defined
+	    if gateway_profile.institution and gateway_profile.institution.template:
+	    	this_page_inputs = this_page_inputs.filter(template=gateway_profile.institution.template)
+	    elif 'institution_id' in payload.keys(): #Explicitly defined institution
+	    	institution = Institution.objects.get(id=payload['institution_id'])
+		if institution.template: this_page_inputs = this_page_inputs.filter(template=institution.template)
+		else:this_page_inputs = this_page_inputs.filter(template=None)
+	    else:
+	    	this_page_inputs = this_page_inputs.filter(template=None)
+
 	    #Role Filters
 	    if gateway_profile.role:
 		role_permission = RolePermission.objects.filter(role=gateway_profile.role)
@@ -309,23 +324,6 @@ class System(Generator):
                 prefetch_related('trigger', 'page', 'access_level', 'institution', 'input_variable', 'page_input_group',
                                  'gateway', 'channel', 'payment_method')
 
-	    '''
-	    #Role Filters
-	    if gateway_profile.role:
-		role_permission = RolePermission.objects.filter(role=gateway_profile.role)
-
-		pages = {}
-		for permission in role_permission:
-			for page in permission.role_right.page.all():
-				if page not in pages.keys():
-					pages[page] = []
-					for action in permission.role_action.all(): 
-						if action not in pages[page]: pages[page].append(action)
-		if pages:
-			query = reduce(operator.or_, ( Q(Q(page=k),Q(Q(role_action=None)|Q(role_action__in=v))) for k,v in pages.items() ))
-			#lgr.info('Query: %s' % query)
-			this_page_inputs = this_page_inputs.filter(query)
-	    '''
             gui['this_page_inputs'] = self.section_generator(payload, this_page_inputs, node_info)
 
             payload['response'] = gui

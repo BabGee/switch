@@ -59,6 +59,10 @@ class HostAdmin(admin.ModelAdmin):
 	search_fields = ('host',)
 admin.site.register(Host, HostAdmin)
 
+class StructureAdmin(admin.ModelAdmin):
+	list_display = ('name', 'description')
+admin.site.register(Structure, StructureAdmin)
+
 class ThemeAdmin(admin.ModelAdmin):
 	list_display = ('name', 'description', 'date_modified', 'date_created')
 admin.site.register(Theme, ThemeAdmin)
@@ -66,8 +70,12 @@ admin.site.register(Theme, ThemeAdmin)
 class GatewayAdmin(admin.ModelAdmin):
 	list_display = ('id','name', 'logo', 'description','background_image','default_color',\
 			'default_host_list','theme','primary_color','secondary_color',\
-			'accent_color','max_pin_retries','session_expiry',)
+			'accent_color','max_pin_retries','session_expiry','structure',)
 admin.site.register(Gateway, GatewayAdmin)
+
+class TemplateAdmin(admin.ModelAdmin):
+	list_display = ('name', 'description','gateway')
+admin.site.register(Template, TemplateAdmin)
 
 class AccessLevelStatusAdmin(admin.ModelAdmin):
 	list_display = ('name', 'description', 'date_modified', 'date_created')
