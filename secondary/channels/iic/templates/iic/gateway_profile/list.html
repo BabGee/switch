@@ -77,6 +77,9 @@
                     {% if page_group.role %}{{ page_group.role.name }}{% else %}None{% endif %}
                 </strong> <br>
 
+                 timezone <strong> {{ page_group.user.profile.timezone }}</strong>
+                <br>
+
                 Actions
                 <a target="_blank" href="/admin/auth/user/{{ page_group.user.pk }}/delete/">Delete</a>
             </li>
@@ -157,7 +160,7 @@
         $(document).ready(function () {
             $('.access_level').editable({
                 source: [
-                    {% for access_level in access_levels %}
+                    {% for access_level in all_access_levels %}
                     {value: {{ access_level.pk }}, text: '{{ access_level.name }}'},
                     {% endfor %}
                 ]

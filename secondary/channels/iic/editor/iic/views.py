@@ -1,8 +1,8 @@
 from django.http import JsonResponse, HttpResponse
 
-from primary.core.administration.models import Gateway, Icon, AccessLevel
+from primary.core.administration.models import Gateway, Icon, AccessLevel,Template
 from primary.core.upc.models import GatewayProfile, Institution, ProfileStatus
-from primary.core.bridge.models import Service, Product, ServiceStatus, ServiceCommand, CommandStatus
+from primary.core.bridge.models import Service, Product, ServiceStatus, ServiceCommand, CommandStatus,PaymentMethod
 
 # data list editor
 from secondary.channels.dsc.models import DataList
@@ -199,9 +199,9 @@ def page_group_create(request, gateway_pk, service_name):
                 return None
 
             # add get_section service command if not exists
-            try:
-                service_obj.servicecommand_set.get(command_function='get_section')
-            except ServiceCommand.DoesNotExist as e:
+            if service_obj.servicecommand_set.filter(command_function='get_section').exists():
+                pass
+            else:
                 service_command = ServiceCommand()
 
                 service_command.service = service_obj
@@ -800,8 +800,7 @@ def page_input_put(request):
         page_input.trigger.add(*Trigger.objects.filter(name__in=add_triggers))
         page_input.trigger.remove(*Trigger.objects.filter(name__in=remove_triggers))
 
-    else:
-        # TODO this should use name too and not be default
+    elif field == 'access_levels':
         new_levels = [int(x) for x in data.getlist('value[]')]
 
         current_levels = page_input.access_level.values_list('pk', flat=True)
@@ -811,6 +810,30 @@ def page_input_put(request):
 
         page_input.access_level.add(*AccessLevel.objects.filter(pk__in=add_levels))
         page_input.access_level.remove(*AccessLevel.objects.filter(pk__in=remove_levels))
+
+    elif field == 'payment_methods':
+        new_payment_methods = [int(x) for x in data.getlist('value[]')]
+        current_payment_methods = page_input.payment_method.values_list('pk', flat=True)
+
+        remove_payment_methods = list(set(current_payment_methods).difference(new_payment_methods))
+        add_payment_methods = list(set(new_payment_methods).difference(current_payment_methods))
+
+        page_input.payment_method.add(*PaymentMethod.objects.filter(pk__in=add_payment_methods))
+        page_input.payment_method.remove(*PaymentMethod.objects.filter(pk__in=remove_payment_methods))
+
+    elif field == 'templates':
+        new_templates = [int(x) for x in data.getlist('value[]')]
+        current_templates = page_input.template.values_list('pk', flat=True)
+
+        remove_templates = list(set(current_templates).difference(new_templates))
+        add_templates = list(set(new_templates).difference(current_templates))
+
+        page_input.template.add(*Template.objects.filter(pk__in=add_templates))
+        page_input.template.remove(*Template.objects.filter(pk__in=remove_templates))
+
+    else:
+        return HttpResponse('not configured {} - {}'.format(field,value))
+
 
     return HttpResponse(status=200)
 
@@ -912,9 +935,12 @@ def interface(request, gateway_pk, service_name, page_group_pk=None, page_pk=Non
     ).order_by('item_level_int')
 
     # all().order_by('item_level')
-
+    # todo optimize to load all where used
     return render(request, "iic/page_group/interface.html", {
         'trigger_list': json.dumps(list(Trigger.objects.all().order_by('-id').values_list('name', flat=True))),
+        'all_access_levels': AccessLevel.objects.all(),
+        'all_payment_methods': PaymentMethod.objects.all(),
+        'all_templates': Template.objects.all(),
         'gateway': gateway,
         'service': service_name,
         'page_groups': page_groups,

@@ -6,7 +6,7 @@ class SaleChargeTypeAdmin(admin.ModelAdmin):
 admin.site.register(SaleChargeType, SaleChargeTypeAdmin)
 
 class SaleChargeAdmin(admin.ModelAdmin):
-	list_display = ('sale_charge_type','credit','expiry','min_amount','max_amount','charge_value',\
+	list_display = ('id','sale_charge_type','credit','expiry','min_amount','max_amount','charge_value',\
 			'is_percentage','description','main_location','min_distance','max_distance','charge_per_km',\
 			'per_item','product_display_list','payment_method_list','product_type_list','institution_list','gateway_list',)
 

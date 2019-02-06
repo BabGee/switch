@@ -936,7 +936,7 @@ class System(Wrappers):
 		except Exception, e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
-			lgr.info("Error on Adding product to cart: %s" % e)
+			lgr.info("Error on Adding product to cart: %s" % e,exc_info=True)
 		return payload
 
 	def cancel_sale_order(self, payload, node_info):
@@ -1321,7 +1321,7 @@ class System(Wrappers):
 			payload['delivery_status'] = delivery.status.name
 
 			if delivery.delivery_profile:
-				payload['delivery_profile_phone'] = delivery.delivery_profile.msisdn.phone_number
+				if delivery.delivery_profile.msisdn: payload['delivery_profile_phone'] = delivery.delivery_profile.msisdn.phone_number
 				delivery_user = delivery.delivery_profile.user
 				payload['delivery_profile_name'] = delivery_user.first_name +' '+delivery_user.last_name
 
@@ -1334,7 +1334,7 @@ class System(Wrappers):
 
 			delivery_recipient = purchase_order.gateway_profile
 			payload['delivery_recipient_name'] = delivery_recipient.user.first_name+' '+delivery_recipient.user.last_name
-			payload['delivery_recipient_phone'] = delivery_recipient.msisdn.phone_number
+			if delivery_recipient.msisdn:payload['delivery_recipient_phone'] = delivery_recipient.msisdn.phone_number
 
 			payload['delivery_schedule'] = delivery.schedule
 

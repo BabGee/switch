@@ -454,7 +454,8 @@ class System(Wrappers):
 						params['password'] = remittance_product[0].endpoint.password
 
 						if remittance_product[0].endpoint.request not in [None, ""]:
-							try:params.update(json.loads(remittance_product[0].endpoint.request))
+							#try:params.update(json.loads(remittance_product[0].endpoint.request))
+							try:params.update(remittance_product[0].endpoint.request)
 							except:pass
 
 						params = self.endpoint_payload(params)
@@ -647,11 +648,14 @@ class System(Wrappers):
 			if 'payment_method' in payload.keys():
 				float_type = float_type.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
 
+			lgr.info('Float Type: %s' % float_type)
 			if 'institution_id' in payload.keys():
 				float_type = float_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
 			else:
 				float_type = float_type.filter(institution=None)
 
+			lgr.info('Float Type: %s' % float_type)
+			lgr.info('Payload: %s' % payload)
 			if 'product_item_id' in payload.keys():
 				product_item = ProductItem.objects.get(id=payload['product_item_id'])
 				float_type = float_type.filter(product_type=product_item.product_type)
@@ -663,7 +667,7 @@ class System(Wrappers):
 				float_type = float_type.filter(product_type__name=payload['product_type'])
 			else:
 				float_type = float_type.filter(product_type=None)
-
+			lgr.info('Float Type: %s' % float_type)
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
 				float_balance = FloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
@@ -671,7 +675,7 @@ class System(Wrappers):
 					float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
 				else:
 					float_balance = float_balance.filter(institution=None)
-
+				lgr.info('Float Balance: %s' % float_balance)
 				#check float exists
 				if float_balance.exists() and Decimal(float_balance[0].balance_bf) >= Decimal(payload['float_amount']):
 
@@ -1050,7 +1054,8 @@ def send_payment(outgoing):
 		payload['transaction_timestamp'] = profile_tz.normalize(i.date_modified.astimezone(profile_tz)).isoformat()
 
 		if i.remittance_product.endpoint.request not in [None, ""]:
-			try:payload.update(json.loads(i.remittance_product.endpoint.request))
+			#try:payload.update(json.loads(i.remittance_product.endpoint.request))
+			try:payload.update(i.remittance_product.endpoint.request)
 			except:pass
 
 		payload = WebService().post_request(payload, node)
@@ -1143,7 +1148,8 @@ def process_incoming_poller(ic):
 		ip = IncomingPoller.objects.get(id=ic)
 		#API Request
 
-		params = json.loads(ip.remittance_product.endpoint.request)
+		#params = json.loads(ip.remittance_product.endpoint.request)
+		params = ip.remittance_product.endpoint.request
 
 		try:params.update(json.loads(ip.request))
 		except Exception, e: lgr.info('Failed to update Request: %s' % e)
@@ -1279,7 +1285,8 @@ def send_paygate_outgoing_deprecated():
 			params['transaction_timestamp'] = profile_tz.normalize(i.date_modified.astimezone(profile_tz)).isoformat()
 
 			if i.remittance_product.endpoint.request not in [None, ""]:
-				try:params.update(json.loads(i.remittance_product.endpoint.request))
+				#try:params.update(json.loads(i.remittance_product.endpoint.request))
+				try:params.update(i.remittance_product.endpoint.request)
 				except:pass
 
 

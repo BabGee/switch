@@ -71,7 +71,6 @@ class DataListLinkQuery(models.Model):
         date_created = models.DateTimeField(auto_now_add=True)
         query = models.ForeignKey(DataListQuery)
 	link_name = models.CharField(max_length=128)
-	link_action = models.CharField(max_length=128)
 	link_service = models.ForeignKey(Service)
 	link_icon = models.ForeignKey(Icon)
         link_case_field = models.CharField(max_length=128, null=True, blank=True)

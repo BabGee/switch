@@ -24,6 +24,7 @@ class SaleCharge(models.Model):
 	is_percentage = models.BooleanField(default=False)
 	description = models.CharField(max_length=256, null=True, blank=True)
 	main_location = models.PointField(srid=4326,blank=True,null=True)
+	objects = models.GeoManager()
 	min_distance = models.IntegerField(null=True, blank=True)
 	max_distance = models.IntegerField(null=True, blank=True)
 	charge_per_km = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)

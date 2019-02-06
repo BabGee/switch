@@ -845,7 +845,7 @@ class Wrappers:
 
 			date_time_data[k.strip()] = Cast(F(v.strip()), CharField(max_length=32))
 
-                    	params['cols'].append({"label": k.strip(), "type": "date", "value": v.strip()})
+                    	params['cols'].append({"label": k.strip(), "type": "datetime", "value": v.strip()})
 
 		    if date_time_data:
 			#lgr.info('Date Time Data: %s' % date_time_data)
@@ -1002,7 +1002,6 @@ class Wrappers:
 
 	    for link in link_query:
 		link_name = link.link_name
-		link_action = link.link_action
 		link_service = link.link_service.name
 		link_icon = link.link_icon.icon
 	        link_case_field = link.link_case_field
@@ -1020,8 +1019,6 @@ class Wrappers:
 			except: continue
 			href['params'] = {k:v}
 			
-		#link_value = '%s%%%s%%%s' % (link_action, link_service, link_icon)
-
 		link_value = json.dumps(href)
 
 		#Final Case
@@ -1097,6 +1094,7 @@ class Wrappers:
 			params['cols'][count] = i
 			count += 1
 
+	    '''
 	    if data.query.links not in [None,'']:
 		    href = {"label": "Actions", "type": "href", "links": {}}
 
@@ -1117,7 +1115,7 @@ class Wrappers:
 					except: continue
 					href['links'][name]['params'] = {k:v}
 		    params['cols'].append(href)
-
+	    '''
 
 	    ###########################################################################
 

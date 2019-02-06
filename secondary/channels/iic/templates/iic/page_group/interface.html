@@ -166,9 +166,7 @@
                                        data-type="checklist"
                                        data-pk="{{ page_input.pk }}"
                                        data-name="access_levels"
-                                       data-value="
-
-                                               {% for cat in page_input.access_level.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                                       data-value="{% for cat in page_input.access_level.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"
                                        data-url="/iic_editor/page_inputs/"
                                        data-title="Select Access Levels"></a>
 
@@ -200,6 +198,26 @@
 
                                         {% endfor %}
                                     {% endif %}
+                                    <br>
+                                    Payment Methods<br>
+                                    <a href="#"
+                                       class="page_input_payment_methods"
+                                       data-type="checklist"
+                                       data-pk="{{ page_input.pk }}"
+                                       data-name="payment_methods"
+                                       data-value="{% for cat in page_input.payment_method.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                                       data-url="/iic_editor/page_inputs/"
+                                       data-title="Select Payment Methods"></a>
+                                    <br>
+                                    Templates<br>
+                                    <a href="#"
+                                       class="page_input_templates"
+                                       data-type="checklist"
+                                       data-pk="{{ page_input.pk }}"
+                                       data-name="templates"
+                                       data-value="{% for cat in page_input.template.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                                       data-url="/iic_editor/page_inputs/"
+                                       data-title="Select Templates"></a>
 
 
                                     <br> Input Variable Usage Count :
@@ -331,18 +349,25 @@
             $('.editable').editable();
             $('.page_input_access_level').editable({
                 source: [
-                    {value: 1, text: 'CUSTOMER'},
-                    {value: 3, text: 'SYSTEM'},
-                    {value: 7, text: 'MANAGER'},
-                    {value: 8, text: 'OPERATOR'},
-                    {value: 11, text: 'ADMINISTRATOR'},
-                    {value: 14, text: 'SUPERVISOR'},
-                    {value: 15, text: 'SUPER ADMINISTRATOR'},
-                    {value: 16, text: 'API USER'},
-                    {value: 17, text: 'SALES'},
-                    {value: 18, text: 'DELIVERY'},
-                    {value: 19, text: 'AGENT'},
-                    {value: 20, text: 'SUPER AGENT'}
+                    {% for access_level in all_access_levels %}
+                    {value: {{ access_level.pk }}, text: '{{ access_level.name }}'},
+                    {% endfor %}
+                ]
+            });
+
+            $('.page_input_payment_methods').editable({
+                source: [
+                    {% for payment_method in all_payment_methods %}
+                    {value: {{ payment_method.pk }}, text: '{{ payment_method.name }}'},
+                    {% endfor %}
+                ]
+            });
+
+            $('.page_input_templates').editable({
+                source: [
+                    {% for template in all_templates %}
+                    {value: {{ template.pk }}, text: '{{ template.name }}'},
+                    {% endfor %}
                 ]
             });
 

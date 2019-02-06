@@ -858,10 +858,10 @@ class System(Wrappers):
 					payload['response_status'] = '00'
 				else:
 					payload['response'] = 'Email not Registered'
-					payload['response_status'] = '63'
+					payload['response_status'] = '96'
 			else:
 				payload['response'] = 'Invalid Email or Not Found'
-				payload['response_status'] = '40'
+				payload['response_status'] = '96'
 
 		except Exception, e:
 			lgr.info('Error on email registration check: %s' % e)
@@ -1937,6 +1937,7 @@ class System(Wrappers):
 			else: institution.country = Country.objects.get(iso2='KE')
 			if 'institution_theme' in payload.keys(): institution.theme = Theme.objects.get(name=payload['institution_theme'])
 			else: institution.theme = Theme.objects.get(name='polymer2.0')
+			if 'institution_template' in payload.keys(): institution.template_id = payload['institution_template']
 
 			institution.save()
 
