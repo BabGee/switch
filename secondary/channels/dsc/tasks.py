@@ -785,7 +785,7 @@ class Wrappers:
                 	try:k,v = i.split('%')
 			except: continue
 	                args.append(k.strip())
-			value_type = model_class._meta.get_field(v.split('__')[0]).get_internal_type()
+			value_type = model_class._meta.get_field(v.strip().split('__')[0]).get_internal_type()
 			
 			column_type = 'string'
 			if value_type == 'DateField':
