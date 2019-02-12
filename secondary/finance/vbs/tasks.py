@@ -94,8 +94,13 @@ class System(Wrappers):
 			amount = account_manager.amount
 			charge =  account_manager.charge
 
-			credit_type = SavingsCreditType.objects.filter(account_type=account_manager.dest_account.account_type,\
-					 min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
+			if 'loan_time' in payload.keys():
+				credit_type = SavingsCreditType.objects.filter(account_type=account_manager.dest_account.account_type,\
+						 min_time__lte=int(payload['loan_time']), max_time__gte=int(payload['loan_time']))
+			elif 'rollover_loan_time' in payload.keys():
+				credit_type = SavingsCreditType.objects.filter(account_type=account_manager.dest_account.account_type,\
+						 min_time__lte=int(payload['rollover_loan_time']), max_time__gte=int(payload['rollover_loan_time']))
+
 
 			interest = Decimal(0)
 			savings_credit_list = []
@@ -449,23 +454,41 @@ class System(Wrappers):
 			session_account = Account.objects.get(id=payload['session_account_id'])
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			try:
-				session_manager = AccountManager.objects.get(id=payload['account_manager_id'], credit_paid=False, credit_due_date__lte=timezone.now())
-				amount = session_manager.amount + session_manager.charge
 
-				credit_type = SavingsCreditType.objects.filter(account_type=session_manager.dest_account.account_type,\
+				#Check loan exists
+				#session_manager = AccountManager.objects.get(id=payload['account_manager_id'], credit_paid=False, credit_due_date__lte=timezone.now())
+				session_manager = SavingsCreditManager.objects.get(id=payload['savings_credit_manager_id'], credit_paid=False)
+
+				credit_overdue = CreditOverdue.objects.get(id=payload['credit_overdue_id'])
+
+				#Add to Credit Overdue Manager
+				credit_overdue_manager = CreditOverdueManager(savings_credit_manager=session_manager, credit_overdue=credit_overdue)
+
+				credit_overdue_manager.save()
+
+				#Release session manager lock
+				session_manager.processed_overdue_credit = False
+				session_manager.save()
+
+
+				#session_manager = AccountManager.objects.get(id=payload['account_manager_id'], credit_paid=False, credit_due_date__lte=timezone.now())
+				#amount = session_manager.amount + session_manager.charge
+				amount = session_manager.outstanding
+
+				credit_type = SavingsCreditType.objects.filter(account_type=session_manager.account_manager.dest_account.account_type,\
 						 min_time__lte=int(payload['rollover_loan_time']), max_time__gte=int(payload['rollover_loan_time']))
 
 				interest = Decimal(0)
 				for c in credit_type:
 					interest =  interest + ((c.interest_rate/100)*(int(payload['rollover_loan_time'])/c.interest_time)*Decimal(amount))
 
-				due_date = session_manager.credit_due_date
+				due_date = session_manager.due_date
 				due_date = due_date.strftime("%d/%b/%Y")
 				payload['due_date'] = due_date
 
-				#payload['quantity'] = interest.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+				payload['is_loan'] = True
 				payload['amount'] = interest.quantize(Decimal('.01'), rounding=ROUND_DOWN)
-			except AccountManager.DoesNotExist: pass
+			except SavingsCreditManager.DoesNotExist: pass
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Rollover Details Captured'
@@ -547,7 +570,10 @@ class System(Wrappers):
 				if 'is_loan' in payload.keys() and payload['is_loan'] and 'loan_time' in payload.keys():
 					session_manager.credit_time = int(payload['loan_time'])
 					session_manager.credit_due_date = timezone.now() + timezone.timedelta(days=int(payload['loan_time']))
-
+				elif 'is_loan' in payload.keys() and payload['is_loan'] and 'rollover_loan_time' in payload.keys():
+					session_manager.credit_time = int(payload['rollover_loan_time'])
+					session_manager.credit_due_date = timezone.now() + timezone.timedelta(days=int(payload['rollover_loan_time']))
+				
 				if 'paygate_incoming_id' in payload.keys():
 					session_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
                         	if 'paygate_outgoing_id' in payload.keys():

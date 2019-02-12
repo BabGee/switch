@@ -788,15 +788,13 @@ class System(Wrappers):
 
 				if 'purchase_order_id' in payload.keys():
 					bill_manager = bill_manager.filter(order__id=payload['purchase_order_id'])
-				elif 'transaction_reference' in payload.keys() and 'purchase_order_id' not in payload.keys():
-					bill_manager_extract = bill_manager.filter(transaction_reference = payload['transaction_reference'])
-					bill_manager = bill_manager.filter(order=bill_manager_extract[0].order)
-
-
-
-				elif 'reference' in payload.keys() and 'purchase_order_id' not in payload.keys():
+				elif 'reference' in payload.keys():
 					reference = payload['reference'].strip()
 					bill_manager = bill_manager.filter(order__reference__iexact=reference)
+				elif 'transaction_reference' in payload.keys():
+					bill_manager_extract = bill_manager.filter(transaction_reference = payload['transaction_reference'])
+					if bill_manager_extract.exists(): bill_manager = bill_manager.filter(order=bill_manager_extract[0].order)
+					else: bill_manager = bill_manager.none()
 				else:
 					bill_manager = bill_manager.none()
 				if bill_manager.exists():
