@@ -1772,6 +1772,9 @@ class System(Wrappers):
 							error += 'New Password not allowed to match previous 3 passwords, ' 
 							break
 
+
+			#digit = r'%s' % '\d'
+
 			if re.search(r'\d', password) is None: error += 'Digit, ' 
 			if re.search(r'[A-Z]', password) is None: error += 'Uppercase, '
 			if re.search(r'[a-z]', password) is None: error += 'Lowercase, '

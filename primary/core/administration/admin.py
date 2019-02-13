@@ -73,6 +73,14 @@ class GatewayAdmin(admin.ModelAdmin):
 			'accent_color','max_pin_retries','session_expiry','structure',)
 admin.site.register(Gateway, GatewayAdmin)
 
+class PasswordComplexityAdmin(admin.ModelAdmin):
+		list_display = ('id','name','description','regex','validation_response')
+admin.site.register(PasswordComplexity, PasswordComplexityAdmin)
+
+class PasswordPolicyAdmin(admin.ModelAdmin):
+		list_display = ('id','date_modified','date_created','gateway','password_complexity_list','old_password_count')
+admin.site.register(PasswordPolicy, PasswordPolicyAdmin)
+
 class TemplateAdmin(admin.ModelAdmin):
 	list_display = ('name', 'description','gateway')
 admin.site.register(Template, TemplateAdmin)

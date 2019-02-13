@@ -152,25 +152,6 @@ class ChangeProfileMSISDN(models.Model):
 	def __unicode__(self):
 		return u'%s %s %s' % (self.gateway_profile, self.msisdn, self.expiry)
 
-class PasswordStatus(models.Model):
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
-		return u'%s' % (self.name)
-		
-class PasswordPolicy(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	user = models.ForeignKey(User)
-	reset_key = models.CharField(max_length=200, blank=True, null=True)
-	old_password = models.CharField(max_length=400)
-	status = models.ForeignKey(PasswordStatus)
-	def __unicode__(self):
-		return u'%s' % (self.name)
-
-
 class SessionStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)

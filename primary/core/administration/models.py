@@ -158,6 +158,30 @@ class Gateway(models.Model):
 	def default_host_list(self):
 		return "\n".join([a.host for a in self.default_host.all()])
 
+
+class PasswordComplexity(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	regex = models.CharField(max_length=100)
+	validation_response = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+	
+	
+class PasswordPolicy(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	gateway = models.OneToOneField(Gateway)
+	password_complexity = models.ManyToManyField(PasswordComplexity, blank=True)
+	old_password_count = models.PositiveSmallIntegerField(default=0, help_text='0 allows old password. Else denies old password to count')
+	def __unicode__(self):
+		return u'%s' % (self.name)
+	def password_complexity_list(self):
+		return "\n".join([p.name for p in self.password_complexity.all()])
+
+
 class Template(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)

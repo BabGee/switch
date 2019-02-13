@@ -78,14 +78,6 @@ class InstitutionTillAdmin(admin.OSMGeoAdmin):
 admin.site.register(InstitutionTill, InstitutionTillAdmin)
 '''
 
-class PasswordStatusAdmin(admin.ModelAdmin):
-		list_display = ('id','name','description','date_modified','date_created')
-admin.site.register(PasswordStatus, PasswordStatusAdmin)
-
-class PasswordPolicyAdmin(admin.ModelAdmin):
-		list_display = ('id','user','reset_key','old_password','status','date_modified','date_created')
-admin.site.register(PasswordPolicy, PasswordPolicyAdmin)
-
 class SessionStatusAdmin(admin.ModelAdmin):
 	list_display = ('id','name','description','date_modified','date_created')
 admin.site.register(SessionStatus, SessionStatusAdmin)
