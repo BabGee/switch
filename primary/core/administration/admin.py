@@ -2,11 +2,12 @@ from django.contrib.gis import admin
 from primary.core.administration.models import *
 from django.forms.widgets import TextInput, Textarea
 from django import forms
-'''
+
 class UserPasswordHistoryAdmin(admin.OSMGeoAdmin):
 	list_display = ('id','date_modified','date_created','user','password',)
 admin.site.register(UserPasswordHistory, UserPasswordHistoryAdmin)
 
+'''
 class CountryStatusAdmin(admin.OSMGeoAdmin):
 	list_display = ('id','name','description')
 admin.site.register(CountryStatus, CountryStatusAdmin)
@@ -74,15 +75,16 @@ class GatewayAdmin(admin.ModelAdmin):
 admin.site.register(Gateway, GatewayAdmin)
 
 class PasswordComplexityAdmin(admin.ModelAdmin):
-		list_display = ('id','name','description','regex','validation_response')
+	list_display = ('id','name','description','regex','validation_response',)
 admin.site.register(PasswordComplexity, PasswordComplexityAdmin)
 
 class PasswordPolicyAdmin(admin.ModelAdmin):
-		list_display = ('id','date_modified','date_created','gateway','password_complexity_list','old_password_count')
+	list_display = ('id','date_modified','date_created','gateway','password_complexity_list','old_password_count',\
+			'min_characters','max_characters','expiration_days',)
 admin.site.register(PasswordPolicy, PasswordPolicyAdmin)
 
 class TemplateAdmin(admin.ModelAdmin):
-	list_display = ('name', 'description','gateway')
+	list_display = ('name', 'description','gateway',)
 admin.site.register(Template, TemplateAdmin)
 
 class AccessLevelStatusAdmin(admin.ModelAdmin):

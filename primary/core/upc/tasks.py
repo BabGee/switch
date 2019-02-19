@@ -1763,6 +1763,96 @@ class System(Wrappers):
 
 			error = ''
 
+			password_policy = PasswordPolicy.objects.get(gateway=gateway_profile.gateway)
+
+			if confirm_password and password <> confirm_password: error += "Passwords did not Match, " 
+			if 'session_gateway_profile_id' in payload.keys():
+				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+				password_history = UserPasswordHistory.objects.filter(user=session_gateway_profile.user).order_by('-date_created')[:password_policy.old_password_count]
+				if password_history.exists():
+					for ph in password_history:
+						if check_password(password, ph.password): 
+							error += 'New Password not allowed to match previous %s passwords, ' % password_policy.old_password_count
+							break
+			if len(password) >= password_policy.min_characters is None: error += 'More than %s Characters Required, ' % password_policy.min_characters
+			if len(password) <= password_policy.max_characters is None: error += 'Less than %s Characters Required, ' % password_policy.max_characters
+			#digit = r'%s' % '\d'
+			for c in password_policy.password_complexity.all():
+				regex = r'%s' % c.regex
+				#lgr.info('Regex: %s' % regex)
+				if re.search(regex, password) is None: error += '%s, ' % c.validation_response
+			if error == '':
+				payload['response'] = 'Password Policy Succesful'
+				payload['response_status'] = '00'
+			else:
+				payload['response'] = 'Requires('+error+')'
+				payload['response_status'] = '30'
+		except Exception, e:
+			lgr.info('Error on Password Policy: %s' % e)
+			payload['response_status'] = '96'
+
+		return payload
+
+	def set_password(self, payload, node_info):
+		try:
+
+
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			password = payload['password']
+			confirm_password = payload['confirm_password'] if 'confirm_password' in payload.keys() else None
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+			error = ''
+
+			password_policy = PasswordPolicy.objects.get(gateway=gateway_profile.gateway)
+
+			if confirm_password and password <> confirm_password: error += "Passwords did not Match, " 
+
+			password_history = UserPasswordHistory.objects.filter(user=session_gateway_profile.user).order_by('-date_created')[:password_policy.old_password_count]
+			if password_history.exists():
+				for ph in password_history:
+					if check_password(password, ph.password): 
+						error += 'New Password not allowed to match previous %s passwords, ' % password_policy.old_password_count
+						break
+			if len(password) >= password_policy.min_characters is None: error += 'More than %s Characters Required, ' % password_policy.min_characters
+			if len(password) <= password_policy.max_characters is None: error += 'Less than %s Characters Required, ' % password_policy.max_characters
+			#digit = r'%s' % '\d'
+			for c in password_policy.password_complexity.all():
+				regex = r'%s' % c.regex
+				lgr.info('Regex: %s' % regex)
+				if re.search(regex, password) is None: error += '%s, ' % c.validation_response
+			if error == '':
+				status = ProfileStatus.objects.get(name="ACTIVATED")
+				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+				session_gateway_profile.status = status
+				session_gateway_profile.save()
+				session_gateway_profile.user.set_password(password)
+				session_gateway_profile.user.is_active = True
+				session_gateway_profile.user.save()
+				#add password history
+				UserPasswordHistory(user=session_gateway_profile.user,password=session_gateway_profile.user.password).save()
+				payload['response'] = 'Password Set'
+				payload['response_status'] = '00'
+			else:
+				payload['response'] = 'Requires('+error+')'
+				payload['response_status'] = '30'
+		except Exception, e:
+			lgr.info('Error on Setting Password: %s' % e)
+			payload['response_status'] = '96'
+
+		return payload
+
+	def old_password_policy(self, payload, node_info):
+		try:
+
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			password = payload['password']
+			confirm_password = payload['confirm_password'] if 'confirm_password' in payload.keys() else None
+
+			error = ''
+
 			if 'session_gateway_profile_id' in payload.keys():
 				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 				password_history = UserPasswordHistory.objects.filter(user=session_gateway_profile.user).order_by('-date_created')[:3]
@@ -1795,7 +1885,7 @@ class System(Wrappers):
 		return payload
 
 
-	def set_password(self, payload, node_info):
+	def old_set_password(self, payload, node_info):
 		try:
 
 
@@ -1965,7 +2055,9 @@ class System(Wrappers):
 	def payload_exclude_institution(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			del payload['institution_id']
+			if 'institution_id' in payload.keys():
+				payload['excluded_institution_id'] = payload['institution_id']
+				del payload['institution_id']
 
 			payload['response'] = 'Institution Excluded from Payload'
 			payload['response_status'] = '00'
@@ -2818,9 +2910,20 @@ class System(Wrappers):
 
 					lgr.info('Authorized Gateway Profile: %s' % authorized_gateway_profile)
 			if authorized_gateway_profile is not None and authorized_gateway_profile.status.name not in ['DELETED']:
-				details['api_key'] = authorized_gateway_profile.user.profile.api_key
-				details['status'] = authorized_gateway_profile.status.name
-				details['access_level'] = authorized_gateway_profile.access_level.name
+
+				password_policy = PasswordPolicy.objects.get(gateway=gateway_profile.gateway)
+
+				password_history = UserPasswordHistory.objects.filter(user=authorized_gateway_profile.user).order_by('-date_created')[:1]
+				password_history = password_history[0]
+
+				if (timezone.now() - password_history.date_created) >= timezone.timedelta(days=password_policy.expiration_days):
+					payload['trigger'] = 'expired_password%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				else:
+					payload['trigger'] = 'active_password%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
+					details['api_key'] = authorized_gateway_profile.user.profile.api_key
+					details['status'] = authorized_gateway_profile.status.name
+					details['access_level'] = authorized_gateway_profile.access_level.name
 
 				payload['response'] = details
 				payload['session_gateway_profile_id'] = authorized_gateway_profile.id #Authenticating Gateway Profile id replace not to clash with parent service

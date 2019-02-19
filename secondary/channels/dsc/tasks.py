@@ -3699,6 +3699,34 @@ class System(Wrappers):
             lgr.info("Error on Uploading File: %s" % e)
         return payload
 
+    def upload_image_list_bulk(self, payload, node_info):
+        try:
+	    
+		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+		bulk_uploads = payload['bulk_uploads']
+		for bulk_upload in bulk_uploads.split(','):
+			image_list = ImageList()
+			image_list.name = None
+			image_list.description = None
+			image_list.image_list_type = ImageListType.objects.get(name='GALLERY')
+			media_temp = settings.MEDIA_ROOT + '/tmp/uploads/'
+			tmp_image = media_temp + str(bulk_upload)
+			with open(tmp_image, 'r') as f:
+				image_list.image.save(bulk_upload,File(f),save=False)
+			f.close()
+			image_list.save()
+			image_list.institution.add(gateway_profile.institution)
+			image_list.gateway.add(gateway_profile.gateway)
+
+			payload['response'] = 'Uploads Processed Successfully'
+			payload['response_status'] = '00'
+	except Exception, e:
+		payload['response_status'] = '96'
+		lgr.info("Error on processing bulk uploads.",exc_info=True)
+	return payload
+
+
+
 
 class Trade(System):
     pass

@@ -74,5 +74,6 @@ admin.site.register(ImageListType, ImageListTypeAdmin)
 class ImageListAdmin(admin.ModelAdmin):
 	list_display = ('id', 'name', 'image','description', 'image_list_type',\
 			 'level', 'access_level_list', 'institution_list','gateway_list',)
+	list_filter = ('image_list_type', 'access_level', 'institution', 'gateway',)
 admin.site.register(ImageList, ImageListAdmin)
 
