@@ -2914,16 +2914,19 @@ class System(Wrappers):
 				password_policy = PasswordPolicy.objects.get(gateway=gateway_profile.gateway)
 
 				password_history = UserPasswordHistory.objects.filter(user=authorized_gateway_profile.user).order_by('-date_created')[:1]
-				password_history = password_history[0]
+				if password_history.exists():
+					password_history = password_history[0]
 
-				if (timezone.now() - password_history.date_created) >= timezone.timedelta(days=password_policy.expiration_days):
-					payload['trigger'] = 'expired_password%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					if (timezone.now() - password_history.date_created) >= timezone.timedelta(days=password_policy.expiration_days):
+						payload['trigger'] = 'expired_password%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					else:
+						payload['trigger'] = 'active_password%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
+						details['api_key'] = authorized_gateway_profile.user.profile.api_key
+						details['status'] = authorized_gateway_profile.status.name
+						details['access_level'] = authorized_gateway_profile.access_level.name
 				else:
-					payload['trigger'] = 'active_password%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-
-					details['api_key'] = authorized_gateway_profile.user.profile.api_key
-					details['status'] = authorized_gateway_profile.status.name
-					details['access_level'] = authorized_gateway_profile.access_level.name
+					payload['trigger'] = 'expired_password%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
 				payload['response'] = details
 				payload['session_gateway_profile_id'] = authorized_gateway_profile.id #Authenticating Gateway Profile id replace not to clash with parent service
