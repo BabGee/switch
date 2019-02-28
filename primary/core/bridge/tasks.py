@@ -380,7 +380,21 @@ class System(Wrappers):
 			payload['response_status'] = '96'
 			lgr.error("Error on Background Service: %s" % e, exc_info=True)
 		return payload
+	def reset_background_service_activity(self,payload,node_info):
+		try:
+			status = TransactionStatus.objects.get(name='CREATED')
+			response_status = ResponseStatus.objects.get(response='DEFAULT')
+			
+			BackgroundServiceActivity.objects.filter(id=payload['background_service_activity_id']).update(response_status=response_status,status=status)
 
+			payload['response'] = "Activity reset, Waitting to process"
+			payload['response_status'] = '00'
+
+
+		except Exception,e:
+			payload['response_status'] = '96'
+			lgr.error("Error reseting background service activity",exc_info=True)
+		return payload
 
 	def check_transaction_auth(self, payload, node_info):
 		try:
