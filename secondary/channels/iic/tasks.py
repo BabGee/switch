@@ -260,14 +260,15 @@ class System(Generator):
 	    else:
 	    	this_page_inputs = this_page_inputs.filter(structure=None)
 	    #Template Filters | If institution has template, only load where template exists or where institution is explicitly defined
-	    if gateway_profile.institution and gateway_profile.institution.template:
-	    	this_page_inputs = this_page_inputs.filter(template=gateway_profile.institution.template)
-	    elif 'institution_id' in payload.keys(): #Explicitly defined institution
-	    	institution = Institution.objects.get(id=payload['institution_id'])
-		if institution.template: this_page_inputs = this_page_inputs.filter(template=institution.template)
-		else:this_page_inputs = this_page_inputs.filter(template=None)
-	    else:
-	    	this_page_inputs = this_page_inputs.filter(template=None)
+	    if 'template_enabled' in payload.keys() and payload['template_enabled']:
+		    if gateway_profile.institution and gateway_profile.institution.template:
+		    	this_page_inputs = this_page_inputs.filter(template=gateway_profile.institution.template)
+		    elif 'institution_id' in payload.keys(): #Explicitly defined institution
+		    	institution = Institution.objects.get(id=payload['institution_id'])
+			if institution.template: this_page_inputs = this_page_inputs.filter(template=institution.template)
+			else:this_page_inputs = this_page_inputs.filter(template=None)
+		    else:
+		    	this_page_inputs = this_page_inputs.filter(template=None)
 
 	    #Role Filters
 	    if gateway_profile.role:

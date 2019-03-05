@@ -151,6 +151,10 @@ class SavingsCreditManager(models.Model):
 	paid = models.DecimalField(max_digits=19, decimal_places=2)
 	outstanding = models.DecimalField(max_digits=19, decimal_places=2)
 	processed_overdue_credit = models.BooleanField(default=False)
+	balance_bf = models.DecimalField(max_digits=19, decimal_places=2)
+	incoming_payment = models.ForeignKey(Incoming, null=True, blank=True)
+        outgoing_payment = models.ForeignKey(Outgoing, null=True, blank=True)
+        follow_on = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s %s %s' % (self.account_manager, self.installment_time, self.due_date)
 

@@ -133,7 +133,8 @@ class System(Wrappers):
 								credit=account_manager.credit,installment_time=installment_time,\
 								amount=installment_amount,charge=installment_charge,\
 								due_date=due_date,\
-								paid=Decimal(0),outstanding=(installment_amount+installment_charge))
+								paid=Decimal(0),outstanding=(installment_amount+installment_charge),\
+								balance_bf=(installment_amount+installment_charge))
 					savings_credit_list.append(savings_credit_manager)
 			else:
 
@@ -142,7 +143,8 @@ class System(Wrappers):
 								credit=account_manager.credit,installment_time=account_manager.credit_time,\
 								amount=account_manager.amount,charge=account_manager.charge,\
 								due_date=account_manager.credit_due_date,\
-								paid=Decimal(0),outstanding=(account_manager.amount+account_manager.charge))
+								paid=Decimal(0),outstanding=(account_manager.amount+account_manager.charge),\
+								balance_bf=(account_manager.amount+account_manager.charge))
 					savings_credit_list.append(savings_credit_manager)
 
 			if len(savings_credit_list)>0: SavingsCreditManager.objects.bulk_create(savings_credit_list)

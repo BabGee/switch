@@ -1866,6 +1866,7 @@ def send_outbound_email_messages():
 
 			else:
 				lgr.info('No Valid Email')
+				i.state = OutBoundState.objects.get(name='FAILED')
 
 			i.save()
 		except Exception, e:

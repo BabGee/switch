@@ -208,7 +208,7 @@ class System(Wrappers):
 			lgr.info('Payment Notification')
 			keyword = reference[:4]
 			institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(keyword__iexact=keyword)\
-										|Q(keyword__in=[''])|Q(keyword=reference)\
+										|Q(keyword__in=[''])|Q(keyword__iexact=reference)\
 										|Q(keyword__isnull=True))
 			purchase_order = PurchaseOrder.objects.filter(reference__iexact=reference, status__name='UNPAID')
 			lgr.info('Order: %s' % purchase_order)
