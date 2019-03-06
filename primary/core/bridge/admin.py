@@ -121,9 +121,11 @@ class ActivityTransactionAdmin(admin.ModelAdmin):
 admin.site.register(ActivityTransaction, ActivityTransactionAdmin)
 
 class ApprovalAdmin(admin.ModelAdmin):
-        list_display = ('id','institution_list','gateway_list','access_level_list',\
+		list_display = ('id','institution_list','gateway_list','access_level_list',\
 			'service','details','cut_off_command','trigger_service_list','requestor','approver',\
 			'pending_count','approval_identifier','pending_related_service_list',)
+		list_filter = ('institution',)
+		search_fields = ('service',)
 admin.site.register(Approval, ApprovalAdmin)
 
 class ApprovalActivityStatusAdmin(admin.ModelAdmin):
