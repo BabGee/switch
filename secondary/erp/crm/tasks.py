@@ -8,6 +8,7 @@ from celery.utils.log import get_task_logger
 
 from django.shortcuts import render
 from secondary.erp.pos.models import *
+from secondary.channels.dsc.models import ImageList
 from django.utils import timezone
 from django.utils.timezone import utc
 from django.contrib.gis.geos import Point
@@ -596,7 +597,10 @@ class System(Wrappers):
 			product.name = payload['product_name']
 			product.description = payload['product_description']
 			product.status =  ProductStatus.objects.get(name=payload['product_status']) # ACTIVE
-			product.shop_product_type_id = payload['shop_product_type']
+			if 'shop_product_type_id' in payload.keys() and payload['shop_product_type_id']:
+				product.shop_product_type_id = payload['shop_product_type']
+			elif 'shop_product_type' in payload.keys() and payload['shop_product_type']:
+				product.shop_product_type = ShopProductType.objects.filter(name=payload['shop_product_type'],institution=gateway_profile.institution)[0]
                         product.product_type_id = payload['product_type_id']
 			product.buying_cost = payload['product_buying_cost']
 			product.unit_cost = payload['product_selling_cost']
@@ -622,6 +626,18 @@ class System(Wrappers):
 			except Exception, e:
 				lgr.info('Error on saving Product default Image: %s' % e)
 
+			if 'product_gallery_image' in payload.keys() and payload['product_gallery_image']:
+				image_lists = ImageList.objects.filter(
+					name=payload['product_gallery_image'],
+					image_list_type__name='GALLERY',
+					institution=gateway_profile.institution
+				)
+				if image_lists.exists():
+					lgr.info(image_lists)
+					image_list = image_lists[0]
+					product.default_image = image_list.image
+				else:
+					lgr.error('image list named {} not found'.format(payload['product_gallery_image']))
 
 			product.save()
 
@@ -630,7 +646,7 @@ class System(Wrappers):
 			payload['response'] = 'Product Added Succefully'
 		except Exception, e:
 			payload['response_status'] = '96'
-			lgr.info("Error on Add Product: %s" % e)
+			lgr.info("Error on Add Product: %s" % e,exc_info=True)
 		return payload
 
 	def edit_product(self,payload, node_info):
