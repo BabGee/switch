@@ -1,0 +1,29 @@
+site_name: Switch Documentation
+site_url: https://interintel.co.ke/
+site_description: InterIntel Switch Documentation.
+site_author: Nyaundi Brian
+
+nav:
+    - Home: index.md
+    - Switch:
+        - Architecure: switch/userguide.md
+        - M1:
+            - User Guide: switch/userguide.md
+            - Architecure: switch/userguide.md
+        - User Guide: switch/userguide.md
+        - Architecure: switch/userguide.md
+    - WebChanel: wc/index.md
+    - Frontends:
+        - Polymer3.0: frontends/writing-your-docs.md
+        - Styling Your Docs: user-guide/styling-your-docs.md
+        - Configuration: user-guide/configuration.md
+        - Deploying Your Docs: user-guide/deploying-your-docs.md
+        - Custom Themes: user-guide/custom-themes.md
+        - Plugins: user-guide/plugins.md
+    - About:
+        - Release Notes: about/release-notes.md
+        - Contributing: about/contributing.md
+        - License: about/license.md
+
+theme: material
+copyright: Copyright &copy; 2018 <a href="https://interintel.co.ke/#/0/0">InterIntel</a>, Maintained by the <a href="/about/release-notes/#maintenance-team">InterIntel Developers</a>.
