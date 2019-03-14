@@ -95,19 +95,18 @@
         }
       }
 
-
-      _render({columns,module,model}) {
+      render() {
 
         return html`
         <div id='columns'>
 
-        ${columns.map((i) => html`<value-column label=${i.label}
-                                                module=${module}
-                                                model=${model}
+        ${this.columns.map((i) => html`<value-column label=${i.label}
+                                                module=${this.module}
+                                                model=${this.model}
                                                 path=${i.path}></value-column>`)}
         </div>
 
-        <button on-click="${(e) => this._onAddNewColumn(e)}">Add</button>
+        <button @click="${this._onAddNewColumn}">Add</button>
         <button id="saveValues">Save</button>`;
       }
 
@@ -142,7 +141,12 @@
           label: String
       }}
 
-      _render({label}) {
+      constructor(){
+          super();
+          this.label = '';
+      }
+
+      render() {
         return html`
 <style>
         :host {
@@ -153,7 +157,7 @@
         }
       </style>
         <div>
-            <input type="text" value="${label}">
+            <input type="text" value="${this.label}">
         </div>`;
       }
 
@@ -174,15 +178,18 @@
       constructor(){
           super();
           this.fields = [];
+          this.model = undefined;
+          this.field = undefined;
+          this.module = undefined;
          // this.module = 'SECONDARY.CHANNELS.IIC';
 
       }
 
-      _render({model,module,field,fields}) {
+      render() {
 
           // console.log(field);
 
-          if(model && module && !fields.length ) {this._loadFields(field);}
+          if(this.model && this.module && !this.fields.length ) {this._loadFields(this.field);}
 
               return html`<style>
         :host {
@@ -193,10 +200,10 @@
         }
       </style><div>
 
-            <strong>${model}</strong>
-            <select on-change="${(e) => this._onFieldOptionChange(e)}">
+            <strong>${this.model}</strong>
+            <select @change="${this._onFieldOptionChange}">
                 <option>-----</option>
-                ${fields.map((i) => html`<option  field=${i} selected?="${i['selected']}" >${i.name}</option>`)}
+                ${this.fields.map((i) => html`<option  .field=${i} ?selected="${i['selected']}" >${i.name}</option>`)}
             </select>
 
 
@@ -282,25 +289,25 @@
           paths:Array
       }}
 
-      _render({module,model,paths,path}) {
+      render() {
 
-            if(!model || !module){
+            if(!this.model || !this.module){
                 return html``
             }
 
-            if(model && module && !paths.length){
-                if(path) {
+            if(this.model && this.module && !this.paths.length){
+                if(this.path) {
                     // parse and re-create paths
-                    let pathParts = path.split('__');
+                    let pathParts = this.path.split('__');
                     for (let i = 0; i < pathParts.length; i++) {
                         let pathPart = pathParts[i];
 
                     }
 
-                    this.paths.push({'model': model, 'module': module,'field':path});
+                    this.paths.push({'model': this.model, 'module': this.module,'field':this.path});
 
                 }else {
-                    this.paths.push({'model': model, 'module': module,'field':undefined});
+                    this.paths.push({'model': this.model, 'module': this.module,'field':undefined});
                 }
 
             }
@@ -310,15 +317,20 @@
         return html`<style>
         :host {
           display: inline-block;
+          overflow-x: auto;
+          white-space: nowrap;
+          width: 70vw;
         }
         :host([hidden]) {
           display: none;
         }
+
+
       </style><div>
-        ${paths.map((path) => html`<path-field module=${path['module']}
+        ${this.paths.map((path) => html`<path-field module=${path['module']}
                                                model=${path['model']}
                                                field=${path['field']}
-                                               on-many-to-one="${(e) => this._onManyToOneField(e)}"></path-field>`)}
+                                               @many-to-one="${this._onManyToOneField}"></path-field>`)}
 
         </div>`;
       }
@@ -355,13 +367,13 @@
           path: String,
       }}
 
-      _render({label,path,model,module}) {
+      render() {
 
 
 
         return html`<div>
-            <column-label label="${label}"></column-label> :
-            <column-path path="${path}" module=${module} model="${model}"></column-path>
+            <column-label label="${this.label}"></column-label> :
+            <column-path path="${this.path}" module=${this.module} model="${this.model}"></column-path>
         </div>`;
       }
 
