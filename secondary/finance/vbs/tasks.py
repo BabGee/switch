@@ -1167,7 +1167,7 @@ class Payments(System):
 
 					savings_credit_manager.save()
 
-				if outstanding_credit_amount > 0:
+				if savings_credit_manager_list.filter(credit_paid=False).exists():
 					payload['outstanding_credit_amount'] = outstanding_credit_amount
 					payload['trigger'] = 'credit_partially_paid%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				else:
