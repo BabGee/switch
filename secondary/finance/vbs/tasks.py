@@ -1138,15 +1138,20 @@ class Payments(System):
 						i.paid = i.paid+i.outstanding
 						i.outstanding = 0
 						i.credit_paid = True
+						#save installment updates
+						i.save()
+						outstanding_credit_amount = outstanding_credit_amount + i.outstanding
+
 					elif credit_amount > Decimal(0):
 						lgr.info('Credit Amount is less than outstanding')
 						i.paid = i.paid+credit_amount
 						i.outstanding = i.outstanding - credit_amount
 						credit_amount = Decimal(0)
+						#save installment updates
+						i.save()
+						outstanding_credit_amount = outstanding_credit_amount + i.outstanding
+
 					else: continue
-					#save installment updates
-					i.save()
-					outstanding_credit_amount = outstanding_credit_amount + i.outstanding
 
 					savings_credit_manager = i
 					savings_credit_manager = SavingsCreditManager(account_manager=savings_credit_manager.account_manager,\
