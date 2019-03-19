@@ -1102,6 +1102,8 @@ class Payments(System):
 				lgr.info('Credit Amount is Greater or equal to credit')
 
 				outstanding = Decimal(0)
+
+				savings_credit_manager = savings_credit_manager_list[0] #Got to come before update to avoid filter
 				savings_credit_manager_list.update(credit_paid=True,paid=F('paid')+F('outstanding'),outstanding=outstanding)
 
 				savings_credit_manager = savings_credit_manager_list[0]
