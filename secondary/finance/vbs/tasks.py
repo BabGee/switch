@@ -1127,6 +1127,8 @@ class Payments(System):
 				payload['response_status'] = '00'
 
 			elif savings_credit_manager_list.exists():
+
+				account_manager = savings_credit_manager_list[0].account_manager
 				lgr.info('Credit Amount is less than credit')
 				outstanding_credit_amount = Decimal(0)
 				for i in savings_credit_manager_list:
@@ -1141,6 +1143,7 @@ class Payments(System):
 						i.paid = i.paid+credit_amount
 						i.outstanding = i.outstanding - credit_amount
 						credit_amount = Decimal(0)
+					else: continue
 					#save installment updates
 					i.save()
 					outstanding_credit_amount = outstanding_credit_amount + i.outstanding
