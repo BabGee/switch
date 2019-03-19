@@ -598,16 +598,18 @@ class System(Wrappers):
 			product.description = payload['product_description']
 			product.status =  ProductStatus.objects.get(name=payload['product_status']) # ACTIVE
 			if 'shop_product_type_id' in payload.keys() and payload['shop_product_type_id']:
-				product.shop_product_type_id = payload['shop_product_type']
+				product.shop_product_type_id = payload['shop_product_type_id']
 			elif 'shop_product_type' in payload.keys() and payload['shop_product_type']:
-				product.shop_product_type = ShopProductType.objects.filter(name=payload['shop_product_type'],institution=gateway_profile.institution)[0]
+				shop_product_types = ShopProductType.objects.filter(name=payload['shop_product_type'],institution=gateway_profile.institution)
+				if shop_product_types.exits():
+					product.shop_product_type = shop_product_types[0]
                         product.product_type_id = payload['product_type_id']
 			product.buying_cost = payload['product_buying_cost']
 			product.unit_cost = payload['product_selling_cost']
 			product.institution = gateway_profile.institution
 			product.currency = Currency.objects.get(code=payload['product_currency']) # KES
 			product.product_display = ProductDisplay.objects.get(name=payload['product_display']) # DEFAULT
-			if str(payload['is_vat_inclusive']) == 'True':
+			if 'is_vat_inclusive' in payload.keys() and str(payload['is_vat_inclusive']) == 'True':
 				product.vat = payload['product_vat']
 			if 'product_discount' in payload.keys(): product.discount = payload['product_discount']
 			

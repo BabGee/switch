@@ -157,6 +157,7 @@ class DataList(models.Model):
 	data_response_type = models.ForeignKey(DataResponseType)
 	ifnull_response = models.CharField(max_length=256, null=True, blank=True)
 	push_service = models.ForeignKey(Service, null=True, blank=True)
+	indexing = models.CharField(max_length=2048, blank=True, null=True) 
 	pn_action = models.ManyToManyField(PushAction, blank=True)
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	institution = models.ManyToManyField(Institution, blank=True)

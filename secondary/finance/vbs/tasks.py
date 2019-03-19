@@ -1079,30 +1079,45 @@ class Payments(System):
 	def loan_repayment(self, payload, node_info):
 		try:
 			if 'account_manager_id' in payload.keys():
-				savings_credit_manager = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'],\
+				savings_credit_manager_list = SavingsCreditManager.objects.filter(account_manager__id=payload['account_manager_id'],\
 								credit_paid=False).order_by('date_created')
 			else:
-				savings_credit_manager = SavingsCreditManager.objects.none()
+				savings_credit_manager_list = SavingsCreditManager.objects.none()
 
 			amount = Decimal(0)
 
-			outstanding_amount = savings_credit_manager.aggregate(Sum('outstanding'))
+			outstanding_amount = savings_credit_manager_list.aggregate(Sum('outstanding'))
 			amount = outstanding_amount['outstanding__sum'] if outstanding_amount['outstanding__sum'] else Decimal(0)
 
 			'''
-			for i in savings_credit_manager:
+			for i in savings_credit_manager_list:
 				amount = amount + (i.amount + i.charge)
 			'''
 
 			credit_amount = Decimal(payload['amount']) if 'amount' in payload.keys() else Decimal(0)
-			if savings_credit_manager.exists() and amount <= credit_amount:
+			if savings_credit_manager_list.exists() and amount <= credit_amount:
 				#Capture account manager prior to updates which will clear the query
-				account_manager = savings_credit_manager[0].account_manager
+
+				account_manager = savings_credit_manager_list[0].account_manager
 				lgr.info('Credit Amount is Greater or equal to credit')
 
 				outstanding = Decimal(0)
-				savings_credit_manager.update(credit_paid=True,paid=F('paid')+F('outstanding'),outstanding=outstanding)
+				savings_credit_manager_list.update(credit_paid=True,paid=F('paid')+F('outstanding'),outstanding=outstanding)
 
+				savings_credit_manager = savings_credit_manager_list[0]
+				savings_credit_manager = SavingsCreditManager(account_manager=savings_credit_manager.account_manager,\
+								credit=True,installment_time=savings_credit_manager.installment_time,\
+								amount=savings_credit_manager.amount,charge=savings_credit_manager.charge,\
+								due_date=savings_credit_manager.due_date, credit_paid=True,\
+								paid=savings_credit_manager.outstanding,outstanding=outstanding,\
+								balance_bf=Decimal(0), follow_on=savings_credit_manager)
+				
+				if 'paygate_incoming_id' in payload.keys():
+					savings_credit_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
+                        	if 'paygate_outgoing_id' in payload.keys():
+                                	savings_credit_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
+
+				savings_credit_manager.save()
 				#Set paid on Account Manager
 				account_manager.credit_paid = True
 				account_manager.save()
@@ -1111,10 +1126,10 @@ class Payments(System):
 				payload['response'] = 'Loan Repaid'
 				payload['response_status'] = '00'
 
-			elif savings_credit_manager.exists():
+			elif savings_credit_manager_list.exists():
 				lgr.info('Credit Amount is less than credit')
 				outstanding_credit_amount = Decimal(0)
-				for i in savings_credit_manager:
+				for i in savings_credit_manager_list:
 					if credit_amount >= i.outstanding:
 						lgr.info('Credit Amount is greater or equal to outstanding')
 						credit_amount = credit_amount - i.outstanding
@@ -1129,6 +1144,20 @@ class Payments(System):
 					#save installment updates
 					i.save()
 					outstanding_credit_amount = outstanding_credit_amount + i.outstanding
+
+					savings_credit_manager = i
+					savings_credit_manager = SavingsCreditManager(account_manager=savings_credit_manager.account_manager,\
+								credit=True,installment_time=savings_credit_manager.installment_time,\
+								amount=savings_credit_manager.amount,charge=savings_credit_manager.charge,\
+								due_date=savings_credit_manager.due_date, credit_paid=savings_credit_manager.credit_paid,\
+								paid=savings_credit_manager.outstanding,outstanding=outstanding_credit_amount,\
+								balance_bf=outstanding_credit_amount, follow_on=savings_credit_manager)
+					if 'paygate_incoming_id' in payload.keys():
+						savings_credit_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
+                	        	if 'paygate_outgoing_id' in payload.keys():
+                        	        	savings_credit_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
+
+					savings_credit_manager.save()
 
 				if outstanding_credit_amount > 0:
 					payload['outstanding_credit_amount'] = outstanding_credit_amount

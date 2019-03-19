@@ -1119,16 +1119,43 @@ class Wrappers:
 
 	    ###########################################################################
 
+
+
+	    cols = params['cols']
+	    new_cols = []
+	    #Indexing
+	    indexes = []
+	    if data.indexing not in ["",None]:
+		
+		for i in data.indexing.split('|'):
+			for c in cols:
+				if c['label'] == i:
+					indexes.append(i)
+					new_cols.append(c)
+		
 	    if data.data_response_type.name == 'DATA':
 		    #Values
         	    report_list = report_list.values(*args)
 
+		    if indexes:
+			report_list = report_list.values(*indexes)
+			params['cols'] = new_cols
+
 	    elif data.data_response_type.name == 'LIST':
 		    #Values List
         	    report_list = report_list.values_list(*args)
+
+		    if indexes:
+			report_list = report_list.values_list(*indexes)
+			params['cols'] = new_cols
+
 	    else:
 		    #Values List
         	    report_list = report_list.values_list(*args)
+
+		    if indexes:
+			report_list = report_list.values_list(*indexes)
+			params['cols'] = new_cols
 
 	    ##########################################################################
 
@@ -3704,15 +3731,16 @@ class System(Wrappers):
 	    
 		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 		bulk_uploads = payload['bulk_uploads']
-		for bulk_upload in bulk_uploads.split(','):
+		for bulk_upload in bulk_uploads.split('|'):
+			response_name = bulk_upload.split(':')
 			image_list = ImageList()
-			image_list.name = None
+			image_list.name = response_name[1]
 			image_list.description = None
 			image_list.image_list_type = ImageListType.objects.get(name='GALLERY')
 			media_temp = settings.MEDIA_ROOT + '/tmp/uploads/'
-			tmp_image = media_temp + str(bulk_upload)
+			tmp_image = media_temp + str(response_name[0])
 			with open(tmp_image, 'r') as f:
-				image_list.image.save(bulk_upload,File(f),save=False)
+				image_list.image.save(response_name[1],File(f),save=False)
 			f.close()
 			image_list.save()
 			image_list.institution.add(gateway_profile.institution)
@@ -3801,12 +3829,12 @@ def process_file_upload_activity(payload):
 			lgr.info('Payload: %s' % payload)
 
                         try:
-                            valid = False
-                            if 'email' in payload.keys() and Wrappers().validateEmail(payload['email']):
-				valid = True
+                            valid = True
+                            if 'email' in payload.keys():
+				valid = Wrappers().validateEmail(payload['email'])
 
-                            if 'msisdn' in payload.keys() and UPCWrappers().get_msisdn(payload):
-				valid = True
+                            if valid and 'msisdn' in payload.keys():
+				valid =  UPCWrappers().get_msisdn(payload)
 
                             if valid:
                                 try:
