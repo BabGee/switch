@@ -1133,6 +1133,7 @@ class Payments(System):
 				lgr.info('Credit Amount is less than credit')
 				outstanding_credit_amount = Decimal(0)
 				for i in savings_credit_manager_list:
+					outstanding = i.outstanding
 					if credit_amount >= i.outstanding:
 						lgr.info('Credit Amount is greater or equal to outstanding')
 						credit_amount = credit_amount - i.outstanding
@@ -1159,7 +1160,7 @@ class Payments(System):
 								credit=True,installment_time=savings_credit_manager.installment_time,\
 								amount=savings_credit_manager.amount,charge=savings_credit_manager.charge,\
 								due_date=savings_credit_manager.due_date, credit_paid=savings_credit_manager.credit_paid,\
-								paid=savings_credit_manager.outstanding,outstanding=outstanding_credit_amount,\
+								paid=outstanding,outstanding=outstanding_credit_amount,\
 								balance_bf=outstanding_credit_amount, follow_on=savings_credit_manager)
 					if 'paygate_incoming_id' in payload.keys():
 						savings_credit_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
