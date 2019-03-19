@@ -1106,7 +1106,6 @@ class Payments(System):
 				savings_credit_manager = savings_credit_manager_list[0] #Got to come before update to avoid filter
 				savings_credit_manager_list.update(credit_paid=True,paid=F('paid')+F('outstanding'),outstanding=outstanding)
 
-				savings_credit_manager = savings_credit_manager_list[0]
 				savings_credit_manager = SavingsCreditManager(account_manager=savings_credit_manager.account_manager,\
 								credit=True,installment_time=savings_credit_manager.installment_time,\
 								amount=savings_credit_manager.amount,charge=savings_credit_manager.charge,\
