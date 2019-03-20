@@ -261,7 +261,9 @@ class System(Wrappers):
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
 				state = IncomingState.objects.get(name="CREATED")
 
-				f_incoming = Incoming.objects.filter(remittance_product=remittance_product[0],ext_inbound_id=payload['ext_inbound_id'])
+				ext_inbound_id = payload['ext_inbound_id'] if 'ext_inbound_id' in payload.keys() else payload['bridge__transaction_id']
+
+				f_incoming = Incoming.objects.filter(remittance_product=remittance_product[0],ext_inbound_id=ext_inbound_id)
 
 				if len(f_incoming)>0:
 					payload['response_status'] = '94'
@@ -270,7 +272,7 @@ class System(Wrappers):
 				else:
 					incoming = Incoming(remittance_product=remittance_product[0],reference=reference,\
 						request=self.transaction_payload(payload),channel=Channel.objects.get(id=payload['chid']),\
-						response_status=response_status, ext_inbound_id=payload['ext_inbound_id'],state=state)
+						response_status=response_status, ext_inbound_id=ext_inbound_id,state=state)
 					if 'ext_first_name' in payload.keys() and payload['ext_first_name'] not in ["",None]: incoming.ext_first_name = payload['ext_first_name']
 					if 'ext_middle_name' in payload.keys() and payload['ext_middle_name'] not in ["",None]: incoming.ext_middle_name = payload['ext_middle_name']
 					if 'ext_last_name' in payload.keys() and payload['ext_last_name'] not in ["",None]: incoming.ext_last_name = payload['ext_last_name']
