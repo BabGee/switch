@@ -70,6 +70,7 @@ class Service(models.Model):
 	product = models.ForeignKey(Product)
 	description = models.CharField(max_length=100)
 	status = models.ForeignKey(ServiceStatus) # Whether Poller or Other
+	last_response = models.CharField(max_length=256, null=True, blank=True)
 	success_last_response = models.CharField(max_length=256, null=True, blank=True)
 	failed_last_response = models.CharField(max_length=256, null=True, blank=True)
 	retry = models.ForeignKey(Retry, null=True, blank=True)
