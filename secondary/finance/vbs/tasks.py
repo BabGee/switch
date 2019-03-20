@@ -1111,8 +1111,7 @@ class Payments(System):
 								amount=savings_credit_manager.amount,charge=savings_credit_manager.charge,\
 								due_date=savings_credit_manager.due_date, credit_paid=True,\
 								paid=savings_credit_manager.outstanding,outstanding=outstanding,\
-								balance_bf=Decimal(0), incoming_payment=account_manager.incoming_payment,\
-								outgoing_payment=account_manager.outgoing_payment,follow_on=savings_credit_manager)
+								balance_bf=Decimal(0), follow_on=savings_credit_manager)
 				
 				if 'paygate_incoming_id' in payload.keys():
 					savings_credit_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
@@ -1162,8 +1161,7 @@ class Payments(System):
 								amount=savings_credit_manager.amount,charge=savings_credit_manager.charge,\
 								due_date=savings_credit_manager.due_date, credit_paid=savings_credit_manager.credit_paid,\
 								paid=outstanding,outstanding=outstanding_credit_amount,\
-								balance_bf=outstanding_credit_amount, incoming_payment=account_manager.incoming_payment,\
-								outgoing_payment=account_manager.outgoing_payment,follow_on=savings_credit_manager)
+								balance_bf=outstanding_credit_amount, follow_on=savings_credit_manager)
 
 					if 'paygate_incoming_id' in payload.keys():
 						savings_credit_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
