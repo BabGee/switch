@@ -277,7 +277,7 @@ class ServiceProcessor:
 				if payload['response_status'] == key.strip():
 					response_tree['last_response'] = value.replace('|', '%').strip()
 
-		if payload['response_status'] <> '00':
+		elif payload['response_status'] <> '00':
 			response_tree['last_response'] = service.failed_last_response if service.failed_last_response not in [None,''] else last_response
 		else:
 			response_tree['last_response'] = service.success_last_response if service.success_last_response not in [None,''] else last_response
