@@ -279,7 +279,7 @@ class ServiceProcessor:
 					status_last_response = value.replace('|', '%').strip()
 					break
 
-			response_tree['last_response'] = status_last_response if not status_last_response else last_response
+			response_tree['last_response'] = status_last_response if status_last_response else last_response
 
 
 		elif payload['response_status'] <> '00':
