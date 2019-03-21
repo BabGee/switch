@@ -268,14 +268,19 @@ class ServiceProcessor:
 		last_response = '' if isinstance(response, dict) else response
 
 		if service.last_response not in [None, '']:
-			for last_response in service.last_response.split('|'):
-				last_response = last_response.replace('%%', '|')  # Escape percentage character
+			status_last_response = None
+			for service_last_response in service.last_response.split('|'):
+				service_last_response = service_last_response.replace('%%', '|')  # Escape percentage character
 				try:
-					key, value = last_response.split('%')
+					key, value = service_last_response.split('%')
 				except:
 					continue
 				if payload['response_status'] == key.strip():
-					response_tree['last_response'] = value.replace('|', '%').strip()
+					status_last_response = value.replace('|', '%').strip()
+					break
+
+			response_tree['last_response'] = status_last_response if not status_last_response else last_response
+
 
 		elif payload['response_status'] <> '00':
 			response_tree['last_response'] = service.failed_last_response if service.failed_last_response not in [None,''] else last_response
