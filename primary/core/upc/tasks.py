@@ -1936,7 +1936,7 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			session_gateway_profile = GatewayProfile.objects.filter(Q(user__username=payload['username'])|Q(user__email__iexact=payload['username'])|Q(user__msisdn=payload['username']),\
+			session_gateway_profile = GatewayProfile.objects.filter(Q(user__username=payload['username'])|Q(user__email__iexact=payload['username'])|Q(msisdn__phone_number=payload['username']),\
 								Q(gateway=gateway_profile.gateway),Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS']))
 			if len(session_gateway_profile) > 0:
 				email = session_gateway_profile[0].user.email
