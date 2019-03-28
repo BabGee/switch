@@ -124,7 +124,7 @@
 
             $('.status').editable({
                 source: [
-                    {% for menu_status in menu_status_qs %}
+                    {% for menu_status in all_menu_status %}
                     {value: {{ menu_status.pk }}, text: '{{ menu_status.name }}'},
                     {% endfor %}
                 ]

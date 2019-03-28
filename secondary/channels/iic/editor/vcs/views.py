@@ -39,12 +39,16 @@ def ussd(request,gateway_pk,code_pk):
 
     level = request.GET.get('level',0)
     select = request.GET.get('select',0)
-    access_level = request.GET.get('access_level','SYSTEM')
+
+    access_level_names = request.GET.get('access_level','SYSTEM').split(',')
     profile_status = request.GET.get('profile_status',None)
 
-    a_l = AccessLevel.objects.get(name=access_level)
+    access_level_queryset = AccessLevel.objects.get(name__in=access_level_names)
+    profile_status_queryset = None
+    profile_status_names = []
     if profile_status:
-        p_s = ProfileStatus.objects.get(name=profile_status)
+        profile_status_names = profile_status.split(',')
+        profile_status_queryset = ProfileStatus.objects.filter(name__in=profile_status_names)
 
     if request.method == "POST":
         form = MenuForm(request.POST)
@@ -78,10 +82,10 @@ def ussd(request,gateway_pk,code_pk):
                     menu_item.save()
 
                     #menu_item.access_level.add(*copy_from_menu_item.access_level.all())
-                    menu_item.access_level.add(a_l)
+                    menu_item.access_level.add(*access_level_queryset)
                     #menu_item.profile_status.add(*copy_from_menu_item.profile_status.all())
                     if profile_status:
-                        menu.profile_status.add(p_s)
+                        menu.profile_status.add(*profile_status_queryset)
 
                     #todo menu_item.enrollment_type_excluded.add(*copy_from_menu_item.enrollment_type_excluded.all())
                     #todo menu_item.enrollment_type_included.add(*copy_from_menu_item.enrollment_type_included.all())
@@ -109,13 +113,13 @@ def ussd(request,gateway_pk,code_pk):
 
                 menu.save()
 
-            menu.access_level.add(a_l)
-            if profile_status:
-                menu.profile_status.add(p_s)
+            if len(access_level_names): menu.access_level.add(*access_level_queryset)
+            if profile_status_queryset:
+                menu.profile_status.add(*profile_status_queryset)
             menu.code.add(*Code.objects.filter(gateway=gateway, channel__name='USSD'))
 
             return redirect('/iic_editor/gateways/{}/vcs/codes/{}/ussd?level={}&select={}&access_level={}&profile_status={}'.format(
-                gateway_pk,code_pk,level,select,access_level,profile_status
+                gateway_pk,code_pk,level,select,','.join(access_level_names),','.join(profile_status_names)
             ))
     else:
         form = MenuForm(initial={
@@ -126,16 +130,16 @@ def ussd(request,gateway_pk,code_pk):
         })
 
 
-
     # get menu
     menus = Menu.objects.filter(
-
         code__gateway=gateway,
-        access_level=a_l,
         level=level,
-        group_select=select,
-        profile_status=p_s if profile_status else None
-    ).distinct()
+        group_select=select
+    )
+    if len(profile_status_names):menus.filter(profile_status__name__in=profile_status_names.split(','))
+    if len(access_level_names):menus.filter(access_level__name__in=access_level_names.split(','))
+
+    menus = menus.distinct()
     # get menu items
     #
 
@@ -152,13 +156,13 @@ def ussd(request,gateway_pk,code_pk):
         'code': code,
         'level':level,
         'select':select,
-        'access_level':access_level,
-        'profile_status':profile_status,
+        'access_level':access_level_names,
+        'profile_status':profile_status_names,
         'menus': menus,
         'form':form,
         'item_form':item_form,
 
-        'menu_status_qs':MenuStatus.objects.all()
+        'all_menu_status':MenuStatus.objects.all()
     })
 
 
