@@ -39,6 +39,7 @@ def ussd(request,gateway_pk,code_pk):
 
     level = request.GET.get('level',0)
     select = request.GET.get('select',0)
+    protected = request.GET.get('protected',False)
 
     access_level_names = request.GET.get('access_level','SYSTEM').split(',')
     profile_status = request.GET.get('profile_status',None)
@@ -129,12 +130,12 @@ def ussd(request,gateway_pk,code_pk):
             #'profile_status':profile_status
         })
 
-
     # get menu
     menus = Menu.objects.filter(
         code__gateway=gateway,
         level=level,
-        group_select=select
+        group_select=select,
+        protected=True if protected else False
     )
     if len(profile_status_names):menus.filter(profile_status__name__in=profile_status_names)
     if len(access_level_names):menus.filter(access_level__name__in=access_level_names)

@@ -1,45 +1,59 @@
 {{ menu }}
 <div><strong>Session State</strong> {{ menu.session_state }} </div>
+<div><strong>Protected</strong> {{ menu.protected }} </div>
 
-<div><strong>Page String</strong>
+<div>
+    <strong>Page String</strong>
     <span class="editableT"
           data-type="text"
           data-name="page_string"
           data-pk="{{ menu.pk }}"
-          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/">{{ menu.page_string }}</span></div>
+          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/">{{ menu.page_string }}</span>
+</div>
 
-<div><strong>Level</strong>
+<div>
+    <strong>Level</strong>
     <span class="editableT"
           data-type="text"
           data-name="level"
           data-pk="{{ menu.pk }}"
-          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/">{{ menu.level }}</span></div>
+          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/">{{ menu.level }}</span>
+</div>
 
-<div><strong>Group Select</strong>
+<div>
+    <strong>Group Select</strong>
     <span class="editableT"
           data-type="text"
           data-name="select"
           data-pk="{{ menu.pk }}"
-          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/">{{ menu.group_select }}</span></div>
+          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/">{{ menu.group_select }}</span>
+</div>
 
 <div><strong>Menu Items Count</strong> {{ menu.menuitem_set.count }} </div>
-<div><strong>Menu Description</strong>
+<div>
+    <strong>Menu Description</strong>
     <span class="editableT"
           data-type="text"
           data-name="menu_description"
           data-pk="{{ menu.pk }}"
-          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/">{{ menu.menu_description }}</span> </div>
-<div><strong>Menu Details</strong>
+          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/">{{ menu.menu_description }}</span>
+</div>
+<div>
+    <strong>Menu Details</strong>
     <span class="editableT"
           data-type="text"
           data-name="details"
           data-pk="{{ menu.pk }}"
-          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/">{{ menu.details }}</span> </div>
-<div><strong>input_variable</strong> {{ menu.input_variable }} , pk
+          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/">{{ menu.details }}</span>
+</div>
+<div>
+    <strong>input_variable</strong> {{ menu.input_variable }} , pk
     <span class="editableT"
           data-type="text"
           data-name="input_variable_id"
-          data-pk="{{ menu.pk }}" data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/">{{ menu.input_variable_id }}</span> </div>
+          data-pk="{{ menu.pk }}"
+          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/">{{ menu.input_variable_id }}</span>
+</div>
 <div><strong>service</strong>
     {% if menu.service %}
         <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ menu.service }}" target="_blank"> Details </a>
@@ -52,13 +66,15 @@
           data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/">{{ menu.service }}</span>
 </div>
 
-<div><strong>Status</strong>
-                <span   class="status"
-                        data-type="select"
-                        data-name="status"
-                        data-pk="{{ menu.pk }}"
-                        data-value="{{ menu.menu_status.pk }}"
-                        data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/">{{ menu.menu_status.name }}</span> </div>
+<div>
+    <strong>Status</strong>
+    <span class="status"
+          data-type="select"
+          data-name="status"
+          data-pk="{{ menu.pk }}"
+          data-value="{{ menu.menu_status.pk }}"
+          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/">{{ menu.menu_status.name }}</span>
+</div>
 
 
 {% if menu.menuitem_set.count %}
@@ -67,48 +83,48 @@
         {% for item in menu.menuitem_set.all %}
             <li>
                 {{ item }}
-            <div><strong>Menu Item</strong>
-                <span class="editableT"
-                      data-type="text"
-                      data-name="menu_item"
-                      data-pk="{{ item.pk }}"
-                      data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/{{ menu.pk }}/menu_items/">{{ item.menu_item }}</span>
-            </div>
-            <div><strong>Level</strong>
-                <span class="editableT"
-                      data-type="text"
-                      data-name="item_level"
-                      data-pk="{{ item.pk }}"
-                      data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/{{ menu.pk }}/menu_items/">{{ item.item_level }}</span> </div>
-            <div><strong>Order</strong>
-                <span class="editableT"
-                      data-type="text"
-                      data-name="item_order"
-                      data-pk="{{ item.pk }}"
-                      data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/{{ menu.pk }}/menu_items/">{{ item.item_order }}</span> </div>
+                <div>
+                    <strong>Menu Item</strong>
+                    <span class="editableT"
+                          data-type="text"
+                          data-name="menu_item"
+                          data-pk="{{ item.pk }}"
+                          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/{{ menu.pk }}/menu_items/">{{ item.menu_item }}</span>
+                </div>
+                <div>
+                    <strong>Level</strong>
+                    <span class="editableT"
+                          data-type="text"
+                          data-name="item_level"
+                          data-pk="{{ item.pk }}"
+                          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/{{ menu.pk }}/menu_items/">{{ item.item_level }}</span>
+                </div>
+                <div>
+                    <strong>Order</strong>
+                    <span class="editableT"
+                          data-type="text"
+                          data-name="item_order"
+                          data-pk="{{ item.pk }}"
+                          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/{{ menu.pk }}/menu_items/">{{ item.item_order }}</span>
+                </div>
 
-            <div><strong>Status</strong>
-                <span   class="status"
-                        data-type="select"
-                        data-name="status"
-                        data-pk="{{ item.pk }}"
-                        data-value="{{ item.status.pk }}"
-                        data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/{{ menu.pk }}/menu_items/">{{ item.status }}</span> </div>
+                <div>
+                    <strong>Status</strong>
+                    <span class="status"
+                          data-type="select"
+                          data-name="status"
+                          data-pk="{{ item.pk }}"
+                          data-value="{{ item.status.pk }}"
+                          data-url="/iic_editor/gateways/{{ gateway.pk }}/vcs/codes/{{ code.pk }}/ussd/menus/{{ menu.pk }}/menu_items/">{{ item.status }}</span>
+                </div>
 
-
-{#            3 Daynamic Select#}
-            {% if menu.input_variable_id == 3 %}
-
-            <a href="?level={{ level|add:1 }}&select={{ select }}{% for key, value in request.GET.items %}{% if key != 'select' and key != 'level' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                {#            3 Daynamic Select#}
+                {% if menu.input_variable_id == 3 %}
+                    <a href="?level={{ level|add:1 }}&select={{ select }}{% for key, value in request.GET.items %}{% if key != 'select' and key != 'level' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
                 {% else %}
-                <a href="?level={{ level|add:1 }}&select={{ item.item_level }}{% for key, value in request.GET.items %}{% if key != 'select' and key != 'level' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
-
+                    <a href="?level={{ level|add:1 }}&select={{ item.item_level }}{% for key, value in request.GET.items %}{% if key != 'select' and key != 'level' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
                 {% endif %}
-
-            <a href="/admin/vcs/menuitem/{{ item.pk }}/change/" target="_blank">Change</a>
-
-
-
+                <a href="/admin/vcs/menuitem/{{ item.pk }}/change/" target="_blank">Change</a>
 
             </li>
         {% endfor %}
