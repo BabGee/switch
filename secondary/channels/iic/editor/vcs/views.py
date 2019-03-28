@@ -137,10 +137,14 @@ def ussd(request,gateway_pk,code_pk):
         group_select=select,
         protected=True if protected else False
     )
-    if len(profile_status_names):menus.filter(profile_status__name__in=profile_status_names)
-    if len(access_level_names):menus.filter(access_level__name__in=access_level_names)
+    if len(profile_status_names):
+        menus.filter(profile_status__name__in=profile_status_names)
+    else:
+        menus.filter(profile_status=None)
 
-    menus = menus.distinct()
+    if len(access_level_names):
+        menus.filter(access_level__name__in=access_level_names)
+
     # get menu items
     #
 
