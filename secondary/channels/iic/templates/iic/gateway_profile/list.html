@@ -178,14 +178,9 @@
 
             $('.status').editable({
                 source: [
-                    {value: 1, text: 'ACTIVATED'},
-                    {value: 2, text: 'DEACTIVATED'},
-                    {value: 3, text: 'ONE TIME PIN'},
-                    {value: 4, text: 'DELETED'},
-                    {value: 5, text: 'REGISTERED'},
-                    {value: 6, text: 'LOCKED'},
-                    {value: 7, text: 'ONE TIME PASSWORD'},
-                    {value: 8, text: 'FIRST ACCESS'}
+                    {% for profile_status in all_profile_status %}
+                    {value: {{ profile_status.pk }}, text: '{{ profile_status.name }}'},
+                    {% endfor %}
                 ]
             });
 

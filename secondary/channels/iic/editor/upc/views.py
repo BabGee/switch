@@ -48,6 +48,7 @@ def gateway_profile_list(request, gateway_pk):
     return render(request, "iic/gateway_profile/list.html", {
         'gateway': gateway,
         'all_access_levels': AccessLevel.objects.all(),
+        'all_profile_status': ProfileStatus.objects.all(),
         'roles': Role.objects.filter(status__name='ACTIVE'),
         'gateway_profiles': gateway_profiles
     })
