@@ -136,8 +136,8 @@ def ussd(request,gateway_pk,code_pk):
         level=level,
         group_select=select
     )
-    if len(profile_status_names):menus.filter(profile_status__name__in=profile_status_names.split(','))
-    if len(access_level_names):menus.filter(access_level__name__in=access_level_names.split(','))
+    if len(profile_status_names):menus.filter(profile_status__name__in=profile_status_names)
+    if len(access_level_names):menus.filter(access_level__name__in=access_level_names)
 
     menus = menus.distinct()
     # get menu items
