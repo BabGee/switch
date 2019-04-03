@@ -19,7 +19,10 @@ the notification product defines the
 - if subscribable
  
 
-- get_notification
+## Requires service commands to send a notification
+
+1. get_notification
+
 retrieves the notification product and updates into `payload['notification_product_id']`
 
 this requires that the `notification_delivery_channel` be defined
@@ -32,7 +35,8 @@ this also splits the message into groups of 160 chars to work  and updates the f
 
 
 
-- send_notification
+2. send_notification
+
 logs the notification into the Outbound table for sending 
 
 this also creates a contact, used to manage subscriptions
@@ -44,12 +48,11 @@ notification can be scheduled by passing `payload["scheduled_send"], '%d/%m/%Y %
 
 the above work for a single channel, if you need to send notifications to more than 1 channel from the same service,
 you need to add `init_notification` to reset the previous notification processing.
-it will remove 
+it will remove/reset 
 - payload['notification_template_id']
 - payload['notification_product_id']
 - payload['message']
  
-
 
 
 # Creating a notification Product
