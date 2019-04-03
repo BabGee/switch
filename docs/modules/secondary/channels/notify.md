@@ -11,6 +11,14 @@ the background service sends out notifications from the Outbound table
 
 # Configuring a notification
 the main service commands required to send a notification to single channel are
+
+the notification product defines the 
+
+- ties the current service to a notification to be sent
+- the charges,
+- if subscribable
+ 
+
 - get_notification
 retrieves the notification product and updates into `payload['notification_product_id']`
 
