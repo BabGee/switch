@@ -55,6 +55,12 @@ it will remove/reset
 - payload['notification_product_id']
 - payload['message']
  
+ 
+ ### For paid notification
+ No float amount to debit
+ - float are the the notification charges
+ - for paid notifications, e.g SMS, 
+    the institution or gateway should have float to be able to send the notification
 
 
 # Creating a notification Product
