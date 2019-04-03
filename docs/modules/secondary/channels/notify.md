@@ -10,8 +10,8 @@ the background service sends out notifications from the Outbound table
 
 
 # Configuring a notification
-the main service commands required to send a notification to single channel are
-the *notification product* 
+
+the **notification product** 
 
 - it mainly ties services to relevant Notification to be sent (at notification is where the template/message is defined) 
 - it holds other configs 
@@ -21,6 +21,7 @@ the *notification product*
  
 
 ## Required service commands to send a notification
+the main service commands required to send a notification to single channel are
 
 1. get_notification
 
