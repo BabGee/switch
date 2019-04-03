@@ -11,18 +11,30 @@ django version 1.9.XXXX
 ## Operation
 
 ### services
-the switch operates by means of calling service, services usually have one or more service commands configured to perfom the service needs
+the switch operates by means of calling service, 
+service works by accepting a [payload](payload description)  and returning the same payload as a response (might be a copy), 
+the service processing steps involves modification of this payload,
+
+the modification includes operations like
+- addition of new keys 
+- removing of keys 
+- updating keys (e.g addition of triggers)
+ 
+services usually have one or more service commands configured to perform the payload modification
 
 #### configuration
 
 services
 - enabled logs to transactions table
-- poller do not log to transactions table
+- poller do not log to transactions table 
 
 
 ### service command
 this is the most basic unit of execution configurable, 
 the service commands are configured in the apps' tasks.py in clases that extend on of 3 base classes
+service commands are able to filtered using
+- triggers
+- 
 
 1. Payment
 2. System
@@ -32,11 +44,11 @@ the service commands are configured in the apps' tasks.py in clases that extend 
 it is a python function that accepts 
 the following parameters
 
-1. node
-2. 
-3. 
+1. self
+2. payload
+3. node_info
 
-the function must returns a response and updates a response status in the payload
+the function must return a response and updates a response status in the payload
 
 
 #### Service call lifecycle
@@ -45,6 +57,8 @@ in the order defined by the level, if a service command fails, defined by some s
 executed stops and a response is returned
 
 #### Response
+- last response
+
 ##### structure
 #### status codes
 

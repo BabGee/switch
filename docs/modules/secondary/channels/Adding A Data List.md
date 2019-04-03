@@ -1,4 +1,4 @@
-```
+
 you specify the  model, module   and the model fields to be returned
 you start from Dsc > Data List
 here is where you set the data_name then in the query field is where you'll configure the module and model
@@ -19,4 +19,6 @@ id%id|name%name
 
 table_column_title1%model_field_path1|table_column_title2%model_field_path2
 
-```
+## Indexing
+used to specify the columns to return
+format Column1|Column2|Column2|
