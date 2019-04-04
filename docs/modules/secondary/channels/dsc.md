@@ -56,6 +56,26 @@ this provides a means of filtering down for only a specific row column
 e.g 
 service__name|gateway_profile__msisdn__phone_number
 
+### Advanced Filtering 
+Advanced query filtering can be achieved using joins, 
+i.e if you want to filter a model based on related entries on another model with no direct 
+relation such as foreign key
+
+real example
+
+you have 2 models 
+1. PostOffice with fields name and post_code 
+2. GatewayProfile with fields postal_code
+> Note PostOffice is a thirdparty module so fk won't work
+
+say there are no keys relating the 2 models but post_code is the same as postal_code
+
+Now to filter a PostOffice name for a given gateway profile from the profile's postal code
+the query will be setup to Filter PostOffice names but then a join not query will be
+needed to compare and filter out the PostOffice names that don't have the profile's code
+
+
+
 
 
 ## Action
