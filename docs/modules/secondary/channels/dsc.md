@@ -28,7 +28,6 @@ if we reference the many to many object fields, it will return a list for every 
 
 
 ## Filtering 
---
 
 For q to filter, you need to add the fields to be filtered
 If you need an AND filter, you use the and_filter field
@@ -75,6 +74,11 @@ the query will be setup to Filter PostOffice names but then a join not query wil
 needed to compare and filter out the PostOffice names that don't have the profile's code
 
 
+
+the power of joins are useful at the fields part, there are 2 categories
+
+1. Yes Fields -> filter rows where QueryModel.field == JoinModel.field
+2. Not Fields -> filter only rows where QueryModel.field != JoinModel.field
 
 
 
