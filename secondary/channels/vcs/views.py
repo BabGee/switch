@@ -164,7 +164,9 @@ class VAS:
 			menuitems = menuitems.filter(menu=self.nav.menu)
 
 			if error_prefix:
-				page_string = '%s %s%s' % (error_prefix, self.payload['page_string'], get_menu_items(menuitems))
+				message = error_prefix.split('|')
+				if len(message)>1 and message[1].strip()=='REPLACE': page_string = '%s' % (message[0])
+				else: page_string = '%s %s%s' % (error_prefix, self.payload['page_string'], get_menu_items(menuitems))
 			else:
 				page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
 
