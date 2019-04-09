@@ -1940,13 +1940,20 @@ class System(Wrappers):
 								Q(gateway=gateway_profile.gateway),Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS']))
 			if len(session_gateway_profile) > 0:
 				email = session_gateway_profile[0].user.email
+				msisdn = session_gateway_profile[0].msisdn
 				if  email not in [None,""] and self.validateEmail(email):
 					payload["email"] = email
 					payload['session_gateway_profile_id'] = session_gateway_profile[0].id
 					payload['response'] = 'Reset Profile Captured'
 					payload['response_status'] = '00'
+
+				elif msisdn not in [None]:
+					payload["msisdn"] = msisdn.phone_number
+					payload['session_gateway_profile_id'] = session_gateway_profile[0].id
+					payload['response'] = 'Reset Profile Captured'
+					payload['response_status'] = '00'
 				else:
-					payload['response'] = 'No Valid Email in File'
+					payload['response'] = 'No Valid Email or Msisdn in File'
 					payload['response_status'] = 25
 			else:
 				payload['response'] = 'Profile not Found'
