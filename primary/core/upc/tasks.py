@@ -1670,7 +1670,7 @@ class System(Wrappers):
 				payload['response_status'] = '25'
 
 		except Exception, e:
-			lgr.info('Error on Validating One Time Pin: %s' % e)
+			lgr.info('Error on Validating One Time Password: %s' % e)
 			payload['response_status'] = '96'
 		return payload
 
@@ -1945,6 +1945,21 @@ class System(Wrappers):
 			payload['response_status'] = '96'
 
 		return payload
+
+	def validate_reset_password(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			if gateway_profile.user.is_active and gateway_profile.user.check_password(payload['reset_password']):
+				payload['response'] = 'Password Verified'
+				payload['response_status'] = '00'
+			else:
+				payload['response_status'] = '25'
+
+		except Exception, e:
+			lgr.info('Error on Validating Reset Password: %s' % e)
+			payload['response_status'] = '96'
+		return payload
+
 
 	def reset_password(self, payload, node_info):
 		try:
