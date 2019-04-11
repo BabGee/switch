@@ -1961,10 +1961,10 @@ class System(Wrappers):
 			session_gateway_profile.save()
 
 			payload['reset_password'] = password
-			payload['response'] = 'One Time Password Set'
+			payload['response'] = 'Reset Password Set'
 			payload['response_status'] = '00'
 		except Exception, e:
-			lgr.info('Error on Setting Password: %s' % e)
+			lgr.info('Error on Re-Setting Password: %s' % e)
 			payload['response_status'] = '96'
 
 		return payload
