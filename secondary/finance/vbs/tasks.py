@@ -122,11 +122,14 @@ class System(Wrappers):
 				chunks, chunk_size = account_manager.credit_time, int(payload['installment_time'])
 				for i in range(0, chunks, chunk_size): count += 1
 
+			balance_bf = Decimal(0)
 			if count > 1:
 				for i in range(0, chunks, chunk_size):
 					installment_time = i+chunk_size
 					installment_amount = amount/count
 					installment_charge = charge/count
+
+					balance_bf= balance_bf+installment_amount+installment_charge
 					if current_installment_time == installment_time: current_installment_amount = installment_amount+installment_charge
 					due_date = timezone.now()+timezone.timedelta(days=installment_time)
 					savings_credit_manager = SavingsCreditManager(account_manager=account_manager,\
@@ -134,17 +137,18 @@ class System(Wrappers):
 								amount=installment_amount,charge=installment_charge,\
 								due_date=due_date,\
 								paid=Decimal(0),outstanding=(installment_amount+installment_charge),\
-								balance_bf=(installment_amount+installment_charge))
+								balance_bf=balance_bf)
 					savings_credit_list.append(savings_credit_manager)
 			else:
 
+					balance_bf= balance_bf + account_manager.amount+account_manager.charge
 					current_installment_amount = account_manager.amount + account_manager.charge
 					savings_credit_manager = SavingsCreditManager(account_manager=account_manager,\
 								credit=account_manager.credit,installment_time=account_manager.credit_time,\
 								amount=account_manager.amount,charge=account_manager.charge,\
 								due_date=account_manager.credit_due_date,\
 								paid=Decimal(0),outstanding=(account_manager.amount+account_manager.charge),\
-								balance_bf=(account_manager.amount+account_manager.charge))
+								balance_bf=balance_bf)
 					savings_credit_list.append(savings_credit_manager)
 
 			if len(savings_credit_list)>0: SavingsCreditManager.objects.bulk_create(savings_credit_list)
@@ -1105,13 +1109,13 @@ class Payments(System):
 
 				savings_credit_manager = savings_credit_manager_list[0] #Got to come before update to avoid filter
 				savings_credit_manager_list.update(credit_paid=True,paid=F('paid')+F('outstanding'),outstanding=outstanding)
-
+				balance_bf = savings_credit_manager.balance_bf - savings_credit_manager.outstanding
 				savings_credit_manager = SavingsCreditManager(account_manager=savings_credit_manager.account_manager,\
 								credit=True,installment_time=savings_credit_manager.installment_time,\
 								amount=savings_credit_manager.amount,charge=savings_credit_manager.charge,\
 								due_date=savings_credit_manager.due_date, credit_paid=True,\
 								paid=savings_credit_manager.outstanding,outstanding=outstanding,\
-								balance_bf=Decimal(0), follow_on=savings_credit_manager)
+								balance_bf=balance_bf, follow_on=savings_credit_manager)
 				
 				if 'paygate_incoming_id' in payload.keys():
 					savings_credit_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
@@ -1130,6 +1134,7 @@ class Payments(System):
 			elif savings_credit_manager_list.exists():
 
 				account_manager = savings_credit_manager_list[0].account_manager
+				balance_bf  = savings_credit_manager_list[0].balance_bf
 				lgr.info('Credit Amount is less than credit')
 				outstanding_credit_amount = Decimal(0)
 				for i in savings_credit_manager_list:
@@ -1156,12 +1161,13 @@ class Payments(System):
 					else: continue
 
 					savings_credit_manager = i
+					balance_bf = balance_bf - outstanding
 					savings_credit_manager = SavingsCreditManager(account_manager=savings_credit_manager.account_manager,\
 								credit=True,installment_time=savings_credit_manager.installment_time,\
 								amount=savings_credit_manager.amount,charge=savings_credit_manager.charge,\
 								due_date=savings_credit_manager.due_date, credit_paid=savings_credit_manager.credit_paid,\
-								paid=outstanding,outstanding=outstanding_credit_amount,\
-								balance_bf=outstanding_credit_amount, follow_on=savings_credit_manager)
+								paid=outstanding, outstanding=outstanding_credit_amount,\
+								balance_bf=balance_bf, follow_on=savings_credit_manager)
 
 					if 'paygate_incoming_id' in payload.keys():
 						savings_credit_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
