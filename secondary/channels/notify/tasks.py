@@ -349,9 +349,9 @@ class System(Wrappers):
 				code3=(len(msisdn) -5)
 
 				prefix = MNOPrefix.objects.filter(prefix=msisdn[:code3])
-				if len(prefix)<1:
+				if not prefix.exists():
 					prefix = MNOPrefix.objects.filter(prefix=msisdn[:code2])
-					if len(prefix)<1:
+					if not prefix.exists():
 						prefix = MNOPrefix.objects.filter(prefix=msisdn[:code1])
 
 				lgr.info('MNO Prefix: %s|%s' % (prefix,msisdn))
@@ -626,9 +626,9 @@ class System(Wrappers):
 				code3=(len(msisdn) -5)
 
 				prefix = MNOPrefix.objects.filter(prefix=msisdn[:code3])
-				if len(prefix)<1:
+				if not prefix.exists():
 					prefix = MNOPrefix.objects.filter(prefix=msisdn[:code2])
-					if len(prefix)<1:
+					if not prefix.exists():
 						prefix = MNOPrefix.objects.filter(prefix=msisdn[:code1])
 
 				lgr.info('MNO Prefix: %s|%s' % (prefix,msisdn))
@@ -1339,9 +1339,9 @@ class System(Wrappers):
 			code3=(len(msisdn) -5)
 
 			prefix = MNOPrefix.objects.filter(prefix=msisdn[:code3])
-			if len(prefix)<1:
+			if not prefix.exists():
 				prefix = MNOPrefix.objects.filter(prefix=msisdn[:code2])
-				if len(prefix)<1:
+				if not prefix.exists():
 					prefix = MNOPrefix.objects.filter(prefix=msisdn[:code1])
 
 			lgr.info('MNO Prefix: %s' % prefix)
