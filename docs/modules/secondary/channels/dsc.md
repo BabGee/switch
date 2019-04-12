@@ -90,3 +90,34 @@ added using *Data list link querys*
 ## Indexing
 used to specify the columns to return
 format Column1|Column2|Column2|
+
+## Response Format
+supported response types
+this is configurable in the datalist ... TODO
+
+1 - LIST
+this is a like a json table view,
+there is a list of columns description then a list of rows for the columns
+
+the columns describe the following about the row
+- datatype
+    date - a date with no time
+    datetime - a date with a time
+    > please note that the date is iso formated
+    href - links/actions
+- name -  the name of the column
+- value - the queried database path
+- list_filter 
+- search_filter
+
+
+2 - DATA
+this  outputs the data formated as objects in the data 
+
+3 - STRING
+
+
+the response will also contain other data properties
+page_count
+page
+

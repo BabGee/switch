@@ -63,7 +63,7 @@
 
 Dynamic menu variable looks same as the IIC one
 
- users the [variable_name]
+ uses the [variable_name]
 
  In this case, it looks up from the page_string.py file for the variable and attaches the result
 
