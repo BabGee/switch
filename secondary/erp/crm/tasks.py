@@ -601,8 +601,14 @@ class System(Wrappers):
 				product.shop_product_type_id = payload['shop_product_type_id']
 			elif 'shop_product_type' in payload.keys() and payload['shop_product_type']:
 				shop_product_types = ShopProductType.objects.filter(name=payload['shop_product_type'],institution=gateway_profile.institution)
-				if shop_product_types.exits():
+				if shop_product_types.exists():
 					product.shop_product_type = shop_product_types[0]
+					lgr.info('found shop product type')
+				else:
+					lgr.info('the specified shop product type does not exist')
+			else:
+				lgr.info('missing required property, shop product type')
+
                         product.product_type_id = payload['product_type_id']
 			product.buying_cost = payload['product_buying_cost']
 			product.unit_cost = payload['product_selling_cost']

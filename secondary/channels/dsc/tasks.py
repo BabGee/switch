@@ -2127,9 +2127,9 @@ class System(Wrappers):
 
             if data_list.exists():
 		cols, rows, lines, groups, data, min_id, max_id, t_count, push = self.process_data_list(data_list, payload, gateway_profile, profile_tz, data)
-		lgr.info(2105)
-		lgr.info(cols)
-		lgr.info(rows)
+		#lgr.info(2105)
+		#lgr.info(cols)
+		#lgr.info(rows)
             else:
                 lgr.info('Not a Data List')
                 if 'survey' in data_name:

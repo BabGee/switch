@@ -24,38 +24,40 @@ class WebService:
 			lgr.info("URL Validation Error: %s" % e)
 			return False
 
-
-	def post_request(self, payload, node, timeout=30):
-		try:
-			if self.validate_url(node):
-				jdata = json.dumps(payload)
-				#response = urllib2.urlopen(node, jdata, timeout = timeout)
-				#jdata = response.read()
-				#payload = json.loads(jdata)
-				c = pycurl.Curl()
-				#Timeout in 30 seconds
-				c.setopt(pycurl.CONNECTTIMEOUT, timeout)
-				c.setopt(pycurl.TIMEOUT, timeout)
-				c.setopt(pycurl.NOSIGNAL, 1)
-				c.setopt(pycurl.URL, str(node) )
-				c.setopt(pycurl.POST, 1)
-				content_type = 'Content-Type: application/json; charset=utf-8'
-				content_length = 'Content-Length: '+str(len(jdata))
-				header=[str(content_type),str(content_length)]
-				c.setopt(pycurl.HTTPHEADER, header)
-				c.setopt(pycurl.POSTFIELDS, str(jdata))
-				import StringIO
-				b = StringIO.StringIO()
-				c.setopt(pycurl.WRITEFUNCTION, b.write)
-				c.perform()
-				response = b.getvalue()
-				payload = json.loads(response)
-		except Exception, e:
-			lgr.info("Error Posting Request: %s" % e)
-			payload['response_status'] = '96'
-
-		return payload
-
+        def post_request(self, payload, node, timeout=30):
+                try:
+                        if self.validate_url(node):
+                                jdata = json.dumps(payload)
+                                #response = urllib2.urlopen(node, jdata, timeout = timeout)
+                                #jdata = response.read()
+                                #payload = json.loads(jdata)
+                                c = pycurl.Curl()
+                                #Timeout in 30 seconds
+                                c.setopt(c.CONNECTTIMEOUT, timeout)
+                                c.setopt(c.VERBOSE, True)
+                                c.setopt(c.FOLLOWLOCATION, True)
+                        	c.setopt(c.USERAGENT, 'InterIntel Switch')
+                                c.setopt(c.CONNECTTIMEOUT, timeout)
+                                c.setopt(c.TIMEOUT, timeout)
+                                c.setopt(c.NOSIGNAL, 1)
+                                c.setopt(c.URL, str(node) )
+                                c.setopt(c.POST, 1)
+                                content_type = 'Content-Type: application/json; charset=utf-8'
+                                content_length = 'Content-Length: '+str(len(jdata))
+                                header=[str(content_type),str(content_length)]
+                                c.setopt(c.HTTPHEADER, header)
+                                c.setopt(c.POSTFIELDS, str(jdata))
+                                import StringIO
+                                b = StringIO.StringIO()
+                                c.setopt(c.WRITEFUNCTION, b.write)
+                                c.perform()
+                                response = b.getvalue()
+                                payload = json.loads(response)
+                except Exception, e:
+                        lgr.info("Error Posting Request: %s" % e)
+                        payload['response_status'] = '96'
+                        
+                return payload
 
         def create_payload(self, request, payload):
                 lgr.info('Started Creating Payload')

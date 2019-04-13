@@ -679,20 +679,6 @@ class System(Wrappers):
 
 				payload['response'] = 'MSISDN Captured'
 				payload['response_status'] = '00'
-			elif 'email_msisdn' in payload.keys() and self.validateEmail(payload["email_msisdn"]):
-				lgr.info('With Email')
-				payload['trigger'] = 'with_email%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-
-		 		payload['email'] = payload['email_msisdn']
-				payload['response'] = 'Email Captured'
-				payload['response_status'] = '00'
-			elif 'email_msisdn' in payload.keys() and self.simple_get_msisdn(payload['email_msisdn'].strip(), payload):
-				lgr.info('With MSISDN')
-				payload['trigger'] = 'with_msisdn%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-
-		 		payload['msisdn'] = payload['email_msisdn'].strip()
-				payload['response'] = 'MSISDN Captured'
-				payload['response_status'] = '00'
 			else:
 				payload['response'] = 'MSISDN or Email Not Found'
 				payload['response_status'] = '25'
@@ -1670,7 +1656,7 @@ class System(Wrappers):
 				payload['response_status'] = '25'
 
 		except Exception, e:
-			lgr.info('Error on Validating One Time Password: %s' % e)
+			lgr.info('Error on Validating One Time Pin: %s' % e)
 			payload['response_status'] = '96'
 		return payload
 
@@ -1946,40 +1932,28 @@ class System(Wrappers):
 
 		return payload
 
-	def validate_reset_password(self, payload, node_info):
-		try:
-			gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-			if gateway_profile.user.is_active and gateway_profile.user.check_password(payload['reset_password']):
-				payload['response'] = 'Password Verified'
-				payload['response_status'] = '00'
-			else:
-				payload['response_status'] = '25'
-
-		except Exception, e:
-			lgr.info('Error on Validating Reset Password: %s' % e)
-			payload['response_status'] = '96'
-		return payload
-
-
 	def reset_password(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 
-			chars = string.ascii_letters + string.digits
-			rnd = random.SystemRandom()
-			password = ''.join(rnd.choice(chars) for i in range(8))
+			session_gateway_profile = GatewayProfile.objects.filter(Q(user__username=payload['username'])|Q(user__email__iexact=payload['username'])|Q(user__msisdn=payload['username']),\
+								Q(gateway=gateway_profile.gateway),Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS']))
+			if len(session_gateway_profile) > 0:
+				email = session_gateway_profile[0].user.email
+				if  email not in [None,""] and self.validateEmail(email):
+					payload["email"] = email
+					payload['session_gateway_profile_id'] = session_gateway_profile[0].id
+					payload['response'] = 'Reset Profile Captured'
+					payload['response_status'] = '00'
+				else:
+					payload['response'] = 'No Valid Email in File'
+					payload['response_status'] = 25
+			else:
+				payload['response'] = 'Profile not Found'
+				payload['response_status'] = 25
 
-			session_gateway_profile.user.set_password(password)
-			session_gateway_profile.user.save()
-			session_gateway_profile.status = ProfileStatus.objects.get(name='RESET PASSWORD')
-			session_gateway_profile.save()
-
-			payload['reset_password'] = password
-			payload['response'] = 'Reset Password Set'
-			payload['response_status'] = '00'
 		except Exception, e:
-			lgr.info('Error on Re-Setting Password: %s' % e)
+			lgr.info('Error on Setting Password: %s' % e)
 			payload['response_status'] = '96'
 
 		return payload
