@@ -3746,6 +3746,8 @@ class System(Wrappers):
             payload['response_status'] = '96'
             lgr.info('Error retrieving ImageList details: ',exc_info=True)
 
+        return payload
+
 
     def upload_image_list_bulk(self, payload, node_info):
         try:
