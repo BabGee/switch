@@ -3728,7 +3728,7 @@ class System(Wrappers):
 
     def image_list_details(self,payload,node_info):
         try:
-            image_lists  = ImageList.object.filter(pk=payload['image_list_id'])
+            image_lists  = ImageList.objects.filter(pk=payload['image_list_id'])
             if image_lists.exists():
                 image_list = image_lists[0]                
                 
