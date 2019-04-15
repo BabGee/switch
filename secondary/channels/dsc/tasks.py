@@ -3726,6 +3726,27 @@ class System(Wrappers):
             lgr.info("Error on Uploading File: %s" % e)
         return payload
 
+    def image_list_details(self,payload,node_info):
+        try:
+            image_lists  = ImageList.object.filter(pk=payload['image_list_id'])
+            if image_lists.exists():
+                image_list = image_lists[0]                
+                
+                payload['image_list_name'] = image_list.name
+                payload['image_list_image'] = image_list.image.url
+                
+                payload['response_status'] = '00'
+                payload['response'] = "Retrieved ImageList Details"
+
+            else:
+                payload['response_status'] = '21'
+                payload['response'] = "ImageList Not Found"
+
+        except Exception, e:
+            payload['response_status'] = '96'
+            lgr.info('Error retrieving ImageList details: ',exc_info=True)
+
+
     def upload_image_list_bulk(self, payload, node_info):
         try:
 	    
