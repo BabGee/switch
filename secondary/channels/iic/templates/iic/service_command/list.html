@@ -15,6 +15,16 @@
 
     {% if service_command.node_system.name == 'NOTIFY' and service_command.command_function == 'get_notification' %}
         <a target="_blank" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service_command.service.name }}/notify/">Notification</a>
+
+    {% elif service_command.node_system.name == 'IIC' and service_command.command_function == 'get_section' %}
+
+        <a target="_blank" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service_command.service.name }}/iic/">Section</a>
+
+    {% elif service_command.node_system.name == 'IIC' and service_command.command_function == 'get_interface' %}
+
+        <a target="_blank" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service_command.service.name }}/iic/">Interface</a>
+
+
     {% endif %}
 
 

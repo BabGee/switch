@@ -44,29 +44,30 @@
         <li class="nav-item">
             <a class="nav-link active" href="/iic_editor/gateways/{{ gateway.pk }}/">Details</a>
         </li>
+
         <li class="nav-item">
-            <a class="nav-link active" href="/iic_editor/gateways/{{ gateway.pk }}/HOME/interface/">Interface</a>
+            <a class="nav-link active" href="/iic_editor/gateways/{{ gateway.pk }}/HOME/interface/"></a>
         </li>
+
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
+               aria-expanded="false">Channels</a>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" href="/iic_editor/gateways/{{ gateway.pk }}/HOME/interface/">Iic</a>
+                <a class="dropdown-item" href="/iic_editor/gateways/{{ gateway.pk }}/vcs/">Vcs</a>
+                <a class="dropdown-item" href="#">Something else here</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#">Separated link</a>
+            </div>
+        </li>
+
         <li class="nav-item">
             <a class="nav-link active" href="/iic_editor/gateways/{{ gateway.pk }}/gateway_profiles/">Profiles</a>
         </li>
         <li class="nav-item">
             <a class="nav-link active" href="/iic_editor/gateways/{{ gateway.pk }}/institutions/">Institutions</a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link active" href="/iic_editor/gateways/{{ gateway.pk }}/vcs/">Vcs</a>
-        </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
-               aria-expanded="false">Dropdown</a>
-            <div class="dropdown-menu">
-                <a class="dropdown-item" href="#">Action</a>
-                <a class="dropdown-item" href="#">Another action</a>
-                <a class="dropdown-item" href="#">Something else here</a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="#">Separated link</a>
-            </div>
-        </li>
+
         <li class="nav-item">
             <a class="nav-link" href="#">Link</a>
         </li>
