@@ -88,5 +88,17 @@ class OutboundAdmin(admin.ModelAdmin):
 			'recipient','pn','pn_ack')
 		list_filter = ('contact__product','state','contact__subscribed','contact__status',)
 		search_fields = ('id','contact__gateway_profile__msisdn__phone_number','contact__gateway_profile__user__email','contact__gateway_profile__user__username','message',)
+
+		def suit_row_attributes(self, obj, request):
+			css_class = {
+				'DELIVERED': 'success',
+				'PROCESSING': 'warning',
+				'FAILED': 'error',
+				'CREATED': '',
+				'SENT': 'info',
+			}.get(obj.state.name)
+			if css_class:
+				return {'class': css_class}
+
 admin.site.register(Outbound, OutboundAdmin)
 
