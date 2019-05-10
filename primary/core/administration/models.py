@@ -128,7 +128,7 @@ class Structure(models.Model):
 	def __unicode__(self):
 		return u'%s' % (self.name)
 
-class Theme(models.Model):
+class DesignSystem(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -146,7 +146,7 @@ class Gateway(models.Model):
 	background_image = models.CharField(max_length=200)
 	default_color = models.CharField(max_length=100)
         default_host = models.ManyToManyField(Host, blank=True)
-	theme = models.ForeignKey(Theme)
+	theme = models.ForeignKey(DesignSystem)
 	primary_color = models.CharField(max_length=100, blank=True, null=True)
 	secondary_color = models.CharField(max_length=100, blank=True, null=True)
 	accent_color = models.CharField(max_length=100, blank=True, null=True)

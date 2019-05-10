@@ -64,9 +64,9 @@ class StructureAdmin(admin.ModelAdmin):
 	list_display = ('name', 'description')
 admin.site.register(Structure, StructureAdmin)
 
-class ThemeAdmin(admin.ModelAdmin):
+class DesignSystemAdmin(admin.ModelAdmin):
 	list_display = ('name', 'description', 'date_modified', 'date_created')
-admin.site.register(Theme, ThemeAdmin)
+admin.site.register(DesignSystem, DesignSystemAdmin)
 
 class GatewayAdmin(admin.ModelAdmin):
 	list_display = ('id','name', 'logo', 'description','background_image','default_color',\
