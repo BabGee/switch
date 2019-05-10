@@ -54,7 +54,10 @@ class PageGroupPageForm(forms.ModelForm):
         page.description = page.name
         page_group = self.cleaned_data['page_group']
         if not bool(self.cleaned_data['item_level']):
-            page.item_level =  page_group.page_set.order_by('item_level').last().item_level + 1
+            if page_group.page_set.exists():
+                page.item_level =  page_group.page_set.order_by('item_level').last().item_level + 1
+            else:
+                page.item_level = 1
         # page.page_group = page_group
 
         if commit:
