@@ -294,4 +294,20 @@ class RecurrentService(models.Model):
 	def __unicode__(self):
 		return u'%s %s %s' % (self.enrollment, self.service, self.amount)
 
+class AgentStatus(models.Model):
+	date_modified = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s %s' % (self.name, self.description)
+
+class Agent(models.Model):
+	date_modified = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	profile = models.OneToOneField(Profile) #Primary Profile
+	status = models.ForeignKey(AgentStatus)
+	registrar = models.ForeignKey(Profile, related_name='registrar') #Agent who created the institution and primary profile
+	def __unicode__(self):
+		return '%s %s %s' % (self.profile, self.status, self.registrar)
 
