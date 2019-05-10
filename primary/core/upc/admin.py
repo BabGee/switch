@@ -20,7 +20,7 @@ class InstitutionAdmin(admin.OSMGeoAdmin):
 		'background_image','description',\
 		'status','tagline','logo','icon_image',\
 		'default_color','website','physical_address',\
-		'gateway_list','currency_list','country','geometry','theme',\
+		'gateway_list','currency_list','country','geometry','design',\
 		'primary_color','secondary_color','accent_color','registration_number','template',)
 		search_fields = ('name','business_number',)
 admin.site.register(Institution, InstitutionAdmin)

@@ -46,7 +46,7 @@ class Institution(models.Model):
 	country = models.ForeignKey(Country)
 	geometry = models.PointField(srid=4326)
 	objects = models.GeoManager()
-	theme = models.ForeignKey(DesignSystem)
+	design = models.ForeignKey(DesignSystem)
 	primary_color = models.CharField(max_length=100, blank=True, null=True)
 	secondary_color = models.CharField(max_length=100, blank=True, null=True)
 	accent_color = models.CharField(max_length=100, blank=True, null=True)

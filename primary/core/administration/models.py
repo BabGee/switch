@@ -146,7 +146,7 @@ class Gateway(models.Model):
 	background_image = models.CharField(max_length=200)
 	default_color = models.CharField(max_length=100)
         default_host = models.ManyToManyField(Host, blank=True)
-	theme = models.ForeignKey(DesignSystem)
+	design = models.ForeignKey(DesignSystem)
 	primary_color = models.CharField(max_length=100, blank=True, null=True)
 	secondary_color = models.CharField(max_length=100, blank=True, null=True)
 	accent_color = models.CharField(max_length=100, blank=True, null=True)

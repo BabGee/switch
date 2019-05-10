@@ -2054,8 +2054,8 @@ class System(Wrappers):
 			else: institution.default_color = '#fff'
 			if 'institution_country' in payload.keys(): institution.country = Country.objects.get(name=payload['institution_country'])
 			else: institution.country = Country.objects.get(iso2='KE')
-			if 'institution_theme' in payload.keys(): institution.theme = Theme.objects.get(name=payload['institution_theme'])
-			else: institution.theme = Theme.objects.get(name='polymer2.0')
+			if 'institution_design' in payload.keys(): institution.design = DesignSystem.objects.get(name=payload['institution_design'])
+			else: institution.design = DesignSystem.objects.get(name='polymer2.0')
 			if 'institution_template' in payload.keys(): institution.template_id = payload['institution_template']
 
 			institution.save()
@@ -2354,10 +2354,11 @@ class System(Wrappers):
 				details['accent_color'] = institution.accent_color if institution.accent_color else gateway.accent_color
 
 				if gateway_profile.access_level.name == 'SYSTEM':
-					details['theme'] = institution.theme.name
+					details['theme'] = institution.design.name
+					details['design'] = institution.design.name
 				else:
-					details['theme'] = gateway.theme.name
-
+					details['theme'] = gateway.design.name
+					details['design'] = gateway.design.name
 			else:
 				details['logo'] =gateway.logo.name
 				details['icon_image'] =gateway.icon_image.name
@@ -2369,8 +2370,8 @@ class System(Wrappers):
 				details['primary_color'] = gateway.primary_color
 				details['secondary_color'] = gateway.secondary_color
 				details['accent_color'] = gateway.accent_color
-				details['theme'] = gateway.theme.name
-
+				details['theme'] = gateway.design.name
+				details['design'] = gateway.design.name
 
 			payload.update(details)
 			payload['response'] = details
