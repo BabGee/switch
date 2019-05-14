@@ -1,6 +1,6 @@
 from django import forms
 
-from secondary.channels.iic.models import Page, PageInput,PageInputGroup,PageGroup
+from secondary.channels.iic.models import Page, PageInput,PageInputGroup,PageGroup,RoleRight
 
 
 # Create the form class.
@@ -89,3 +89,8 @@ class PageOrderConfigForm(forms.Form):
 class PageInputOrderConfigForm(forms.Form):
     config = forms.CharField(widget = forms.HiddenInput(), required = True)
 
+
+class RoleRightForm(forms.ModelForm):
+    class Meta:
+        model = RoleRight
+        fields = ['name']

@@ -20,6 +20,7 @@
     <br>
     <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/create/">Add New</a>
     <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/order/">Reorder Pages</a>
+    <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/create_role/">Create Role Right</a>
     <div class="row">
         <div class="col-md-6">
             <h4>Pages</h4>
@@ -45,6 +46,16 @@
                                data-value="{% for cat in page.access_level.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"
                                data-url="/iic_editor/pages/"
                                data-title="Select Access Levels"></a>
+                        <br>
+                        Role Rights<br>
+                            <a href="#"
+                               class="page_role_right"
+                               data-type="checklist"
+                               data-pk="{{ page.pk }}"
+                               data-name="role_rights"
+                               data-value="{% for cat in page.roleright_set.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                               data-url="/iic_editor/pages/"
+                               data-title="Select Role Rights"></a>
                         <br>
 
                             <a href="/iic_editor/gateways/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/copy/">Use
@@ -125,18 +136,17 @@
         $(document).ready(function () {
             $('.page_access_level').editable({
                 source: [
-                    {value: 1, text: 'CUSTOMER'},
-                    {value: 3, text: 'SYSTEM'},
-                    {value: 7, text: 'MANAGER'},
-                    {value: 8, text: 'OPERATOR'},
-                    {value: 11, text: 'ADMINISTRATOR'},
-                    {value: 14, text: 'SUPERVISOR'},
-                    {value: 15, text: 'SUPER ADMINISTRATOR'},
-                    {value: 16, text: 'API USER'},
-                    {value: 17, text: 'SALES'},
-                    {value: 18, text: 'DELIVERY'},
-                    {value: 19, text: 'AGENT'},
-                    {value: 20, text: 'SUPER AGENT'}
+                    {% for access_level in all_access_levels %}
+                    {value: {{ access_level.pk }}, text: '{{ access_level.name }}'},
+                    {% endfor %}
+                ]
+            });
+
+            $('.page_role_right').editable({
+                source: [
+                    {% for role_right in all_role_rights %}
+                    {value: {{ role_right.pk }}, text: '{{ role_right.name }}'},
+                    {% endfor %}
                 ]
             });
         });

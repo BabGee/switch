@@ -2,7 +2,8 @@ from django.conf.urls import url,include
 from .views import \
     page_list,\
     page_order,\
-    page_create,\
+    page_create, \
+    page_role_right_create,\
     page_detail,\
     page_copy,\
     page_input_group_list,\
@@ -23,6 +24,7 @@ name = 'iic'
 page_patterns = [
     url(r'^$', page_list),
     url(r'^order/$', page_order),
+    url(r'^create_role/$', page_role_right_create),
     url(r'^create/$', page_create),
     url(r'^(?P<page_pk>\d+)/', include([
         url(r'^$', page_detail),

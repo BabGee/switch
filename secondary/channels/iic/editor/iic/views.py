@@ -17,7 +17,8 @@ from secondary.channels.iic.models import \
     PageInput, \
     InputVariable, \
     VariableType, \
-    PageInputStatus
+    PageInputStatus, \
+    RoleRight
 from django.db.models import Count, IntegerField
 from django.db.models.functions import Cast
 from django.shortcuts import render, redirect
@@ -29,7 +30,8 @@ from .forms import \
     PageOrderConfigForm, \
     PageInputOrderConfigForm, \
     PageInputGroupForm, \
-    PageGroupPageForm
+    PageGroupPageForm,\
+    RoleRightForm
 
 from django.db.models import Q
 from primary.core.administration.models import Channel
@@ -80,6 +82,8 @@ def page_list(request, gateway_pk, service_name, page_group_pk):
     blank_pages = pages.exclude(pk__in=pages_with_inputs)
 
     return render(request, "iic/page/list.html", {
+        'all_access_levels': AccessLevel.objects.all(),
+        'all_role_rights': RoleRight.objects.all(),
         'gateway': gateway,
         'service': service_name,
         'pages': pages_with_inputs,
@@ -113,6 +117,33 @@ def page_order(request, gateway_pk, service_name, page_group_pk):
         'pages': pages,
         'form': form,
         'page_group': page_group
+    })
+
+
+def page_role_right_create(request, gateway_pk, service_name, page_group_pk):
+    gateway = Gateway.objects.get(pk=gateway_pk)
+    page_group = PageGroup.objects.get(pk=page_group_pk)
+
+    if request.method == "POST":
+        form = RoleRightForm(request.POST)
+        if form.is_valid():
+            role_right = form.save(commit=False)
+            role_right.description = role_right.name
+            role_right.save()
+
+            return redirect(
+                '/iic_editor/gateways/{}/{}/page_groups/{}/pages/'.format(
+                    gateway_pk, service_name, page_group_pk
+                )
+            )
+    else:
+        form = RoleRightForm()
+
+    return render(request, "iic/page/create_role_right.html", {
+        'gateway': gateway,
+        'service': service_name,
+        'form': form,
+        'page_group': page_group,
     })
 
 
@@ -153,8 +184,9 @@ def page_create(request, gateway_pk, service_name, page_group_pk):
             page.service.add(*Service.objects.filter(name__in=services))
 
             return redirect(
-                '/iic_editor/gateways/{}/{}/page_groups/{}/pages/{}/'.format(gateway_pk, service_name, page_group_pk,
-                                                                             page.pk)
+                '/iic_editor/gateways/{}/{}/page_groups/{}/pages/{}/'.format(
+                    gateway_pk, service_name, page_group_pk,page.pk
+                )
             )
     else:
         form = PageForm()
@@ -737,15 +769,32 @@ def page_input_copy(request, gateway_pk, service_name, page_group_pk, page_pk, p
 
 def page_put(request):
     data = request.POST
-    new_levels = [int(x) for x in data.getlist('value[]')]
     page = Page.objects.get(pk=data.get('pk'))
-    current_levels = page.access_level.values_list('pk', flat=True)
+    field = data.get('name')
 
-    remove_levels = list(set(current_levels).difference(new_levels))
-    add_levels = list(set(new_levels).difference(current_levels))
+    if field == 'access_levels':
+        new_levels = [int(x) for x in data.getlist('value[]')]
 
-    page.access_level.add(*AccessLevel.objects.filter(pk__in=add_levels))
-    page.access_level.remove(*AccessLevel.objects.filter(pk__in=remove_levels))
+        current_levels = page.access_level.values_list('pk', flat=True)
+
+        remove_levels = list(set(current_levels).difference(new_levels))
+        add_levels = list(set(new_levels).difference(current_levels))
+
+        page.access_level.add(*AccessLevel.objects.filter(pk__in=add_levels))
+        page.access_level.remove(*AccessLevel.objects.filter(pk__in=remove_levels))
+
+    if field == 'role_rights':
+        new_rights = [int(x) for x in data.getlist('value[]')]
+        current_rights = page.roleright_set.values_list('pk', flat=True)
+
+        remove_rights = list(set(current_rights).difference(new_rights))
+        add_rights = list(set(new_rights).difference(current_rights))
+
+        for role_right in RoleRight.objects.filter(pk__in=add_rights):
+            role_right.page.add(page)
+
+        for role_right in RoleRight.objects.filter(pk__in=remove_rights):
+            role_right.page.remove(page)
 
     return HttpResponse(status=200)
 

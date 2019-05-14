@@ -1,0 +1,22 @@
+{% extends 'iic/base.html' %}
+{% block content %}
+       <ol class="breadcrumb">
+
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/">Gateways</a></li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/">{{ gateway.name }} </a> </li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/">Page Groups</a>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/">{{ page_group.name }}</a></li>
+        <li class="breadcrumb-item"><a href="/iic_editor/gateways/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/">Pages</a></li>
+        <li class="breadcrumb-item active">Create Role Right </li>
+
+
+    </ol>
+    <br>
+<h4>Create Role Right</h4>
+
+    <form method="POST" class="post-form">{% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="save btn btn-default">Save</button>
+    </form>
+
+{% endblock %}
