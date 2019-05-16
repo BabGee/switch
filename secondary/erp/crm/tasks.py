@@ -720,6 +720,45 @@ class System(Wrappers):
 		return payload
 
 
+
+	def register_agent(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+			status = AgentStatus.objects.get(name='CREATED')
+			agent = Agent(profile=session_gateway_profile.user.profile, status=status,
+						  registrar=gateway_profile.user.profile)
+			agent.save()
+			payload['agent_id'] = agent.pk
+			payload['response'] = 'Agent Registered'
+			payload['response_status'] = '00'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on register agent: %s" % e)
+		return payload
+
+
+
+	def register_agent_institution(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+			agent = Agent.objects.filter(profile=gateway_profile.user.profile)[0]
+
+			institution_type = AgentInstitutionType.objects.get(pk=payload['agent_institution_type_id'])
+			agent_institution = AgentInstitution(agent=agent, institution_type=institution_type, institution=session_gateway_profile.institution)
+			agent_institution.save()
+
+			payload['response'] = 'Agent Institution Registered'
+			payload['response_status'] = '00'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on register agent Institution: %s" % e)
+		return payload
+
+
 class Trade(System):
 	pass
 
