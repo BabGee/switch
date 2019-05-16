@@ -133,3 +133,12 @@ class AgentAdmin(admin.ModelAdmin):
 	search_fields = ('profile__user__username','profile__user__first_name','profile__user__last_name','profile__national_id',)
 admin.site.register(Agent, AgentAdmin)
 
+class AgentInstitutionTypeAdmin(admin.ModelAdmin):
+	list_display = ('id','name','name',)
+admin.site.register(AgentInstitutionType, AgentInstitutionTypeAdmin)
+
+
+class AgentInstitutionAdmin(admin.ModelAdmin):
+	list_display = ('id','institution','agent','institution_type')
+admin.site.register(AgentInstitution, AgentInstitutionAdmin)
+

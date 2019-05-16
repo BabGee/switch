@@ -311,3 +311,22 @@ class Agent(models.Model):
 	def __unicode__(self):
 		return '%s %s %s' % (self.profile, self.status, self.registrar)
 
+
+class AgentInstitutionType(models.Model):
+	date_modified = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=100)
+	def __unicode__(self):
+		return '%s' % (self.name)
+
+
+class AgentInstitution(models.Model):
+	date_modified = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	agent = models.ForeignKey(Agent)
+	institution = models.ForeignKey(Institution)
+	institution_type = models.ForeignKey(AgentInstitutionType)
+	def __unicode__(self):
+		return '%s %s %s' % (self.agent,self.institution,self.institution_type)
+
+
