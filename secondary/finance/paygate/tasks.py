@@ -564,7 +564,7 @@ class System(Wrappers):
 
 				# Crediting Requires the institution_id to be expilicitly specified in the payload
 				institution = Institution.objects.get(id=payload['institution_id'])
-				gateway = institution.gateway
+				gateway = gateway_profile.gateway
 
 				charge = Decimal(0)
 				charge_list = FloatCharge.objects.filter(Q(float_type=float_type[0], min_amount__lte=Decimal(payload['float_amount']),\
