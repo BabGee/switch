@@ -625,7 +625,7 @@ class System(Wrappers):
 				payload['response_status'] = '00'
 			
 			elif Decimal(payload['float_amount']) <= 0:
-           		payload['response'] = 'No float amount to Credit'
+				payload['response'] = 'No float amount to Credit'
 				payload['response_status'] = '00'
 
 		except DatabaseError, e:
@@ -738,7 +738,7 @@ class System(Wrappers):
 				payload['response_status'] = '00'
 			
 			elif Decimal(payload['float_amount']) <= 0:
-           		payload['response'] = 'No float amount to Credit'
+				payload['response'] = 'No float amount to Credit'
 				payload['response_status'] = '00'
 
 		except DatabaseError, e:
@@ -979,7 +979,7 @@ class System(Wrappers):
 
 		except DatabaseError, e:
 			transaction.set_rollback(True)
-                except Exception, e:
+		except Exception, e:
 			payload['response'] = 'Error %s' % e
 			payload['response_status'] = '96'
 			lgr.info("Error on Debiting Float: %s" % e)
@@ -1086,13 +1086,13 @@ class System(Wrappers):
 					#check last entry balance_bf
 					#Create a debit entry with float_amount entry and deducted balance_bf
 					payload['response'] = 'Float Credited with: %s balance: %s' % (payload['float_amount'], balance_bf)
-                    payload['response_status'] = '00'
+					payload['response_status'] = '00'
 				else:
-	       	 		payload['response'] = 'No float amount to Reverse'
+					payload['response'] = 'No float amount to Reverse'
 					payload['response_status'] = '00'
 
 			elif Decimal(payload['float_amount']) <= 0:
-           		payload['response'] = 'No float amount to reverse debit'
+				payload['response'] = 'No float amount to reverse debit'
 				payload['response_status'] = '00'
 		except DatabaseError, e:
 			transaction.set_rollback(True)
@@ -1207,7 +1207,7 @@ class System(Wrappers):
 					lgr.info("No Float")
 					payload['response_status'] = '51'
 			elif Decimal(payload['float_amount']) <= Decimal(0):
-       	 		payload['response'] = 'No float amount to debit'
+				payload['response'] = 'No float amount to debit'
 				payload['response_status'] = '00'
 			else:
 				lgr.info("No Float")
@@ -1215,7 +1215,7 @@ class System(Wrappers):
 
 		except DatabaseError, e:
 			transaction.set_rollback(True)
-        except Exception, e:
+		except Exception, e:
 			payload['response'] = 'Error %s' % e
 			payload['response_status'] = '96'
 			lgr.info("Error on Debiting Float: %s" % e)
