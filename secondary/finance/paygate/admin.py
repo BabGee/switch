@@ -100,8 +100,8 @@ admin.site.register(FloatAlertActivity, FloatAlertActivityAdmin)
 
 class AgentFloatManagerAdmin(admin.ModelAdmin):
 	list_display = ('id','date_modified','date_created','ext_outbound_id','credit','float_amount',\
-			'charge','balance_bf','expiry','float_type','gateway','updated',)
-	list_filter = ('float_type','gateway','credit','updated',)
+			'charge','balance_bf','expiry','float_type','agent','gateway','updated',)
+	list_filter = ('float_type','gateway','agent','credit','updated',)
 	search_fields = ('ext_outbound_id','id',)
 admin.site.register(AgentFloatManager, AgentFloatManagerAdmin)
  
