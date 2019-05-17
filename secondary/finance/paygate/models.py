@@ -72,6 +72,23 @@ class FloatManager(models.Model):
 		return u'%s %s %s' % (self.id, self.float_type, self.balance_bf)
 
 
+class AgentFloatManager(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	ext_outbound_id = models.CharField(max_length=200, blank=True, null=True)
+	credit = models.BooleanField(default=False) #Dr | Cr
+	float_amount = models.DecimalField(max_digits=19, decimal_places=2)
+	charge = models.DecimalField(max_digits=19, decimal_places=2)
+	balance_bf = models.DecimalField(max_digits=19, decimal_places=2)
+	expiry = models.DateTimeField(null=True, blank=True)
+	float_type = models.ForeignKey(FloatType)
+	gateway = models.ForeignKey(Gateway)
+	agent = models.ForeignKey(Agent)
+	updated = models.BooleanField(default=False, help_text="True for record that is not the last record")
+	def __unicode__(self):
+		return u'%s %s %s' % (self.id, self.float_type, self.balance_bf)
+
+
 class Endpoint(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
