@@ -1021,7 +1021,7 @@ class System(Wrappers):
 				float_balance = AgentFloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
 
-				if 'institution_id' in payload.keys():
+				if 'agent_id' in payload.keys():
 					float_balance = float_balance.filter(Q(agent__id=payload['agent_id'])|Q(agent=None))
 				else:
 					float_balance = float_balance.filter(agent=None)
