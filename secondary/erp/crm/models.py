@@ -305,6 +305,7 @@ class AgentStatus(models.Model):
 class Agent(models.Model):
 	date_modified = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
+	enrollment = models.ForeignKey(Enrollment)
 	profile = models.OneToOneField(Profile) #Primary Profile
 	status = models.ForeignKey(AgentStatus)
 	registrar = models.ForeignKey(Profile, related_name='registrar') #Agent who created the institution and primary profile
