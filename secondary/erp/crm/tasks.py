@@ -347,7 +347,7 @@ class System(Wrappers):
 
 			if 'enrollment_type_id' in payload.keys():
 				enrollment_type_list = EnrollmentType.objects.filter(id=payload['enrollment_type_id'])
-                        if 'product_item_id' in payload.keys():
+                        elif 'product_item_id' in payload.keys():
 				enrollment_type_list = EnrollmentType.objects.filter(product_item__id=payload['product_item_id'])
 			else:
 				if 'institution_id' in payload.keys():
@@ -725,9 +725,10 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			enrollment = Enrollment.objects.get(id=payload['enrollment_id'])
 
 			status = AgentStatus.objects.get(name='CREATED')
-			agent = Agent(profile=session_gateway_profile.user.profile, status=status,
+			agent = Agent(profile=session_gateway_profile.user.profile, status=status, enrollment=enrollment,
 						  registrar=gateway_profile.user.profile)
 			agent.save()
 			payload['agent_id'] = agent.pk
@@ -758,6 +759,25 @@ class System(Wrappers):
 			lgr.info("Error on register agent Institution: %s" % e)
 		return payload
 
+
+	def agent_details(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			
+			# session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			agents = Agent.objects.filter(enrollment__profile=gateway_profile.user.profile, enrollment__enrollment_type__id = payload['enrollment_type_id'])
+			if agents.exists():
+				agent = agents[0]
+				payload['agent_id'] = agent.pk
+			else:
+				lgr.info('agent not found')
+			
+			payload['response'] = 'Agent Details Captured'
+			payload['response_status'] = '00'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error retrieving agent details: %s" % e,exc_info=True)
+		return payload
 
 class Trade(System):
 	pass
