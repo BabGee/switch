@@ -128,7 +128,7 @@ class AgentStatusAdmin(admin.ModelAdmin):
 admin.site.register(AgentStatus, AgentStatusAdmin)
 
 class AgentAdmin(admin.ModelAdmin):
-	list_display = ('id','profile','status','registrar',)
+	list_display = ('id','profile','status','registrar','enrollment')
 	list_filter = ('status',)
 	search_fields = ('profile__user__username','profile__user__first_name','profile__user__last_name','profile__national_id',)
 admin.site.register(Agent, AgentAdmin)
