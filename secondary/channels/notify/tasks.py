@@ -353,12 +353,14 @@ class System(Wrappers):
 			lgr.info("Add Recipient: %s" % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			status = ContactStatus.objects.get(name='ACTIVE')
+			contact_group = ContactGroup.objects.get(id=payload['contact_group_id'].strip())
 			recipient = Recipient(status=status,subscribed=True,recipient=payload['recipient'].strip(),\
-						details=json.dumps(self.recipient_payload(payload)))
+						details=json.dumps(self.recipient_payload(payload)),\
+						contact_group=contact_group)
 			recipient.save()
 
 
-
+			payload['response'] = 'Recipient Added'
 			payload['response_status'] = '00'
 		except Exception, e:
 			payload['response_status'] = '96'
