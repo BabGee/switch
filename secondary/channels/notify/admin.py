@@ -38,16 +38,26 @@ class ContactStatusAdmin(admin.ModelAdmin):
 	list_display = ('name', 'description',)
 admin.site.register(ContactStatus, ContactStatusAdmin)
 
-class ContactGroupAdmin(admin.ModelAdmin):
-	list_display = ('id','name', 'description','institution','gateway',)
-admin.site.register(ContactGroup, ContactGroupAdmin)
-
 class ContactAdmin(admin.ModelAdmin):
 	list_display = ('id','status','product','subscription_details','subscribed',\
-			'linkid','gateway_profile', 'contact_group_list')
+			'linkid','gateway_profile')
 	list_filter = ('product','subscribed','status',)
 	search_fields = ('gateway_profile__msisdn__phone_number',)
 admin.site.register(Contact, ContactAdmin)
+
+class ContactGroupStatusAdmin(admin.ModelAdmin):
+	list_display = ('name', 'description',)
+admin.site.register(ContactGroupStatus, ContactGroupStatusAdmin)
+
+class ContactGroupAdmin(admin.ModelAdmin):
+	list_display = ('id','name', 'description','institution','gateway','status',)
+admin.site.register(ContactGroup, ContactGroupAdmin)
+
+class RecipientAdmin(admin.ModelAdmin):
+	list_display = ('id','status','details','subscribed', 'recipient','contact_group')
+	list_filter = ('contact_group__gateway','contact_group__institution','subscribed','status',)
+	search_fields = ('recipient',)
+admin.site.register(Recipient, RecipientAdmin)
 
 class CreditAdmin(admin.ModelAdmin):
 	list_display = ('description','institution', 'product_type','credit_value',)

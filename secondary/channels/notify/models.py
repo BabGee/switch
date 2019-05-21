@@ -1,6 +1,7 @@
 from django.contrib.gis.db import models
 from secondary.channels.vcs.models import *
 from secondary.erp.crm.models import *
+from django.contrib.postgres.fields import JSONField
 
 class Endpoint(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -89,16 +90,6 @@ class ContactStatus(models.Model):
 	def __unicode__(self):
 		return u'%s' % (self.name)
 
-class ContactGroup(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=200)
-	description = models.CharField(max_length=200)
-	institution = models.ForeignKey(Institution, blank=True, null=True)
-	gateway = models.ForeignKey(Gateway, blank=True, null=True)
-	def __unicode__(self):
-		return u'%s' % (self.name)
-
 class Contact(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
@@ -108,11 +99,41 @@ class Contact(models.Model):
 	subscribed = models.BooleanField(default=False)
 	linkid = models.CharField(max_length=200, null=True,blank=True)
 	gateway_profile = models.ForeignKey(GatewayProfile) # A gateway profile has only one MSISDN
-	contact_group = models.ManyToManyField(ContactGroup, blank=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.gateway_profile, self.product)
 	def contact_group_list(self):
 		return "\n".join([a.name for a in self.contact_group.all()])
+
+class ContactGroupStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
+
+class ContactGroup(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=200)
+	description = models.CharField(max_length=200)
+	institution = models.ForeignKey(Institution, blank=True, null=True)
+	gateway = models.ForeignKey(Gateway, blank=True, null=True)
+	status = models.ForeignKey(ContactGroupStatus) 
+	def __unicode__(self):
+		return u'%s' % (self.name)
+
+class Recipient(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	status = models.ForeignKey(ContactStatus) 
+	details = JSONField(max_length=38400)
+	subscribed = models.BooleanField(default=False)
+	recipient = models.CharField(max_length=200)
+	contact_group = models.ForeignKey(ContactGroup)
+	def __unicode__(self):
+		return u'%s %s' % (self.recipient, self.contact_group)
 
 class Credit(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)

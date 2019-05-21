@@ -36,6 +36,7 @@ from django.core import serializers
 import operator, string
 from django.core.mail import EmailMultiAlternatives
 from primary.core.upc.tasks import Wrappers as UPCWrappers
+from primary.core.Bridge.tasks import Wrappers as BridgeWrappers
 import numpy as np
 from django.conf import settings
 
@@ -47,6 +48,34 @@ lgr = logging.getLogger('secondary.channels.notify')
 
 
 class Wrappers:
+	def recipient_payload(self, payload):
+		new_payload, transaction, count = {}, None, 1
+
+		exempt_keys = ['card','credentials','new_pin','validate_pin','confirm_password','password','pin',\
+					   'access_level','response_status','sec_hash','ip_address','service' ,'lat','lng',\
+					   'chid','session','session_id','csrf_token','csrfmiddlewaretoken' , 'gateway_host' ,'gateway_profile' ,\
+					   'transaction_timestamp' ,'action_id' , 'bridge__transaction_id','merchant_data', 'signedpares',\
+					   'gpid','sec','fingerprint','vpc_securehash','currency','amount',\
+					   'institution_id','response','input','trigger','send_minutes_period','send_hours_period',\
+					   'send_days_period','send_years_period','token','repeat_bridge_transaction','transaction_auth']
+
+		for k, v in payload.items():
+			try:
+				value = json.loads(v)
+				if isinstance(value, list) or isinstance(value, dict):continue
+			except: pass
+			key = k.lower()
+			if key not in exempt_keys:
+				if count <= 100:
+					new_payload[str(k)[:30] ] = str(v)[:500]
+				else:
+					break
+				count = count+1
+
+		return new_payload
+
+
+
 	def trigger_notification_template(self, payload,notification_template):
 		#Check if trigger Exists
 		if 'trigger' in payload.keys():
@@ -161,6 +190,27 @@ class System(Wrappers):
 			payload['response_status'] = '96'
 			lgr.info("Error on Updating Notification Template: %s" % e)
 		return payload
+
+	def create_contact_group(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			status = ContactGroupStatus.objects.get(name='ACTIVE')
+			contact_group = ContactGroup(name=payload['contact_group_name'].strip(), \
+					description=payload['contact_group_description'], status=status,\
+					institution=gateway_profile.institution,gateway=gateway_profile.gateway)
+
+			contact_group.save()
+			payload['contact_group_id'] = contact_group.id
+			payload['response'] = 'Contact Group Created'
+			payload['response_status'] = '00'
+
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Updating Notification Template: %s" % e)
+
+		return payload
+
 
 	def create_notification_template(self, payload, node_info):
 		try:
@@ -299,146 +349,21 @@ class System(Wrappers):
 
 		return payload
 
-	def add_notification_contact(self, payload, node_info):
+	def add_recipient(self, payload, node_info):
 		try:
-		
-			lgr.info("Get Notification: %s" % payload)
+			lgr.info("Add Recipient: %s" % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-
-			notification_product = NotificationProduct.objects.filter(notification__status__name='ACTIVE', \
-						notification__code__gateway=gateway_profile.gateway,\
-						 service__name=payload['SERVICE'])
-
-
-			'''
-			lng = payload['lng'] if 'lng' in payload.keys() else 0.0
-			lat = payload['lat'] if 'lat' in payload.keys() else 0.0
-	                trans_point = Point(float(lng), float(lat))
-			g = GeoIP()
-
-			msisdn = None
-			if "msisdn" in payload.keys():
-	 			msisdn = str(payload['msisdn'])
-				msisdn = msisdn.strip()
-				if len(msisdn) >= 9 and msisdn[:1] == '+':
-					msisdn = str(msisdn)
-				elif len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
-					country_list = Country.objects.filter(mpoly__intersects=trans_point)
-					ip_point = g.geos(str(payload['ip_address']))
-					if country_list.exists() and country_list[0].ccode:
-						msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
-					elif ip_point:
-						country_list = Country.objects.filter(mpoly__intersects=ip_point)
-						if country_list.exists() and country_list[0].ccode:
-							msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
-						else:
-							msisdn = None
-					else:
-						msisdn = '+254%s' % msisdn[1:]
-				elif len(msisdn) >=10  and msisdn[:1] <> '0' and msisdn[:1] <> '+':
-					msisdn = '+%s' % msisdn #clean msisdn for lookup
-				else:
-					msisdn = None
-			'''
-			msisdn = UPCWrappers().get_msisdn(payload)
-
-			if msisdn is not None:
-				#Get/Filter MNO
-				code1=(len(msisdn) -7)
-				code2=(len(msisdn) -6)
-				code3=(len(msisdn) -5)
-
-				prefix = MNOPrefix.objects.filter(prefix=msisdn[:code3])
-				if not prefix.exists():
-					prefix = MNOPrefix.objects.filter(prefix=msisdn[:code2])
-					if not prefix.exists():
-						prefix = MNOPrefix.objects.filter(prefix=msisdn[:code1])
-
-				lgr.info('MNO Prefix: %s|%s' % (prefix,msisdn))
-				#Get Notification product
-				notification_product = notification_product.filter(Q(notification__code__mno=prefix[0].mno)|Q(notification__code__mno=None))
-
-			if 'notification_delivery_channel' in payload.keys():
-				notification_product = notification_product.filter(notification__code__channel__name=payload['notification_delivery_channel'])
-
-			if 'notification_product_id' in payload.keys():
-				notification_product = notification_product.filter(id=payload['notification_product_id'])
-			if 'product_item_id' in payload.keys():
-				product_type = ProductItem.objects.get(id=payload['product_item_id']).product_type
-				notification_product = notification_product.filter(product_type=product_type)
-			if 'product_type_id' in payload.keys():
-				notification_product = notification_product.filter(product_type__id=payload['product_type_id'])
-			if 'payment_method' in payload.keys():
-				notification_product = notification_product.filter(payment_method__name=payload['payment_method'])
-			if 'code' in payload.keys():
-				notification_product = notification_product.filter(notification__code__code=payload['code'])
-
-			if 'institution_id' in payload.keys():
-				#Filter to send an institution notification or otherwise a gateway if institution does not exist (gateway only has institution as None)
-				institution_notification_product = notification_product.filter(notification__code__institution__id=payload['institution_id'])
-				gateway_notification_product = notification_product.filter(notification__code__institution=None)
-				notification_product =  institution_notification_product if institution_notification_product.exists() else gateway_notification_product
-
-			if "keyword" in payload.keys():
-				lgr.info("Keyword to filter found: %s" % payload['keyword'])
-				notification_product=notification_product.filter(keyword__iexact=payload['keyword'])
-
-			if notification_product.exists():
-				notification_product = notification_product[0]
-				status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
-
-				if 'session_gateway_profile_id' in payload.keys():
-					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-				else:
-					session_gateway_profile_list = GatewayProfile.objects.filter(msisdn=msisdn, gateway=gateway_profile.gateway)
-					session_gateway_profile = session_gateway_profile_list[0]
+			status = ContactStatus.objects.get(name='ACTIVE')
+			recipient = Recipient(status=status,subscribed=True,recipient=payload['recipient'].strip(),\
+						details=json.dumps(self.recipient_payload(payload)))
+			recipient.save()
 
 
-				contact = Contact.objects.filter(product=notification_product, gateway_profile=session_gateway_profile)
-				
-				if not contact.exists():
-					details = json.dumps({})
-					new_contact = Contact(status=status,product=notification_product,subscription_details=details,\
-							gateway_profile=session_gateway_profile)
 
-					#On create Contact, apply create_subscribe. Existing contacts, do not apply
-					if notification_product.subscribable:
-						new_contact.subscribed=notification_product.create_subscribe
-					else:
-						new_contact.subscribed=True
-
-					if "linkid" in payload.keys():
-						new_contact.linkid=payload['linkid']
-					new_contact.save()
-					payload['contact_id'] = new_contact.id
-					payload['response'] = 'Contact Added'
-
-				else:
-					new_contact = contact[0]
-					payload['contact_id'] = new_contact.id
-					payload['response'] = 'Contact Exists'
-
-
-				if 'contact_group' in payload.keys():
-					#check if contact_group exists if not create
-					contact_group_list = ContactGroup.objects.filter(name=payload['contact_group'],institution=new_contact.product.notification.code.institution)
-					if len(contact_group_list)<1:
-						contact_group = ContactGroup(name=payload['contact_group'],description=payload['contact_group'],institution=new_contact.product.notification.code.institution)
-						contact_group.save()
-					else:
-						contact_group = contact_group_list[0]
-
-					#check if contact's contact_group is added, if not, create
-					contact_with_group = new_contact.contact_group.filter(id=contact_group.id)
-					if len(contact_with_group)<1:
-						new_contact.contact_group.add(contact_group)
-
-				payload['response_status'] = '00'
-			else:
-				payload['response_status'] = "25"
+			payload['response_status'] = '00'
 		except Exception, e:
 			payload['response_status'] = '96'
-			lgr.info("Error on Get Notification: %s" % e)
+			lgr.info("Error on Add Recipient: %s" % e)
 		return payload
 
 
@@ -839,7 +764,7 @@ class System(Wrappers):
 					else:
 						new_contact = contact[0]
 						new_contact.status = status
-						if notification_product.subscribable == False and new_contact.subscribed == False: #Subscribe Unsubscribed Bulk(subscribable = False)
+						if not notification_product.subscribable and not new_contact.subscribed: #Subscribe Unsubscribed where not subscribable on send
 							new_contact.subscribed=True
 
 						new_contact.save()
@@ -1027,7 +952,8 @@ class System(Wrappers):
 					if notification_product[0].subscribable:
 						new_contact.subscribed=notification_product[0].create_subscribe
 					else:
-						new_contact.subscribed=True
+						if not notification_product.subscribable and not new_contact.subscribed: #Subscribe Unsubscribed where not subscribable on send
+							new_contact.subscribed=True
 
 					new_contact.save()
 				else:
