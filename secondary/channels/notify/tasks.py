@@ -383,7 +383,7 @@ class System(Wrappers):
 				lgr.info("Keyword to filter found: %s" % payload['keyword'])
 				notification_product=notification_product.filter(keyword__iexact=payload['keyword'])
 
-			if len(notification_product)>0:
+			if notification_product.exists():
 				notification_product = notification_product[0]
 				status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
 
@@ -455,7 +455,7 @@ class System(Wrappers):
 				contact = contact.filter(product__name=payload['notification_product'])
 			lgr.info('Contact: %s' % contact)
 
-			if len(contact)>0:
+			if contact.exists():
 				#Change status to INACTIVE but leave subscribed=True. Celery service would check for INACTIVE contact purpoting to be subscribed and unsubscribe
 				contact_status = ContactStatus.objects.get(name='INACTIVE')
 				c = contact[0]
@@ -914,11 +914,10 @@ class System(Wrappers):
 	def process_delivery_status(self, payload, node_info):
 		try:
 			lgr.info("Process Delivery Status: %s" % payload)
-			msisdn = UPCWrappers().get_msisdn(payload)
 
 			outbound_id = payload['outbound_id']
 			delivery_status = payload['delivery_status']
-			outbound = Outbound.objects.select_related('contact').filter(id=outbound_id,recipient=msisdn)
+			outbound = Outbound.objects.select_related('contact').filter(id=outbound_id)
 			if 'ext_service_id' in payload.keys() and payload['ext_service_id'] not in [None,'']:
 				outbound = outbound.filter(contact__product__notification__ext_service_id=payload['ext_service_id'])
 
@@ -1384,7 +1383,7 @@ class System(Wrappers):
 					lgr.info("Subscription Details: %s" % details)
 					if 'notification_action' in payload.keys() and payload['notification_action'] == 'Addition':
 						status = ContactStatus.objects.get(name='ACTIVE')
-						if len(contact)<1 or 'linkid' in payload.keys():
+						if not contact.exists()  or 'linkid' in payload.keys():
 							new_contact = Contact(status=status,product=notification_product[0],subscription_details=details[:1920],\
 									subscribed=True, gateway_profile=session_gateway_profile)
 							if 'linkid' in payload.keys():new_contact.linkid = payload['linkid'] 
@@ -1398,7 +1397,7 @@ class System(Wrappers):
 						payload['contact_id'] = new_contact.id
 						payload['response'] = '%s Subscription Successful' % new_contact.product.name
 						payload['response_status']= '00'
-					elif 'notification_action' in payload.keys() and payload['notification_action'] == 'Deletion' and len(contact)>0:
+					elif 'notification_action' in payload.keys() and payload['notification_action'] == 'Deletion' and contact.exists():
 						status = ContactStatus.objects.get(name='INACTIVE')
 						if 'linkid' in payload.keys(): contact.filter(linkid=payload['linkid'])
 						new_contact = contact[0]
