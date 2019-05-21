@@ -101,8 +101,6 @@ class Contact(models.Model):
 	gateway_profile = models.ForeignKey(GatewayProfile) # A gateway profile has only one MSISDN
 	def __unicode__(self):
 		return u'%s %s' % (self.gateway_profile, self.product)
-	def contact_group_list(self):
-		return "\n".join([a.name for a in self.contact_group.all()])
 
 class ContactGroupStatus(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)

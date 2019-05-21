@@ -36,7 +36,6 @@ from django.core import serializers
 import operator, string
 from django.core.mail import EmailMultiAlternatives
 from primary.core.upc.tasks import Wrappers as UPCWrappers
-from primary.core.Bridge.tasks import Wrappers as BridgeWrappers
 import numpy as np
 from django.conf import settings
 
