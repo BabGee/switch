@@ -396,13 +396,14 @@ class System(Wrappers):
 
 				contact = Contact.objects.filter(product=notification_product, gateway_profile=session_gateway_profile)
 				
-
-				if len(contact)<1:
+				if not contact.exists():
 					details = json.dumps({})
 					new_contact = Contact(status=status,product=notification_product,subscription_details=details,\
 							gateway_profile=session_gateway_profile)
+
+					#On create Contact, apply create_subscribe. Existing contacts, do not apply
 					if notification_product.subscribable:
-						new_contact.subscribed=False
+						new_contact.subscribed=notification_product.create_subscribe
 					else:
 						new_contact.subscribed=True
 
@@ -821,12 +822,14 @@ class System(Wrappers):
 						contact = contact.filter(linkid=payload['linkid'])
 
 					status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
-					if len(contact)<1:
+					if not contact.exists():
 						details = json.dumps({})
 						new_contact = Contact(status=status,product=notification_product,subscription_details=details,\
 								gateway_profile=session_gateway_profile)
+
+						#On create Contact, apply create_subscribe. Existing contacts, do not apply
 						if notification_product.subscribable:
-							new_contact.subscribed=False
+							new_contact.subscribed=notification_product.create_subscribe
 						else:
 							new_contact.subscribed=True
 
@@ -1017,9 +1020,16 @@ class System(Wrappers):
 				payload['notification_template_id'] = notification_template[0].id
 				details = json.dumps({})
 				status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
-				if len(contact)<1:
+				if not contact.exists():
 					new_contact = Contact(status=status,product=notification_product[0],subscription_details=details[:1920],\
-							subscribed=False, gateway_profile=session_gateway_profile)
+							gateway_profile=session_gateway_profile)
+
+					#On create Contact, apply create_subscribe. Existing contacts, do not apply
+					if notification_product[0].subscribable:
+						new_contact.subscribed=notification_product[0].create_subscribe
+					else:
+						new_contact.subscribed=True
+
 					new_contact.save()
 				else:
 					new_contact = contact[0]

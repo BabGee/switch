@@ -748,8 +748,13 @@ class System(Wrappers):
 
 			agent = Agent.objects.filter(profile=gateway_profile.user.profile)[0]
 
+			if 'institution_id' in payload.keys():
+				institution = Institution.objects.get(id=payload['institution_id'])
+			else:
+				institution = session_gateway_profile.institution
+
 			institution_type = AgentInstitutionType.objects.get(pk=payload['agent_institution_type_id'])
-			agent_institution = AgentInstitution(agent=agent, institution_type=institution_type, institution=session_gateway_profile.institution)
+			agent_institution = AgentInstitution(agent=agent, institution_type=institution_type, institution=institution)
 			agent_institution.save()
 
 			payload['response'] = 'Agent Institution Registered'
