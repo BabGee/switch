@@ -1868,32 +1868,6 @@ class Wrappers:
             lgr.info('Error on credit account: %s' % e)
         return params
 
-
-    def notifications_summary(self, payload, gateway_profile, profile_tz, data):
-        params = {}
-	params['rows'] = []
-	params['cols'] = [{"label": "index", "type": "string"}, {"label": "name", "type": "string"},
-                          {"label": "image", "type": "string"}, {"label": "checked", "type": "string"},
-                          {"label": "selectValue", "type": "string"}, {"label": "description", "type": "string"},
-                          {"label": "color", "type": "string"}]
-
-
-        try:
-            outbound = Outbound.objects.filter(
-                    contact__product__notification__code__institution=gateway_profile.institution). \
-                values('state__name'). \
-                annotate(state_count=Count('state__name'))
-
-            for o in outbound:
-                item = {}
-                item['name'] = o['state__name']
-                item['count'] = '%s' % '{0:,.2f}'.format(o['state_count'])
-                params['rows'].append(item)
-        except Exception, e:
-            lgr.info('Error on notifications: %s' % e)
-        return params
-
-
     def investment_summary(self, payload, gateway_profile, profile_tz, data):
         params = {}
 	params['rows'] = []
