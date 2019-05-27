@@ -3840,7 +3840,7 @@ def process_file_upload_activity(payload):
                                     service = u.file_upload.activity_service
 				    gateway_profile = u.gateway_profile
 
-				    bridgetasks.background_service_call.delay(service.name, gateway_profile.id, payload)
+				    task = bridgetasks.background_service_call.delay(service.name, gateway_profile.id, payload)
 
                                 except Exception, e:
                                     lgr.info('Error on Service Call: %s' % e)

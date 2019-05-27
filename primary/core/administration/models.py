@@ -313,4 +313,14 @@ class Icon(models.Model):
  	def __unicode__(self):
 		return u'%s' % (self.icon)
 
+class TradingBox(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=200,null=True,blank=True)
+	open_time = models.TimeField()
+	close_time = models.TimeField()
+	timezone = models.CharField(max_length=50)
+ 	def __unicode__(self):
+		return u'%s' % (self.name)
 

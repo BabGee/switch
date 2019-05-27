@@ -1,0 +1,1 @@
+{"gateway_host": "services.interintel.co","sec_hash": "HVT5P6jHQOfDqkPFg7+hnS2T2u6fJj41H5NKjgZvUMU="}

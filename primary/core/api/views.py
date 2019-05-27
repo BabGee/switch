@@ -15,6 +15,8 @@ lgr = logging.getLogger('primary.core.api')
 
 @csrf_protect
 def default(request):
+	import time
+	time.sleep(2)
 	return HttpResponse()  
 
 
@@ -124,8 +126,7 @@ class Interface(Authorize, ServiceCall):
 					lgr.info('# A system User Login')
 					gateway_profile_list = GatewayProfile.objects.filter(Q(Q(allowed_host__host=str(payload['gateway_host'])),Q(allowed_host__status__name='ENABLED'))\
 								|Q(Q(gateway__default_host__host=str(payload['gateway_host'])),Q(gateway__default_host__status__name='ENABLED')),\
-								Q(user__username='System@User'),Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS'])).\
-								prefetch_related('user','msisdn','gateway')[:1]
+								Q(user__username='System@User'),Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS']))
 
 				#Integration would need an API Key for the specific user.
 				#Integration would require the user credentials on call so as to select user for API KEY check
@@ -149,8 +150,7 @@ class Interface(Authorize, ServiceCall):
 								break
 						if gp <> None:
 							lgr.info('This User Active')
-							gateway_profile_list = gateway_profile_list.filter(id=gp.id).\
-										prefetch_related('user','msisdn','gateway')
+							gateway_profile_list = gateway_profile_list.filter(id=gp.id)
 						else:
 							gateway_profile_list = GatewayProfile.objects.none()
 					else:
@@ -169,8 +169,7 @@ class Interface(Authorize, ServiceCall):
 							gateway_profile__allowed_host__status__name='ENABLED')|\
 							Q(gateway_profile__gateway__default_host__host=payload['gateway_host'],\
 							gateway_profile__gateway__default_host__status__name='ENABLED'),\
-							Q(gateway_profile__status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS'])).\
-							prefetch_related('gateway_profile')[:1]
+							Q(gateway_profile__status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS']))
 
 						if session.exists():
 							lgr.info('Session Exists')
@@ -191,8 +190,7 @@ class Interface(Authorize, ServiceCall):
 
 
 							if (session_expiry == None) or (session_expiry and session_active):
-								try: gateway_profile_list = GatewayProfile.objects.filter(id=user_session.gateway_profile.id).\
-										prefetch_related('user','msisdn','gateway')
+								try: gateway_profile_list = GatewayProfile.objects.filter(id=user_session.gateway_profile.id)
 								except: pass
 					except Exception, e:
 						lgr.info('Error: %s' % e)
@@ -207,19 +205,19 @@ class Interface(Authorize, ServiceCall):
 
 				if gateway_profile_list.exists():
 					lgr.info('Got Gateway Profile')
-					service = Service.objects.filter(name=SERVICE).prefetch_related('access_level')
-					service = service.filter(Q(access_level__in=[gateway_profile.access_level for gateway_profile in gateway_profile_list])|Q(access_level=None))
+					gateway_profile = gateway_profile_list.first()
+					service = Service.objects.filter(Q(name=SERVICE),Q(access_level=gateway_profile.access_level)|Q(access_level=None))
 					if service.exists():
 						payload_check = service_call(request)
 						#lgr.info(payload_check)
 						if payload_check.status_code == 403:
 							lgr.info('Did Not Pass Onsite Check')
-							API_KEY = gateway_profile_list[0].user.profile.api_key
+							API_KEY = gateway_profile.user.profile.api_key
 							#lgr.info('Payload: %s' % payload)
 							payload = self.check_hash(payload, API_KEY)
 							if payload['response_status'] == '00':
 								#Call Services as 
-								payload = self.api_service_call(service[0], gateway_profile_list[0], payload)
+								payload = self.api_service_call(service.first(), gateway_profile, payload)
 							else:
 								payload['response'] = {'overall_status': 'Hash Check Failed'}	
 							#Remove sensitive data
@@ -232,7 +230,7 @@ class Interface(Authorize, ServiceCall):
 							#lgr.info('Payload: %s' % payload)
 						elif payload_check.status_code == 200:
 							lgr.info('Onsite Check Passed')
-							payload = self.api_service_call(service[0], gateway_profile_list[0], payload)
+							payload = self.api_service_call(service.first(), gateway_profile, payload)
 						else:
 							pass
 					else: 

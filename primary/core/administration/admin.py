@@ -144,3 +144,8 @@ class IconAdmin(admin.ModelAdmin):
 admin.site.register(Icon, IconAdmin)
 
 
+class TradingBoxAdmin(admin.ModelAdmin):
+	list_display = ('name', 'description','open_time','close_time','timezone',)
+admin.site.register(TradingBox, TradingBoxAdmin)
+
+

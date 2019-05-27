@@ -355,14 +355,18 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			status = ContactStatus.objects.get(name='ACTIVE')
 			contact_group = ContactGroup.objects.get(id=payload['contact_group_id'].strip())
-			recipient = Recipient(status=status,subscribed=True,recipient=payload['recipient'].strip(),\
+			if not Recipient.objects.filter(recipient=payload['recipient'].strip(),contact_group=contact_group).exists():
+				recipient = Recipient(status=status,subscribed=True,recipient=payload['recipient'].strip(),\
 						details=json.dumps(self.recipient_payload(payload)),\
 						contact_group=contact_group)
-			recipient.save()
+				recipient.save()
 
-
-			payload['response'] = 'Recipient Added'
-			payload['response_status'] = '00'
+				payload['response_status'] = '00'
+				payload['response'] = 'Recipient Added'
+			else:
+				payload['response_status'] = '26'
+				payload['response'] = 'Recipient Exists'
+			
 		except Exception, e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Add Recipient: %s" % e)
@@ -660,21 +664,18 @@ class System(Wrappers):
 						payload['message'] = ''
 				payload['notification_product_id'] = notification_product[0].id
 				lgr.info('Payload: %s' % payload)
-				#product_item = ProductItem.objects.filter(institution_till=notification_product[0].notification.institution_till,\
-				#		product_type=notification_product[0].notification.product_type)
-				#payload['product_item_id'] = product_item[0].id #Pick the notification product, product item used in sales and purchases of credits etc| *****@@Will throw error if no product item!!!!
 				if 'product_item_id' in payload.keys(): del payload['product_item_id'] #Avoid deduction of float
-				payload['float_product_type_id'] = notification_product[0].notification.product_type.id
-				payload['float_amount'] = (notification_product[0].unit_credit_charge) #Pick the notification product cost
 
-				#if 'institution_id' not in payload.keys() and notification_product[0].notification.code.institution:
-				#	payload['institution_id'] = notification_product[0].notification.code.institution.id
 				if notification_product[0].notification.code.institution:
 					payload['institution_id'] = notification_product[0].notification.code.institution.id
 				else:
 					if 'institution_id' in payload.keys(): del payload['institution_id'] #User gateway Float if exists, if not, fail
-				payload['response'] = "Notification Captured : %s" % notification_product[0].id 
-				payload['response_status']= '00'
+
+
+				float_amount = (notification_product[0].unit_credit_charge) #Pick the notification product cost
+				if 'recipient_count' in payload.keys():
+					float_amount = float_amount*Decimal(payload['recipient_count'])
+
 				#Calculate price per SMS per each 160 characters
 				if notification_product[0].notification.code.channel.name == 'SMS':
 					message = payload['message'].strip()
@@ -683,7 +684,14 @@ class System(Wrappers):
 		                	message = escape(message)
 					chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters
 					messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
-					payload['float_amount'] = (notification_product[0].unit_credit_charge)*len(messages)
+					float_amount = float_amount*len(messages)
+
+				#Finally
+
+				payload['float_product_type_id'] = notification_product[0].notification.product_type.id
+				payload['float_amount'] = float_amount
+				payload['response'] = "Notification Captured : %s" % notification_product[0].id 
+				payload['response_status']= '00'
 
 			elif len(notification_product)<1 and 'notification_product_id' in payload.keys():
 				del payload['notification_product_id'] #Avoid send SMS
@@ -1027,6 +1035,34 @@ class System(Wrappers):
 			lgr.info("Error on creating Notification: %s" % e)
 		return payload
 
+
+
+	def unsubscribe_recipient(self, payload, node_info):
+		try:
+			recipient = Recipient.objects.get(id=payload['recipient_id'])
+			recipient.subscribed = False
+			recipient.save()
+			
+			payload['response'] = 'Recipient UnSubscribed'
+			payload['response_status']= '00'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on UnSubscribing Recipient: %s" % e,exc_info=True)
+		return payload
+
+	def subscribe_recipient(self, payload, node_info):
+		try:
+			recipient = Recipient.objects.get(id=payload['recipient_id'])
+			recipient.subscribed = True
+			recipient.save()
+			
+			payload['response'] = 'Recipient Subscribed'
+			payload['response_status']= '00'
+		except Exception, e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Subscribing Recipient: %s" % e,exc_info=True)
+		return payload
+
 	def get_message(self, payload, node_info):
 		try:
 			response = "No Message"
@@ -1044,49 +1080,50 @@ class System(Wrappers):
 		return payload
 
 
-	def contact_group_charges(self, payload, node_info):
+	def contact_group_list_details(self, payload, node_info):
 		try:
 			lgr.info('Get Product Outbound Notification: %s' % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			contact_group_list = ContactGroup.objects.filter(id__in=[a for a in payload['contact_group'].split(',') if a],\
-							institution=gateway_profile.institution,\
-							gateway=gateway_profile.gateway)
 
-			lgr.info('Contact Group List: %s' % contact_group_list)
-			contact = Contact.objects.filter(subscribed=True,status__name='ACTIVE',\
-							contact_group__in=[c for c in contact_group_list],\
-							product__notification__code__institution=gateway_profile.institution,\
-							product__notification__code__gateway=gateway_profile.gateway).select_related('product')
+			recipient = Recipient.objects.filter(subscribed=True,status__name='ACTIVE',\
+							contact_group__id__in=[a for a in payload['contact_group_id'].split(',') if a],\
+							contact_group__institution=gateway_profile.institution,\
+							contact_group__gateway=gateway_profile.gateway)
 
-			lgr.info('Contact: %s' % contact)
-			contact_product_list = contact.values('product__id','product__unit_credit_charge').annotate(product_count=Count('product__id'))
+			recipient_count = recipient.count()
 
-			lgr.info('Contact Group List: %s' % contact_group_list)
-			#Get Amount
-			response = ''
-			if contact_product_list.exists():
-				for contact_product in contact_product_list:
-					contact_list_count = contact.filter(product__id=contact_product['product__id']).distinct('gateway_profile__msisdn__phone_number').count()
+			payload['recipient_count'] = recipient_count
 
-					lgr.info('Contact List Count: %s' % contact_list_count)
-					message = payload['message'].strip()
-		        	        message = unescape(message)
-					message = smart_str(message)
-		                	message = escape(message)
-					chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters
-					messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
-					messages_count = len(messages)
- 					float_amount = Decimal(contact_list_count * contact_product['product__unit_credit_charge'] * messages_count)
-					response = '%s | @ %s' % (response, float_amount)
-
-				payload['response'] = response
-				payload['response_status']= '00'
+			product = NotificationProduct.objects.get(id=payload['notification_product_id'])
+			contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
+			status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
+			if not contact.exists():
+				new_contact = Contact(status=status,product=product,subscription_details=json.dumps({}),\
+						subscribed=True, gateway_profile=gateway_profile)
+				new_contact.save()
 			else:
-				payload['response'] = 'Notification Product Not Found'
-				payload['response_status'] = '25'
+				new_contact = contact[0]
+				new_contact.status = status
+				new_contact.subscribed=True
+				new_contact.save()
+
+			#Message Len
+			message = payload['message'].strip()
+	                message = unescape(message)
+			message = smart_str(message)
+			message = escape(message)
+			chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters
+			messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
+			message_len = len(messages)
+
+			payload['recipient_count'] = recipient_count
+			payload['message_len'] = message_len
+			payload['contact_id'] = new_contact.id
+			payload['response'] = 'Contact Group of %d Recipient(s) to receive %s message(s)' % (recipient_count, message_len)
+			payload['response_status']= '00'
 		except Exception, e:
 			payload['response_status'] = '96'
-			lgr.info("Error on Notification Charges: %s" % e)
+			lgr.info("Error on Contact Group List Details: %s" % e)
 		return payload
 
 
@@ -1135,44 +1172,29 @@ class System(Wrappers):
 			profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
 			scheduled_send = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
 
+			notification_product = NotificationProduct.objects.get(id=payload['notification_product_id'])
 
+			recipient_list = Recipient.objects.filter(subscribed=True,status__name='ACTIVE',\
+							contact_group__id__in=[a for a in payload['contact_group_id'].split(',') if a],\
+							contact_group__institution=gateway_profile.institution,\
+							contact_group__gateway=gateway_profile.gateway).values_list('recipient', flat=True)
 
-
-			contact_group_list = ContactGroup.objects.filter(id__in=[a for a in payload['contact_group'].split(',') if a],\
-							institution=gateway_profile.institution,\
-							gateway=gateway_profile.gateway)
-
-			lgr.info('Contact Group List: %s' % contact_group_list)
-			contact = Contact.objects.filter(subscribed=True,status__name='ACTIVE',\
-							contact_group__in=[c for c in contact_group_list],\
-							product__notification__code__institution=gateway_profile.institution,\
-							product__notification__code__gateway=gateway_profile.gateway).select_related('product')
-
-			lgr.info('Contact: %s' % contact)
-			contact_product_list = contact.values('product__id','product__unit_credit_charge').annotate(product_count=Count('product__id'))
-
-			lgr.info('Contact Group List: %s' % contact_group_list)
-			#Get Amount
-			response = ''
-			for contact_product in contact_product_list:
-				contact_list = contact.filter(product__id=contact_product['product__id']).values_list('id').distinct('gateway_profile__msisdn__phone_number')
-				if 'message' in payload.keys() and len(contact_list)>0:
-					lgr.info('Message and Contact Captured')
-					#Bulk Create Outbound
-					#self.outbound_bulk_logger.delay(payload, contact_list, scheduled_send)
-					contact_list = np.asarray(contact_list).tolist()
-					lgr.info('Contact List: %s' % len(contact_list))
-					outbound_bulk_logger.apply_async((payload, contact_list, scheduled_send), serializer='json')
-
-
-					payload['response'] = 'Outbound Message Processed'
-					payload['response_status']= '00'
-				elif 'message' not in payload.keys() and len(contact_list)>0:
-					payload['response'] = 'No Message to Send'
-					payload['response_status']= '00'
-				else:
-					payload['response'] = 'No Contact/Message to Send'
-					payload['response_status']= '00'
+			if 'message' in payload.keys() and recipient_list.exists():
+				lgr.info('Message and Contact Captured')
+				#Bulk Create Outbound
+				#self.outbound_bulk_logger.delay(payload, contact_list, scheduled_send)
+				recipient_list = np.asarray(recipient_list).tolist()
+				#lgr.info('Recipient List: %s' % recipient_list)
+				#recipient_outbound_bulk_logger.apply_async((payload, recipient_list, scheduled_send), serializer='json')
+				recipient_outbound_bulk_logger.delay(payload, recipient_list, scheduled_send)
+				payload['response'] = 'Outbound Message Processed'
+				payload['response_status']= '00'
+			elif 'message' not in payload.keys() and recipient_list.exists():
+				payload['response'] = 'No Message to Send'
+				payload['response_status']= '00'
+			else:
+				payload['response'] = 'No Contact/Message to Send'
+				payload['response_status']= '00'
 		except Exception, e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Log Outbound Message: %s" % e)
@@ -1203,7 +1225,7 @@ class System(Wrappers):
 
 					contact_list = np.asarray(contact_list).tolist()
 					lgr.info('Contact List: %s' % len(contact_list))
-					outbound_bulk_logger.apply_async((payload, contact_list, scheduled_send), serializer='json')
+					contact_outbound_bulk_logger.apply_async((payload, contact_list, scheduled_send), serializer='json')
 
 					payload['response'] = 'Outbound Message Processed'
 					payload['response_status']= '00'
@@ -1511,7 +1533,61 @@ def contact_unsubscription():
 
 
 @app.task(ignore_result=True)
-def outbound_bulk_logger(payload, contact_list, scheduled_send):
+@transaction.atomic
+def recipient_outbound_bulk_logger(payload, recipient_list, scheduled_send):
+	#from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+		lgr.info('Recipient Outbound Bulk Logger Started')
+
+		state = OutBoundState.objects.get(name='CREATED')
+		contact = Contact.objects.get(id=payload['contact_id'])
+
+		from itertools import islice
+		batch_size = 10000
+		objs = (Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r, sends=0) for r in recipient_list)
+		while True:
+			batch = list(islice(objs, batch_size))
+			if not batch:
+				break
+			try: 
+				outbound = Outbound.objects.bulk_create(batch)
+				lgr.info('Succesfully Logged to Outbound')
+			except DatabaseError, e:
+				lgr.info('Database Error, Retry Transaction')
+				transaction.set_rollback(True)
+
+		'''
+		#For Bulk Create, do not save each model in loop
+		outbound_list = []
+		for r in recipient_list:
+			outbound = Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r[0], sends=0)
+			outbound_list.append(outbound)
+		if outbound_list:
+			lgr.info('Outbound Bulk Logger Captured')
+			Outbound.objects.bulk_create(outbound_list)
+		'''
+
+		'''
+		from itertools import islice
+
+		batch_size = 10000
+		objs = (Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r[0], sends=0) for r in recipient_list)
+		while True:
+			batch = list(islice(objs, batch_size))
+			if not batch:
+				break
+			Outbound.objects.bulk_create(batch, batch_size)
+
+		'''
+		lgr.info('Recipient Outbound Bulk Logger Completed Task')
+	except Exception, e:
+		lgr.info("Error on Outbound Bulk Logger: %s" % e)
+
+
+
+@app.task(ignore_result=True)
+def contact_outbound_bulk_logger(payload, contact_list, scheduled_send):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
@@ -1734,11 +1810,17 @@ def send_outbound_sms_messages():
 				|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 				|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=2),date_created__gte=timezone.now()-timezone.timedelta(hours=6)),\
 				Q(contact__status__name='ACTIVE'))
-	outbound = list(orig_outbound.values_list('id',flat=True)[:500])
+	outbound = list(orig_outbound.values_list('id',flat=True)[:250])
 
 	processing = orig_outbound.filter(id__in=outbound).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
-	for ob in outbound:
-		send_outbound.delay(ob)
+	#for ob in outbound:
+	#	send_outbound.delay(ob)
+	map_iterator = map(send_outbound.delay, outbound)
+	#x = np.array(outbound)
+	#vfunc = np.vectorize(send_outbound.delay)
+	#v_iterator = vfunc(x)
+
+
 
 @app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic

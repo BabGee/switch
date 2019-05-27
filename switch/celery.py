@@ -13,10 +13,13 @@ app = Celery('switch')
 # the configuration object to child processes.
 # - namespace='CELERY' means all celery-related configuration keys
 #   should have a `CELERY_` prefix.
-app.config_from_object('django.conf:settings', namespace='CELERY')
+app.config_from_object('django.conf:settings', namespace='CELERY') #4.0
 
+#app.config_from_object('django.conf:settings')
 
-app.autodiscover_tasks()
+app.autodiscover_tasks() #4.0
+
+#app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 
 @app.task(bind=True)
@@ -43,42 +46,131 @@ def single_instance_task(timeout):
 	return task_exc
 
 from kombu import Exchange, Queue
+from kombu.common import Broadcast
+
+'''
+app.conf.task_queues = (Broadcast('celery'),Broadcast('commandline'),Broadcast('commandline'),Broadcast('notification'),
+    			Broadcast('spawned_bulk_notification'),Broadcast('bulk_notification'),Broadcast('files'),Broadcast('payments'),
+			Broadcast('services'),Broadcast('push_request'))
+'''
 
 app.conf.task_routes = {
-		'secondary.channels.notify.tasks.send_bulk_sms': {'queue': 'commandline1','routing_key':'commandline1'}, 
-		'secondary.channels.notify.tasks.send_outbound_sms_messages': {'queue': 'sms','routing_key':'sms'}, 
-		'secondary.channels.notify.tasks.send_outbound': {'queue': 'spawned_sms','routing_key':'spawned_sms'}, 
-		'secondary.channels.notify.tasks.send_outbound_email_messages': {'queue': 'email','routing_key':'email'}, 
-		'secondary.channels.dsc.tasks.process_file_upload_activity': {'queue': 'files','routing_key':'files'},
-		'secondary.channels.notify.tasks.add_bulk_contact': {'queue': 'commandline','routing_key':'commandline'},
-		'secondary.channels.notify.tasks.add_gateway_bulk_contact': {'queue': 'commandline1','routing_key':'commandline1'},
-		'secondary.finance.paygate.tasks.send_paygate_outgoing': {'queue': 'payments','routing_key':'payments'},
-		'secondary.finance.paygate.tasks.process_incoming_payments': {'queue': 'payments','routing_key':'payments'},
-		'secondary.channels.dsc.tasks.process_file_upload': {'queue': 'files','routing_key':'files'},
-		'secondary.channels.notify.tasks.service_call': {'queue': 'services','routing_key':'services'},
-		'primary.core.bridge.tasks.background_service_call': {'queue': 'services','routing_key':'services'},
-		'primary.core.bridge.tasks.process_background_service_call': {'queue': 'services','routing_key':'services'},
-		'primary.core.bridge.tasks.process_background_service': {'queue': 'services','routing_key':'services'},
-		'secondary.finance.crb.tasks.reference_activity_service_call': {'queue': 'services','routing_key':'services'},
-		'secondary.finance.crb.tasks.process_reference_activity': {'queue': 'commandline','routing_key':'commandline'},
-		'secondary.channels.dsc.tasks.process_push_request': {'queue': 'push_request','routing_key':'push_request'},
+		'secondary.channels.notify.tasks.send_bulk_notification': {'queue': 'commandline','exchange': 'commandline','routing_key':'commandline','delivery_mode': 'transient'}, 
+
+		'secondary.channels.notify.tasks.contact_outbound_bulk_logger': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'},
+		'secondary.channels.notify.tasks.recipient_outbound_bulk_logger': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'},
+		'secondary.channels.notify.tasks.send_contact_unsubscription': {'queue': 'notification','exchange': 'notification','notification':'1234','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.contact_unsubscription': {'queue': 'notification','exchange': 'notification','notification':'1234','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.send_contact_subscription': {'queue': 'notification','exchange': 'notification','notification':'1234','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.contact_subscription': {'queue': 'notification','exchange': 'notification','notification':'1234','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.send_outbound_sms_messages': {'queue': 'notification','exchange': 'notification','notification':'1234','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.send_outbound': {'queue': 'spawned_bulk_notification','exchange': 'spawned_bulk_notification','routing_key':'spawned_bulk_notification','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.send_outbound_email_messages': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
+
+		'secondary.channels.dsc.tasks.process_file_upload': {'queue': 'files','exchange': 'files','routing_key':'files','delivery_mode': 'transient'},
+		'secondary.channels.dsc.tasks.process_file_upload_activity': {'queue': 'files','exchange': 'files','routing_key':'files','delivery_mode': 'transient'},
+		'secondary.channels.notify.tasks.add_bulk_contact': {'queue': 'commandline','exchange': 'commandline','routing_key':'commandline','delivery_mode': 'transient'},
+		'secondary.channels.notify.tasks.add_gateway_bulk_contact': {'queue': 'commandline','exchange': 'commandline','routing_key':'commandline','delivery_mode': 'transient'},
+
+		'secondary.finance.vbs.tasks.process_overdue_credit': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
+		'secondary.finance.paygate.tasks.incoming_poller': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
+		'secondary.erp.pos.tasks.process_settled_order': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
+		'secondary.erp.pos.tasks.process_paid_order': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
+		'secondary.finance.paygate.tasks.send_paygate_outgoing': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
+		'secondary.finance.paygate.tasks.process_incoming_payments': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
+
+		'secondary.channels.notify.tasks.service_call': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
+		'primary.core.bridge.tasks.background_service_call': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
+		'primary.core.bridge.tasks.process_background_service_call': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
+		'primary.core.bridge.tasks.process_background_service': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
+
+		'secondary.channels.dsc.tasks.process_push_request': {'queue': 'push_request','exchange': 'push_request','routing_key':'push_request','delivery_mode': 'transient'},
+
+
+		'thirdparty.bidfather.tasks.closed_bids_invoicing': {'queue': 'io_task','exchange': 'io_task','routing_key':'io_task','delivery_mode': 'transient'},
+		'thirdparty.wahi.tasks.process_approved_loan': {'queue': 'io_task','exchange': 'io_task','routing_key':'io_task','delivery_mode': 'transient'},
+		'products.crb.tasks.reference_activity_service_call': {'queue': 'io_task','exchange': 'io_task','routing_key':'io_task','delivery_mode': 'transient'},
+		'products.crb.tasks.process_reference_activity': {'queue': 'io_task','exchange': 'io_task','routing_key':'io_task','delivery_mode': 'transient'},
 		}
+
+
+'''
+
+'''
 
 
 app.conf.task_queues = (
     Queue('celery', Exchange('celery'), routing_key='celery', delivery_mode=1),
-    Queue('commandline', Exchange('commandline'), routing_key='commandline', delivery_mode=1),
-    Queue('commandline1', Exchange('commandline1'), routing_key='commandline1', delivery_mode=1),
-    Queue('sms', Exchange('sms'), routing_key='sms', delivery_mode=1),
-    Queue('spawned_sms', Exchange('spawned_sms'), routing_key='spawned_sms', delivery_mode=1),
-    Queue('email', Exchange('email'), routing_key='email', delivery_mode=1),
+    Queue('io_task', Exchange('io_task'), routing_key='io_task', delivery_mode=1),
+    Queue('comp_task', Exchange('comp_task'), routing_key='comp_task', delivery_mode=1),
+    Queue('notification', Exchange('notification'), routing_key='notification', delivery_mode=1),
+    Queue('spawned_bulk_notification', Exchange('spawned_bulk_notification'), routing_key='spawned_bulk_notification', delivery_mode=1),
+    Queue('bulk_notification', Exchange('bulk_notification'), routing_key='bulk_notification', delivery_mode=1),
     Queue('files', Exchange('files'), routing_key='files', delivery_mode=1),
     Queue('payments', Exchange('payments'), routing_key='payments', delivery_mode=1),
     Queue('services', Exchange('services'), routing_key='services', delivery_mode=1),
     Queue('push_request', Exchange('push_request'), routing_key='push_request', delivery_mode=1),
-
+    Queue('commandline', Exchange('commandline'), routing_key='commandline', delivery_mode=1),
 )
+'''
+app.conf.task_queues = (
+    Queue('celery', Exchange('celery'), routing_key='celery', delivery_mode=1, exchange_type="x-consistent-hash"),
+    Queue('commandline', Exchange('commandline'), routing_key='commandline', delivery_mode=1, exchange_type="x-consistent-hash"),
+    Queue('commandline', Exchange('commandline'), routing_key='commandline', delivery_mode=1, exchange_type="x-consistent-hash"),
+    Queue('notification', Exchange('notification'), routing_key='notification', delivery_mode=1, exchange_type="x-consistent-hash"),
+    Queue('spawned_bulk_notification', Exchange('spawned_bulk_notification'), routing_key='spawned_bulk_notification', delivery_mode=1, exchange_type="x-consistent-hash"),
+    Queue('bulk_notification', Exchange('bulk_notification'), routing_key='bulk_notification', delivery_mode=1, exchange_type="x-consistent-hash"),
+    Queue('files', Exchange('files'), routing_key='files', delivery_mode=1, exchange_type="x-consistent-hash"),
+    Queue('payments', Exchange('payments'), routing_key='payments', delivery_mode=1, exchange_type="x-consistent-hash"),
+    Queue('services', Exchange('services'), routing_key='services', delivery_mode=1, exchange_type="x-consistent-hash"),
+    Queue('push_request', Exchange('push_request'), routing_key='push_request', delivery_mode=1, exchange_type="x-consistent-hash"),
+)
+'''
+#app.conf.task_queues = ()
+
+#app.conf.broker_url = "redis://192.168.137.22:6379/"
+app.conf.broker_url = "redis://localhost:6379/"
+#app.conf.broker_url = "amqp://guest:guest@192.168.137.23:5672"
+#app.conf.broker_url = "librabbitmq://guest:guest@192.168.137.23:5672"
 
 app.conf.task_default_queue = 'celery'
-app.conf.task_default_exchange_type = 'celery'
+app.conf.task_default_exchange_type = 'direct'
 app.conf.task_default_routing_key = 'celery'
+#app.conf.worker_pool='gevent' #Never use this option to select the eventlet or gevent pool. You must use the -P option to celery worker instead, to ensure the monkey patches are not applied too late, causing things to break in strange ways.
+
+
+app.conf.task_protocol = 1
+app.conf.delivery_mode = 1
+app.conf.result_expires = 360
+
+app.conf.beat_scheduler = 'django_celery_beat.schedulers.DatabaseScheduler'
+app.conf.task_serializer = 'json'
+app.conf.accept_content = ['pickle', 'json', 'msgpack', 'yaml','application/x-python-serialize']
+app.conf.enable_utc = True
+app.conf.timezone = 'Africa/Nairobi'
+app.conf.task_soft_time_limit = 60
+app.conf.task_acks_late = True
+app.conf.worker_prefetch_multiplier = 128
+app.conf.worker_disable_rate_limits = True
+#app.conf.broker_pool_limit = 10000
+
+app.conf.broker_connection_max_retries = None
+app.conf.broker_pool_limit = None
+
+app.conf.broker_heartbeat = 0 #workaround for rabbitmq gevent issue "Connection Reset"
+#app.conf.broker_heartbeat = 10
+#app.conf.broker_heartbeat_checkrate = 2.0
+#broker_transport_options = {'confirm_publish': True}
+
+'''
+#from librabbitmq import Connection
+
+#conn = Connection(host="localhost", userid="guest", password="guest", virtual_host="/")
+
+#channel = conn.channel()
+#channel.exchange_declare(exchange, type, ...)
+#channel.queue_declare(queue, ...)
+#channel.queue_bind(queue, exchange, routing_key)
+
+'''
+

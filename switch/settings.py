@@ -72,44 +72,7 @@ secondary = (
 installed_apps = primary + secondary + tuple(installed_apps)
 
 
-#import djcelery
-#djcelery.setup_loader()
-
-CELERY_TASK_PROTOCOL = 1
-delivery_mode = 1
-result_backend = 'django-db'
-#result_backend = "amqp"
-CELERY_AMQP_TASK_RESULT_EXPIRES = 1000 
-#beat_scheduler = 'djcelery.schedulers.DatabaseScheduler'
-beat_scheduler = 'django_celery_beat.schedulers.DatabaseScheduler'
-task_serializer = 'json'
-result_serializer = 'json'
-#accept_content = ['pickle']
-accept_content = ['pickle', 'json', 'msgpack', 'yaml','application/x-python-serialize']
 timezone='Africa/Nairobi'
-CELERY_enable_utc=True
-result_expires=3600
-task_soft_time_limit = 60
-#task_acks_late = True
-task_acks_late = False
-worker_prefetch_multiplier = 128
-worker_disable_rate_limits = True
-broker_pool_limit = 100
-broker_heartbeat = 10 
-broker_heartbeat_checkrate = 2.0
-#broker_transport_options = {'confirm_publish': True}
-#broker_pool_limit = None
-#broker_url = "amqp://Super%40User:%40wys1WYG@localhost:5672//"
-#broker_url = "librabbitmq://Super%40User:%40wys1WYG@localhost:5672//"
-
-#broker_url = "librabbitmq://guest:guest@localhost:5672//"
-#broker_url = "librabbitmq://guest:guest@zabbix:56720//"
-#broker_url = "pyamqp://guest:guest@localhost:5672//"
-#broker_url = ["librabbitmq://guest:guest@localhost:5672//","librabbitmq://guest:guest@zabbix:56720//"]
-broker_url = "librabbitmq://guest:guest@localhost:5672//"
-
-#TEST_RUNNER = 'django.test.runner.DiscoverRunner'
-
 DEBUG = True
 #TEMPLATE_DEBUG = DEBUG #Deprecated 1.8
 
@@ -244,7 +207,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.gis',
     'django_extensions',
-    'django_celery_results',
     'django_celery_beat',
 ) +  installed_apps
 
