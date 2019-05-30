@@ -22,11 +22,13 @@ import logging
 lgr = logging.getLogger('primary.core.bridge')
 
 
-def transact(gateway_profile, transaction, service, payload, response_tree):
-	transaction_object = transaction['transaction']
+def transact(gateway_profile, trans, service, payload, response_tree):
+
+	transaction_object = trans['trans']
 	profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
 	timestamp = profile_tz.normalize(transaction_object.date_modified.astimezone(profile_tz)).isoformat()
-	if 'response_status' in transaction.keys() and transaction['response_status'] == '00':
+	if 'response_status' in trans.keys() and trans['response_status'] == '00':
+
 		payload['bridge__transaction_id'] = transaction_object.id
 
 		#payload['transaction_timestamp'] = transaction.date_created.isoformat()
@@ -40,8 +42,8 @@ def transact(gateway_profile, transaction, service, payload, response_tree):
 			response_tree['response_status'] = '96'
 		else:
 			lgr.info("Transaction Succesfully Updated")
-	elif 'response_status' in transaction.keys() and transaction['response_status'] <> '00':
-		response_tree['response_status'] = transaction['response_status']
+	elif 'response_status' in trans.keys() and trans['response_status'] != '00':
+		response_tree['response_status'] = trans['response_status']
 		lgr.info("Transaction Wasn't Succesfully Processed")
 		response_status = Wrappers().process_responsestatus(response_tree['response_status'], payload)
 	else:
@@ -59,11 +61,11 @@ def background_transact(gateway_profile_id, transaction_id, service_id, payload,
 	lgr = get_task_logger(__name__)
 	try:
 
-		transaction = {}
-		transaction['response_status'] = '00'
+		trans = {}
+		trans['response_status'] = '00'
 		t = Transaction.objects.get(id=transaction_id)
-		transaction['transaction'] = t
-		lgr.info("Transaction: %s" % transaction)
+		trans['trans'] = t
+		lgr.info("Transaction: %s" % trans)
 
 		lgr.info("Request: %s" % t.request)
 		new_payload = json.loads(t.request).copy()
@@ -82,15 +84,15 @@ def background_transact(gateway_profile_id, transaction_id, service_id, payload,
 
 		gateway_profile = GatewayProfile.objects.get(id=gateway_profile_id)
 		service = Service.objects.get(id=service_id)
-		response_tree = transact(gateway_profile, transaction, service, new_payload, response_tree)
-	except Exception, e:
+		response_tree = transact(gateway_profile, trans, service, new_payload, response_tree)
+	except Exception as e:
 		lgr.info('Error on BackgroundService Call: %s' % e)
 
 	return response_tree
 
 
 class ServiceProcessor:
-	def action_reverse(self, commands, gateway_profile, payload, transaction, reverse_response_tree, level):
+	def action_reverse(self, commands, gateway_profile, payload, trans, reverse_response_tree, level):
 		response = 'No Response'
 		#Reverse any action below the command (Less Than) not (Less Than or Equal)
 		commands = commands.filter(~Q(reverse_function__isnull=True),~Q(reverse_function__iexact=''), level__lt=level,\
@@ -126,9 +128,9 @@ class ServiceProcessor:
 						lgr.info('No Trigger in Payload so skip: %s' % item)
 						continue
 
-				if node_system.node_status.name == 'LOCAL API'  and item.reverse_function <> 'no_reverse':
+				if node_system.node_status.name == 'LOCAL API'  and item.reverse_function != 'no_reverse':
 					payload = Wrappers().call_api(item, item.reverse_function, payload)
-				elif node_system.node_status.name == 'EXT API'  and item.reverse_function <> 'no_reverse':	
+				elif node_system.node_status.name == 'EXT API'  and item.reverse_function != 'no_reverse':	
 					payload_ext = Wrappers().call_ext_api(item, item.reverse_function, payload)
 					if 'response_status' in payload_ext.keys():
 						payload['response_status'] = str(payload_ext['response_status'])
@@ -137,14 +139,14 @@ class ServiceProcessor:
 					if 'ext_transaction_id' in payload_ext.keys():
 						payload['ext_transaction_id'] = str(payload_ext['ext_transaction_id'])
 
-				elif node_system.node_status.name == 'LOCAL' and item.reverse_function <> 'no_reverse':
+				elif node_system.node_status.name == 'LOCAL' and item.reverse_function != 'no_reverse':
 					payload = Wrappers().call_local(item, item.reverse_function, payload)
-				elif node_system.node_status.name == 'BLANK' and item.reverse_function <> 'no_reverse':
+				elif node_system.node_status.name == 'BLANK' and item.reverse_function != 'no_reverse':
 					pass
 				elif item.reverse_function == 'no_reverse':
 					break
 
-				if payload['response_status'] <> '00' and payload['response_status'] not in [rs.response for rs in item.success_response_status.all()]:
+				if payload['response_status'] != '00' and payload['response_status'] not in [rs.response for rs in item.success_response_status.all()]:
 					response_status = Wrappers().process_responsestatus(payload['response_status'],payload)
 					response = response_status['response']
 					lgr.info('Failed response status. check if to reverse: %s' % response_status['reverse'])						
@@ -155,7 +157,7 @@ class ServiceProcessor:
 				reverse_response_tree['response_status'] = payload['response_status']
 				lgr.info('Captured Response: %s' % str(response)[:100])
 				reverse_response_tree['response'][item.reverse_function] = response
-			except Exception, e:
+			except Exception as e:
 				reverse_response_tree['response_status'] = '96'
 				lgr.info("Error: %s" % e)
 
@@ -164,7 +166,7 @@ class ServiceProcessor:
 
 		return reverse_response_tree
 
-	def action_exec(self, service, gateway_profile, payload, transaction):
+	def action_exec(self, service, gateway_profile, payload, trans):
 		response = 'No Response'
 		response_tree = {'response':{}}
 		level = None
@@ -227,7 +229,7 @@ class ServiceProcessor:
 					pass
 				elif node_system.node_status.name == 'LOCAL':	
 					payload = Wrappers().call_local(item, item.command_function, payload)
-				if payload['response_status'] <> '00' and payload['response_status'] not in [rs.response for rs in item.success_response_status.all()]:
+				if payload['response_status'] != '00' and payload['response_status'] not in [rs.response for rs in item.success_response_status.all()]:
 					response_status = Wrappers().process_responsestatus(payload['response_status'], payload)
 					response = response_status['response']
 					lgr.info('Failed response status. check if to reverse: %s' % response_status['reverse'])						
@@ -242,19 +244,19 @@ class ServiceProcessor:
 					break
 				else:
 					#Log command to transaction
-					if transaction is not None:
-						transaction.current_command = item
+					if trans is not None:
+						trans.current_command = item
 						all_commands = all_commands.filter(level__gt=item.level)
 						if len(all_commands)>0:
-							transaction.next_command = all_commands[0]
+							trans.next_command = all_commands[0]
 						else:
-							transaction.next_command = None
+							trans.next_command = None
 					response = item.response if item.response not in [None,''] else payload['response'] 
 				if item.command_function in response_tree['response'].keys():
 					response_tree['response'][item.command_function+str(item.level)] = response
 				else:
 					response_tree['response'][item.command_function] = response
-			except Exception, e:
+			except Exception as e:
 				response_tree['response_status'] = '96'
 				lgr.critical("Error: %s" % e)
 
@@ -282,7 +284,7 @@ class ServiceProcessor:
 			response_tree['last_response'] = status_last_response if status_last_response else last_response
 
 
-		elif payload['response_status'] <> '00':
+		elif payload['response_status'] != '00':
 			response_tree['last_response'] = service.failed_last_response if service.failed_last_response not in [None,''] else last_response
 		else:
 			response_tree['last_response'] = service.success_last_response if service.success_last_response not in [None,''] else last_response
@@ -296,7 +298,7 @@ class ServiceProcessor:
 			lgr.info('Service Script Processing Reversal')
 			reverse_payload = payload.copy()
 			reverse_response_tree = response_tree.copy()
-			reverse_response_tree = self.action_reverse(commands, gateway_profile, reverse_payload, transaction, reverse_response_tree, level)
+			reverse_response_tree = self.action_reverse(commands, gateway_profile, reverse_payload, trans, reverse_response_tree, level)
 			response_tree['overall_status'] = reverse_response_tree['response_status']
 
 		return response_tree
@@ -304,7 +306,8 @@ class ServiceProcessor:
 
 	def do_process(self, service, gateway_profile, payload):	
 
-		transaction = {}
+		lgr.info('Started Do Process')
+		trans = {}
 		response_tree = {'response':{}, 'response_status':'06'}
 
 		try:
@@ -328,7 +331,7 @@ class ServiceProcessor:
 						response_tree['response_status'] = '96'
 					else:
 						lgr.info("Transaction Succesfully Updated")
-				elif 'response_status' in transaction.keys() and transaction['response_status'] <> '00':
+				elif 'response_status' in transaction.keys() and transaction['response_status'] != '00':
 					response_tree['response_status'] = transaction['response_status']
 					lgr.info("Transaction Wasn't Succesfully Processed")
 					response_status = Wrappers().process_responsestatus(response_tree['response_status'], payload)
@@ -351,7 +354,7 @@ class ServiceProcessor:
 					try:
 						background_transact.delay(gateway_profile.id, t.id, t.service.id, payload, response_tree)
 						lgr.info('Transaction Auth: %s' % t)
-					except Exception, e:
+					except Exception as e:
 						lgr.info('Error On Background Transact')
 
 				response_tree['response_status'] = '00'
@@ -365,22 +368,25 @@ class ServiceProcessor:
 					try:
 						background_transact.delay(t.gateway_profile.id, t.id, t.service.id, payload, response_tree)
 						lgr.info('Repeat Bridge Transaction: %s' % t)
-					except Exception, e:
+					except Exception as e:
 						lgr.info('Error On Background Transact')
 				response_tree['response_status'] = '00'
 				response_tree['response'] = 'Auth Transaction Captured'
 			else:
 				if service.status.name == 'ENABLED':
-					transaction = Loggers().log_transaction(service, gateway_profile, payload)
-					response_tree = transact(gateway_profile, transaction, service, payload, response_tree)
+
+					trans = Loggers().log_transaction(service, gateway_profile, payload)
+					response_tree = transact(gateway_profile, trans, service, payload, response_tree)
 
 				elif service.status.name == 'POLLER':
+
+					lgr.info('Got Poller')
 					response_tree = self.action_exec(service, gateway_profile, payload, None) 
 				else:
 					lgr.info('Service not Enabled')
 					response_tree['response_status'] = '05'
 
-		except Exception, e:
+		except Exception as e:
 			response_tree['response_status'] = '96'
 			lgr.critical("Error Processing Service: %s" % e)
 

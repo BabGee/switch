@@ -25,22 +25,22 @@ crypter = keyczar.Crypter.Read(location)
 class Wrapper:
 	mask_card = lambda self, q: "%s%s%s" % (q[:4],"".join(['*' for v in range(len(q)-8)]),q[len(q)-4:]) #Show's first 4 digits and used to preview card
 	mask_pan = lambda self, q: "%s%s%s" % (q[:6],"".join(['*' for v in range(len(q)-10)]),q[len(q)-4:]) #Shows first 6 digits and used in search
-        def cc_type(self,cc_number):
-                import re
-                AMEX_CC_RE = re.compile(r"^3[47][0-9]{13}$")
-                VISA_CC_RE = re.compile(r"^4[0-9]{12}(?:[0-9]{3})?$")
-                MASTERCARD_CC_RE = re.compile(r"^5[1-5][0-9]{14}$")
-                DISCOVER_CC_RE = re.compile(r"^6(?:011|5[0-9]{2})[0-9]{12}$")
-                DINERS_CC_RE = re.compile(r"^3[068][0-9]{12}$")
-                JCB_CC_RE = re.compile(r"^3[013][13589][2678][0-9]{12}$")
+	def cc_type(self,cc_number):
+		import re
+		AMEX_CC_RE = re.compile(r"^3[47][0-9]{13}$")
+		VISA_CC_RE = re.compile(r"^4[0-9]{12}(?:[0-9]{3})?$")
+		MASTERCARD_CC_RE = re.compile(r"^5[1-5][0-9]{14}$")
+		DISCOVER_CC_RE = re.compile(r"^6(?:011|5[0-9]{2})[0-9]{12}$")
+		DINERS_CC_RE = re.compile(r"^3[068][0-9]{12}$")
+		JCB_CC_RE = re.compile(r"^3[013][13589][2678][0-9]{12}$")
 
-                CC_MAP = {"003": AMEX_CC_RE, "001": VISA_CC_RE,
-                             "002": MASTERCARD_CC_RE, "004": DISCOVER_CC_RE, "005": DINERS_CC_RE, "007": JCB_CC_RE}
+		CC_MAP = {"003": AMEX_CC_RE, "001": VISA_CC_RE,
+			     "002": MASTERCARD_CC_RE, "004": DISCOVER_CC_RE, "005": DINERS_CC_RE, "007": JCB_CC_RE}
 
-                for type, regexp in CC_MAP.items():
-                        if regexp.match(str(cc_number)):
-                                return type
-                return None
+		for type, regexp in CC_MAP.items():
+			if regexp.match(str(cc_number)):
+				return type
+		return None
 
 
 class System(Wrapper):
@@ -72,7 +72,7 @@ class System(Wrapper):
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Card Present Details Captured'
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on Card Present Details: %s" % e)
@@ -84,22 +84,22 @@ class System(Wrapper):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			accountNumber = str(payload['card_accountnumber']).replace(' ','')
-                	pan = self.mask_pan(accountNumber)
+			pan = self.mask_pan(accountNumber)
 
 			token = crypter.Encrypt(accountNumber)
 
-                	cvNumber = str(payload['card_cvnumber']) if 'card_cvnumber' in payload.keys() else ''
+			cvNumber = str(payload['card_cvnumber']) if 'card_cvnumber' in payload.keys() else ''
 
-                	cardType = str(self.cc_type(accountNumber))
+			cardType = str(self.cc_type(accountNumber))
 
-	                if 'card_expirationdate' in payload.keys():
-        	                card_expirationDate = payload['card_expirationdate']
+			if 'card_expirationdate' in payload.keys():
+				card_expirationDate = payload['card_expirationdate']
 
-                	        expirationMonth = str(card_expirationDate.split('/')[0])
-                        	expirationYear = str(card_expirationDate.split('/')[1])
-	                else:
-        	                expirationMonth = str(payload['card_expirationmonth'])
-                	        expirationYear = str(payload['card_expirationyear'])
+				expirationMonth = str(card_expirationDate.split('/')[0])
+				expirationYear = str(card_expirationDate.split('/')[1])
+			else:
+				expirationMonth = str(payload['card_expirationmonth'])
+				expirationYear = str(payload['card_expirationyear'])
 
 			expiry_date = '20%s-%s-01' % (expirationYear,expirationMonth)
 			expiry_date = datetime.strptime(expiry_date, "%Y-%m-%d").date()
@@ -123,11 +123,11 @@ class System(Wrapper):
 
 			card_record.save()
 
-	                payload['pan'] = card_record.pan
+			payload['pan'] = card_record.pan
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Card Added'
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on Add Card Record: %s" % e)
@@ -139,7 +139,7 @@ class System(Wrapper):
 
 			accountNumber = str(payload['card_accountnumber']).replace(' ','')
 
-                	pan = self.mask_pan(accountNumber)
+			pan = self.mask_pan(accountNumber)
 			card_record = CardRecord.objects.filter(pan=pan,status__name__in=['ACTIVE','CREATED'])
 			if card_record.exists():
 				if card_record.filter(gateway_profile=gateway_profile).exists():
@@ -162,7 +162,7 @@ class System(Wrapper):
 				payload['ignore_avs_result'] = False
 				payload['ignore_cv_result'] = False
 
-		                payload['pan'] = pan
+				payload['pan'] = pan
 				payload['currency'] = currency_code
 				payload['amount'] = amount
 				chars = string.digits
@@ -174,7 +174,7 @@ class System(Wrapper):
 				payload['reference'] = 'MIPAY*%s*CODE' % pin
 				payload['response_status'] = '00'
 				payload['response'] = 'Card Captured'
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on Card Verification Details: %s" % e)
@@ -185,12 +185,12 @@ class System(Wrapper):
 
 			accountNumber = str(payload['card_accountnumber']).replace(' ','')
 
-                	pan = self.mask_pan(accountNumber)
-	                payload['pan'] = pan
+			pan = self.mask_pan(accountNumber)
+			payload['pan'] = pan
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Card Captured'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Get Card: %s" % e)
 		return payload

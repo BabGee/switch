@@ -210,16 +210,16 @@ class Wrappers:
 			 'validate_pin' not in key and 'password' not in key and 'confirm_password' not in key and \
 			 'pin' not in key and 'access_level' not in key and \
 			 'response_status' not in key and 'sec_hash' not in key and 'ip_address' not in key and \
-			 'service' not in key and key <> 'lat' and key <> 'lng' and \
-			 key <> 'chid' and 'session' not in key and 'csrf_token' not in key and \
+			 'service' not in key and key != 'lat' and key != 'lng' and \
+			 key != 'chid' and 'session' not in key and 'csrf_token' not in key and \
 			 'csrfmiddlewaretoken' not in key and 'gateway_host' not in key and \
 			 'gateway_profile' not in key and 'transaction_timestamp' not in key and \
 			 'action_id' not in key and 'bridge__transaction_id' not in key and \
 			 'merchant_data' not in key and 'signedpares' not in key and \
-			 key <> 'gpid' and key <> 'sec' and \
+			 key != 'gpid' and key != 'sec' and \
 			 key not in ['ext_product_id','vpc_securehash','currency','amount'] and \
-			 'institution_id' not in key and key <> 'response' and key <> 'input' and \
-			 key <> 'repeat_bridge_transaction' and key <> 'transaction_auth':
+			 'institution_id' not in key and key != 'response' and key != 'input' and \
+			 key != 'repeat_bridge_transaction' and key != 'transaction_auth':
 
 				if count <= 30:
 					new_payload[str(k)[:30] ] = str(v)[:40]
@@ -312,12 +312,12 @@ class System(Wrappers):
 
 			except ProductItem.DoesNotExist:
 				lgr.info("ProdutItem Does not Exist")
-                        	payload['response_status'] = '25'
+				payload['response_status'] = '25'
 
-                except Exception, e:
-                        payload['response_status'] = '96'
-                        lgr.info("Error on Order Activity: %s" % e)
-                return payload
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Order Activity: %s" % e)
+		return payload
 
 
 	def settle_order_charges(self, payload, node_info):
@@ -429,7 +429,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Sale Charge Created"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Creating Sale Charge: %s" % e)
 		return payload
@@ -458,7 +458,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Cart Item Details"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Cart Items: %s" % e)
 		return payload
@@ -487,7 +487,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Cart Item Details"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Cart Items: %s" % e)
 		return payload
@@ -519,7 +519,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Updated Cart Item"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Update Cart Item: %s" % e)
 		return payload
@@ -537,7 +537,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Deleted Cart Item"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Delete Cart Item: %s" % e)
 		return payload
@@ -546,7 +546,7 @@ class System(Wrappers):
 		try:
 			payload["response_status"] = "00"
 			payload["response"] = "Window Event"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on window event: %s" % e)
 		return payload
@@ -561,7 +561,7 @@ class System(Wrappers):
 			else:
 				payload["response_status"] = "25"
 				payload["response"] = "Bill Detail(s) missing"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on allowing cash on delivery: %s" % e)
 		return payload
@@ -582,7 +582,7 @@ class System(Wrappers):
 						if product_institution.count() == 1:
 							payload['institution_id'] = product_institution[0]['product_item__institution__id']
 					payload['amount'] = str(bill_manager_list[0].balance_bf)
-                                        payload['currency'] = bill_manager_list[0].order.currency.code
+					payload['currency'] = bill_manager_list[0].order.currency.code
 					payload['purchase_order_id'] = bill_manager_list[0].order.id
 
 					payload["response_status"] = "00"
@@ -598,7 +598,7 @@ class System(Wrappers):
 			else:
 				payload["response_status"] = "25"
 				payload["response"] = "No Purchase Order reference was given"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on pay bill: %s" % e)
 		return payload
@@ -620,7 +620,7 @@ class System(Wrappers):
 						if product_institution.count() == 1:
 							payload['institution_id'] = product_institution[0]['product_item__institution__id']
 					payload['amount'] = str(bill_manager_list[0].balance_bf)
-                                        payload['currency'] = bill_manager_list[0].order.currency.code
+					payload['currency'] = bill_manager_list[0].order.currency.code
 					payload['purchase_order_id'] = bill_manager_list[0].order.id
 					payload["response_status"] = "00"
 					payload["response"] = "Bill Balance: %s" % bill_manager_list[0].balance_bf
@@ -630,7 +630,7 @@ class System(Wrappers):
 			else:
 				payload["response_status"] = "25"
 				payload["response"] = "No Purchase Order reference was given"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on pay bill: %s" % e)
 		return payload
@@ -675,7 +675,7 @@ class System(Wrappers):
 				payload['response'] = "No Order to Reverse"
 			#All are successes
 			payload["response_status"] = "00"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on reverse pay bill: %s" % e)
 		return payload
@@ -694,7 +694,7 @@ class System(Wrappers):
 
 					#If currency does not match purchase_order currency (FOREX) and replace amount & currency in payload
 					currency = Currency.objects.get(code=payload['currency'])
-					if currency <> order.currency:
+					if currency != order.currency:
 						order_currency = order.currency
 						forex = Forex.objects.filter(base_currency=order_currency, quote_currency=currency)
 						if forex.exists():
@@ -736,7 +736,7 @@ class System(Wrappers):
 
 
 						amount = bill_manager.amount
-						if currency <> order.currency:
+						if currency != order.currency:
 							order_currency = order.currency
 							forex = Forex.objects.filter(base_currency=order_currency, quote_currency=currency)
 							if forex.exists():
@@ -764,7 +764,7 @@ class System(Wrappers):
 				payload["response"] = "No Purchase Order reference was given"
 
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on pay bill: %s" % e)
 		return payload
@@ -821,7 +821,7 @@ class System(Wrappers):
 				payload["response_status"] = "25"
 				payload["response"] = "No Cart Items Found"
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on creating purchase order: %s" % e,exc_info=True)
 		return payload
@@ -896,7 +896,7 @@ class System(Wrappers):
 
 				payload["response_status"] = "00"
 				payload["response"] = "Purchase Order Created"
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on creating purchase order: %s" % e,exc_info=True)
@@ -931,7 +931,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Product Added to Cart"
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on Adding product to cart: %s" % e,exc_info=True)
@@ -955,7 +955,7 @@ class System(Wrappers):
 				payload['response_status'] = '00'
 			else:
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Reversing Sale Order: %s" % e)
 		return payload
@@ -973,7 +973,7 @@ class System(Wrappers):
 					else:
 						payload["response"] = "Sale Order"
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Creating Sale Order: %s" % e)
 		return payload
@@ -1004,7 +1004,7 @@ class System(Wrappers):
 				else:
 					break
 
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on Creating Sale Order: %s" % e)
@@ -1023,7 +1023,7 @@ class System(Wrappers):
 					else:
 						payload["response"] = "Sale Order"
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Creating Sale Order: %s" % e)
 		return payload
@@ -1069,7 +1069,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Sale Contact Created"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Creating Sale Contact: %s" % e)
 		return payload
@@ -1106,7 +1106,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Sale Contact Created"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Creating Sale Contact: %s" % e)
 
@@ -1155,7 +1155,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Delivery Created"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Creating Delivery: %s" % e)
 
@@ -1182,7 +1182,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Delivery Type Created"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Creating Delivery Type: %s" % e)
 
@@ -1203,7 +1203,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Delivery Assigned"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Assigning Delivery: %s" % e)
 
@@ -1224,7 +1224,7 @@ class System(Wrappers):
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Checked Delivery'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Checking Delivery: %s" % e)
 		return payload
@@ -1256,7 +1256,7 @@ class System(Wrappers):
 			payload['delivery_status'] = delivery.status.name
 			payload["response_status"] = "00"
 			payload["response"] = "Got Purchase Order Details"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on getting Purchase Order Details: %s" % e)
 
@@ -1282,7 +1282,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Delivery Accepted Accepted"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on accepting Delivery: %s" % e)
 
@@ -1298,7 +1298,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Delivery DELIVERED"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Completing Delivery: %s" % e)
 
@@ -1338,7 +1338,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Got Delivery Details"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error Getting Delivery Details: %s" % e)
 		return payload
@@ -1355,7 +1355,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Delivery Activity confirmed"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Confirming Delivery Activity: %s" % e)
 
@@ -1424,11 +1424,11 @@ def order_background_service_call(order, status):
 				payload['ext_inbound_id'] = bill.incoming_payment.ext_inbound_id
 
 
-			payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
+			payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
 
 			payload = BridgeWrappers().background_service_call(service, gateway_profile, payload)
 			lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
-	except Exception, e:
+	except Exception as e:
 		payload['response_status'] = '96'
 		lgr.info('Unable to make service call: %s' % e)
 	return payload
@@ -1464,11 +1464,11 @@ def order_service_call(order):
 			payload['ip_address'] = '127.0.0.1'
 			payload['gateway_host'] = '127.0.0.1'
 
-			payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
+			payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
 
 			payload = ServiceCall().api_service_call(service, gateway_profile, payload)
 			lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
-	except Exception, e:
+	except Exception as e:
 		payload['response_status'] = '96'
 		lgr.info('Unable to make service call: %s' % e)
 	return payload
@@ -1481,13 +1481,13 @@ def service_call(payload):
 	from primary.core.api.views import ServiceCall
 	try:
 		payload = json.loads(payload)
-		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
 
+		payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
 		service = Service.objects.get(id=payload['service_id'])
 		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 		payload = ServiceCall().api_service_call(service, gateway_profile, payload)
 		lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
-	except Exception, e:
+	except Exception as e:
 		payload['response_status'] = '96'
 		lgr.info('Unable to make service call: %s' % e)
 	return payload
@@ -1506,11 +1506,11 @@ def process_settled_order():
 		for od in order:
 			lgr.info('Order: %s' % od)
 			order_background_service_call.delay(od, 'SETTLED')
-	except DatabaseError, e:
+	except DatabaseError as e:
 		lgr.info('Transaction Rolled Back')
 		transaction.set_rollback(True)
 
-	except Exception, e: lgr.info('Error on process settled order: %s' % e)
+	except Exception as e: lgr.info('Error on process settled order: %s' % e)
 
 
 @app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
@@ -1526,10 +1526,10 @@ def process_paid_order():
 		for od in order:
 			lgr.info('Order: %s' % od)
 			order_background_service_call.delay(od, 'PAID')
-	except DatabaseError, e:
+	except DatabaseError as e:
 		lgr.info('Transaction Rolled Back')
 		transaction.set_rollback(True)
 
-	except Exception, e: lgr.info('Error on process paid order: %s' % e)
+	except Exception as e: lgr.info('Error on process paid order: %s' % e)
 
 

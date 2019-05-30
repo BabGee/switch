@@ -2,7 +2,7 @@ from __future__ import absolute_import, unicode_literals
 import os
 from celery import Celery
 
-from django.conf import settings
+#from django.conf import settings
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'switch.settings')
@@ -59,11 +59,11 @@ app.conf.task_routes = {
 
 		'secondary.channels.notify.tasks.contact_outbound_bulk_logger': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'},
 		'secondary.channels.notify.tasks.recipient_outbound_bulk_logger': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'},
-		'secondary.channels.notify.tasks.send_contact_unsubscription': {'queue': 'notification','exchange': 'notification','notification':'1234','delivery_mode': 'transient'}, 
-		'secondary.channels.notify.tasks.contact_unsubscription': {'queue': 'notification','exchange': 'notification','notification':'1234','delivery_mode': 'transient'}, 
-		'secondary.channels.notify.tasks.send_contact_subscription': {'queue': 'notification','exchange': 'notification','notification':'1234','delivery_mode': 'transient'}, 
-		'secondary.channels.notify.tasks.contact_subscription': {'queue': 'notification','exchange': 'notification','notification':'1234','delivery_mode': 'transient'}, 
-		'secondary.channels.notify.tasks.send_outbound_sms_messages': {'queue': 'notification','exchange': 'notification','notification':'1234','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.send_contact_unsubscription': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.contact_unsubscription': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.send_contact_subscription': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.contact_subscription': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.send_outbound_sms_messages': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.send_outbound': {'queue': 'spawned_bulk_notification','exchange': 'spawned_bulk_notification','routing_key':'spawned_bulk_notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.send_outbound_email_messages': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
 
@@ -149,8 +149,10 @@ app.conf.accept_content = ['pickle', 'json', 'msgpack', 'yaml','application/x-py
 app.conf.enable_utc = True
 app.conf.timezone = 'Africa/Nairobi'
 app.conf.task_soft_time_limit = 60
-app.conf.task_acks_late = True
-app.conf.worker_prefetch_multiplier = 128
+app.conf.task_acks_late = False
+
+app.conf.worker_prefetch_multiplier = 1
+#app.conf.worker_prefetch_multiplier = 128
 app.conf.worker_disable_rate_limits = True
 #app.conf.broker_pool_limit = 10000
 

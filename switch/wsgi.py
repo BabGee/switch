@@ -28,13 +28,13 @@ os.environ["CELERY_LOADER"] = "django"
 # file. This includes Django's development server, if the WSGI_APPLICATION
 # setting points here.
 from django.core.wsgi import get_wsgi_application
-from gevent import monkey
-from psycogreen.gevent import patch_psycopg
+#from gevent import monkey
+#from psycogreen.gevent import patch_psycopg
 
 
 
-monkey.patch_all(thread=False)
-patch_psycopg()
+#monkey.patch_all(thread=False)
+#patch_psycopg()
 
 application = get_wsgi_application()
 

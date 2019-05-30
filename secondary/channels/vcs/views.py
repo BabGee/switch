@@ -11,12 +11,12 @@ from primary.core.upc.tasks import Wrappers as UPCWrappers
 from decimal import Decimal
 
 class VAS:
-        def validateEmail(self, email):
-                try:
-                        validate_email(email)
-                        return True
-                except ValidationError:
-                        return False
+	def validateEmail(self, email):
+		try:
+			validate_email(email)
+			return True
+		except ValidationError:
+			return False
 
 	def initialize(self, *args):
 		lgr = self.node_info.log
@@ -47,7 +47,7 @@ class VAS:
 				self.pin_auth = True
 				self.navigator = self.navigator.filter(pin_auth=True)
 			
-			if len(self.navigator) > 0 and self.payload['input']<>'00':#Not a Main Menu Request
+			if len(self.navigator) > 0 and self.payload['input']!='00':#Not a Main Menu Request
 				if self.gateway_profile.exists():
 					self.navigator = self.navigator.filter(session__gateway_profile=self.gateway_profile[0])
 				self.nav = self.navigator[0]
@@ -129,7 +129,7 @@ class VAS:
 
 			#Process Page String
 			try: self.payload =  PageString().pagestring(new_navigator, self.payload, self.code, self.node_info)
-			except Exception, e: lgr.info('Error on Processing Page String: %s' % e)
+			except Exception as e: lgr.info('Error on Processing Page String: %s' % e)
 
 			menuitems = menuitems.filter(menu=self.menu[0])
 			page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
@@ -159,7 +159,7 @@ class VAS:
 			
 			#Process Page String
 			try: self.payload =  PageString().pagestring(new_navigator, self.payload, self.code, self.node_info)
-			except Exception, e: lgr.info('Error on Processing Page String: %s' % e)
+			except Exception as e: lgr.info('Error on Processing Page String: %s' % e)
 
 			menuitems = menuitems.filter(menu=self.nav.menu)
 
@@ -199,7 +199,7 @@ class VAS:
 		if new_navigator is not None and new_navigator.menu is not None:
 
 			try: self.payload =  PageString().pagestring(new_navigator, self.payload, self.code)
-			except Exception, e: lgr.info('Error on Processing Page String: %s' % e)
+			except Exception as e: lgr.info('Error on Processing Page String: %s' % e)
 		'''
 		#import goslate
 		#gs = goslate.Goslate()
@@ -229,7 +229,7 @@ class VAS:
 			if 'input' in self.payload.keys() and len(self.navigator)<1 and self.channel.name == 'USSD':#the ussd string is available on first request meaning is shortcut
 				extension = self.payload['input']
 				self.access_point = '*%s*%s#' % (self.access_point,extension)
-			elif len(self.navigator)==1 and self.navigator[0].input_select <> 'BEG' and \
+			elif len(self.navigator)==1 and self.navigator[0].input_select != 'BEG' and \
 			self.navigator[0].code.mno.name=='Safaricom':#A shortcut first call
 				self.payload['input'] = 'B'
 				self.access_point = self.navigator[0].code.code
@@ -446,7 +446,7 @@ class VAS:
 
 					lgr.info('Input Validation Failed')
 
-			except Exception, e: lgr.info('Error: %s' % e); self.group_select = 96
+			except Exception as e: lgr.info('Error: %s' % e); self.group_select = 96
 
 		lgr.info('LEVEL: %s | GROUP: %s | Protected: %s | Service: %s | Selection: %s ' % (self.level, self.group_select, self.pin_auth, self.service, self.selection))
 
@@ -499,7 +499,7 @@ class VAS:
 				self.navigator = self.navigator.filter(session__session_id=self.payload['sessionid'])
 
 			self.create_menu()
-		except Exception, e:
+		except Exception as e:
 			lgr.critical('An error getting the page because of the Error: %s' % e)
 			self.create_menu(level=0, group_select=96, access_point='SYSTEM')#Unexpected input
 

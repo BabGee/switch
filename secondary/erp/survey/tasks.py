@@ -61,7 +61,7 @@ class System(Wrappers):
 			payload["response"] = "%s responses | Position: %s" % (payload['survey_tally'], payload['survey_rank'])
 			payload['response_status'] = '00'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on creating survey item: %s" % e)
 		return payload
@@ -82,7 +82,7 @@ class System(Wrappers):
 			else:
 				payload['response'] = 'Not a Survey Response'
 			payload["response_status"] = "00"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on creating survey item: %s" % e)
 		return payload
@@ -115,7 +115,7 @@ class System(Wrappers):
 			else:
 				payload['response_status'] = '25'
 				payload['response'] = 'No Survey Item Found'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on creating survey item: %s" % e)
 		return payload
@@ -142,7 +142,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Survey Item Created"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on creating survey item: %s" % e)
 		return payload
@@ -179,7 +179,7 @@ class System(Wrappers):
 
 			payload["response_status"] = "00"
 			payload["response"] = "Survey Logged"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Logging Survey: %s" % e)
 		return payload

@@ -35,6 +35,8 @@ test
 #Ignore a
 a
 
+#Ignore env
+switch_env
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template

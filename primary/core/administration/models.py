@@ -1,4 +1,5 @@
 from django.contrib.gis.db import models
+from django.db.models import Manager as GeoManager
 from django.contrib.auth.models import User
 from datetime import date
 from django.utils import timezone
@@ -10,7 +11,7 @@ User._meta.get_field("first_name").max_length = 100
 class UserPasswordHistory(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	user = models.ForeignKey(User)
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
 	password = models.CharField(max_length=200)
 	def __unicode__(self):
 		return u'%s %s' % (self.user, self.date_created.isoformat())
@@ -37,7 +38,7 @@ class Country(models.Model):
 	lon = models.FloatField()
 	lat = models.FloatField()
 	mpoly = models.MultiPolygonField()
-	objects = models.GeoManager()
+	objects = GeoManager()
 	ccode = models.CharField('3 Digit Country Code', max_length=3, blank=True, null=True)
 	def __unicode__(self):
 		return u'%s' % (self.name)
@@ -71,7 +72,7 @@ class IndustrySection(models.Model):
 class IndustryDivision(models.Model):
 	isic_code = models.CharField(max_length=5, unique=True)
 	description = models.CharField(max_length=512)
-	section = models.ForeignKey(IndustrySection, blank=True, null=True)
+	section = models.ForeignKey(IndustrySection, blank=True, null=True, on_delete=models.CASCADE)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	def __unicode__(self):
@@ -80,7 +81,7 @@ class IndustryDivision(models.Model):
 class IndustryGroup(models.Model):
 	isic_code = models.CharField(max_length=5, unique=True)
 	description = models.CharField(max_length=512)
-	division = models.ForeignKey(IndustryDivision, blank=True, null=True)
+	division = models.ForeignKey(IndustryDivision, blank=True, null=True, on_delete=models.CASCADE)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	def __unicode__(self):
@@ -89,7 +90,7 @@ class IndustryGroup(models.Model):
 class IndustryClass(models.Model):
 	isic_code = models.CharField(max_length=5, unique=True)
 	description = models.CharField(max_length=512)
-	group = models.ForeignKey(IndustryGroup, blank=True, null=True)
+	group = models.ForeignKey(IndustryGroup, blank=True, null=True, on_delete=models.CASCADE)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	def __unicode__(self):
@@ -113,7 +114,7 @@ class HostStatus(models.Model):
 
 class Host(models.Model):
 	host = models.CharField(max_length=50) #Not GenericIPAddress as hostnames are allowed|not unique to allow diff descriptions
-	status = models.ForeignKey(HostStatus)
+	status = models.ForeignKey(HostStatus, on_delete=models.CASCADE)
 	description =  models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
@@ -145,14 +146,14 @@ class Gateway(models.Model):
 	description = models.CharField(max_length=100)
 	background_image = models.CharField(max_length=200)
 	default_color = models.CharField(max_length=100)
-        default_host = models.ManyToManyField(Host, blank=True)
-	design = models.ForeignKey(DesignSystem)
+	default_host = models.ManyToManyField(Host,blank=True)
+	design = models.ForeignKey(DesignSystem, on_delete=models.CASCADE)
 	primary_color = models.CharField(max_length=100, blank=True, null=True)
 	secondary_color = models.CharField(max_length=100, blank=True, null=True)
 	accent_color = models.CharField(max_length=100, blank=True, null=True)
 	max_pin_retries = models.SmallIntegerField(default=3)
 	session_expiry = models.IntegerField(blank=True, null=True, help_text='In Minutes')
-	structure = models.ForeignKey(Structure, blank=True, null=True)
+	structure = models.ForeignKey(Structure, blank=True, null=True, on_delete=models.CASCADE)
 	def __unicode__(self):
 		return u'%s' % (self.name)
 	def default_host_list(self):
@@ -171,7 +172,7 @@ class PasswordComplexity(models.Model):
 class PasswordPolicy(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	gateway = models.OneToOneField(Gateway)
+	gateway = models.OneToOneField(Gateway, on_delete=models.CASCADE)
 	password_complexity = models.ManyToManyField(PasswordComplexity, blank=True)
 	old_password_count = models.PositiveSmallIntegerField(default=0, help_text='0 allows old password. Else denies old password to count')
 	min_characters = models.PositiveSmallIntegerField(default=1)
@@ -187,7 +188,7 @@ class Template(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	gateway = models.ForeignKey(Gateway)
+	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	def __unicode__(self):
 		return u'%s' % (self.name)
 
@@ -203,7 +204,7 @@ class AccessLevel(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
-	status = models.ForeignKey(AccessLevelStatus)
+	status = models.ForeignKey(AccessLevelStatus, on_delete=models.CASCADE)
 	description = models.CharField(max_length=100)
 	hierarchy = models.IntegerField()
 	def __unicode__(self):
@@ -213,10 +214,10 @@ class Role(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45)
-	status = models.ForeignKey(AccessLevelStatus)
+	status = models.ForeignKey(AccessLevelStatus, on_delete=models.CASCADE)
 	description = models.CharField(max_length=100)
-	access_level = models.ForeignKey(AccessLevel)
-	gateway = models.ForeignKey(Gateway)
+	access_level = models.ForeignKey(AccessLevel, on_delete=models.CASCADE)
+	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	session_expiry = models.IntegerField(blank=True, null=True, help_text='In Minutes')
 	def __unicode__(self):
 		return u'%s %s' % (self.name, self.gateway)
@@ -226,7 +227,7 @@ class Channel(models.Model):
 	description = models.CharField(max_length=200)	
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)	
- 	def __unicode__(self):
+	def __unicode__(self):
 		return u'%s' % (self.name)        
 
 class Gender(models.Model):
@@ -241,7 +242,7 @@ class Uploading(models.Model):
 	name = models.CharField(max_length=45)
 	processing_path = models.CharField(max_length=45) 
 	file_format = models.CharField(max_length=450) 
-	access_level = models.ForeignKey(AccessLevel)
+	access_level = models.ForeignKey(AccessLevel, on_delete=models.CASCADE)
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
@@ -249,7 +250,7 @@ class Uploading(models.Model):
 		return u'%s' % (self.name)  
 
 class AuditTrails(models.Model):
-	user = models.ForeignKey(User)
+	user = models.ForeignKey(User, on_delete=models.CASCADE)
 	action = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
@@ -271,13 +272,13 @@ class MNO(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
-	country = models.ForeignKey(Country)
+	country = models.ForeignKey(Country, on_delete=models.CASCADE)
 	description = models.CharField(max_length=100)
 	def __unicode__(self):
 		return u'%s %s' % (self.name, self.country.ccode)
 
 class MNOPrefix(models.Model):
-	mno = models.ForeignKey(MNO)
+	mno = models.ForeignKey(MNO, on_delete=models.CASCADE)
 	prefix = models.CharField(max_length=8)
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -288,8 +289,8 @@ class MNOPrefix(models.Model):
 class Forex(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	base_currency = models.ForeignKey(Currency, related_name='from_currency')
-	quote_currency = models.ForeignKey(Currency, related_name='to_currency')
+	base_currency = models.ForeignKey(Currency, related_name='from_currency', on_delete=models.CASCADE)
+	quote_currency = models.ForeignKey(Currency, related_name='to_currency', on_delete=models.CASCADE)
 	exchange_rate = models.DecimalField(max_digits=19, decimal_places=2)
 	trading_date = models.DateField(default=date.today)
 	description = models.CharField(max_length=200, null=True, blank=True)
@@ -309,8 +310,8 @@ class Icon(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)	
 	icon = models.CharField(max_length=50, unique=True)	
 	description = models.CharField(max_length=200,null=True,blank=True)
-	group = models.ForeignKey(IconGroup, blank=True, null=True)
- 	def __unicode__(self):
+	group = models.ForeignKey(IconGroup, blank=True, null=True, on_delete=models.CASCADE)
+	def __unicode__(self):
 		return u'%s' % (self.icon)
 
 class TradingBox(models.Model):
@@ -321,6 +322,6 @@ class TradingBox(models.Model):
 	open_time = models.TimeField()
 	close_time = models.TimeField()
 	timezone = models.CharField(max_length=50)
- 	def __unicode__(self):
+	def __unicode__(self):
 		return u'%s' % (self.name)
 

@@ -22,10 +22,10 @@ class NodeSystem(models.Model):
 	timeout_time = models.IntegerField(blank=True, null=True, help_text='In Seconds') #In seconds
 	username = models.CharField(max_length=50, blank=True, null=True)
 	password = models.CharField(max_length=50, blank=True, null=True)
-	node_status = models.ForeignKey(NodeStatus)
+	node_status = models.ForeignKey(NodeStatus, on_delete=models.CASCADE)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
- 	def __unicode__(self):
+	def __unicode__(self):
 		return u'%s' % (self.name)
 
 

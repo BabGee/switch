@@ -14,7 +14,7 @@ admin.site.register(CountryStatus, CountryStatusAdmin)
 '''
 class CountryAdmin(admin.OSMGeoAdmin):
 	list_display = ('name','area','pop2005','fips','iso2','iso3','un','region','subregion','lon','lat','ccode',)
-        search_fields = ('name',)
+	search_fields = ('name',)
 
 admin.site.register(Country, CountryAdmin)
 

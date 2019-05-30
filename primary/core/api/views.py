@@ -9,11 +9,13 @@ from primary.core.bridge.views import *
 from django.db.models import Q
 from django.http import Http404
 from decimal import Decimal, ROUND_DOWN
+import binascii
 
 import logging
 lgr = logging.getLogger('primary.core.api')
 
 @csrf_protect
+#@csrf_exempt
 def default(request):
 	import time
 	time.sleep(2)
@@ -28,8 +30,11 @@ class ServiceCall:
 	def api_service_call(self, service, gateway_profile, payload):
 		try:
 			payload = dict(filter(lambda x:x[1], payload.items())) #Remove empty value items
+
+			lgr.info('To Call Processor: %s' % ServiceProcessor().do_process)
 			payload = ServiceProcessor().do_process(service, gateway_profile, payload.copy())
 
+			lgr.info('End Processor: %s' % payload)
 			'''
 			payload['action_id'] = response['action_id']
 			payload['last_response'] = response['last_response']
@@ -38,7 +43,7 @@ class ServiceCall:
 			if 'transaction_reference' in response.keys(): payload['transaction_reference'] = response['transaction_reference']
 			if 'timestamp' in response.keys(): payload['timestamp'] = response['timestamp']
 			'''
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Service Processing Failed: %s" % e)
 
@@ -46,9 +51,9 @@ class ServiceCall:
 
 class Authorize:
 	def secure(self, payload, API_KEY):
-                new_payload = {}
-                for key, value in payload.items():
-                        if 'sec_hash' not in key and 'credentials' not in key:
+		new_payload = {}
+		for key, value in payload.items():
+			if 'sec_hash' not in key and 'credentials' not in key:
 				try:value=json.loads(value, parse_float=Decimal);value=str(value) if isinstance(value,Decimal) else value #(BUG!!) JSON loads converts decimal places
 				except:pass
 				if isinstance(value, dict) is False: new_payload[key]=value
@@ -57,16 +62,17 @@ class Authorize:
 			k = '%s=%s' % (n,new_payload[n])
 			p.append(k)
 		p1 = '&'.join(p)
-		#lgr.info('Hash: %s' % p1)
-		a = hmac.new( base64.b64decode(API_KEY), p1, hashlib.sha256)
+		lgr.info('Hash: %s' % p1)
+		a = hmac.new( base64.b64decode(API_KEY), p1.encode('utf-8'), hashlib.sha256)
 		return base64.b64encode(a.digest())
 
 	def check_hash(self, payload, API_KEY):
 		lgr.info("Check Hash: %s" % base64.b64decode(API_KEY))
-		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value) ), payload.items()))
-		secret = payload['sec_hash']
+		payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1]) ), payload.items()))
+		secret = payload['sec_hash'].encode('utf-8')
 		#remove sec_hash and hash_type	
 		sec_hash = self.secure(payload,API_KEY) 
+
 		if base64.b64decode(secret) == base64.b64decode(sec_hash):
 			payload['response_status'] = '00'
 		else:
@@ -84,11 +90,13 @@ class Authorize:
 class Interface(Authorize, ServiceCall):
 	@csrf_exempt
 	def interface(self, request, SERVICE):
-		if request.method == 'POST':
-                        try:
-                                #view_data = request.GET.copy()
-                                try:view_data = request.read();un_payload = json.loads(view_data)
-                                except:view_data = request.POST.copy();un_payload= view_data
+		#if request.method == 'POST':
+
+		if request.method:
+			try:
+				#view_data = request.GET.copy()
+				try:view_data = request.read();un_payload = json.loads(view_data)
+				except:view_data = request.POST.copy();un_payload= view_data
 
 				#Clean Request
 				'''
@@ -104,7 +112,7 @@ class Interface(Authorize, ServiceCall):
 				'''
 				#payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value) ), un_payload.items()))
 
-				payload = dict(map(lambda (key, value):(string.lower(key), value ), un_payload.items()))
+				payload = dict(map(lambda x:(str(x[0]).lower(), x[1] ), un_payload.items()))
 
 				'''#RISK IN REVIEW
 				for key, value in un_payload.items():
@@ -112,9 +120,9 @@ class Interface(Authorize, ServiceCall):
 					if 'session_gateway_profile_id' in payload.keys():
 						del payload['session_gateway_profile_id']
 				'''
-                        except Exception, e:
-                                payload = {}
-                                lgr.info('Error on Post%s' % e)
+			except Exception as e:
+				payload = {}
+				lgr.info('Error on Post%s' % e)
 			try:
 				lgr.info("SERVICE: %s" % SERVICE)
 				gateway_profile_list, service = GatewayProfile.objects.none(), Service.objects.none()
@@ -142,13 +150,13 @@ class Interface(Authorize, ServiceCall):
 								Q(Q(user__username=credentials['username'])|Q(user__email=credentials['username'])),\
 								Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS']))#Cant Filter as password check continues
 
-                	        	if gateway_profile_list.exists():
+					if gateway_profile_list.exists():
 						gp = None
 						for g in gateway_profile_list:
 							if g.user.check_password(credentials['password']):
 								gp = g
 								break
-						if gp <> None:
+						if gp !=  None:
 							lgr.info('This User Active')
 							gateway_profile_list = gateway_profile_list.filter(id=gp.id)
 						else:
@@ -162,7 +170,7 @@ class Interface(Authorize, ServiceCall):
 					try:
 						lgr.info('SessionID: %s' % payload['session_id'])
 						session_id = base64.urlsafe_b64decode(str(payload['session_id']))
-						session = Session.objects.filter(Q(session_id=session_id.decode('hex')),\
+						session = Session.objects.filter(Q(session_id=session_id),\
 							Q(channel__id=payload['chid']),\
 							Q(status__name='CREATED'),\
 							Q(gateway_profile__allowed_host__host=payload['gateway_host'],\
@@ -192,7 +200,7 @@ class Interface(Authorize, ServiceCall):
 							if (session_expiry == None) or (session_expiry and session_active):
 								try: gateway_profile_list = GatewayProfile.objects.filter(id=user_session.gateway_profile.id)
 								except: pass
-					except Exception, e:
+					except Exception as e:
 						lgr.info('Error: %s' % e)
 					#session should be encrypted and salted in base64
 					#Session should last around 24 - 48 hours before pasword is prompted once again for access
@@ -223,7 +231,6 @@ class Interface(Authorize, ServiceCall):
 							#Remove sensitive data
 							#try: del payload["session_id"]
 							#except: pass
-
 							#lgr.info('Payload: %s' % payload)
 							payload = self.return_hash(payload, API_KEY)
 
@@ -244,7 +251,7 @@ class Interface(Authorize, ServiceCall):
 					lgr.info('Didnt Get Gateway Profile')
 					payload['response'] = {'overall_status': 'Profile Does not Exist' }
 					payload['response_status'] = '25'
-			except Exception, e:
+			except Exception as e:
 				payload['response_status'] = '96'
 				lgr.info('Error on receiving payload: %s' % e)
 
@@ -258,5 +265,5 @@ class Interface(Authorize, ServiceCall):
 			#lgr.info(json_results)
 			return HttpResponse(json_results, content_type='application/json')
 		else:
-                        raise PermissionDenied
+			raise PermissionDenied
 

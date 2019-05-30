@@ -97,7 +97,7 @@ class System(Wrappers):
 
 
 			lgr.info('Product Item Details: %s' % payload)
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on bulk product item details: %s" % e)
@@ -164,7 +164,7 @@ class System(Wrappers):
 				payload['response_status'] = '25'
 
 			lgr.info('Product Item Details: %s' % payload)
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on product item details: %s" % e)
 		return payload
@@ -195,7 +195,7 @@ class System(Wrappers):
 				payload['response_status'] = '00'
 			else:
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on event ticket: %s" % e)
 		return payload
@@ -232,7 +232,7 @@ class System(Wrappers):
 					payload['response_status'] = '00'
 			else:
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on awards registration: %s" % e)
 		return payload
@@ -269,7 +269,7 @@ class System(Wrappers):
 					payload['response_status'] = '00'
 			else:
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on awards registration: %s" % e)
 		return payload
@@ -283,7 +283,7 @@ class System(Wrappers):
 				#profile=gateway_profile.user.profile,
 				#enrollment_type__product_item=payload['product_item_id'],
 				#updated=False
-                id=payload['enrollment_id']
+		id=payload['enrollment_id']
 			)
 			enrollment_status = EnrollmentStatus.objects.get(name=payload['enrollment_status'])
 			enrollment.status = enrollment_status
@@ -292,7 +292,7 @@ class System(Wrappers):
 
 			payload['response'] = 'Enrollment Captured'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on setting enrollment status: %s" % e)
@@ -334,7 +334,7 @@ class System(Wrappers):
 
 			payload['response'] = 'Details Captured'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on getting Profile Details: %s" % e)
@@ -347,7 +347,7 @@ class System(Wrappers):
 
 			if 'enrollment_type_id' in payload.keys():
 				enrollment_type_list = EnrollmentType.objects.filter(id=payload['enrollment_type_id'])
-                        elif 'product_item_id' in payload.keys():
+			elif 'product_item_id' in payload.keys():
 				enrollment_type_list = EnrollmentType.objects.filter(product_item__id=payload['product_item_id'])
 			else:
 				if 'institution_id' in payload.keys():
@@ -390,12 +390,12 @@ class System(Wrappers):
 				record = payload['record']
 
 			lgr.info('Record: %s' % record)
-                        #Check if enrollment exists
-                        orig_enrollment_list = Enrollment.objects.select_for_update(nowait=True).filter(status__name='ACTIVE',\
+			#Check if enrollment exists
+			orig_enrollment_list = Enrollment.objects.select_for_update(nowait=True).filter(status__name='ACTIVE',\
 							enrollment_type__in=enrollment_type_list).order_by('-date_created')
 
 			#Check if record_exists
-                        enrollment_list = orig_enrollment_list.filter(record=record)
+			enrollment_list = orig_enrollment_list.filter(record=record)
 
 
 			if enrollment_list.exists():
@@ -430,13 +430,13 @@ class System(Wrappers):
 
 				if enrollment_type_list.exists():
 					
-	                                status = EnrollmentStatus.objects.get(name='ACTIVE')
+					status = EnrollmentStatus.objects.get(name='ACTIVE')
 
-        	                        enrollment = Enrollment(record=record, status=status, enrollment_type=enrollment_type_list[0])
+					enrollment = Enrollment(record=record, status=status, enrollment_type=enrollment_type_list[0])
 
-                	                if 'alias' in payload.keys():
-                        	                enrollment.alias = payload['alias']
-                                	else:
+					if 'alias' in payload.keys():
+						enrollment.alias = payload['alias']
+					else:
 						if 'full_names' in payload.keys():
 							alias = payload['full_names']
 						elif 'first_name' in payload.keys() or 'last_name' in payload.keys() or 'middle_name' in payload.keys():
@@ -450,7 +450,7 @@ class System(Wrappers):
 						else:
 							alias = enrollment_type_list[0].name 
 
-                        	                enrollment.alias = alias.strip()
+						enrollment.alias = alias.strip()
 
 					if 'enrollment_date' in payload.keys():
 						#enrollment.enrollment_date = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload['enrollment_date'], '%d/%m/%Y')).date()
@@ -474,7 +474,7 @@ class System(Wrappers):
 					else:
 						enrollment.expiry = timezone.now()+timezone.timedelta(days=(365*20))
 
-	                                enrollment.save()
+					enrollment.save()
 
 					payload['record'] = enrollment.record
 					payload['enrollment_id'] = enrollment.pk
@@ -486,11 +486,11 @@ class System(Wrappers):
 					payload['response_status'] = '00'
 					payload['response'] = 'Enrollment Type Does Not Exist'
 
-		except DatabaseError, e:
+		except DatabaseError as e:
 			transaction.set_rollback(True)
 
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Fetching Programs: %s" % e)
 		return payload
@@ -500,7 +500,7 @@ class System(Wrappers):
 		try:
 			payload['response_status'] = '00'
 			payload['response'] = '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Fetching Programs: %s" % e)
 		return payload
@@ -533,7 +533,7 @@ class System(Wrappers):
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Product Type Added Succefully'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Add Product Type: %s" % e)
 		return payload
@@ -546,7 +546,7 @@ class System(Wrappers):
 			product.name = payload['delivery_name']
 			product.description = payload['delivery_description']
 			product.status =  ProductStatus.objects.get(name='ACTIVE') # ACTIVE
-                        product.product_type_id = 106
+			product.product_type_id = 106
 			product.unit_cost = 1
 			product.institution = gateway_profile.institution
 			product.currency = Currency.objects.get(code='KES') # KES
@@ -557,7 +557,7 @@ class System(Wrappers):
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Delivery Product Added Succefully'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Add Product: %s" % e)
 		return payload
@@ -571,7 +571,7 @@ class System(Wrappers):
 			product.name = 'Till Amount'
 			product.description = 'Till Amount'
 			product.status =  ProductStatus.objects.get(name='ACTIVE') # ACTIVE
-                        product.product_type_id = 117
+			product.product_type_id = 117
 			product.unit_cost = 1
 			product.variable_unit = True
 			product.institution = Institution.objects.get(id=payload['institution_id']) if 'institution_id' in payload.keys() else gateway_profile.institution
@@ -583,7 +583,7 @@ class System(Wrappers):
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Till Product Added Succefully'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Add Till Product: %s" % e)
 		return payload
@@ -609,7 +609,7 @@ class System(Wrappers):
 			else:
 				lgr.info('missing required property, shop product type')
 
-                        product.product_type_id = payload['product_type_id']
+			product.product_type_id = payload['product_type_id']
 			product.buying_cost = payload['product_buying_cost']
 			product.unit_cost = payload['product_selling_cost']
 			product.institution = gateway_profile.institution
@@ -631,7 +631,7 @@ class System(Wrappers):
 				with open(from_file, 'r') as f:
 					myfile = File(f)
 					product.default_image.save(filename, myfile, save=False)
-			except Exception, e:
+			except Exception as e:
 				lgr.info('Error on saving Product default Image: %s' % e)
 
 			if 'product_gallery_image' in payload.keys() and payload['product_gallery_image']:
@@ -652,7 +652,7 @@ class System(Wrappers):
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Product Added Succefully'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Add Product: %s" % e,exc_info=True)
 		return payload
@@ -689,7 +689,7 @@ class System(Wrappers):
 				with open(from_file, 'r') as f:
 					myfile = File(f)
 					product.default_image.save(filename, myfile, save=False)
-			except Exception, e:
+			except Exception as e:
 				lgr.info('Error on saving Product default Image: %s' % e)
 
 
@@ -698,7 +698,7 @@ class System(Wrappers):
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Product Updated Succefully'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Update Product: %s" % e)
 		return payload
@@ -714,7 +714,7 @@ class System(Wrappers):
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Product Deleted Succefully'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Delete Product: %s" % e)
 		return payload
@@ -734,7 +734,7 @@ class System(Wrappers):
 			payload['agent_id'] = agent.pk
 			payload['response'] = 'Agent Registered'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on register agent: %s" % e)
 		return payload
@@ -759,7 +759,7 @@ class System(Wrappers):
 
 			payload['response'] = 'Agent Institution Registered'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on register agent Institution: %s" % e)
 		return payload
@@ -779,7 +779,7 @@ class System(Wrappers):
 			
 			payload['response'] = 'Agent Details Captured'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error retrieving agent details: %s" % e,exc_info=True)
 		return payload

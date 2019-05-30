@@ -14,7 +14,7 @@ class PaymentMethodAdmin(admin.ModelAdmin):
 admin.site.register(PaymentMethod, PaymentMethodAdmin)
 
 class ProductAdmin(admin.ModelAdmin):
-		list_display = ('id','name','description','date_modified','date_created')        
+		list_display = ('id','name','description','date_modified','date_created')	
 admin.site.register(Product, ProductAdmin)
 
 class RetryAdmin(admin.ModelAdmin):
@@ -22,20 +22,20 @@ class RetryAdmin(admin.ModelAdmin):
 admin.site.register(Retry, RetryAdmin)
 
 class ServiceStatusAdmin(admin.ModelAdmin):
-		list_display = ('id','name','description','date_modified','date_created')        
+		list_display = ('id','name','description','date_modified','date_created')	
 
 admin.site.register(ServiceStatus, ServiceStatusAdmin)
 
 class ServiceAdmin(admin.ModelAdmin):
 		list_display = ('id','name','product','description','status','last_response','success_last_response',\
 		 'failed_last_response','retry','allowed_response_key','access_level_list') 
-	        search_fields = ('name',)
+		search_fields = ('name',)
 		list_filter = ('product','access_level',)
 admin.site.register(Service, ServiceAdmin)
 
 class TriggerAdmin(admin.ModelAdmin):
 		list_display = ('name','description','date_modified','date_created',)
-	        search_fields = ('name','description')
+		search_fields = ('name','description')
 
 admin.site.register(Trigger, TriggerAdmin)
 
@@ -49,7 +49,7 @@ class ServiceCommandAdmin(admin.ModelAdmin):
 		 'reverse_function','description','response','details', 'access_level_list',\
 		 'profile_status_list', 'channel_list',\
 		 'payment_method_list','trigger_list','gateway_list','success_response_status_list',)
-	        list_filter = ('service','node_system','gateway','access_level','channel','payment_method',)
+		list_filter = ('service','node_system','gateway','access_level','channel','payment_method',)
 		search_fields = ('command_function','service__name','reverse_function','trigger__name','details',)
 admin.site.register(ServiceCommand, ServiceCommandAdmin)
 
@@ -68,7 +68,7 @@ class TransactionAdmin(admin.OSMGeoAdmin):
 		  'charges','raise_charges','response','ip_address','transaction_status','response_status',\
 		    'geometry','current_command','next_command','msisdn','overall_status','institution',\
 			'fingerprint','token','date_modified','date_created')
-	        search_fields = ('id','gateway_profile__user__first_name','gateway_profile__user__last_name',\
+		search_fields = ('id','gateway_profile__user__first_name','gateway_profile__user__last_name',\
 				'gateway_profile__user__username','gateway_profile__msisdn__phone_number',
 				'request','response','ip_address',)
 		list_filter = ('service','channel','gateway','transaction_status','response_status','overall_status',)
@@ -92,32 +92,32 @@ admin.site.register(BackgroundServiceActivity, BackgroundServiceActivityAdmin)
 
 
 class ActivityStatusAdmin(admin.ModelAdmin):
-        list_display = ('name','description',)
+	list_display = ('name','description',)
 admin.site.register(ActivityStatus, ActivityStatusAdmin)
 
 
 class ActivityAdmin(admin.ModelAdmin):
-        list_display = ('id','name','description','status','ext_service_id','ext_service_username',\
-                        'ext_service_password','ext_service_details',\
-                        'service','gateway_list',)
+	list_display = ('id','name','description','status','ext_service_id','ext_service_username',\
+			'ext_service_password','ext_service_details',\
+			'service','gateway_list',)
 admin.site.register(Activity, ActivityAdmin)
 
 class ActivityEndpointAdmin(admin.ModelAdmin):
-        list_display = ('id','name','description','request','url','account_id','username','password',)
+	list_display = ('id','name','description','request','url','account_id','username','password',)
 admin.site.register(ActivityEndpoint, ActivityEndpointAdmin)
 
 
 class ActivityProductAdmin(admin.ModelAdmin):
-        list_display = ('id','name','description','activity','ext_product_id','endpoint',\
-                        'service_list','details','realtime','show_message',\
-                        'payment_method_list','currency_list','trigger_list',)
-        list_filter = ('activity','service','payment_method',)
+	list_display = ('id','name','description','activity','ext_product_id','endpoint',\
+			'service_list','details','realtime','show_message',\
+			'payment_method_list','currency_list','trigger_list',)
+	list_filter = ('activity','service','payment_method',)
 admin.site.register(ActivityProduct, ActivityProductAdmin)
 
 class ActivityTransactionAdmin(admin.ModelAdmin):
-        list_display = ('id','activity_product','status','gateway_profile','request','channel','response_status',\
-                        'transaction_reference','currency','amount','charges','gateway','institution',\
-                        'message','sends','ext_outbound_id',)
+	list_display = ('id','activity_product','status','gateway_profile','request','channel','response_status',\
+			'transaction_reference','currency','amount','charges','gateway','institution',\
+			'message','sends','ext_outbound_id',)
 admin.site.register(ActivityTransaction, ActivityTransactionAdmin)
 
 class ApprovalAdmin(admin.ModelAdmin):
@@ -129,11 +129,11 @@ class ApprovalAdmin(admin.ModelAdmin):
 admin.site.register(Approval, ApprovalAdmin)
 
 class ApprovalActivityStatusAdmin(admin.ModelAdmin):
-        list_display = ('name','description',)
+	list_display = ('name','description',)
 admin.site.register(ApprovalActivityStatus, ApprovalActivityStatusAdmin)
 
 class ApprovalActivityAdmin(admin.ModelAdmin):
-        list_display = ('id','approval','status','requestor_gateway_profile','affected_gateway_profile','approver_gateway_profile',\
+	list_display = ('id','approval','status','requestor_gateway_profile','affected_gateway_profile','approver_gateway_profile',\
 			'request','channel','response_status','gateway','institution','identifier',)
 	list_filter = ('approval',)
 	search_fields = ('request',)

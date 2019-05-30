@@ -33,12 +33,12 @@ import logging
 lgr = logging.getLogger('secondary.finance.vbs')
 
 class Wrappers:
-        def validateEmail(self, email):
-                try:
-                        validate_email(str(email))
-                        return True
-                except ValidationError:
-                        return False
+	def validateEmail(self, email):
+		try:
+			validate_email(str(email))
+			return True
+		except ValidationError:
+			return False
 
 	def transaction_payload(self, payload):
 		new_payload, transaction, count = {}, None, 1
@@ -48,15 +48,15 @@ class Wrappers:
 			 'validate_pin' not in key and 'password' not in key and 'confirm_password' not in key and \
 			 'pin' not in key and 'access_level' not in key and \
 			 'response_status' not in key and 'sec_hash' not in key and 'ip_address' not in key and \
-			 'service' not in key and key <> 'lat' and key <> 'lng' and \
-			 key <> 'chid' and 'session' not in key and 'csrf_token' not in key and \
+			 'service' not in key and key != 'lat' and key != 'lng' and \
+			 key != 'chid' and 'session' not in key and 'csrf_token' not in key and \
 			 'csrfmiddlewaretoken' not in key and 'gateway_host' not in key and \
 			 'gateway_profile' not in key and 'transaction_timestamp' not in key and \
 			 'action_id' not in key and 'bridge__transaction_id' not in key and \
 			 'merchant_data' not in key and 'signedpares' not in key and \
-			 key <> 'gpid' and key <> 'sec' and  key <> 'fingerprint' and \
+			 key != 'gpid' and key != 'sec' and  key != 'fingerprint' and \
 			 key not in ['ext_product_id','vpc_securehash','currency','amount'] and \
-			 'institution_id' not in key and key <> 'response' and key <> 'input':
+			 'institution_id' not in key and key != 'response' and key != 'input':
 				if count <= 30:
 					new_payload[str(k)[:30] ] = str(v)[:500]
 				else:
@@ -67,21 +67,21 @@ class Wrappers:
 
 class System(Wrappers):
 
-        def update_outgoing_payment(self, payload, node_info):
-                try:
-                        gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+	def update_outgoing_payment(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-                        session_account_manager = AccountManager.objects.filter(id__in=payload['account_manager_id'].split(','))
+			session_account_manager = AccountManager.objects.filter(id__in=payload['account_manager_id'].split(','))
 
-                        session_account_manager.update(outgoing_payment=Outgoing.objects.get(id=payload['paygate_outgoing_id']))
-                        payload['response'] = 'Outgoing Payment Updated'
-                        payload['response_status'] = '00'
-                except Exception, e:
-                        payload['response'] = str(e)
-                        payload['response_status'] = '96'
-                        lgr.info("Error on Update Outgoing Payment: %s" % e)
+			session_account_manager.update(outgoing_payment=Outgoing.objects.get(id=payload['paygate_outgoing_id']))
+			payload['response'] = 'Outgoing Payment Updated'
+			payload['response_status'] = '00'
+		except Exception as e:
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+			lgr.info("Error on Update Outgoing Payment: %s" % e)
 
-                return payload
+		return payload
 
 
 	def log_installment(self, payload, node_info):
@@ -163,7 +163,7 @@ class System(Wrappers):
 			payload['response'] = 'Installment Logged'
 
 
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on log installment: %s" % e)
@@ -183,7 +183,7 @@ class System(Wrappers):
 			payload['response_status'] = '00'
 			payload['response'] = 'Details Captured'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on get account details: %s" % e)
 		return payload
@@ -218,7 +218,7 @@ class System(Wrappers):
 			elif payload['account_option'] == 'General Inquiry':
 				payload = UPCSystem().get_profile(payload, node_info)
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on account option: %s" % e)
 		return payload
@@ -245,7 +245,7 @@ class System(Wrappers):
 			payload['response_status'] = '00'
 			payload['response'] = statement_info
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on loan status: %s" % e)
 		return payload
@@ -287,7 +287,7 @@ class System(Wrappers):
 				payload['response_status'] = '00'
 				payload['response'] = '%s %s' % (payload['currency'], '{0:,.2f}'.format(payload['amount']))
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on get account: %s" % e)
 		return payload
@@ -309,7 +309,7 @@ class System(Wrappers):
 				payload['response'] = 'No Account Balance Record Found'
 				payload['response_status'] = '25'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on get account: %s" % e)
 		return payload
@@ -356,7 +356,7 @@ class System(Wrappers):
 				payload['response_status'] = '25'
 				payload['response'] = 'No Reversal Activities Found'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on debit account reversal: %s" % e)
 		return payload
@@ -401,7 +401,7 @@ class System(Wrappers):
 				payload['response_status'] = '25'
 				payload['response'] = 'No Reversal Activities Found'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on get account: %s" % e)
 		return payload
@@ -448,7 +448,7 @@ class System(Wrappers):
 			payload['response_status'] = '00'
 			payload['response'] = 'Loan Notification Details Captured'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on loan notification details: %s" % e)
 		return payload
@@ -499,7 +499,7 @@ class System(Wrappers):
 			payload['response_status'] = '00'
 			payload['response'] = 'Rollover Details Captured'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on loan rollover details: %s" % e)
 		return payload
@@ -511,7 +511,7 @@ class System(Wrappers):
 			session_account = Account.objects.get(id=payload['session_account_id'])
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			session_account_manager = AccountManager.objects.select_for_update(nowait=True).filter(dest_account = session_account,dest_account__account_type=session_account.account_type).order_by('-date_created')
+			session_account_manager = AccountManager.objects.select_for_update(of=('self',),nowait=True).filter(dest_account = session_account,dest_account__account_type=session_account.account_type).order_by('-date_created')
 
 
 			amount = Decimal(payload['amount']) if 'amount' in payload.keys() else Decimal(0)
@@ -582,8 +582,8 @@ class System(Wrappers):
 				
 				if 'paygate_incoming_id' in payload.keys():
 					session_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
-                        	if 'paygate_outgoing_id' in payload.keys():
-                                	session_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
+				if 'paygate_outgoing_id' in payload.keys():
+					session_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
 				if 'purchase_order_id' in payload.keys():
 					session_manager.purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 
@@ -633,8 +633,8 @@ class System(Wrappers):
 	
 				if 'paygate_incoming_id' in payload.keys():
 					gl_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
-                       		if 'paygate_outgoing_id' in payload.keys():
-                               		gl_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
+		       		if 'paygate_outgoing_id' in payload.keys():
+			       		gl_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
 				if 'purchase_order_id' in payload.keys():
 					gl_manager.purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 
@@ -648,11 +648,11 @@ class System(Wrappers):
 				payload['response'] = 'Account Debited'
 			else:
 				payload['response_status'] = '61' #Exceeds Withdrawal Limit
-		except DatabaseError, e:
+		except DatabaseError as e:
 			transaction.set_rollback(True)
 
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			#payload['response'] = str(e)
 			lgr.info("Error on debit account: %s" % e)
@@ -665,7 +665,7 @@ class System(Wrappers):
 
 			session_account = Account.objects.get(id=payload['session_account_id'])
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			session_account_manager = AccountManager.objects.select_for_update(nowait=True).filter(dest_account = session_account, dest_account__account_type=session_account.account_type).order_by('-date_created')
+			session_account_manager = AccountManager.objects.select_for_update(of=('self',),nowait=True).filter(dest_account = session_account, dest_account__account_type=session_account.account_type).order_by('-date_created')
 
 			amount = Decimal(payload['amount']) if 'amount' in payload.keys() else Decimal(0)
 			charge = Decimal(0)
@@ -698,8 +698,8 @@ class System(Wrappers):
 
 				if 'paygate_incoming_id' in payload.keys():
 					session_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
-                        	if 'paygate_outgoing_id' in payload.keys():
-                                	session_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
+				if 'paygate_outgoing_id' in payload.keys():
+					session_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
 				if 'purchase_order_id' in payload.keys():
 					session_manager.purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 
@@ -746,8 +746,8 @@ class System(Wrappers):
 	
 				if 'paygate_incoming_id' in payload.keys():
 					gl_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
-                       		if 'paygate_outgoing_id' in payload.keys():
-                               		gl_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
+		       		if 'paygate_outgoing_id' in payload.keys():
+			       		gl_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
 				if 'purchase_order_id' in payload.keys():
 					gl_manager.purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
 
@@ -763,10 +763,10 @@ class System(Wrappers):
 			else:
 				payload['response_status'] = '98' #Exceeds cash limit
 				payload['response'] = 'Max Deposit limit reached'
-		except DatabaseError, e:
+		except DatabaseError as e:
 			transaction.set_rollback(True)
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			#payload['response'] = str(e)
 			lgr.info("Error on credit account: %s" % e)
@@ -809,7 +809,7 @@ class System(Wrappers):
 				payload['response_status'] = '25'
 				payload['response'] = 'No MIPAY Account Found'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on get account: %s" % e)
 		return payload
@@ -855,7 +855,7 @@ class System(Wrappers):
 			else:
 				payload['response_status'] = '25'
 				payload['response'] = 'Ledger Account Does not Exist'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on get ledger account: %s" % e)
 		return payload
@@ -945,7 +945,7 @@ class System(Wrappers):
 				else:
 					payload['response_status'] = '25'
 					payload['response'] = 'Account Type Does not Exist'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on get account: %s" % e)
 		return payload
@@ -1038,7 +1038,7 @@ class System(Wrappers):
 				else:
 					payload['response_status'] = '25'
 					payload['response'] = 'Account Type Does not Exist'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on get account: %s" % e)
 		return payload
@@ -1058,7 +1058,7 @@ class Payments(System):
 			payload['float_amount'] = payload['amount']
 			payload['response'] = 'Captured'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on funds transfer item details: %s" % e)
 		return payload
@@ -1074,7 +1074,7 @@ class Payments(System):
 			payload['float_amount'] = payload['amount']
 			payload['response'] = 'Captured'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on funds transfer item details: %s" % e)
 		return payload
@@ -1119,8 +1119,8 @@ class Payments(System):
 				
 				if 'paygate_incoming_id' in payload.keys():
 					savings_credit_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
-                        	if 'paygate_outgoing_id' in payload.keys():
-                                	savings_credit_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
+				if 'paygate_outgoing_id' in payload.keys():
+					savings_credit_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
 
 				savings_credit_manager.save()
 				#Set paid on Account Manager
@@ -1171,8 +1171,8 @@ class Payments(System):
 
 					if 'paygate_incoming_id' in payload.keys():
 						savings_credit_manager.incoming_payment = Incoming.objects.get(id=payload['paygate_incoming_id'])
-                	        	if 'paygate_outgoing_id' in payload.keys():
-                        	        	savings_credit_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
+					if 'paygate_outgoing_id' in payload.keys():
+						savings_credit_manager.outgoing_payment = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
 
 					savings_credit_manager.save()
 
@@ -1193,7 +1193,7 @@ class Payments(System):
 				payload['response'] = 'No Loan Installment Found'
 				payload['response_status'] = '25'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on loan repayment: %s" % e)
 		return payload
@@ -1258,7 +1258,7 @@ class Payments(System):
 			payload['response_status'] = '00'
 			payload['response'] = credit_info
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on loan status: %s" % e)
 		return payload
@@ -1293,7 +1293,7 @@ class Payments(System):
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Credit Limit %s %s\nAvailable Limit %s %s' % (currency,credit_limit,currency,available_limit)
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on getting account limit: %s" % e)
 		return payload
@@ -1329,7 +1329,7 @@ class Payments(System):
 				payload['response'] = 'Loan Installment not Found'
 				payload['response_status'] = '25'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on loan details: %s" % e)
 		return payload
@@ -1354,7 +1354,7 @@ class Payments(System):
 			else:
 				payload['response_status'] = '25'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on loan details: %s" % e)
 		return payload
@@ -1443,7 +1443,7 @@ class Payments(System):
 					else:
 						payload['response_status'] = '25'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on loan request details: %s" % e)
 		return payload
@@ -1457,7 +1457,7 @@ class Payments(System):
 				payload = self.loan_status(payload,node_info)
 			else:
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on getting loan options: %s" % e)
 		return payload
@@ -1505,11 +1505,10 @@ def overdue_credit_service_call(payload):
 		payload['lng'] = '0.0'
 
 		lgr.info('Service: %s | Payload: %s' % (service, payload))
-		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
-
+		payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
 		payload = ServiceCall().api_service_call(service, gateway_profile, payload)
 		lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
-	except Exception, e:
+	except Exception as e:
 		payload['response_status'] = '96'
 		lgr.info('Unable to make service call: %s' % e)
 	return payload
@@ -1537,13 +1536,12 @@ def service_call(payload):
 	from api.views import ServiceCall
 	try:
 		payload = json.loads(payload)
-		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
-
+		payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
 		service = Service.objects.get(id=payload['service_id'])
 		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 		payload = ServiceCall().api_service_call(service, gateway_profile, payload)
 		lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
-	except Exception, e:
+	except Exception as e:
 		payload['response_status'] = '96'
 		lgr.info('Unable to make service call: %s' % e)
 	return payload
@@ -1597,9 +1595,9 @@ def overdue_credit(sc, co):
 			'''
 			payload = json.dumps(payload, cls=DjangoJSONEncoder)
 			try: service_call(payload)
-			except Exception, e: lgr.info('Error on Service Call: %s' % e)
+			except Exception as e: lgr.info('Error on Service Call: %s' % e)
 			'''
-	except Exception, e:
+	except Exception as e:
 		lgr.info("Error on Overdue Credit: %s" % e)
 
 
@@ -1615,7 +1613,7 @@ def process_overdue_credit():
 	for c in credit_overdue:
 		try:
 			lgr.info('Credit Overdue: %s' % c)
-			orig_savings_credit_manager = SavingsCreditManager.objects.select_for_update().filter(Q(due_date__lte=(timezone.now()-timezone.timedelta(days=c.overdue_time))),\
+			orig_savings_credit_manager = SavingsCreditManager.objects.select_for_update(of=('self',)).filter(Q(due_date__lte=(timezone.now()-timezone.timedelta(days=c.overdue_time))),\
 					Q(due_date__gte=(timezone.now()-timezone.timedelta(days=(c.overdue_time+3) ))),\
 					Q(credit_paid=False, processed_overdue_credit=False))
 
@@ -1632,6 +1630,6 @@ def process_overdue_credit():
 				lgr.info('Savings Credit: %s | %s' % (a, c))
 				overdue_credit.delay(a,c.id)
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error processing overdue credit: %s | %s' % (c,e))
 

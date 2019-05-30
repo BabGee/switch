@@ -48,7 +48,7 @@ class Wrappers:
 					count = count+1
 
 			payload = json.dumps(new_payload) if isinstance(new_payload, dict) else payload
-		except Exception, e:
+		except Exception as e:
 
 			lgr.info('Error on Response Payload: %s' % e)
 		return payload
@@ -115,7 +115,7 @@ class Wrappers:
 		try:
 			payload = ServiceCall().api_service_call(service, gateway_profile, payload)
 			lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info('Unable to make service call: %s' % e)
 		return payload
@@ -134,7 +134,7 @@ class Wrappers:
 			lgr.info('Request: %s' % request)
 			if details: #details can be used to inject triggers
 				try: request.update(details) #Triggers removed in previous call
-				except Exception, e: lgr.info('Error on Updating Details: %s' % e)
+				except Exception as e: lgr.info('Error on Updating Details: %s' % e)
 
 			lgr.info('Request: %s' % request)
 			activity = BackgroundServiceActivity(service=service, status=status,\
@@ -176,7 +176,7 @@ class Wrappers:
 			activity.save()
 			payload['response'] = "Activity Logged. Wait to Process"
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Background Service Call: %s" % e)
 		return payload
@@ -221,7 +221,7 @@ class System(Wrappers):
 				#all are successes
 				payload['response'] = 'No Activity Service Found'
 				payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Background Service: %s" % e)
 		return payload
@@ -246,7 +246,7 @@ class System(Wrappers):
 
 			else:
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Background Service Call: %s" % e)
 		return payload
@@ -271,7 +271,7 @@ class System(Wrappers):
 			else:
 				payload['response'] = 'You are not allowed to approve this activity'
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Background Service Call: %s" % e)
 		return payload
@@ -376,7 +376,7 @@ class System(Wrappers):
 				payload['response'] = 'No Activity Service Found'
 			#all are successes
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.error("Error on Background Service: %s" % e, exc_info=True)
 		return payload
@@ -391,7 +391,7 @@ class System(Wrappers):
 			payload['response_status'] = '00'
 
 
-		except Exception,e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.error("Error reseting background service activity",exc_info=True)
 		return payload
@@ -412,7 +412,7 @@ class System(Wrappers):
 			else:
 				payload['response'] = 'Transaction Authorizations Only'
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Getting Institution Details: %s" % e)
 
@@ -432,11 +432,11 @@ class Payments(System):
 '''
 def process_pending_transactions(id_list):
 	#from celery.utils.log import get_task_logger
-        #lgr = get_task_logger(__name__)
-        #transactions = Transaction.objects.select_for_update().filter(id__in=id_list)
-        transactions = Transaction.objects.filter(id__in=id_list)
+	#lgr = get_task_logger(__name__)
+	#transactions = Transaction.objects.select_for_update().filter(id__in=id_list)
+	transactions = Transaction.objects.filter(id__in=id_list)
 
-        transactions.update(transaction_status = TransactionStatus.objects.get(name='PENDING'))
+	transactions.update(transaction_status = TransactionStatus.objects.get(name='PENDING'))
 	payload = {}
 	payload['repeat_bridge_transaction'] = ','.join(map(str, transactions.values_list('id', flat=True)))
 	payload['gateway_host'] = '127.0.0.1'
@@ -452,7 +452,7 @@ def background_service_call(service_name, gateway_profile_id, payload):
 		service = Service.objects.get(name=service_name)
 		gateway_profile = GatewayProfile.objects.get(id=gateway_profile_id)
 		Wrappers().background_service_call(service, gateway_profile, payload)
-	except Exception, e:
+	except Exception as e:
 		lgr.info('Error on BackgroundService Call: %s' % e)
 
 @app.task(ignore_result=True)
@@ -482,7 +482,7 @@ def process_background_service_call(background):
 		if i.service.retry and i.sends > i.service.retry.max_retry:
 			payload['trigger'] = 'last_send%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
-		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
+		payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
 
 		lgr.info('\n\n\n\n\t########\Request: %s\n\n' % payload)
 		payload = ServiceCall().api_service_call(service, gateway_profile, payload)
@@ -502,7 +502,7 @@ def process_background_service_call(background):
 			i.response_status = ResponseStatus.objects.get(response='20')
 
 		#Set for failed retries in every 6 hours within 24 hours
-		if payload['response_status'] <> '00':
+		if payload['response_status'] != '00':
 			if i.service.retry:
 				try: servicecutoff = i.service.servicecutoff
 				except ServiceCutOff.DoesNotExist: servicecutoff = None
@@ -518,7 +518,7 @@ def process_background_service_call(background):
 
 		i.save()
 
-	except Exception, e:
+	except Exception as e:
 		lgr.info('Unable to make service call: %s' % e)
 
 
@@ -529,7 +529,7 @@ def process_background_service():
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
-		orig_background = BackgroundServiceActivity.objects.select_for_update().filter(response_status__response='DEFAULT',\
+		orig_background = BackgroundServiceActivity.objects.select_for_update(of=('self',)).filter(response_status__response='DEFAULT',\
 					status__name='CREATED', date_modified__lte=timezone.now()-timezone.timedelta(seconds=2),\
 					scheduled_send__lte=timezone.now())
 		background = list(orig_background.values_list('id',flat=True)[:250])
@@ -537,6 +537,6 @@ def process_background_service():
 		processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
 		for bg in background:
 			process_background_service_call.delay(bg)
-	except Exception, e:
+	except Exception as e:
 		lgr.info('Error on Processing Background Service: %s' % e)
 

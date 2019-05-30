@@ -21,7 +21,7 @@ class Wrappers:
 						Q(Q(gateway=gateway)|Q(gateway=None)))
 
 		def get_balance(balance_bf, item, product_item):
-			if item.currency <> product_item.currency:
+			if item.currency != product_item.currency:
 				forex = Forex.objects.filter(base_currency=product_item.currency, quote_currency=item.currency)
 				total = Decimal(0)
 				if forex.exists():
@@ -77,13 +77,13 @@ class PageString(ServiceCall, Wrappers):
 					try: 
 						input_nav = item_list[int(navigator_list.get(id=item_level).input_select) - 1]
 						lgr.info('Input Nav: %s' % input_nav)
-					except Exception, e:
+					except Exception as e:
 						lgr.info('Error on item_list: %s' % e);
 						input_nav = None
 				else:
 					lgr.info('Item List None')
 					try:input_nav = navigator_list.get(id=item_level).input_select 
-					except Exception, e:
+					except Exception as e:
 						lgr.info('Error on item_list: %s' % e);
 						input_nav = None
 				if input_nav and value.menu.menu_description not in nav.keys(): nav[value.menu.menu_description] = input_nav
@@ -129,10 +129,10 @@ class PageString(ServiceCall, Wrappers):
 			gateway_profile = navigator.session.gateway_profile
 			if gateway_profile is None: #If profile is unexistent
 				gateway_profile_list = GatewayProfile.objects.filter(gateway =code[0].gateway,user__username='System@User', status__name__in=['ACTIVATED'])
-                	        if len(gateway_profile_list) > 0 and gateway_profile_list[0].user.is_active:
+				if len(gateway_profile_list) > 0 and gateway_profile_list[0].user.is_active:
 					gateway_profile = gateway_profile_list[0]
 
-			payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
+			payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
 			payload = self.api_service_call(navigator.menu.service, gateway_profile, payload)
 
 			#Page String Response
@@ -148,12 +148,12 @@ class PageString(ServiceCall, Wrappers):
 			variables = re.findall("\[(.*?)\]", page_string)
 			for v in variables:
 				variable_key, variable_val = None, None
-			        n = v.find("=")
-		        	if n >=0:
-		                	variable_key = v[:n]
-	                		variable_val = v[(n+1):].strip()
-			        else:
-                			variable_key = v
+				n = v.find("=")
+				if n >=0:
+					variable_key = v[:n]
+					variable_val = v[(n+1):].strip()
+				else:
+					variable_key = v
 
 				#Global variable key check
 
@@ -192,12 +192,12 @@ class PageString(ServiceCall, Wrappers):
 		variables = re.findall("\[(.*?)\]", page_string)
 		for v in variables:
 			variable_key, variable_val = None, None
-		        n = v.find("=")
-		        if n >=0:
-		                variable_key = v[:n]
-                		variable_val = v[(n+1):].strip()
-		        else:
-                		variable_key = v
+			n = v.find("=")
+			if n >=0:
+				variable_key = v[:n]
+				variable_val = v[(n+1):].strip()
+			else:
+				variable_key = v
 
 			lgr.info('\n\n\n\n Variable Found: Key:%s|Val: %s\n\n\n\n' % (variable_key, variable_val))
 			if variable_key is not None:
@@ -366,7 +366,7 @@ class PageString(ServiceCall, Wrappers):
 
 					if bid_requirement_application.exists():
 						unit_cost = bid_requirement_application[0].unit_price
-		                                cost = '{0:,.2f}'.format(unit_cost) if unit_cost > 0 else None
+						cost = '{0:,.2f}'.format(unit_cost) if unit_cost > 0 else None
 						item = '%s@%s' % (item, cost)
 
 					page_string = page_string.replace('['+v+']',item)
@@ -390,7 +390,7 @@ class PageString(ServiceCall, Wrappers):
 					item_list = []
 					count = 1
 					for i in bid_requirement:
-                                                name = '%s' % (i.name)
+						name = '%s' % (i.name)
 						if navigator.session.channel.name == 'IVR':
 							item = '%s\nFor %s, press %s.' % (item, name, count)
 						elif navigator.session.channel.name == 'USSD':
@@ -426,8 +426,8 @@ class PageString(ServiceCall, Wrappers):
 					count = 1
 					if bid_applications.exists():
 						for i in bid_applications:
-        	                                        cost = '{0:,.2f}'.format(i.current_total_price)
-                	                                name = '%s' % (i.bid.name)
+							cost = '{0:,.2f}'.format(i.current_total_price)
+							name = '%s' % (i.bid.name)
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
 							elif navigator.session.channel.name == 'USSD':
@@ -469,7 +469,7 @@ class PageString(ServiceCall, Wrappers):
 					count = 1
 					if bid.exists():
 						for i in bid:
-                	                                name = '%s' % (i.name)
+							name = '%s' % (i.name)
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
 							elif navigator.session.channel.name == 'USSD':
@@ -510,8 +510,8 @@ class PageString(ServiceCall, Wrappers):
 					count = 1
 					if bid_applications.exists():
 						for i in bid_applications:
-        	                                        cost = '{0:,.2f}'.format(i.current_total_price) if i.current_total_price else 0
-                	                                name = '%s' % (i.bid.name)
+							cost = '{0:,.2f}'.format(i.current_total_price) if i.current_total_price else 0
+							name = '%s' % (i.bid.name)
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
 							elif navigator.session.channel.name == 'USSD':
@@ -663,7 +663,7 @@ class PageString(ServiceCall, Wrappers):
 					item_list = []
 					count = 1
 					for i in contact:
-                                                name = '%s' % (i.product.name)
+						name = '%s' % (i.product.name)
 						if navigator.session.channel.name == 'IVR':
 							item = '%s\nFor %s, press %s.' % (item, name, count)
 						elif navigator.session.channel.name == 'USSD':
@@ -698,7 +698,7 @@ class PageString(ServiceCall, Wrappers):
 					count = 1
 					for i in payment_method:
 						account_balance = None
-						if i.name == 'MIPAY' and variable_val <> 'Send' and mipay_gateway_profile.exists():
+						if i.name == 'MIPAY' and variable_val != 'Send' and mipay_gateway_profile.exists():
 							session_account_manager = AccountManager.objects.filter(dest_account__account_status__name='ACTIVE',\
 									dest_account__profile=mipay_gateway_profile[0].user.profile,\
 									dest_account__account_type__gateway__name='MIPAY').\
@@ -814,8 +814,8 @@ class PageString(ServiceCall, Wrappers):
 					count = 1
 					if savings_credit_manager.exists():
 						for i in savings_credit_manager:
-       		                                        amount = '{0:,.2f}'.format(i.outstanding)
-               		                                name = 'Days:%s %s %s - %s' % (i.installment_time, i.account_manager.dest_account.account_type.product_item.currency.code, amount, i.due_date.strftime("%d/%b/%Y"))
+							amount = '{0:,.2f}'.format(i.outstanding)
+							name = 'Days:%s %s %s - %s' % (i.installment_time, i.account_manager.dest_account.account_type.product_item.currency.code, amount, i.due_date.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
@@ -864,8 +864,8 @@ class PageString(ServiceCall, Wrappers):
 							for a in savings_credit_manager:
 								amount = amount + a.outstanding
 
-       		                                        amount = '{0:,.2f}'.format(amount)
-               		                                name = '%s %s %s - %s' % (i.dest_account.account_type.name, i.dest_account.account_type.product_item.currency.code, amount, i.credit_due_date.strftime("%d/%b/%Y"))
+							amount = '{0:,.2f}'.format(amount)
+							name = '%s %s %s - %s' % (i.dest_account.account_type.name, i.dest_account.account_type.product_item.currency.code, amount, i.credit_due_date.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
@@ -904,8 +904,8 @@ class PageString(ServiceCall, Wrappers):
 					count = 1
 					if loan.exists():
 						for i in loan:
-       		                                        amount = '{0:,.2f}'.format(i.amount)
-               		                                name = '%s %s%s' % (i.currency.code, amount, i.date_created.strftime("%d/%b/%Y"))
+							amount = '{0:,.2f}'.format(i.amount)
+							name = '%s %s%s' % (i.currency.code, amount, i.date_created.strftime("%d/%b/%Y"))
 
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
@@ -1120,7 +1120,7 @@ class PageString(ServiceCall, Wrappers):
 					count = 1
 					for i in payment_method:
 						account_balance = None
-						if i.name == 'MIPAY' and variable_val <> 'Send' and mipay_gateway_profile.exists():
+						if i.name == 'MIPAY' and variable_val != 'Send' and mipay_gateway_profile.exists():
 							session_account_manager = AccountManager.objects.filter(dest_account__account_status__name='ACTIVE',\
 									dest_account__profile=mipay_gateway_profile[0].user.profile,\
 									dest_account__account_type__gateway__name='MIPAY').\
@@ -1171,7 +1171,7 @@ class PageString(ServiceCall, Wrappers):
 					count = 1
 					for i in payment_method:
 						account_balance = None
-						if i.name == 'MIPAY' and variable_val <> 'Send' and mipay_gateway_profile.exists():
+						if i.name == 'MIPAY' and variable_val != 'Send' and mipay_gateway_profile.exists():
 							session_account_manager = AccountManager.objects.filter(dest_account__account_status__name='ACTIVE',\
 									dest_account__profile=mipay_gateway_profile[0].user.profile,\
 									dest_account__account_type__gateway__name='MIPAY').\
@@ -1489,7 +1489,7 @@ class PageString(ServiceCall, Wrappers):
 					count = 1
 
 					if account_list.exists():
-		                                amount = '{0:,.2f}'.format(account_list[0].credit_limit) if account_list[0].credit_limit else 0
+						amount = '{0:,.2f}'.format(account_list[0].credit_limit) if account_list[0].credit_limit else 0
 						currency = account_list[0].account_type.product_item.currency.code
 						item = '%s %s\n' % (currency,amount)
 
@@ -1519,11 +1519,11 @@ class PageString(ServiceCall, Wrappers):
 					if product_item.exists():
 						max_amount = product_item[0].unit_limit_max
 						max_amount = max_amount if max_amount > 0 else Decimal(0)
-	        	                        max_amount = '{0:,.2f}'.format(max_amount) 
+						max_amount = '{0:,.2f}'.format(max_amount) 
 
 						min_amount = product_item[0].unit_limit_min
 						min_amount = min_amount if min_amount > 0 else Decimal(0)
-	                                	min_amount = '{0:,.2f}'.format(min_amount) 
+						min_amount = '{0:,.2f}'.format(min_amount) 
 						currency = product_item[0].currency.code
 						item = '\nMin:%s %s\nMax:%s %s\n' % (currency,min_amount,currency,max_amount)
 
@@ -1538,11 +1538,11 @@ class PageString(ServiceCall, Wrappers):
 
 					max_amount = account_type.product_item.unit_limit_max
 					max_amount = max_amount if max_amount > 0 else Decimal(0)
-	                                max_amount = '{0:,.2f}'.format(max_amount) 
+					max_amount = '{0:,.2f}'.format(max_amount) 
 
 					min_amount = account_type.product_item.unit_limit_min
 					min_amount = min_amount if min_amount > 0 else Decimal(0)
-	                                min_amount = '{0:,.2f}'.format(min_amount) 
+					min_amount = '{0:,.2f}'.format(min_amount) 
 					currency = account_type.product_item.currency.code
 					item = '\nMin:%s %s\nMax:%s %s\n' % (currency,min_amount,currency,max_amount)
 
@@ -1557,11 +1557,11 @@ class PageString(ServiceCall, Wrappers):
 
 					max_amount = account_type.product_item.unit_limit_max
 					max_amount = max_amount if max_amount > 0 else Decimal(0)
-	                                max_amount = '{0:,.2f}'.format(max_amount) 
+					max_amount = '{0:,.2f}'.format(max_amount) 
 
 					min_amount = account_type.product_item.unit_limit_min
 					min_amount = min_amount if min_amount > 0 else Decimal(0)
-	                                min_amount = '{0:,.2f}'.format(min_amount) 
+					min_amount = '{0:,.2f}'.format(min_amount) 
 					currency = account_type.product_item.currency.code
 					item = '\nMin:%s %s\nMax:%s %s\n' % (currency,min_amount,currency,max_amount)
 
@@ -1583,7 +1583,7 @@ class PageString(ServiceCall, Wrappers):
 
 
 
-	                                cost = '{0:,.2f}'.format(total_cost) if total_cost > 0 else None
+					cost = '{0:,.2f}'.format(total_cost) if total_cost > 0 else None
 					item = '%s@%s %s' % (account_type.name,account_type.product_item.currency.code,\
 								cost )
 
@@ -1640,7 +1640,7 @@ class PageString(ServiceCall, Wrappers):
 					if charge>Decimal(0):
 						item = '%s\nCharges@%s %s' % (item,account_type.product_item.currency.code,'{0:,.2f}'.format(charge))
 					amount = total_cost + charge
-	                                loan_cost = '{0:,.2f}'.format(amount) if amount > 0 else None
+					loan_cost = '{0:,.2f}'.format(amount) if amount > 0 else None
 					if is_loan:
 						item = '%s\nPayable Amount@%s %s' % (item,account_type.product_item.currency.code,loan_cost)
 					else:
@@ -1695,7 +1695,7 @@ class PageString(ServiceCall, Wrappers):
 
 					item = ''
 					if bill_manager_list.exists():
-		                                cost = '{0:,.2f}'.format(bill_manager_list[0].balance_bf) if bill_manager_list[0].balance_bf > 0 else bill_manager_list[0].order.amount
+						cost = '{0:,.2f}'.format(bill_manager_list[0].balance_bf) if bill_manager_list[0].balance_bf > 0 else bill_manager_list[0].order.amount
 						item = '%s(%s)@%s %s' % (bill_manager_list[0].order.reference, bill_manager_list[0].order.cart_item_list()[:10],\
 									bill_manager_list[0].order.currency.code,\
 									cost )
@@ -1720,7 +1720,7 @@ class PageString(ServiceCall, Wrappers):
 
 					item = ''
 					if len(music)>0:
-		                                cost = '{0:,.2f}'.format(music[0].product_item.unit_cost) if music[0].product_item.unit_cost > 0 else None
+						cost = '{0:,.2f}'.format(music[0].product_item.unit_cost) if music[0].product_item.unit_cost > 0 else None
 						item = '%s(%s)@%s %s' % (music[0].product_item.name,music[0].artiste,\
 									music[0].product_item.currency.code,\
 									cost )
@@ -1751,7 +1751,7 @@ class PageString(ServiceCall, Wrappers):
 							unit_cost = Decimal(payload['amount'])	
 
 						unit_cost = self.sale_charge_bill(unit_cost, product_item[0], code[0].gateway)
-		                                cost = '{0:,.2f}'.format(unit_cost) if unit_cost > 0 else None
+						cost = '{0:,.2f}'.format(unit_cost) if unit_cost > 0 else None
 						item = '%s@%s %s' % (product_item[0].name,\
 									product_item[0].currency.code,\
 									cost )
@@ -1769,8 +1769,8 @@ class PageString(ServiceCall, Wrappers):
 					count = 1
 					if purchase_order.exists():
 						for i in purchase_order:
-        	                                        #cost = '{0:,.2f}'.format(i.unit_cost) if i.unit_cost > 0 else None
-	                                                name_id = i['cart_item__product_item__institution__id']
+							#cost = '{0:,.2f}'.format(i.unit_cost) if i.unit_cost > 0 else None
+							name_id = i['cart_item__product_item__institution__id']
 							name = i['cart_item__product_item__institution__name']
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name, count)
@@ -1810,8 +1810,8 @@ class PageString(ServiceCall, Wrappers):
 					if bill.exists():
 						for i in bill:
 							lgr.info('Bill Items: %s' % i)
-        	                                        cost = '{0:,.2f}'.format(i.balance_bf)
-                	                                name = '%s %s-%s-%s' % (i.order.currency.code, cost, i.order.date_created.strftime("%d/%b/%Y"),i.order.reference)
+							cost = '{0:,.2f}'.format(i.balance_bf)
+							name = '%s %s-%s-%s' % (i.order.currency.code, cost, i.order.date_created.strftime("%d/%b/%Y"),i.order.reference)
 							if navigator.session.channel.name == 'IVR':
 								item = '%s\nFor %s, press %s.' % (item, name[:40], count)
 							elif navigator.session.channel.name == 'USSD':
@@ -1841,8 +1841,8 @@ class PageString(ServiceCall, Wrappers):
 					item_list = []
 					count = 1
 					for i in product_type_item:
-                                                #cost = '{0:,.2f}'.format(i.unit_cost) if i.unit_cost > 0 else None
-                                                name = '%s' % (i.product_type.name)
+						#cost = '{0:,.2f}'.format(i.unit_cost) if i.unit_cost > 0 else None
+						name = '%s' % (i.product_type.name)
 						if navigator.session.channel.name == 'IVR':
 							item = '%s\nFor %s, press %s.' % (item, name, count)
 						elif navigator.session.channel.name == 'USSD':
@@ -1907,8 +1907,8 @@ class PageString(ServiceCall, Wrappers):
 					item_list = []
 					count = 1
 					for i in product_item:
-                                                cost = '{0:,.2f}'.format(i.unit_cost) if i.unit_cost > 0 else None
-                                                name = '%s' % (i.name)
+						cost = '{0:,.2f}'.format(i.unit_cost) if i.unit_cost > 0 else None
+						name = '%s' % (i.name)
 						if navigator.session.channel.name == 'IVR':
 							item = '%s\nFor %s, press %s.' % (item, name, count)
 						elif navigator.session.channel.name == 'USSD':
@@ -1957,8 +1957,8 @@ class PageString(ServiceCall, Wrappers):
 					item_list = []
 					count = 1
 					for i in product_item:
-                                                cost = '{0:,.2f}'.format(i.unit_cost) if i.unit_cost > 0 else None
-                                                name = '%s' % (i.name)
+						cost = '{0:,.2f}'.format(i.unit_cost) if i.unit_cost > 0 else None
+						name = '%s' % (i.name)
 						if navigator.session.channel.name == 'IVR':
 							item = '%s\nFor %s, press %s.' % (item, name, count)
 						elif navigator.session.channel.name == 'USSD':
@@ -1997,8 +1997,8 @@ class PageString(ServiceCall, Wrappers):
 					item_list = []
 					count = 1
 					for i in product_item:
-                                                cost = '{0:,.2f}'.format(i.unit_cost) if i.unit_cost > 0 else None
-                                                name = '%s' % (i.name)
+						cost = '{0:,.2f}'.format(i.unit_cost) if i.unit_cost > 0 else None
+						name = '%s' % (i.name)
 						if navigator.session.channel.name == 'IVR':
 							item = '%s\nFor %s, press %s.' % (item, name, count)
 						elif navigator.session.channel.name == 'USSD':
@@ -2038,8 +2038,8 @@ class PageString(ServiceCall, Wrappers):
 					item_list = []
 					count = 1
 					for i in product_item:
-                                                cost = '{0:,.2f}'.format(i.unit_cost) if i.unit_cost > 0 else None
-                                                name = '%s' % (i.name)
+						cost = '{0:,.2f}'.format(i.unit_cost) if i.unit_cost > 0 else None
+						name = '%s' % (i.name)
 						if navigator.session.channel.name == 'IVR':
 							item = '%s\nFor %s, press %s.' % (item, name, count)
 						elif navigator.session.channel.name == 'USSD':
@@ -2403,12 +2403,11 @@ class PageString(ServiceCall, Wrappers):
 					gateway_profile = navigator.session.gateway_profile
 					if gateway_profile is None: #If profile is unexistent
 						gateway_profile_list = GatewayProfile.objects.filter(gateway =code[0].gateway,user__username='System@User', status__name__in=['ACTIVATED'])
-		                	        if len(gateway_profile_list) > 0 and gateway_profile_list[0].user.is_active:
+						if len(gateway_profile_list) > 0 and gateway_profile_list[0].user.is_active:
 							gateway_profile = gateway_profile_list[0]
 
 					payload['gateway_profile_id'] = gateway_profile.id
-					payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
-
+					payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
 
 					params = payload.copy()
 					lgr.info('Request Payload: %s' % params)
@@ -2427,7 +2426,7 @@ class PageString(ServiceCall, Wrappers):
 						if 'rows' in data_source.keys() and len(data_source['rows']):
 							lgr.info('Rows')
 							for i in data_source['rows']:
-                	        	                        name = '%s' % (' '.join(i[1:]))
+								name = '%s' % (' '.join(i[1:]))
 								if navigator.session.channel.name == 'IVR':
 									item = '%s\nFor %s, press %s.' % (item, name, count)
 								elif navigator.session.channel.name == 'USSD':
@@ -2442,7 +2441,7 @@ class PageString(ServiceCall, Wrappers):
 						elif 'data' in data_source.keys() and len(data_source['data']):
 							lgr.info('Data')
 							for i in data_source['data']:
-                	        	                        name = '%s' % (i['name'])
+								name = '%s' % (i['name'])
 								if navigator.session.channel.name == 'IVR':
 									item = '%s\nFor %s, press %s.' % (item, name, count)
 								elif navigator.session.channel.name == 'USSD':

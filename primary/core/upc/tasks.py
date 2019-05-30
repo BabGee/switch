@@ -34,10 +34,11 @@ import logging
 lgr = logging.getLogger('primary.core.upc')
 
 import base64, re
+import binascii
 
 try:
 	# hack for modules not installable on windows
-	from django.contrib.gis.geoip import GeoIP
+	from django.contrib.gis.geoip2 import GeoIP2
 	import crypt
 except ImportError:
 	if os.name == 'nt':
@@ -75,7 +76,7 @@ class Wrappers:
 		 GatewayProfile.objects.filter(Q(user__profile__national_id__iexact=payload['national_id'].replace(' ','').strip()),\
 		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway)).exists() and\
 		 GatewayProfile.objects.filter(Q(user__profile__national_id__iexact=payload['national_id'].replace(' ','').strip()),\
-		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))[0].user <> session_gateway_profile[0].user:
+		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))[0].user != session_gateway_profile[0].user:
 			#check update national_id profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
 			payload['response'] = 'Profile Error: National ID exists in another profile. Please contact us'
 			payload['response_status'] = '63'
@@ -91,7 +92,7 @@ class Wrappers:
 		 GatewayProfile.objects.filter(Q(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip()),\
 		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway)).exists() and\
 		 GatewayProfile.objects.filter(Q(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip()),\
-		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))[0].user <> session_gateway_profile[0].user:
+		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))[0].user != session_gateway_profile[0].user:
 			#check update passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
 			payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
 			payload['response_status'] = '63'
@@ -129,7 +130,7 @@ class Wrappers:
 				profile.passport_number = payload['passport_number'].replace(' ','').strip()
 				if 'passport_expiry_date' in payload.keys() and profile.passport_expiry_date in [None,""]: 
 					try: profile.passport_expiry_date = datetime.strptime(payload['passport_expiry_date'], '%Y-%m-%d').date()
-					except Exception, e: lgr.info('Error on Passport Expiry Date: %s' % e)
+					except Exception as e: lgr.info('Error on Passport Expiry Date: %s' % e)
 
 			if 'tax_pin' in payload.keys() and profile.tax_pin in [None,""]: profile.tax_pin = payload['tax_pin']
 			if 'physical_address' in payload.keys() and profile.physical_address in [None,""]: profile.physical_address = payload['physical_address']
@@ -149,10 +150,10 @@ class Wrappers:
 			if 'address' in payload.keys() and profile.address in [None,""]: profile.address = payload['address']
 			if 'gender' in payload.keys() and profile.gender in [None,""]:
 				try: gender = Gender.objects.get(code=payload['gender']); profile.gender = gender
-				except Exception, e: lgr.info('Error on Gender: %s' % e)
+				except Exception as e: lgr.info('Error on Gender: %s' % e)
 			if 'dob' in payload.keys() and profile.dob in [None,""]: 
 				try: profile.dob = datetime.strptime(payload['dob'], '%Y-%m-%d').date()
-				except Exception, e: lgr.info('Error on DOB: %s' % e)
+				except Exception as e: lgr.info('Error on DOB: %s' % e)
 
 			profile.save()
 
@@ -180,7 +181,7 @@ class Wrappers:
 			profile.passport_number = payload['passport_number'].replace(' ','').strip()
 			if 'passport_expiry_date' in payload.keys():
 				try: profile.passport_expiry_date = datetime.strptime(payload['passport_expiry_date'], '%Y-%m-%d').date()
-				except Exception, e: lgr.info('Error on Passport Expiry Date: %s' % e)
+				except Exception as e: lgr.info('Error on Passport Expiry Date: %s' % e)
 
 		if 'tax_pin' in payload.keys(): profile.tax_pin = payload['tax_pin']
 		if 'physical_address' in payload.keys(): profile.physical_address = payload['physical_address']
@@ -201,10 +202,10 @@ class Wrappers:
 		if 'address' in payload.keys(): profile.address = payload['address']
 		if 'gender' in payload.keys():
 			try: gender = Gender.objects.get(code=payload['gender']); profile.gender = gender
-			except Exception, e: lgr.info('Error on Gender: %s' % e)
+			except Exception as e: lgr.info('Error on Gender: %s' % e)
 		if 'dob' in payload.keys():
 			try: profile.dob = datetime.strptime(payload['dob'], '%Y-%m-%d').date()
-			except Exception, e: lgr.info('Error on DOB: %s' % e)
+			except Exception as e: lgr.info('Error on DOB: %s' % e)
 
 		if 'photo' in payload.keys():
 			try:
@@ -214,7 +215,7 @@ class Wrappers:
 				with open(from_file, 'r') as f:
 					myfile = File(f)
 					profile.photo.save(filename, myfile, save=False)
-			except Exception, e:
+			except Exception as e:
 				lgr.info('Error on saving Profile Image: %s' % e)
 
 		profile.save()
@@ -323,8 +324,8 @@ class Wrappers:
 	def simple_get_msisdn(self, msisdn, payload={}):
 		lng = payload['lng'] if 'lng' in payload.keys() else 0.0
 		lat = payload['lat'] if 'lat' in payload.keys() else 0.0
-               	trans_point = Point(float(lng), float(lat))
-		g = GeoIP()
+		trans_point = Point(float(lng), float(lat))
+		g = GeoIP2()
 
 		#try: msisdn = msisdn.encode('ascii','ignore').decode('utf-8','ignore')
 		#except: pass
@@ -333,7 +334,7 @@ class Wrappers:
 		is_num = False
 		try:
 			if (msisdn[:1]=='0' or msisdn[:1]=='+') and isinstance(int(msisdn[1:]), int): is_num = True
-			elif msisdn[:1]<>'0' and msisdn[:1]<>'+' and isinstance(int(msisdn), int): is_num = True
+			elif msisdn[:1]!='0' and msisdn[:1]!='+' and isinstance(int(msisdn), int): is_num = True
 		except: pass
  
 
@@ -353,7 +354,7 @@ class Wrappers:
 					msisdn = None
 			else:
 				msisdn = '+254%s' % msisdn[1:]
-		elif is_num and len(msisdn) >=10  and msisdn[:1] <> '0' and msisdn[:1] <> '+':
+		elif is_num and len(msisdn) >=10  and msisdn[:1] != '0' and msisdn[:1] != '+':
 			msisdn = '+%s' % msisdn #clean msisdn for lookup
 		else:
 			msisdn = None
@@ -364,8 +365,8 @@ class Wrappers:
 	def get_msisdn(self, payload):
 		lng = payload['lng'] if 'lng' in payload.keys() else 0.0
 		lat = payload['lat'] if 'lat' in payload.keys() else 0.0
-               	trans_point = Point(float(lng), float(lat))
-		g = GeoIP()
+		trans_point = Point(float(lng), float(lat))
+		g = GeoIP2()
 
 		msisdn = None
 		if "msisdn" in payload.keys():
@@ -377,9 +378,9 @@ class Wrappers:
 			msisdn = msisdn.replace(' ','').replace('-','')
 
 			is_num = False
- 			try:
+			try:
 				if (msisdn[:1]=='0' or msisdn[:1]=='+') and isinstance(int(msisdn[1:]), int): is_num = True
-				elif msisdn[:1]<>'0' and msisdn[:1]<>'+' and isinstance(int(msisdn), int): is_num = True
+				elif msisdn[:1]!='0' and msisdn[:1]!='+' and isinstance(int(msisdn), int): is_num = True
 			except: pass
 
 			if is_num and len(msisdn) >= 9 and msisdn[:1] == '+':
@@ -398,7 +399,7 @@ class Wrappers:
 						msisdn = None
 				else:
 					msisdn = '+254%s' % msisdn[1:]
-			elif is_num and len(msisdn) >=10  and msisdn[:1] <> '0' and msisdn[:1] <> '+':
+			elif is_num and len(msisdn) >=10  and msisdn[:1] != '0' and msisdn[:1] != '+':
 				msisdn = '+%s' % msisdn #clean msisdn for lookup
 			else:
 				msisdn = None
@@ -423,7 +424,7 @@ class Wrappers:
 			image_obj.save()
 			myfile.close()
 			f.close()
-		except Exception, e:
+		except Exception as e:
 			lgr.info("Unable to save image: %s to: %s because: %s" % (filename, image_obj, e))
 
 class System(Wrappers):
@@ -481,7 +482,7 @@ class System(Wrappers):
 			payload['response'] = 'Profile Not Found'
 			payload['response_status'] = '25'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on device verification: %s' % e)
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
@@ -549,7 +550,7 @@ class System(Wrappers):
 			payload['response_status'] = '25'
 
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on device activation: %s' % e)
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
@@ -616,7 +617,7 @@ class System(Wrappers):
 			payload['response'] = 'Profile Not Found'
 			payload['response_status'] = '25'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on validating device: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -649,7 +650,7 @@ class System(Wrappers):
 			else:
 				payload['response'] = 'MSISDN or Email Not Found'
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on profile contact check: %s' % e)
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
@@ -683,20 +684,20 @@ class System(Wrappers):
 				lgr.info('With Email')
 				payload['trigger'] = 'with_email%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
-		 		payload['email'] = payload['email_msisdn']
+				payload['email'] = payload['email_msisdn']
 				payload['response'] = 'Email Captured'
 				payload['response_status'] = '00'
 			elif 'email_msisdn' in payload.keys() and self.simple_get_msisdn(payload['email_msisdn'].strip(), payload):
 				lgr.info('With MSISDN')
 				payload['trigger'] = 'with_msisdn%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
-		 		payload['msisdn'] = payload['email_msisdn'].strip()
+				payload['msisdn'] = payload['email_msisdn'].strip()
 				payload['response'] = 'MSISDN Captured'
 				payload['response_status'] = '00'
 			else:
 				payload['response'] = 'MSISDN or Email Not Found'
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on contact check: %s' % e)
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
@@ -766,7 +767,7 @@ class System(Wrappers):
 			else:
 				payload['response'] = 'Identity Document not found'
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on capture_identity_document: %s' % e)
 			payload['response_status'] = '96'
 
@@ -808,7 +809,7 @@ class System(Wrappers):
 			else:
 				payload['response'] = 'Identity Document not found'
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on capture_identity_document strict: %s' % e)
 			payload['response_status'] = '96'
 
@@ -817,27 +818,39 @@ class System(Wrappers):
 
 	def session(self, payload, node_info):
 		try:
+			lgr.info('Got Here')
 			#CREATE SIGN UP SESSION, GET SESSION_ID (To expire within - 24 - 48hrs) VCSSystem().session(payload, node_info)
 			chars = string.ascii_letters + string.punctuation + string.digits
 			rnd = random.SystemRandom()
 			s = ''.join(rnd.choice(chars) for i in range(150))
-			session_id = s.encode('base64')
+
+			lgr.info('Got Here')
+			#session_id = s.encode('base64')
+			session_id = s.encode()
+			lgr.info('Got Here')
 			channel = Channel.objects.get(id=payload["chid"])
-			session = Session(session_id=session_id.lower(),channel=channel,num_of_tries=0,num_of_sends=0,status=SessionStatus.objects.get(name='CREATED'))
+			session = Session(session_id=session_id,channel=channel,num_of_tries=0,num_of_sends=0,status=SessionStatus.objects.get(name='CREATED'))
+
+			lgr.info('Got Here')
 			if 'email' in payload.keys():
 				session.reference = payload["email"]
 			session.save()
 
+			lgr.info('Got Here')
 			if 'session_gateway_profile_id' in payload.keys():
 				gateway_profile=GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 				session.gateway_profile=gateway_profile
 				session.save()
 
-			encoded_session = base64.urlsafe_b64encode(session.session_id.encode('hex'))
+			lgr.info('Got Here')
+			#encoded_session = base64.urlsafe_b64encode(session.session_id.encode('hex'))
+			encoded_session = base64.urlsafe_b64encode(session.session_id)
+
+			lgr.info('Got Here')
 			payload['session'] = urlquote(encoded_session)
 			payload['response'] = encoded_session
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Creating Session Failed: %s' % e)
 			payload['response_status'] = '96'
 
@@ -848,13 +861,13 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-			if session_gateway_profile.status.name <> 'REGISTERED':
+			if session_gateway_profile.status.name != 'REGISTERED':
 				payload['response'] = 'Profile Exists'
 				payload['response_status'] = '26'
 			else:
 				payload['response'] = 'Profile Details Captured'
 				payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on get profile details: %s' % e)
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
@@ -877,7 +890,7 @@ class System(Wrappers):
 				payload['response'] = 'Invalid Email or Not Found'
 				payload['response_status'] = '96'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on email registration check: %s' % e)
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
@@ -895,7 +908,7 @@ class System(Wrappers):
 						# TODO should the date be in the future?
 						datetime.strptime(payload['passport_expiry_date'], '%Y-%m-%d').date()
 						valid = True
-					except Exception, e:
+					except Exception as e:
 						lgr.info('Error on Passport Expiry Date: %s' % e)
 						valid = False
 
@@ -906,7 +919,7 @@ class System(Wrappers):
 
 			payload['response'] = 'Passport Expiry Validated'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Validating Passport Expiry: %s' % e,exc_info=True)
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
@@ -942,7 +955,7 @@ class System(Wrappers):
 
 			payload['response'] = 'Profile Details Captured'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on get profile details: %s' % e)
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
@@ -989,7 +1002,7 @@ class System(Wrappers):
 
 			payload['response'] = 'AVS Details Captured'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on avs check: %s' % e)
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
@@ -1044,7 +1057,7 @@ class System(Wrappers):
 				lgr.info('Without Email')
 				msisdn = None
 				if "email_msisdn" in payload.keys():
-		 			payload['msisdn'] = str(payload['email_msisdn'])
+					payload['msisdn'] = str(payload['email_msisdn'])
 					msisdn = self.get_msisdn(payload)
 				lgr.info('MSISDN: %s' % msisdn)
 				if msisdn is not None:
@@ -1073,7 +1086,7 @@ class System(Wrappers):
 					if 'msisdn' in payload.keys(): del payload['msisdn']
 					payload['response'] = 'MSISDN or Email Not Found'
 					payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on registration check: %s' % e)
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
@@ -1110,7 +1123,7 @@ class System(Wrappers):
 				payload['response'] = 'MSISDN Not Found'
 				payload['response_status'] = '25'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on device verification: %s' % e)
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
@@ -1153,7 +1166,7 @@ class System(Wrappers):
 				payload['response'] = 'MSISDN Not Found'
 				payload['response_status'] = '25'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on device activation: %s' % e)
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
@@ -1201,7 +1214,7 @@ class System(Wrappers):
 				payload['response'] = 'MSISDN Not Found'
 				payload['response_status'] = '25'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on validating device: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1252,7 +1265,7 @@ class System(Wrappers):
 			except ObjectDoesNotExist:
 				payload['response_status'] = '96'
 				payload['response'] = 'No Change MSISDN Found' 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on verify MSISDN: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1323,7 +1336,7 @@ class System(Wrappers):
 
 
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on change MSISDN: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1347,7 +1360,7 @@ class System(Wrappers):
 				payload['response_status'] = '25'
 				payload['response'] = 'Profile Institution Does not Exist %s' % gateway_profile
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on validating institution: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1374,7 +1387,7 @@ class System(Wrappers):
 				lgr.info('Invalid Email:%s' % payload)
 				payload['response'] = 'No Valid Email Found, Ignored Email Change'
 				payload['response_status'] = '00' # was 25
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Set Profile Pin: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1407,7 +1420,7 @@ class System(Wrappers):
 				lgr.info('Invalid Phone Number:%s' % payload)
 				payload['response'] = 'No Valid Phone Number Found, Ignored Phone Number Change'
 				payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Update Profile Phone Number: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1433,7 +1446,7 @@ class System(Wrappers):
 				payload['response_status'] = '95'
 				payload['response'] = 'Confirm PIN did not match New PIN'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Set Profile Pin: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1462,7 +1475,7 @@ class System(Wrappers):
 				payload['response_status'] = '55'
 				payload['response'] = 'Invalid PIN'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Validating Pin: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1478,7 +1491,7 @@ class System(Wrappers):
 			payload['response'] = 'Profile Push Notification Reset'
 			payload['response_status'] = '00'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Reset Profile Push Notification: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1493,7 +1506,7 @@ class System(Wrappers):
 			payload['response'] = 'Profile is on Expired Passport'
 			payload['response_status'] = '00'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on set profile Expired Passport: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1509,7 +1522,7 @@ class System(Wrappers):
 			payload['response'] = 'Profile is on For Terms'
 			payload['response_status'] = '00'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on set profile For Terms: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1525,7 +1538,7 @@ class System(Wrappers):
 			payload['response'] = 'Profile is on For Update'
 			payload['response_status'] = '00'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on set profile For Update: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1542,7 +1555,7 @@ class System(Wrappers):
 			payload['response'] = 'Profile is on First Access'
 			payload['response_status'] = '00'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on set profile First Access: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1559,7 +1572,7 @@ class System(Wrappers):
 			payload['response'] = 'Profile is Pending Activation'
 			payload['response_status'] = '00'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on set profile pending: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1575,7 +1588,7 @@ class System(Wrappers):
 			payload['response'] = 'Profile DeActivated'
 			payload['response_status'] = '00'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Validating One Time Pin: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1592,7 +1605,7 @@ class System(Wrappers):
 			payload['response'] = 'Profile Activated'
 			payload['response_status'] = '00'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Validating One Time Pin: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1624,7 +1637,7 @@ class System(Wrappers):
 				payload['response'] = 'Institution not Submitted'
 				payload['response_status'] = '25'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Updating Profile Institution: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1654,7 +1667,7 @@ class System(Wrappers):
 				payload['response_status'] = '55'
 				payload['response'] = 'Invalid One Time PIN'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Validating One Time Pin: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1669,7 +1682,7 @@ class System(Wrappers):
 			else:
 				payload['response_status'] = '25'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Validating One Time Password: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1691,7 +1704,7 @@ class System(Wrappers):
 			payload['one_time_password'] = password
 			payload['response'] = 'One Time Password Set'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on One Time Password: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1720,7 +1733,7 @@ class System(Wrappers):
 			payload['reset_pin'] = pin
 			payload['response'] = 'Reset Pin'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Reset Pin: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1748,7 +1761,7 @@ class System(Wrappers):
 			payload['one_time_pin'] = pin
 			payload['response'] = 'One Time Pin Set'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on One Time Pin: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1761,7 +1774,7 @@ class System(Wrappers):
 				payload['response_status'] = '00'
 			else:
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on verifying Password: %s' % e)
 			payload['response_status'] = '96'
 
@@ -1779,7 +1792,7 @@ class System(Wrappers):
 
 			password_policy = PasswordPolicy.objects.get(gateway=gateway_profile.gateway)
 
-			if confirm_password and password <> confirm_password: error += "Passwords did not Match, " 
+			if confirm_password and password != confirm_password: error += "Passwords did not Match, " 
 			if 'session_gateway_profile_id' in payload.keys():
 				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 				password_history = UserPasswordHistory.objects.filter(user=session_gateway_profile.user).order_by('-date_created')[:password_policy.old_password_count]
@@ -1801,7 +1814,7 @@ class System(Wrappers):
 			else:
 				payload['response'] = 'Requires('+error+')'
 				payload['response_status'] = '30'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Password Policy: %s' % e)
 			payload['response_status'] = '96'
 
@@ -1821,7 +1834,7 @@ class System(Wrappers):
 
 			password_policy = PasswordPolicy.objects.get(gateway=gateway_profile.gateway)
 
-			if confirm_password and password <> confirm_password: error += "Passwords did not Match, " 
+			if confirm_password and password != confirm_password: error += "Passwords did not Match, " 
 
 			password_history = UserPasswordHistory.objects.filter(user=session_gateway_profile.user).order_by('-date_created')[:password_policy.old_password_count]
 			if password_history.exists():
@@ -1851,7 +1864,7 @@ class System(Wrappers):
 			else:
 				payload['response'] = 'Requires('+error+')'
 				payload['response_status'] = '30'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Setting Password: %s' % e)
 			payload['response_status'] = '96'
 
@@ -1885,14 +1898,14 @@ class System(Wrappers):
 			if len(password) >=6 is None: error += 'More than 6 Characters, '
 			if len(password) <=30 is None: error += 'Less than 30 Characters, '
 			if re.search(r"[ !@#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) is None: error += 'Special character, '
-			if confirm_password and password <> confirm_password: error += "Matching, " 
+			if confirm_password and password != confirm_password: error += "Matching, " 
 			if error == '':
 				payload['response'] = 'Password Policy Succesful'
 				payload['response_status'] = '00'
 			else:
 				payload['response'] = 'Requires('+error+')'
 				payload['response_status'] = '30'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Password Policy: %s' % e)
 			payload['response_status'] = '96'
 
@@ -1924,7 +1937,7 @@ class System(Wrappers):
 			if len(password) >=6 is None: error += 'More than 6 Characters, '
 			if len(password) <=30 is None: error += 'Less than 30 Characters, '
 			if re.search(r"[ !@#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) is None: error += 'Special character, '
-			if password <> confirm_password: error += "Matching, " 
+			if password != confirm_password: error += "Matching, " 
 			if error == '':
 				status = ProfileStatus.objects.get(name="ACTIVATED")
 				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
@@ -1940,7 +1953,7 @@ class System(Wrappers):
 			else:
 				payload['response'] = 'Requires('+error+')'
 				payload['response_status'] = '30'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Setting Password: %s' % e)
 			payload['response_status'] = '96'
 
@@ -1955,7 +1968,7 @@ class System(Wrappers):
 			else:
 				payload['response_status'] = '25'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Validating Reset Password: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -1978,7 +1991,7 @@ class System(Wrappers):
 			payload['reset_password'] = password
 			payload['response'] = 'Reset Password Set'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Re-Setting Password: %s' % e)
 			payload['response_status'] = '96'
 
@@ -1993,7 +2006,7 @@ class System(Wrappers):
 			#Create co-ordinates if dont exist
 			# lng = payload['lng'] if 'lng' in payload.keys() else 0.0
 			# lat = payload['lat'] if 'lat' in payload.keys() else 0.0
-	         #        trans_point = Point(float(lng), float(lat))
+		 #	trans_point = Point(float(lng), float(lat))
 
 			institution = Institution()
 			institution.name = payload['institution_name']
@@ -2026,7 +2039,7 @@ class System(Wrappers):
 			else:
 				lng = payload['lng'] if 'lng' in payload.keys() else 0.0
 				lat = payload['lat'] if 'lat' in payload.keys() else 0.0
-	                	trans_point = Point(float(lng), float(lat))
+				trans_point = Point(float(lng), float(lat))
 			#Set Location
 			institution.geometry = trans_point
 			if 'institution_description' in payload.keys(): institution.description = payload['institution_description']
@@ -2046,7 +2059,7 @@ class System(Wrappers):
 					with open(from_file, 'r') as f:
 						myfile = File(f)
 						institution.logo.save(filename, myfile, save=False)
-				except Exception, e:
+				except Exception as e:
 					lgr.info('Error on saving Institution Logo: %s' % e)
 
 		
@@ -2071,7 +2084,7 @@ class System(Wrappers):
 
 			payload['response'] = 'Institution Created'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Creating Institution: %s' % e)
 			payload['response_status'] = '96'
 
@@ -2243,7 +2256,7 @@ class System(Wrappers):
 				with open(from_file, 'r') as f:
 					myfile = File(f)
 					institution.logo.save(filename, myfile, save=False)
-			except Exception, e:
+			except Exception as e:
 				lgr.info('Error on saving Institution Logo: %s' % e)
 
 			if 'institution_default_color' in payload.keys(): institution.default_color = payload['institution_default_color']
@@ -2255,7 +2268,7 @@ class System(Wrappers):
 			institution.save()
 			payload['response'] = 'Institution Updated'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Updating Institution: %s' % e)
 			payload['response_status'] = '96'
 
@@ -2278,7 +2291,7 @@ class System(Wrappers):
 			#Create co-ordinates if dont exist
 			lng = payload['lng'] if 'lng' in payload.keys() else 0.0
 			lat = payload['lat'] if 'lat' in payload.keys() else 0.0
-	                trans_point = Point(float(lng), float(lat))
+			trans_point = Point(float(lng), float(lat))
 
 			lgr.info("Finished Transaction")
 
@@ -2312,7 +2325,7 @@ class System(Wrappers):
 			payload['till_number'] = till.till_number
 			payload['response'] = 'Institution Till Created'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Creating Institution Till: %s' % e)
 			payload['response_status'] = '96'
 
@@ -2320,11 +2333,11 @@ class System(Wrappers):
 
 	def get_gateway_details(self, payload, node_info):
 		try:
-                        gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			gateway = gateway_profile.gateway
 			details = {}
 
-			if gateway_profile.access_level.name <> 'SYSTEM':
+			if gateway_profile.access_level.name != 'SYSTEM':
 				details['profile'] = {}
 				details['profile']['profile_photo'] = gateway_profile.user.profile.photo.name
 				details['profile']['first_name'] = gateway_profile.user.first_name
@@ -2378,7 +2391,7 @@ class System(Wrappers):
 			payload['response_status'] = '00'
 			lgr.info('\n\n\n\t#####Host: %s' % gateway_profile)
 			#payload['trigger_state'] = True		
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Getting Host Details: %s" % e)
 
@@ -2421,7 +2434,7 @@ class System(Wrappers):
 			payload['response_status'] = '00'
 			# lgr.info('\n\n\n\t#####Host: %s' % gateway_profile)
 			#payload['trigger_state'] = True
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Getting Host Details: %s" % e)
 
@@ -2481,10 +2494,10 @@ class System(Wrappers):
 				#Create co-ordinates if dont exist
 				lng = payload['lng'] if 'lng' in payload.keys() else 0.0
 				lat = payload['lat'] if 'lat' in payload.keys() else 0.0
-	                	trans_point = Point(float(lng), float(lat))
+				trans_point = Point(float(lng), float(lat))
 
 				profile_status = ProfileStatus.objects.get(name="REGISTERED")
-				profile = Profile(api_key=api_key.encode('base64'),timezone=gateway_profile.user.profile.timezone,\
+				profile = Profile(api_key=base64.urlsafe_b64encode(api_key.encode()),timezone=gateway_profile.user.profile.timezone,\
 					language=gateway_profile.user.profile.language,geometry=trans_point,
 					user=user)
 				profile.status = profile_status
@@ -2546,7 +2559,7 @@ class System(Wrappers):
 				payload['response_status'] = '00'
 				payload['session_gateway_profile_id'] = create_gateway_profile.id
 
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on Creating User Profile: %s" % e,exc_info=True)
@@ -2598,7 +2611,7 @@ class System(Wrappers):
 				payload = self.create_user_profile(payload, node_info)
 				if 'response_status' in payload.keys() and payload['response_status'] == '00':
 					payload['response'] = 'Session Profile Captured'
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on getting session gateway Profile: %s" % e)
@@ -2656,7 +2669,7 @@ class System(Wrappers):
 				payload = self.create_user_profile(payload, node_info)
 				if 'response_status' in payload.keys() and payload['response_status'] == '00':
 					payload['response'] = 'Session Profile Captured'
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on getting session gateway Profile: %s" % e)
@@ -2732,7 +2745,7 @@ class System(Wrappers):
 				payload['response'] = 'No Auth Token Provided'
 				payload['response_status'] = 25
 
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on Verifying Social Profile: %s" % e)
@@ -2756,7 +2769,7 @@ class System(Wrappers):
 			payload['response'] = 'Profile Activated'
 			payload['response_status'] = '00'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Validating One Time Pin: %s' % e)
 			payload['response_status'] = '96'
 		return payload
@@ -2765,12 +2778,12 @@ class System(Wrappers):
 	def update_gateway_profile(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-            		if 'session_gateway_profile_id' in payload.keys():
-                		gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			if 'session_gateway_profile_id' in payload.keys():
+				gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 
-	            	user, payload = self.profile_update(gateway_profile.user, payload)
-	
-		    	if 'role_id' in payload.keys():
+			user, payload = self.profile_update(gateway_profile.user, payload)
+
+			if 'role_id' in payload.keys():
 				role = Role.objects.get(id=payload["role_id"])
 				access_level = role.access_level
 				gateway_profile.role = role
@@ -2779,7 +2792,7 @@ class System(Wrappers):
 			payload['response_status'] = '00'
 			payload['response'] = 'Session Profile Updated'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on getting session gateway Profile: %s" % e)
@@ -2848,7 +2861,7 @@ class System(Wrappers):
 				payload = self.create_user_profile(payload, node_info)
 				if 'response_status' in payload.keys() and payload['response_status'] == '00':
 					payload['response'] = 'Session Profile Captured'
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on getting session gateway Profile: %s" % e)
@@ -2856,8 +2869,8 @@ class System(Wrappers):
 
 	def login(self, payload, node_info):
 		try:
-                        details = {}
-                        #Check if LOGIN or SIGN UP
+			details = {}
+			#Check if LOGIN or SIGN UP
 			authorized_gateway_profile = None
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			if ('email_msisdn' in payload.keys() or 'username' in payload.keys() or ('email' in payload.keys() and self.validateEmail(payload['email']))) and ('password' in payload.keys() or payload.get('oauth_token_verified',False)):
@@ -2960,7 +2973,7 @@ class System(Wrappers):
 				payload['response_status'] = '00'
 			else:
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Login: %s" % e)
 		return payload

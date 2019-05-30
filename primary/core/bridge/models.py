@@ -1,4 +1,6 @@
 from django.contrib.gis.db import models
+from django.contrib.gis.db.models import Manager as GeoManager
+
 from primary.core.upc.models import *
 import json
 
@@ -15,14 +17,14 @@ class PaymentMethod(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	status = models.ForeignKey(PaymentMethodStatus)
+	status = models.ForeignKey(PaymentMethodStatus, on_delete=models.CASCADE)
 	send = models.BooleanField(default=False)
 	receive = models.BooleanField(default=True)
-	default_currency = models.ForeignKey(Currency, related_name='default_currency')
+	default_currency = models.ForeignKey(Currency, related_name='default_currency', on_delete=models.CASCADE)
 	min_amount = models.DecimalField(max_digits=19, decimal_places=2)
 	max_amount = models.DecimalField(max_digits=19, decimal_places=2)
 	icon_old= models.CharField(max_length=45, null=True, blank=True)
-	icon = models.ForeignKey(Icon, null=True, blank=True)
+	icon = models.ForeignKey(Icon, null=True, blank=True, on_delete=models.CASCADE)
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	country = models.ManyToManyField(Country, blank=True)
 	currency = models.ManyToManyField(Currency, blank=True)
@@ -44,7 +46,7 @@ class Product(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)	
 	def __unicode__(self):
-		return u'%s' % (self.name)        
+		return u'%s' % (self.name)	
 
 class Retry(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -53,7 +55,7 @@ class Retry(models.Model):
 	max_retry = models.IntegerField(null=True, blank=True)
 	max_retry_hours = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	def __unicode__(self):
-		return u'%s' % (self.name)        
+		return u'%s' % (self.name)	
 
 class ServiceStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
@@ -67,13 +69,13 @@ class Service(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)	
 	name = models.CharField(max_length=50, unique=True)
-	product = models.ForeignKey(Product)
+	product = models.ForeignKey(Product, on_delete=models.CASCADE)
 	description = models.CharField(max_length=100)
-	status = models.ForeignKey(ServiceStatus) # Whether Poller or Other
+	status = models.ForeignKey(ServiceStatus, on_delete=models.CASCADE) # Whether Poller or Other
 	last_response = models.CharField(max_length=2048, null=True, blank=True, help_text='response_status%response|...')
 	success_last_response = models.CharField(max_length=256, null=True, blank=True)
 	failed_last_response = models.CharField(max_length=256, null=True, blank=True)
-	retry = models.ForeignKey(Retry, null=True, blank=True)
+	retry = models.ForeignKey(Retry, null=True, blank=True, on_delete=models.CASCADE)
 	allowed_response_key = models.CharField(max_length=1024, null=True, blank=True, help_text='Comma Delimitted')
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	def __unicode__(self):
@@ -104,9 +106,9 @@ class ServiceCommand(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)	
 	command_function = models.CharField(max_length=50)
 	level = models.IntegerField()
-	service = models.ForeignKey(Service)	
-	node_system = models.ForeignKey(NodeSystem)
-	status = models.ForeignKey(CommandStatus)
+	service = models.ForeignKey(Service, on_delete=models.CASCADE)	
+	node_system = models.ForeignKey(NodeSystem, on_delete=models.CASCADE)
+	status = models.ForeignKey(CommandStatus, on_delete=models.CASCADE)
 	reverse_function = models.CharField(max_length=50, null=True, blank=True)
 	description = models.CharField(max_length=100)
 	details = models.CharField(max_length=512, default=json.dumps({}))
@@ -138,8 +140,8 @@ class ServiceCommand(models.Model):
 class ServiceCutOff(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	service = models.OneToOneField(Service)
-	cut_off_command = models.ForeignKey(ServiceCommand, null=True, blank=True)
+	service = models.OneToOneField(Service, on_delete=models.CASCADE)
+	cut_off_command = models.ForeignKey(ServiceCommand, null=True, blank=True, on_delete=models.CASCADE)
 	description = models.CharField(max_length=100)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.service)  
@@ -156,27 +158,27 @@ class TransactionStatus(models.Model):
 class Transaction(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	gateway_profile = models.ForeignKey(GatewayProfile)
-	service = models.ForeignKey(Service)
-	channel = models.ForeignKey(Channel)
-	gateway = models.ForeignKey(Gateway)
+	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
+	service = models.ForeignKey(Service, on_delete=models.CASCADE)
+	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	request = models.CharField(max_length=12800)
-	currency = models.ForeignKey(Currency, related_name="bridge", null=True, blank=True)
+	currency = models.ForeignKey(Currency, related_name="bridge", null=True, blank=True, on_delete=models.CASCADE)
 	amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	charges = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	raise_charges = models.NullBooleanField(default=False) #False - Not inclusive of the amount | True - Inclusive of the amount
 	response = models.CharField(max_length=3840, blank=True, null=True)
-	transaction_status = models.ForeignKey(TransactionStatus)
+	transaction_status = models.ForeignKey(TransactionStatus, on_delete=models.CASCADE)
 	#ip_address = models.CharField(max_length=20)
 	ip_address = models.GenericIPAddressField(editable=False)
-	response_status = models.ForeignKey(ResponseStatus)
+	response_status = models.ForeignKey(ResponseStatus, on_delete=models.CASCADE)
 	geometry = models.PointField(srid=4326)
-	objects = models.GeoManager()
-	current_command = models.ForeignKey(ServiceCommand, null=True, blank=True, related_name="transaction_current_command")
-	next_command = models.ForeignKey(ServiceCommand, null=True, blank=True, related_name="transaction_next_command")
-	msisdn = models.ForeignKey(MSISDN, null=True, blank=True)
-	overall_status = models.ForeignKey(ResponseStatus, null=True, blank=True, related_name="bridge_transaction_overall_status")
-	institution = models.ForeignKey(Institution, null=True, blank=True)
+	objects = GeoManager()
+	current_command = models.ForeignKey(ServiceCommand, null=True, blank=True, related_name="transaction_current_command", on_delete=models.CASCADE)
+	next_command = models.ForeignKey(ServiceCommand, null=True, blank=True, related_name="transaction_next_command", on_delete=models.CASCADE)
+	msisdn = models.ForeignKey(MSISDN, null=True, blank=True, on_delete=models.CASCADE)
+	overall_status = models.ForeignKey(ResponseStatus, null=True, blank=True, related_name="bridge_transaction_overall_status", on_delete=models.CASCADE)
+	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
 	fingerprint = models.CharField(max_length=1024, editable=False, null=True, blank=True)
 	token = models.CharField(max_length=1024, editable=False, null=True, blank=True)
 	def __unicode__(self):
@@ -191,9 +193,9 @@ class BackgroundService(models.Model):
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	trigger_service = models.ManyToManyField(Service)
-	service = models.ForeignKey(Service, related_name='background_service')
+	service = models.ForeignKey(Service, related_name='background_service', on_delete=models.CASCADE)
 	details = models.CharField(max_length=3840, default=json.dumps({}))
-	cut_off_command = models.ForeignKey(ServiceCommand, null=True, blank=True)
+	cut_off_command = models.ForeignKey(ServiceCommand, null=True, blank=True, on_delete=models.CASCADE)
 	trigger = models.ManyToManyField(Trigger, blank=True)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.service)  
@@ -205,25 +207,25 @@ class BackgroundService(models.Model):
 		return "\n".join([a.name for a in self.access_level.all()])
 	def trigger_service_list(self):
 		return "\n".join([a.name for a in self.trigger_service.all()])
-        def trigger_list(self):
-                return "\n".join([a.name for a in self.trigger.all()])
+	def trigger_list(self):
+		return "\n".join([a.name for a in self.trigger.all()])
 
 class BackgroundServiceActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	service = models.ForeignKey(Service)
-	status = models.ForeignKey(TransactionStatus)
-	gateway_profile = models.ForeignKey(GatewayProfile)
+	service = models.ForeignKey(Service, on_delete=models.CASCADE)
+	status = models.ForeignKey(TransactionStatus, on_delete=models.CASCADE)
+	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
 	request = models.CharField(max_length=10240)
-	channel = models.ForeignKey(Channel)
-	response_status = models.ForeignKey(ResponseStatus)
+	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+	response_status = models.ForeignKey(ResponseStatus, on_delete=models.CASCADE)
 	transaction_reference = models.CharField(max_length=256, null=True, blank=True) #Transaction ID
-	currency = models.ForeignKey(Currency, null=True, blank=True)
+	currency = models.ForeignKey(Currency, null=True, blank=True, on_delete=models.CASCADE)
 	amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	charges = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
-	gateway = models.ForeignKey(Gateway)
-	institution = models.ForeignKey(Institution, null=True, blank=True)
-	current_command = models.ForeignKey(ServiceCommand, null=True, blank=True)
+	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
+	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
+	current_command = models.ForeignKey(ServiceCommand, null=True, blank=True, on_delete=models.CASCADE)
 	scheduled_send = models.DateTimeField(blank=True, null=True)
 	message = models.CharField(max_length=3840, blank=True, null=True)
 	sends = models.IntegerField()
@@ -240,82 +242,82 @@ class ActivityStatus(models.Model):
 		return u'%s' % (self.name)
 
 class Activity(models.Model):
-        date_modified  = models.DateTimeField(auto_now=True)
-        date_created = models.DateTimeField(auto_now_add=True)
-        name = models.CharField(max_length=45, unique=True)
-        description = models.CharField(max_length=100)
-        status = models.ForeignKey(ActivityStatus)
-        ext_service_id = models.CharField(max_length=250)
-        ext_service_username = models.CharField(max_length=320, null=True, blank=True, help_text='Optional')
-        ext_service_password = models.CharField(max_length=320, null=True, blank=True, help_text='Optional')
-        ext_service_details = models.CharField(max_length=1920, null=True, blank=True)
-        service = models.ForeignKey(Service, null=True, blank=True) #Service for processing outgoing tasks
-        gateway = models.ManyToManyField(Gateway, blank=True)
-        def __unicode__(self):
-                return u'%s %s' % (self.name, self.ext_service_id)
-        def gateway_list(self):
-                return "\n".join([a.name for a in self.gateway.all()])
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	status = models.ForeignKey(ActivityStatus, on_delete=models.CASCADE)
+	ext_service_id = models.CharField(max_length=250)
+	ext_service_username = models.CharField(max_length=320, null=True, blank=True, help_text='Optional')
+	ext_service_password = models.CharField(max_length=320, null=True, blank=True, help_text='Optional')
+	ext_service_details = models.CharField(max_length=1920, null=True, blank=True)
+	service = models.ForeignKey(Service, null=True, blank=True, on_delete=models.CASCADE) #Service for processing outgoing tasks
+	gateway = models.ManyToManyField(Gateway, blank=True)
+	def __unicode__(self):
+		return u'%s %s' % (self.name, self.ext_service_id)
+	def gateway_list(self):
+		return "\n".join([a.name for a in self.gateway.all()])
 
 class ActivityEndpoint(models.Model):
-        date_modified  = models.DateTimeField(auto_now=True)
-        date_created = models.DateTimeField(auto_now_add=True)
-        name = models.CharField(max_length=45, unique=True)
-        description = models.CharField(max_length=100)
-        request = models.CharField(max_length=1920, null=True, blank=True)
-        url = models.CharField(max_length=640)
-        account_id = models.CharField(max_length=512, null=True, blank=True)
-        username = models.CharField(max_length=128, null=True, blank=True)
-        password = models.CharField(max_length=1024, null=True, blank=True)
-        def __unicode__(self):
-                return u'%s' % (self.name)
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	request = models.CharField(max_length=1920, null=True, blank=True)
+	url = models.CharField(max_length=640)
+	account_id = models.CharField(max_length=512, null=True, blank=True)
+	username = models.CharField(max_length=128, null=True, blank=True)
+	password = models.CharField(max_length=1024, null=True, blank=True)
+	def __unicode__(self):
+		return u'%s' % (self.name)
 
 class ActivityProduct(models.Model):
-        date_modified  = models.DateTimeField(auto_now=True)
-        date_created = models.DateTimeField(auto_now_add=True)
-        name = models.CharField(max_length=45)
-        description = models.CharField(max_length=100)
-        activity = models.ForeignKey(Activity)
-        ext_product_id = models.CharField(max_length=250, null=True, blank=True)
-        endpoint = models.ForeignKey(ActivityEndpoint, null=True, blank=True)
-        service = models.ManyToManyField(Service, blank=True)
-        details = models.CharField(max_length=512, default=json.dumps({}))
-        realtime = models.BooleanField(default=False)
-        show_message = models.BooleanField(default=False)
-        payment_method = models.ManyToManyField(PaymentMethod, blank=True)
-        currency = models.ManyToManyField(Currency, blank=True) #Allowed Currencies
-        trigger = models.ManyToManyField(Trigger, blank=True)
-        def __unicode__(self):
-                return u'%s %s' % (self.name, self.investment)
-        def service_list(self):
-                return "\n".join([a.name for a in self.service.all()])
-        def payment_method_list(self):
-                return "\n".join([a.name for a in self.payment_method.all()])
-        def currency_list(self):
-                return "\n".join([a.code for a in self.currency.all()])
-        def trigger_list(self):
-                return "\n".join([a.name for a in self.trigger.all()])
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45)
+	description = models.CharField(max_length=100)
+	activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+	ext_product_id = models.CharField(max_length=250, null=True, blank=True)
+	endpoint = models.ForeignKey(ActivityEndpoint, null=True, blank=True, on_delete=models.CASCADE)
+	service = models.ManyToManyField(Service, blank=True)
+	details = models.CharField(max_length=512, default=json.dumps({}))
+	realtime = models.BooleanField(default=False)
+	show_message = models.BooleanField(default=False)
+	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
+	currency = models.ManyToManyField(Currency, blank=True) #Allowed Currencies
+	trigger = models.ManyToManyField(Trigger, blank=True)
+	def __unicode__(self):
+		return u'%s %s' % (self.name, self.investment)
+	def service_list(self):
+		return "\n".join([a.name for a in self.service.all()])
+	def payment_method_list(self):
+		return "\n".join([a.name for a in self.payment_method.all()])
+	def currency_list(self):
+		return "\n".join([a.code for a in self.currency.all()])
+	def trigger_list(self):
+		return "\n".join([a.name for a in self.trigger.all()])
 
 
 class ActivityTransaction(models.Model):
-        date_modified  = models.DateTimeField(auto_now=True)
-        date_created = models.DateTimeField(auto_now_add=True)
-        activity_product = models.ForeignKey(ActivityProduct)
-        status = models.ForeignKey(TransactionStatus)
-        gateway_profile = models.ForeignKey(GatewayProfile)
-        request = models.CharField(max_length=1920)
-        channel = models.ForeignKey(Channel)
-        response_status = models.ForeignKey(ResponseStatus)
-        transaction_reference = models.CharField(max_length=45, null=True, blank=True) #Transaction ID
-        currency = models.ForeignKey(Currency, null=True, blank=True)
-        amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
-        charges = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
-        gateway = models.ForeignKey(Gateway)
-        institution = models.ForeignKey(Institution, null=True, blank=True)
-        message = models.CharField(max_length=3840, blank=True, null=True)
-        sends = models.IntegerField()
-        ext_outbound_id = models.CharField(max_length=200, blank=True, null=True)
-        def __unicode__(self):
-                return u'%s %s' % (self.activity_product, self.gateway_profile)
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	activity_product = models.ForeignKey(ActivityProduct, on_delete=models.CASCADE)
+	status = models.ForeignKey(TransactionStatus, on_delete=models.CASCADE)
+	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
+	request = models.CharField(max_length=1920)
+	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+	response_status = models.ForeignKey(ResponseStatus, on_delete=models.CASCADE)
+	transaction_reference = models.CharField(max_length=45, null=True, blank=True) #Transaction ID
+	currency = models.ForeignKey(Currency, null=True, blank=True, on_delete=models.CASCADE)
+	amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	charges = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
+	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
+	message = models.CharField(max_length=3840, blank=True, null=True)
+	sends = models.IntegerField()
+	ext_outbound_id = models.CharField(max_length=200, blank=True, null=True)
+	def __unicode__(self):
+		return u'%s %s' % (self.activity_product, self.gateway_profile)
 
 
 class Approval(models.Model):
@@ -325,12 +327,12 @@ class Approval(models.Model):
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	trigger_service = models.ManyToManyField(Service)
-	service = models.ForeignKey(Service, related_name='approvals')
+	service = models.ForeignKey(Service, related_name='approvals', on_delete=models.CASCADE)
 	details = models.CharField(max_length=3840, default=json.dumps({}))
-	cut_off_command = models.ForeignKey(ServiceCommand, null=True, blank=True)
+	cut_off_command = models.ForeignKey(ServiceCommand, null=True, blank=True, on_delete=models.CASCADE)
 	trigger = models.ManyToManyField(Trigger, blank=True)
-	requestor = models.ForeignKey(Role)
-	approver = models.ForeignKey(Role, related_name='approver')
+	requestor = models.ForeignKey(Role, on_delete=models.CASCADE)
+	approver = models.ForeignKey(Role, related_name='approver', on_delete=models.CASCADE)
 	pending_count = models.IntegerField(null=True,blank=True,default=0) # null is unlimited
 	approval_identifier = models.CharField(max_length=200, blank=True, null=True)
 	pending_related_service = models.ManyToManyField(Service, related_name='pending_related_service', blank=True)
@@ -360,16 +362,16 @@ class ApprovalActivityStatus(models.Model):
 class ApprovalActivity(models.Model):
 	date_modified = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	approval = models.ForeignKey(Approval)
-	status = models.ForeignKey(ApprovalActivityStatus)
-	affected_gateway_profile = models.ForeignKey(GatewayProfile, related_name='affecting_approvals')
-	requestor_gateway_profile = models.ForeignKey(GatewayProfile, related_name='requested_approvals')
-	approver_gateway_profile = models.ForeignKey(GatewayProfile, related_name='pending_approvals',blank=True,null=True)
+	approval = models.ForeignKey(Approval, on_delete=models.CASCADE)
+	status = models.ForeignKey(ApprovalActivityStatus, on_delete=models.CASCADE)
+	affected_gateway_profile = models.ForeignKey(GatewayProfile, related_name='affecting_approvals', on_delete=models.CASCADE)
+	requestor_gateway_profile = models.ForeignKey(GatewayProfile, related_name='requested_approvals', on_delete=models.CASCADE)
+	approver_gateway_profile = models.ForeignKey(GatewayProfile, related_name='pending_approvals',blank=True,null=True, on_delete=models.CASCADE)
 	request = models.CharField(max_length=10240)
-	channel = models.ForeignKey(Channel)
-	response_status = models.ForeignKey(ResponseStatus)
-	gateway = models.ForeignKey(Gateway)
-	institution = models.ForeignKey(Institution, null=True, blank=True)
+	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+	response_status = models.ForeignKey(ResponseStatus, on_delete=models.CASCADE)
+	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
+	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
 	identifier = models.CharField(null=True,blank=True,max_length=20)
 	def __unicode__(self):
 		return u'%s %s' % (self.id, self.approval)
@@ -397,11 +399,11 @@ class GatewayProfileChange(models.Model):
 class GatewayProfileChangeActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	change = models.ForeignKey(GatewayProfileChange)
-	gateway_profile = models.ForeignKey(GatewayProfile)
+	change = models.ForeignKey(GatewayProfileChange, on_delete=models.CASCADE)
+	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
 	request = models.CharField(max_length=10240)
-	gateway = models.ForeignKey(Gateway)
-	institution = models.ForeignKey(Institution, null=True, blank=True)
+	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
+	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
 	processed = models.BooleanField(default=False)
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")

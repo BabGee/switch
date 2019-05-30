@@ -15,10 +15,10 @@ from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.db.models import Q, F
 import operator
-import urllib, urllib2
+#import urllib, urllib2
 from django.db import transaction
 from xml.sax.saxutils import escape, unescape
-from django.utils.encoding import smart_str, smart_unicode
+from django.utils.encoding import smart_text
 from django.db.models import Count, Sum, Max, Min, Avg
 from secondary.channels.notify.models import *
 from secondary.erp.pos.models import *
@@ -45,7 +45,7 @@ class Wrappers:
 		try:
 			val(url)
 			return True
-		except ValidationError, e:
+		except ValidationError as e:
 			lgr.info("URL Validation Error: %s" % e)
 			return False
 
@@ -73,7 +73,7 @@ class Wrappers:
 				response = b.getvalue()
 
 				payload = json.loads(response)
-		except Exception, e:
+		except Exception as e:
 			lgr.info("Error Posting Request: %s" % e)
 			payload['response_status'] = '96'
 
@@ -86,11 +86,11 @@ class Wrappers:
 			if 'credentials' not in key and \
 			 'validate_pin' not in key and 'access_level' not in key and \
 			 'sec_hash' not in key and 'ip_address' not in key and \
-			 key <> 'service' and key <> 'lat' and key <> 'lng' and \
-			 key <> 'chid' and 'session' not in key and 'csrf_token' not in key and \
+			 key != 'service' and key != 'lat' and key != 'lng' and \
+			 key != 'chid' and 'session' not in key and 'csrf_token' not in key and \
 			 'csrfmiddlewaretoken' not in key and 'gateway_host' not in key and \
 			 'gateway_profile' not in key and \
-			 key <> 'gpid' and key <> 'sec' and key <> 'response':
+			 key != 'gpid' and key != 'sec' and key != 'response':
 				new_payload[str(k)] = str(v)
 
 
@@ -116,7 +116,7 @@ class Wrappers:
 					count = count+1
 
 			payload = json.dumps(new_payload)
-		except Exception, e: 
+		except Exception as e: 
 			pass
 			#lgr.info('Error on Response Payload: %s' % e)
 		return payload
@@ -135,16 +135,16 @@ class Wrappers:
 			 'validate_pin' not in key and 'password' not in key and 'confirm_password' not in key and \
 			 'pin' not in key and 'access_level' not in key and \
 			 'response_status' not in key and 'sec_hash' not in key and 'ip_address' not in key and \
-			 key <> 'service' and key <> 'lat' and key <> 'lng' and \
-			 key <> 'chid' and 'session' not in key and 'csrf_token' not in key and \
+			 key != 'service' and key != 'lat' and key != 'lng' and \
+			 key != 'chid' and 'session' not in key and 'csrf_token' not in key and \
 			 'csrfmiddlewaretoken' not in key and 'gateway_host' not in key and \
 			 'gateway_profile' not in key and 'transaction_timestamp' not in key and \
 			 'action_id' not in key and 'bridge__transaction_id' not in key and \
 			 'merchant_data' not in key and 'signedpares' not in key and \
-			 key <> 'gpid' and key <> 'sec' and \
+			 key != 'gpid' and key != 'sec' and \
 			 key not in ['vpc_securehash','currency','amount'] and \
-			 'institution_id' not in key and key <> 'response' and key <> 'input' and 'url' not in key and \
-			 'availablefund' not in key and key <> 'repeat_bridge_transaction' and key <> 'transaction_auth':
+			 'institution_id' not in key and key != 'response' and key != 'input' and 'url' not in key and \
+			 'availablefund' not in key and key != 'repeat_bridge_transaction' and key != 'transaction_auth':
 				if count <= 30:
 					new_payload[str(k)[:30] ] = str(v)[:40]
 				else:
@@ -164,7 +164,7 @@ class System(Wrappers):
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Captrued Payment Details'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Payment Details: %s" % e)
 		return payload
@@ -179,7 +179,7 @@ class System(Wrappers):
 			else:
 				payload['response_status'] = '25'
 				payload['response'] = 'No float amount to capture'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Float to Amount: %s" % e)
 		return payload
@@ -194,7 +194,7 @@ class System(Wrappers):
 			else:
 				payload['response_status'] = '25'
 				payload['response'] = 'No amount to capture'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Amount to Float: %s" % e)
 		return payload
@@ -296,7 +296,7 @@ class System(Wrappers):
 			else:
 					payload['response_status'] = '25'
 					payload['response'] = 'Remittance Product Not Found'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Payment Notification: %s" % e)
 		return payload
@@ -340,7 +340,7 @@ class System(Wrappers):
 				payload['response_status'] = '25'
 				payload['response'] = 'No Remit Request Found'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Remit Confirmation: %s" % e)
 		return payload
@@ -380,7 +380,7 @@ class System(Wrappers):
 					'''
 					if 'currency' in payload.keys() and payload['currency'] not in ["",None]:
 						currency = Currency.objects.get(code=payload['currency'])
-						if currency <> remittance_product[0].remittance.institution_till.till_currency:
+						if currency != remittance_product[0].remittance.institution_till.till_currency:
 							till_currency = remittance_product[0].remittance.institution_till.till_currency
 							payload['currency'] = till_currency.code
 							forex = Forex.objects.filter(base_currency=currency, quote_currency=till_currency)
@@ -516,12 +516,12 @@ class System(Wrappers):
 
 			except ProductItem.DoesNotExist:
 				lgr.info("ProdutItem Does not Exist")
-                        	payload['response_status'] = '25'
+				payload['response_status'] = '25'
 
-                except Exception, e:
-                        payload['response_status'] = '96'
-                        lgr.info("Error on Remittance: %s" % e)
-                return payload
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Remittance: %s" % e)
+		return payload
 
 	@transaction.atomic
 	def credit_float(self, payload, node_info):
@@ -555,7 +555,7 @@ class System(Wrappers):
 
 
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = FloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = FloatManager.objects.select_for_update(of=('self',),nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
 				if 'institution_id' in payload.keys():
 					float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
@@ -628,10 +628,10 @@ class System(Wrappers):
 				payload['response'] = 'No float amount to Credit'
 				payload['response_status'] = '00'
 
-		except DatabaseError, e:
+		except DatabaseError as e:
 			transaction.set_rollback(True)
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Crediting Float: %s" % e)
 		return payload
@@ -668,7 +668,7 @@ class System(Wrappers):
 
 
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = AgentFloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = AgentFloatManager.objects.select_for_update(of=('self',),nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
 				if 'agent_id' in payload.keys():
 					float_balance = float_balance.filter(Q(agent__id=payload['agent_id'])|Q(agent=None))
@@ -741,10 +741,10 @@ class System(Wrappers):
 				payload['response'] = 'No float amount to Credit'
 				payload['response_status'] = '00'
 
-		except DatabaseError, e:
+		except DatabaseError as e:
 			transaction.set_rollback(True)
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Crediting Float: %s" % e)
 		return payload
@@ -782,7 +782,7 @@ class System(Wrappers):
 
 
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = FloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = FloatManager.objects.select_for_update(of=('self',),nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
 
 				if 'institution_id' in payload.keys():
@@ -850,18 +850,18 @@ class System(Wrappers):
 					#check last entry balance_bf
 					#Create a debit entry with float_amount entry and deducted balance_bf
 					payload['response'] = 'Float Credited with: %s balance: %s' % (payload['float_amount'], balance_bf)
-                     			payload['response_status'] = '00'
+					payload['response_status'] = '00'
 				else:
-	       	 		        payload['response'] = 'No float amount to Reverse'
+					payload['response'] = 'No float amount to Reverse'
 					payload['response_status'] = '00'
 
 			elif Decimal(payload['float_amount']) <= 0:
-           		        payload['response'] = 'No float amount to reverse debit'
+				payload['response'] = 'No float amount to reverse debit'
 				payload['response_status'] = '00'
-		except DatabaseError, e:
+		except DatabaseError as e:
 			transaction.set_rollback(True)
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Crediting Float: %s" % e)
 		return payload
@@ -898,7 +898,7 @@ class System(Wrappers):
 				float_type = float_type.filter(product_type=None)
 			lgr.info('Float Type: %s' % float_type)
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = FloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = FloatManager.objects.select_for_update(of=('self',),nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
 				if 'institution_id' in payload.keys():
 					float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
@@ -971,15 +971,15 @@ class System(Wrappers):
 					lgr.info("No Float")
 					payload['response_status'] = '51'
 			elif Decimal(payload['float_amount']) <= Decimal(0):
-       	 		        payload['response'] = 'No float amount to debit'
+				payload['response'] = 'No float amount to debit'
 				payload['response_status'] = '00'
 			else:
 				lgr.info("No Float")
 				payload['response_status'] = '51'
 
-		except DatabaseError, e:
+		except DatabaseError as e:
 			transaction.set_rollback(True)
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = 'Error %s' % e
 			payload['response_status'] = '96'
 			lgr.info("Error on Debiting Float: %s" % e)
@@ -1018,7 +1018,7 @@ class System(Wrappers):
 
 
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = AgentFloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = AgentFloatManager.objects.select_for_update(of=('self',),nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
 
 				if 'agent_id' in payload.keys():
@@ -1094,10 +1094,10 @@ class System(Wrappers):
 			elif Decimal(payload['float_amount']) <= 0:
 				payload['response'] = 'No float amount to reverse debit'
 				payload['response_status'] = '00'
-		except DatabaseError, e:
+		except DatabaseError as e:
 			transaction.set_rollback(True)
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Crediting Float: %s" % e)
 		return payload
@@ -1134,7 +1134,7 @@ class System(Wrappers):
 				float_type = float_type.filter(product_type=None)
 			lgr.info('Float Type: %s' % float_type)
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = AgentFloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = AgentFloatManager.objects.select_for_update(of=('self',),nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
 				if 'agent_id' in payload.keys():
 					float_balance = float_balance.filter(Q(agent__id=payload['agent_id'])|Q(agent=None))
@@ -1213,9 +1213,9 @@ class System(Wrappers):
 				lgr.info("No Float")
 				payload['response_status'] = '51'
 
-		except DatabaseError, e:
+		except DatabaseError as e:
 			transaction.set_rollback(True)
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = 'Error %s' % e
 			payload['response_status'] = '96'
 			lgr.info("Error on Debiting Float: %s" % e)
@@ -1239,10 +1239,10 @@ class System(Wrappers):
 
 				#check float exists
 				if float_balance.exists() and Decimal(float_balance[0].balance_bf) >= Decimal(payload['float_amount']):
-                       			payload['response_status'] = '00'
+		       			payload['response_status'] = '00'
 
 				elif int(payload['float_amount']) == 0:
-                       			payload['response_status'] = '00'
+		       			payload['response_status'] = '00'
 
 				else:
 					lgr.info("No Float")
@@ -1272,9 +1272,9 @@ class System(Wrappers):
 
 				lgr.info('Contact List Count: %s' % contact_list_count)
 				message = payload['message'].strip()
-	        	        message = unescape(message)
-				message = smart_str(message)
-	                	message = escape(message)
+				message = unescape(message)
+				message = smart_text(message)
+				message = escape(message)
 				chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters
 				messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
 				messages_count = len(messages)
@@ -1298,7 +1298,7 @@ class System(Wrappers):
 
 				payload = check(float_type[0], payload)
 
-				if 'response_status' in payload.keys() and payload['response_status'] <> '00':
+				if 'response_status' in payload.keys() and payload['response_status'] != '00':
 					float_exists = False
 					break
 
@@ -1309,9 +1309,9 @@ class System(Wrappers):
 					contact_list_count = contact.filter(product__id=contact_product['product__id']).distinct('gateway_profile__msisdn__phone_number').count()
 
 					message = payload['message'].strip()
-		        	        message = unescape(message)
-					message = smart_str(message)
-		                	message = escape(message)
+					message = unescape(message)
+					message = smart_text(message)
+					message = escape(message)
 					chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters
 					messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
 					messages_count = len(messages)
@@ -1326,7 +1326,7 @@ class System(Wrappers):
 
 					#payload['product_type_id'] = notification_product.notification.product_type.id
 
- 					payload['float_amount'] = Decimal(contact_list_count * contact_product['product__unit_credit_charge'] * messages_count)
+					payload['float_amount'] = Decimal(contact_list_count * contact_product['product__unit_credit_charge'] * messages_count)
 
 					if notification_product.notification.code.institution:
 						payload['institution_id'] = notification_product.notification.code.institution.id
@@ -1339,7 +1339,7 @@ class System(Wrappers):
 
 				payload['response'] = response
 
-                except Exception, e:
+		except Exception as e:
 			payload['response'] = 'Error %s' % e
 			payload['response_status'] = '96'
 			lgr.info("Error on Debiting Float: %s" % e)
@@ -1364,10 +1364,10 @@ class System(Wrappers):
 
 				#check float exists
 				if float_balance.exists() and Decimal(float_balance[0].balance_bf) >= Decimal(payload['float_amount']):
-                       			payload['response_status'] = '00'
+		       			payload['response_status'] = '00'
 
 				elif int(payload['float_amount']) == 0:
-                       			payload['response_status'] = '00'
+		       			payload['response_status'] = '00'
 
 				else:
 					lgr.info("No Float")
@@ -1387,9 +1387,9 @@ class System(Wrappers):
 
 				contact_list_count = Contact.objects.filter(product=notification_product,subscribed=True,status__name='ACTIVE').count()
 				message = payload['message'].strip()
-		                message = unescape(message)
-				message = smart_str(message)
-	                	message = escape(message)
+				message = unescape(message)
+				message = smart_text(message)
+				message = escape(message)
 				chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters
 				messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
 				messages_count = len(messages)
@@ -1410,7 +1410,7 @@ class System(Wrappers):
 
 				payload = check(float_type[0], payload)
 
-				if 'response_status' in payload.keys() and payload['response_status'] <> '00':
+				if 'response_status' in payload.keys() and payload['response_status'] != '00':
 					float_exists = False
 					break
 
@@ -1422,9 +1422,9 @@ class System(Wrappers):
 
 					contact_list_count = Contact.objects.filter(product=notification_product,subscribed=True,status__name='ACTIVE').count()
 					message = payload['message'].strip()
-			                message = unescape(message)
-					message = smart_str(message)
-	                		message = escape(message)
+					message = unescape(message)
+					message = smart_text(message)
+					message = escape(message)
 					chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters
 					messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
 					messages_count = len(messages)
@@ -1450,7 +1450,7 @@ class System(Wrappers):
 
 				payload['response'] = response
 
-                except Exception, e:
+		except Exception as e:
 			payload['response'] = 'Error %s' % e
 			payload['response_status'] = '96'
 			lgr.info("Error on Debiting Float: %s" % e)
@@ -1460,7 +1460,7 @@ class System(Wrappers):
 		try:
 			payload['response'] = 'Payment Logged'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Payment Log: %s" % e)
 		return payload
@@ -1469,7 +1469,7 @@ class System(Wrappers):
 		try:
 			payload['response'] = 'Reversed Payment Logged'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Reversing Payment Log: %s" % e)
 		return payload
@@ -1478,7 +1478,7 @@ class System(Wrappers):
 		try:
 			payload['response'] = 'Remit Charges %s' % payload['amount']
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Remit Charges: %s" % e)
 		return payload
@@ -1500,7 +1500,7 @@ def send_payment(outgoing):
 		lgr.info("Non-realtime Remit")
 		if i.request not in [None, ""]:
 			try:payload.update(json.loads(i.request))
-			except Exception, e: lgr.info('Failed to update Request: %s' % e)
+			except Exception as e: lgr.info('Failed to update Request: %s' % e)
 
 		node = i.remittance_product.endpoint.url
 
@@ -1542,7 +1542,7 @@ def send_payment(outgoing):
 			i.response_status = ResponseStatus.objects.get(response='06')
 			payload['response_status'] = '06'
 		i.save()
-	except Exception, e:
+	except Exception as e:
 		lgr.info('Error Sending Payment: %s' % e)
 
 
@@ -1554,7 +1554,7 @@ def send_payment_deprecated(payload,node):
 	payload = json.loads(payload)
 	i = Outgoing.objects.get(id=payload['id'])
 	try:
-		if i.state.name <> 'PROCESSING':
+		if i.state.name != 'PROCESSING':
 			i.sends = i.sends+1
 			i.state = OutgoingState.objects.get(name='PROCESSING')
 			i.save()
@@ -1577,7 +1577,7 @@ def send_payment_deprecated(payload,node):
 			i.response_status = ResponseStatus.objects.get(response='06')
 			payload['response_status'] = '06'
 		i.save()
-	except Exception, e:
+	except Exception as e:
 		lgr.info('Error Sending Payment: %s' % e)
 
 
@@ -1588,13 +1588,12 @@ def service_call(payload):
 	from primary.core.api.views import ServiceCall
 	try:
 		payload = json.loads(payload)
-		payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
-
+		payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
 		service = Service.objects.get(id=payload['service_id'])
 		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 		payload = ServiceCall().api_service_call(service, gateway_profile, payload)
 		lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
-	except Exception, e:
+	except Exception as e:
 		payload['response_status'] = '96'
 		lgr.info('Unable to make service call: %s' % e)
 	return payload
@@ -1618,7 +1617,7 @@ def process_incoming_poller(ic):
 		params = ip.remittance_product.endpoint.request
 
 		try:params.update(json.loads(ip.request))
-		except Exception, e: lgr.info('Failed to update Request: %s' % e)
+		except Exception as e: lgr.info('Failed to update Request: %s' % e)
 
 		params['account_id'] = ip.remittance_product.endpoint.account_id
 		params['username'] = ip.remittance_product.endpoint.username
@@ -1657,7 +1656,7 @@ def process_incoming_poller(ic):
 		ip.status = IncomingPollerStatus.objects.get(name='PROCESSED')
 		ip.next_run = timezone.now() + timezone.timedelta(seconds=ip.frequency.run_every)
 		ip.save()
-	except Exception, e:
+	except Exception as e:
 		lgr.info('Error processing incoming_poller: %s ' % e)
 
 @app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
@@ -1670,7 +1669,7 @@ def incoming_poller():
 	try:
 		lgr.info('Poller 1')
 
-		orig_incoming_poller = IncomingPoller.objects.select_for_update().filter(Q(status__name='PROCESSED'),Q(next_run__lte=timezone.now()))
+		orig_incoming_poller = IncomingPoller.objects.select_for_update(of=('self',)).filter(Q(status__name='PROCESSED'),Q(next_run__lte=timezone.now()))
 
 		lgr.info('Poller 1.1: %s' % orig_incoming_poller)
 		incoming = list(orig_incoming_poller.values_list('id',flat=True)[:100])
@@ -1681,7 +1680,7 @@ def incoming_poller():
 			lgr.info('Poller 2: %s' % ic)
 			process_incoming_poller.delay(ic)
 			lgr.info('Poller 2.1: %s' % ic)
-	except Exception, e:
+	except Exception as e:
 		lgr.info('Error on Incoming Poller: %s' % e)
 
 
@@ -1694,7 +1693,7 @@ def send_paygate_outgoing():
 	lgr = get_task_logger(__name__)
 	#Check for created outbounds or processing and gte(last try) 4 hours ago within the last 3 days| Check for failed transactions within the last 10 minutes
 	try:
-		orig_outgoing = Outgoing.objects.select_for_update().filter(Q(scheduled_send__lte=timezone.now()),\
+		orig_outgoing = Outgoing.objects.select_for_update(of=('self',)).filter(Q(scheduled_send__lte=timezone.now()),\
 					Q(Q(remittance_product__realtime=False),Q(state__name='CREATED'))|Q(state__name='RESEND'),\
 					~Q(response_status__action__in=['0']),\
 					~Q(remittance_product__endpoint=None),Q(remittance_product__remittance__status__name='ACTIVE'))
@@ -1703,7 +1702,7 @@ def send_paygate_outgoing():
 		processing = orig_outgoing.filter(id__in=outgoing).update(state=OutgoingState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
 		for og in outgoing:
 			send_payment.delay(og)
-	except Exception, e:
+	except Exception as e:
 		lgr.info('Error on Send Paygate Outgoing: %s' % e)
 
 
@@ -1715,7 +1714,7 @@ def send_paygate_outgoing_deprecated():
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	#Check for created outbounds or processing and gte(last try) one hour ago | Send all non realtime created and resends all, realtime and non-relatime
-	outgoing = Outgoing.objects.select_for_update().filter(Q(scheduled_send__lte=timezone.now()),\
+	outgoing = Outgoing.objects.select_for_update(of=('self',)).filter(Q(scheduled_send__lte=timezone.now()),\
 				Q(Q(remittance_product__realtime=False),Q(state__name='CREATED'))|Q(state__name='RESEND'),\
 				~Q(response_status__action__in=['0']),\
 				~Q(remittance_product__endpoint=None),Q(remittance_product__remittance__status__name='ACTIVE'))[:100]
@@ -1730,7 +1729,7 @@ def send_paygate_outgoing_deprecated():
 			lgr.info("Non-realtime Remit")
 			if i.request not in [None, ""]:
 				try:payload.update(json.loads(i.request))
-				except Exception, e: lgr.info('Failed to update Request: %s' % e)
+				except Exception as e: lgr.info('Failed to update Request: %s' % e)
 
 			params = payload.copy()
 			node = i.remittance_product.endpoint.url
@@ -1759,10 +1758,10 @@ def send_paygate_outgoing_deprecated():
 			lgr.info('Endpoint: %s' % node)
 			params['id'] = i.id
 
-	    		params = json.dumps(params, cls=DjangoJSONEncoder)
+			params = json.dumps(params, cls=DjangoJSONEncoder)
 			send_payment_deprecated.delay(params, node)
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error sending paygate outgoing item: %s | %s' % (i,e))
 
 
@@ -1774,7 +1773,7 @@ def send_paygate_outgoing_deprecated():
 def process_incoming_payments():
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
-	incoming = Incoming.objects.select_for_update().filter(Q(processed=False),~Q(institution_incoming_service=None),Q( date_modified__lte=timezone.now()-timezone.timedelta(seconds=2) ))[:10]
+	incoming = Incoming.objects.select_for_update(of=('self',)).filter(Q(processed=False),~Q(institution_incoming_service=None),Q( date_modified__lte=timezone.now()-timezone.timedelta(seconds=2) ))[:10]
 
 	for c in incoming:
 		try:
@@ -1812,7 +1811,7 @@ def process_incoming_payments():
 					bridgetasks.background_service_call.delay(service.name, gateway_profile_list[0].id, payload)
 					'''
 					try:service_call(payload)
-					except Exception, e: lgr.info('Error on Service Call: %s' % e)
+					except Exception as e: lgr.info('Error on Service Call: %s' % e)
 					'''
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error processing paid order item: %s | %s' % (c,e))

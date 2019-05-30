@@ -5,11 +5,9 @@ from celery import task
 from switch.celery import app
 from celery.utils.log import get_task_logger
 
-from SimpleXMLRPCServer import SimpleXMLRPCDispatcher
 from django.template import Context, loader
 from django.shortcuts import render
 from django.shortcuts import HttpResponseRedirect, HttpResponse
-from django.core.urlresolvers import reverse
 import simplejson as json
 from django.core.exceptions import PermissionDenied
 from secondary.channels.vcs.models import *
@@ -18,7 +16,7 @@ import os, random, string
 from django.db.models import Q
 from itertools import chain
 import base64
-from django.utils.encoding import smart_str
+from django.utils.encoding import smart_text
 from django.core.mail import EmailMultiAlternatives
 from django.utils.http import urlquote
 
@@ -32,22 +30,22 @@ class Wrappers:
 		lgr = get_task_logger(__name__)
 		lgr.info('Sending Email')
 		try:
-                        subject, from_email, to = payload['name']+': '+payload["SERVICE"].title(), payload['name']+'<noreply@'+payload['gateway_host']+'>', payload["email"]
-                        text_content = 'For more info, go to http://%s.' % payload["gateway_host"]
-		
+			subject, from_email, to = payload['name']+': '+payload["SERVICE"].title(), payload['name']+'<noreply@'+payload['gateway_host']+'>', payload["email"]
+			text_content = 'For more info, go to http://%s.' % payload["gateway_host"]
+
 			url = {'sec': payload['session'],'SERVICE':'EMAIL VERIFICATION','gpid':payload['session_gateway_profile_id']}
 			import urllib
 			main_url = 'http://'+payload['gateway_host']+'/index/#?'+urllib.urlencode(url)
-                        html_content = loader.get_template('send_mail.html') #html template with utf-8 charset
-                        d = Context({'main_url':main_url,'payload':payload})
-                        html_content = html_content.render(d)
-                        html_content = smart_str(html_content)
-                        msg = EmailMultiAlternatives(subject, text_content, from_email, [to.strip()], headers={'Reply-To': 'No Reply'})
+			html_content = loader.get_template('send_mail.html') #html template with utf-8 charset
+			d = Context({'main_url':main_url,'payload':payload})
+			html_content = html_content.render(d)
+			html_content = smart_str(html_content)
+			msg = EmailMultiAlternatives(subject, text_content, from_email, [to.strip()], headers={'Reply-To': 'No Reply'})
 
-                        msg.attach_alternative(html_content, "text/html")
-                        msg.send()              
+			msg.attach_alternative(html_content, "text/html")
+			msg.send()	      
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error Sending Mail: %s' % e)
 
 		except BadHeaderError:
@@ -97,7 +95,7 @@ class System(Wrappers):
 
 			payload['response'] = 'USSD Menu Created'
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Creating USSD Menu Failed: %s' % e)
 			payload['response_status'] = '96'
 
@@ -153,20 +151,20 @@ class System(Wrappers):
 			payload['session'] = urlquote(encoded_session)
 			payload['response'] = encoded_session
 			payload['response_status'] = '00'
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Creating Session Failed: %s' % e)
 			payload['response_status'] = '96'
 
 		return payload
 
 	def email_credentials(self, payload, node_info):
-                try:
+		try:
 			lgr.info('Payload: %s' % payload)
 			self.send_email.delay(payload, node_info)
 			payload['response_status'] = '00'
-                        payload['response'] = 'Credentials Sent'
+			payload['response'] = 'Credentials Sent'
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error Sending Mail: %s' % e)
 			payload['response'] = 'Error Sending email'
 			payload['response_status'] = '96'

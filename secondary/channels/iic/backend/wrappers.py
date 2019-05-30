@@ -23,7 +23,7 @@ class Wrappers:
 					p = '['+v+']'
 					json.loads(p)
 					not_json = False
-				except Exception, e: lgr.info('Default Value not JSON: %s' % default_value5)
+				except Exception as e: lgr.info('Default Value not JSON: %s' % default_value5)
 
 
 				if v in payload.keys() and not_json:
@@ -54,7 +54,7 @@ class Wrappers:
 					p = '['+v+']'
 					json.loads(p)
 					not_json = False
-				except Exception, e: lgr.info('Default Value not JSON: %s' % default_value8)
+				except Exception as e: lgr.info('Default Value not JSON: %s' % default_value8)
 
 				if v in payload.keys() and not_json:
 					default_value8 = default_value8.replace('['+v+']',str(payload[v]))

@@ -62,7 +62,7 @@ class ProductItemAdmin(admin.ModelAdmin):
 				'kind','default_product','buying_cost','shop_product_type',\
 				'barcode',)
 		search_fields = ("id","name","description")
-	        list_filter = ('institution','product_type','product_type__product_category')
+		list_filter = ('institution','product_type','product_type__product_category')
 
 admin.site.register(ProductItem, ProductItemAdmin)
 

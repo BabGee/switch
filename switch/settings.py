@@ -7,22 +7,31 @@ import psycopg2
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-import ConfigParser
+#import ConfigParser
+import configparser
 from keyczar import keyczar
 
 location = '/opt/kz'
 crypter = keyczar.Crypter.Read(location)
 
-cf = ConfigParser.ConfigParser()
+#cf = ConfigParser.ConfigParser()
+
+cf = configparser.ConfigParser()
 cf.read('switch/conf/switch.properties')
 
 #print cf._sections
 
+#faust
+FAUST_BROKER_URL = 'kafka://localhost:9092'
+FAUST_STORE_URL = 'redis://'
 
-conf_products = cf.get('INSTALLED_APPS','products')
+
+try:conf_products = cf.get('INSTALLED_APPS','products')
+except:conf_products=''
 products=conf_products.split(",")
 
-conf_thirdparty = cf.get('INSTALLED_APPS','thirdparty')
+try:conf_thirdparty = cf.get('INSTALLED_APPS','thirdparty')
+except:conf_thirdparty = ''
 thirdparty=conf_thirdparty.split(",")
 
 
@@ -120,7 +129,7 @@ DATABASES = {
         'PASSWORD': dbpassword,
         'HOST': dbhost,                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': dbport,                      # Set to empty string for default.
-	#'CONN_MAX_AGE': '600',
+	'CONN_MAX_AGE': 600,
     }
 }
 
@@ -176,6 +185,7 @@ ROOT_URLCONF = 'switch.urls'
 
 WSGI_APPLICATION = 'switch.wsgi.application'
 
+
 '''
 INSTALLED_APPS = (
     'suit',
@@ -197,7 +207,6 @@ INSTALLED_APPS = (
 )
 '''
 INSTALLED_APPS = (
-    'suit',
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.auth',
@@ -210,16 +219,28 @@ INSTALLED_APPS = (
     'django_celery_beat',
 ) +  installed_apps
 
-MIDDLEWARE_CLASSES = (
+'''
+
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
+
+'''
+MIDDLEWARE = [
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
 
 '''
 #REQUEST CONTEXT PROCESSOR
@@ -253,7 +274,7 @@ TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 #VENV_ROOT = os.path.join(os.path.dirname(__file__), 'logs').replace('\\','/')
 VENV_ROOT = '/opt/logs/switch/'
 
-print VENV_ROOT
+#print VENV_ROOT
 
 LOGFILE='info.log'
 

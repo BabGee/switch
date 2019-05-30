@@ -11,7 +11,7 @@ from django.shortcuts import render
 from django.utils import timezone
 from django.utils.timezone import utc
 from django.contrib.gis.geos import Point
-from django.contrib.gis.geoip import GeoIP
+from django.contrib.gis.geoip2 import GeoIP2
 
 from django.db import IntegrityError
 import pytz, time, json, pycurl
@@ -24,10 +24,10 @@ from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
-import urllib, urllib2
+#import urllib, urllib2
 from django.db import transaction
 from xml.sax.saxutils import escape, unescape
-from django.utils.encoding import smart_str, smart_unicode
+from django.utils.encoding import smart_text
 from django.db.models import Q, F
 from django.db.models import Count, Sum, Max, Min, Avg
 from django.core.serializers.json import DjangoJSONEncoder
@@ -105,11 +105,11 @@ class Wrappers:
 
 		from primary.core.api.views import ServiceCall
 		try:
-			payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value)), payload.items()))
+			payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
 
 			payload = ServiceCall().api_service_call(service, gateway_profile, payload)
 			lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info('Unable to make service call: %s' % e)
 		return payload
@@ -127,40 +127,9 @@ class Wrappers:
 		try:
 			val(url)
 			return True
-		except ValidationError, e:
+		except ValidationError as e:
 			lgr.info("URL Validation Error: %s" % e)
 			return False
-
-	def post_request(self, payload, node):
-		try:
-			if self.validate_url(node):
-				jdata = json.dumps(payload)
-				#response = urllib2.urlopen(node, jdata, timeout = timeout)
-				#jdata = response.read()
-				#payload = json.loads(jdata)
-				c = pycurl.Curl()
-				#Timeout in 30 seconds
-				c.setopt(pycurl.CONNECTTIMEOUT, 20)
-				c.setopt(pycurl.TIMEOUT, 20)
-				c.setopt(pycurl.NOSIGNAL, 1)
-				c.setopt(pycurl.URL, str(node) )
-				c.setopt(pycurl.POST, 1)
-				content_type = 'Content-Type: application/json; charset=utf-8'
-				content_length = 'Content-Length: '+str(len(jdata))
-				header=[str(content_type),str(content_length)]
-				c.setopt(pycurl.HTTPHEADER, header)
-				c.setopt(pycurl.POSTFIELDS, str(jdata))
-				import StringIO
-				b = StringIO.StringIO()
-				c.setopt(pycurl.WRITEFUNCTION, b.write)
-				c.perform()
-				response = b.getvalue()
-				payload = json.loads(response)
-		except Exception, e:
-			lgr.info("Error Posting Request: %s" % e)
-			payload['response_status'] = '96'
-
-		return payload
 
 class System(Wrappers):
 	def update_notification_template(self, payload, node_info):
@@ -186,7 +155,7 @@ class System(Wrappers):
 				else:
 					payload['response'] = 'No Template to Update'
 					payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Updating Notification Template: %s" % e)
 		return payload
@@ -205,7 +174,7 @@ class System(Wrappers):
 			payload['response'] = 'Contact Group Created'
 			payload['response_status'] = '00'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Updating Notification Template: %s" % e)
 
@@ -259,7 +228,7 @@ class System(Wrappers):
 			payload['response'] = 'Template Saved'
 			payload['response_status'] = '00'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Updating Notification Template: %s" % e)
 
@@ -312,7 +281,7 @@ class System(Wrappers):
 			payload['response'] = 'Template Saved'
 			payload['response_status'] = '00'
 
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Updating Notification Template: %s" % e)
 
@@ -341,7 +310,7 @@ class System(Wrappers):
 			payload['response'] = 'Template Details Captured'
 			payload['response_status'] = '00'
 
-		except Exception, e:
+		except Exception as e:
 
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
@@ -367,7 +336,7 @@ class System(Wrappers):
 				payload['response_status'] = '26'
 				payload['response'] = 'Recipient Exists'
 			
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Add Recipient: %s" % e)
 		return payload
@@ -397,7 +366,7 @@ class System(Wrappers):
 				payload["response_status"] = "00"
 			else:
 				payload['response_status'] = "25"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Get Notification: %s" % e)
 		return payload
@@ -412,8 +381,8 @@ class System(Wrappers):
 
 				lng = payload['lng'] if 'lng' in payload.keys() else 0.0
 				lat = payload['lat'] if 'lat' in payload.keys() else 0.0
-	        	        trans_point = Point(float(lng), float(lat))
-				g = GeoIP()
+				trans_point = Point(float(lng), float(lat))
+				g = GeoIP2()
 
 
 
@@ -468,14 +437,14 @@ class System(Wrappers):
 					payload['postal_code'] = payload['recipient_postal_code']
 
 				if 'recipient_msisdn' in payload.keys():
-			 		payload['msisdn'] = str(payload['recipient_msisdn'])
+					payload['msisdn'] = str(payload['recipient_msisdn'])
 					msisdn = UPCWrappers().get_msisdn(payload)
 
 					if msisdn is not None:
 						payload['msisdn'] = msisdn
 						payload['response'] = 'MSISDN Changed to recipient'
 						payload["response_status"] = "00"
-				                payload['trigger'] = 'change_to_recipient%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+						payload['trigger'] = 'change_to_recipient%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 					else:
 						payload['response_status'] = '00'
 						payload['response'] = 'No Recipient Found'
@@ -490,7 +459,7 @@ class System(Wrappers):
 			else:
 				payload['response_status'] = '00'
 				payload['response'] = 'No Recipient Found'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Get Notification: %s" % e)
 		return payload
@@ -508,7 +477,7 @@ class System(Wrappers):
 				del payload['message']
 			payload['response_status'] = '00'
 			payload['response'] = 'Notification Initialized'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Init Notification: %s" % e)
 		return payload
@@ -534,7 +503,7 @@ class System(Wrappers):
 
 			payload['response_status'] = '00'
 			payload['response'] = 'Notification Initialized'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Init Notification: %s" % e)
 		return payload
@@ -549,7 +518,7 @@ class System(Wrappers):
 						Q(notification__channel__id=payload['chid'])|Q(notification__channel=None),
 						 Q(service__name=payload['SERVICE'])).\
 						prefetch_related('notification__code','product_type')
-
+			lgr.info(notification_product)
 			msisdn = UPCWrappers().get_msisdn(payload)
 			if msisdn is not None:
 				#Get/Filter MNO
@@ -569,6 +538,7 @@ class System(Wrappers):
 			elif 'session_gateway_profile_id' in payload.keys():
 				contact = Contact.objects.filter(product__in=[p for p in notification_product],gateway_profile__id=payload['session_gateway_profile_id'])
 				if contact.exists():
+					lgr.info(contact)
 					notification_product = notification_product.filter(id__in=[c.product.id for c in contact])
 
 			lgr.info('Notification Product: %s ' % notification_product)
@@ -679,9 +649,9 @@ class System(Wrappers):
 				#Calculate price per SMS per each 160 characters
 				if notification_product[0].notification.code.channel.name == 'SMS':
 					message = payload['message'].strip()
-			                message = unescape(message)
-					message = smart_str(message)
-		                	message = escape(message)
+					message = unescape(message)
+					message = smart_text(message)
+					message = escape(message)
 					chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters
 					messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
 					float_amount = float_amount*len(messages)
@@ -702,7 +672,7 @@ class System(Wrappers):
 			else:
 				payload['response'] = 'Notification Product Not found'
 				payload["response_status"] = "25"
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Get Notification: %s" % e)
 		return payload
@@ -718,18 +688,20 @@ class System(Wrappers):
 
 	def send_notification(self, payload, node_info):
 		try:
-
+			lgr.info('Got Here')
 			if 'notification_product_id' not in payload.keys():
 				payload['response'] = "Notification not found"
 				payload['response_status']= '25'
 
+				lgr.info('Got Here Failed')
 			else:
 				gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
+				lgr.info('Got Here')
 				ext_outbound_id = None
 				if "ext_outbound_id" in payload.keys():
 					ext_outbound_id = payload['ext_outbound_id']
-                                elif 'bridge__transaction_id' in payload.keys():
+				elif 'bridge__transaction_id' in payload.keys():
 					ext_outbound_id = payload['bridge__transaction_id']
 
 				try:date_obj = datetime.strptime(payload["scheduled_send"], '%d/%m/%Y %I:%M %p')
@@ -741,6 +713,7 @@ class System(Wrappers):
 					scheduled_send = timezone.now()
 				notification_product = NotificationProduct.objects.get(id=payload['notification_product_id'])
 
+				lgr.info('Got Here')
 				if 'session_gateway_profile_id' in payload.keys():
 					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 				else:
@@ -749,6 +722,7 @@ class System(Wrappers):
 				#Check if Contact exists in notification product
 				contact = Contact.objects.filter(product=notification_product, gateway_profile=session_gateway_profile) 
 
+				lgr.info('Got Here')
 				#Construct Message to send
 				if 'message' in payload.keys() and payload['message'] not in ['',None]:
 					message = payload['message']
@@ -756,6 +730,7 @@ class System(Wrappers):
 					if "linkid" in payload.keys():
 						contact = contact.filter(linkid=payload['linkid'])
 
+					lgr.info('Got Here')
 					status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
 					if not contact.exists():
 						details = json.dumps({})
@@ -782,9 +757,10 @@ class System(Wrappers):
 
 					message = payload['message'].strip()
 					message = unescape(message)
-					message = smart_str(message)
+					message = smart_text(message)
 					message = escape(message)
 
+					lgr.info('Got Here')
 					outbound = Outbound(contact=new_contact,message=message,scheduled_send=scheduled_send,state=state, sends=0)
 					if ext_outbound_id is not None:
 						outbound.ext_outbound_id = ext_outbound_id
@@ -806,6 +782,7 @@ class System(Wrappers):
 						else:
 							outbound.recipient = new_contact.gateway_profile.user.profile.id
 
+					lgr.info('Got Here')
 					if 'notification_template_id' in payload.keys():
 						template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
 						outbound.template = template
@@ -833,14 +810,18 @@ class System(Wrappers):
 
 						outbound.heading = heading
 
+					lgr.info('Got Here')
 					outbound.save()
 
+					lgr.info('Got Here')
 					payload['response'] = "Notification Sent. Please check %s" % notification_product.notification.code.channel.name
 					payload['response_status']= '00'
 				else:
+
+					lgr.info('Got Here No message')
 					payload['response'] = 'No message to send'
 					payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Send Notification: %s" % e)
 		return payload
@@ -904,7 +885,7 @@ class System(Wrappers):
 			else:
 				payload['response'] = 'Message not Found'
 			payload['response_status']= '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Processing Delivery Status: %s" % e)
 		return payload
@@ -1030,7 +1011,7 @@ class System(Wrappers):
 			else:
 				payload['response'] = "Notification Not Found"
 			payload['response_status']= '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on creating Notification: %s" % e)
 		return payload
@@ -1045,7 +1026,7 @@ class System(Wrappers):
 			
 			payload['response'] = 'Recipient UnSubscribed'
 			payload['response_status']= '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on UnSubscribing Recipient: %s" % e,exc_info=True)
 		return payload
@@ -1058,7 +1039,7 @@ class System(Wrappers):
 			
 			payload['response'] = 'Recipient Subscribed'
 			payload['response_status']= '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Subscribing Recipient: %s" % e,exc_info=True)
 		return payload
@@ -1074,7 +1055,7 @@ class System(Wrappers):
 			payload['inbound_message'] = response
 			payload['response'] = 'Message Got Got'
 			payload['response_status']= '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Getting Message: %s" % e)
 		return payload
@@ -1109,8 +1090,8 @@ class System(Wrappers):
 
 			#Message Len
 			message = payload['message'].strip()
-	                message = unescape(message)
-			message = smart_str(message)
+			message = unescape(message)
+			message = smart_text(message)
 			message = escape(message)
 			chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters
 			messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
@@ -1121,7 +1102,7 @@ class System(Wrappers):
 			payload['contact_id'] = new_contact.id
 			payload['response'] = 'Contact Group of %d Recipient(s) to receive %s message(s)' % (recipient_count, message_len)
 			payload['response_status']= '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Contact Group List Details: %s" % e)
 		return payload
@@ -1142,12 +1123,12 @@ class System(Wrappers):
 					contact_list_count = Contact.objects.filter(product=notification_product,subscribed=True,status__name='ACTIVE').count()
 					message = payload['message'].strip()
 					message = unescape(message)
-					message = smart_str(message)
+					message = smart_text(message)
 					message = escape(message)
 					chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters
 					messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
 					messages_count = len(messages)
- 					float_amount = Decimal(contact_list_count * notification_product.unit_credit_charge * messages_count)
+					float_amount = Decimal(contact_list_count * notification_product.unit_credit_charge * messages_count)
 					response = '%s | @ %s' % (response, float_amount)
 
 				payload['response'] = response
@@ -1155,7 +1136,7 @@ class System(Wrappers):
 			else:
 				payload['response'] = 'Notification Product Not Found'
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Notification Charges: %s" % e)
 		return payload
@@ -1195,7 +1176,7 @@ class System(Wrappers):
 			else:
 				payload['response'] = 'No Contact/Message to Send'
 				payload['response_status']= '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Log Outbound Message: %s" % e)
 		return payload
@@ -1235,7 +1216,7 @@ class System(Wrappers):
 				else:
 					payload['response'] = 'No Contact/Message to Send'
 					payload['response_status']= '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on Log Outbound Message: %s" % e)
@@ -1277,7 +1258,7 @@ class System(Wrappers):
 
 			payload['response'] = 'Inbox Message Successful'
 			payload['response_status']= '00'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Subscribe: %s" % e)
 		return payload
@@ -1383,12 +1364,12 @@ class System(Wrappers):
 						payload = System().get_profile(payload, {})
 						session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 						payload = contact_entry_subscription(payload, session_gateway_profile, notification_product, msisdn)
-					except Exception, e:
+					except Exception as e:
 						lgr.info('Error On creating gateway contact: %s' % e)
 			else:
 				payload['response'] = 'Notification Product Does not Exist'
 				payload['response_status'] = '25'
-		except Exception, e:
+		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Subscribe: %s" % e)
 		return payload
@@ -1409,7 +1390,7 @@ def send_contact_subscription(payload, node):
 		lgr.info("Payload: %s| Node: %s" % (payload, node) )
 
 		i = Contact.objects.get(id=payload['id'])
-		if i.status.name <> 'PROCESSING':
+		if i.status.name != 'PROCESSING':
 			i.status = ContactStatus.objects.get(name='PROCESSING')
 			i.save()
 
@@ -1435,7 +1416,7 @@ def send_contact_subscription(payload, node):
 			i.state = ContactStatus.objects.get(name='FAILED')
 			i.save()
 
-	except Exception, e:
+	except Exception as e:
 		lgr.info("Error on Sending Contact Subscription: %s" % e)
 
 @app.task(ignore_result=True)
@@ -1446,7 +1427,7 @@ def send_contact_unsubscription(payload, node):
 		payload = json.loads(payload)
 		lgr.info("Payload: %s| Node: %s" % (payload, node) )
 		i = Contact.objects.get(id=payload['id'])
-		if i.status.name <> 'PROCESSING':
+		if i.status.name != 'PROCESSING':
 			i.status = ContactStatus.objects.get(name='PROCESSING')
 			i.save()
 
@@ -1465,7 +1446,7 @@ def send_contact_unsubscription(payload, node):
 
 		i.save()
 
-	except Exception, e:
+	except Exception as e:
 		lgr.info("Error on Sending Contact: %s" % e)
 
 @app.task(ignore_result=True)
@@ -1483,7 +1464,7 @@ def notify_institution(payload, node):
 
 		payload['response'] = 'Institution Notified'
 		payload['response_status']= '00'
-	except Exception, e:
+	except Exception as e:
 		payload['response_status'] = '96'
 		lgr.info("Error on Notifying Institution: %s" % e)
 	return payload
@@ -1496,7 +1477,7 @@ def contact_unsubscription():
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	#Check for inactive contacts that are still subscribed and have an unsubscription_endpoint
-	contact = Contact.objects.select_for_update().filter(Q(subscribed=True),Q(status__name='INACTIVE'),\
+	contact = Contact.objects.select_for_update(of=('self',)).filter(Q(subscribed=True),Q(status__name='INACTIVE'),\
 			~Q(product__unsubscription_endpoint=None))[:10]
 
 	for i in contact:
@@ -1528,7 +1509,7 @@ def contact_unsubscription():
 			payload = json.dumps(payload, cls=DjangoJSONEncoder)
 			send_contact_unsubscription.delay(payload, node)
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error unsubscribing item: %s | %s' % (i,e))
 
 
@@ -1553,7 +1534,7 @@ def recipient_outbound_bulk_logger(payload, recipient_list, scheduled_send):
 			try: 
 				outbound = Outbound.objects.bulk_create(batch)
 				lgr.info('Succesfully Logged to Outbound')
-			except DatabaseError, e:
+			except DatabaseError as e:
 				lgr.info('Database Error, Retry Transaction')
 				transaction.set_rollback(True)
 
@@ -1581,7 +1562,7 @@ def recipient_outbound_bulk_logger(payload, recipient_list, scheduled_send):
 
 		'''
 		lgr.info('Recipient Outbound Bulk Logger Completed Task')
-	except Exception, e:
+	except Exception as e:
 		lgr.info("Error on Outbound Bulk Logger: %s" % e)
 
 
@@ -1616,7 +1597,7 @@ def contact_outbound_bulk_logger(payload, contact_list, scheduled_send):
 		if len(outbound_list)>0:
 			lgr.info('Outbound Bulk Logger Captured')
 			Outbound.objects.bulk_create(outbound_list)
-	except Exception, e:
+	except Exception as e:
 		lgr.info("Error on Outbound Bulk Logger: %s" % e)
 
 
@@ -1628,7 +1609,7 @@ def contact_subscription():
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	#Check for created outbounds or processing and gte(last try) one hour ago
-	contact = Contact.objects.select_for_update().filter(Q(subscribed=False),\
+	contact = Contact.objects.select_for_update(of=('self',)).filter(Q(subscribed=False),\
 			Q(status__name='ACTIVE')|Q(status__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=1)))[:10]
 
 	for i in contact:
@@ -1670,7 +1651,7 @@ def contact_subscription():
 				status = ContactStatus.objects.get(name='INACTIVE')
 				i.status = status
 			i.save()
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error subscribing item: %s | %s' % (i,e))
 
 
@@ -1683,8 +1664,8 @@ def send_outbound(message):
 
 		#add a valid phone number check
 		message = i.message
-                message = unescape(message)
-		message = smart_str(message)
+		message = unescape(message)
+		message = smart_text(message)
 		message = escape(message)
 
 		payload = {}
@@ -1764,7 +1745,7 @@ def send_outbound(message):
 			i.state = OutBoundState.objects.get(name='SENT')
 			i.save()
 
-	except Exception, e:
+	except Exception as e:
 		lgr.info("Error on Sending Outbound: %s" % e)
 
 
@@ -1792,7 +1773,7 @@ def send_outbound2(payload, node):
 		else:
 			outbound.state = OutBoundState.objects.get(name='FAILED')
 		outbound.save()
-	except Exception, e:
+	except Exception as e:
 		lgr.info("Error on Sending Outbound: %s" % e)
 
 
@@ -1802,9 +1783,8 @@ def send_outbound2(payload, node):
 def send_outbound_sms_messages():
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
-
 	#Check for created outbounds or processing and gte(last try) 4 hours ago within the last 3 days| Check for failed transactions within the last 10 minutes
-	orig_outbound = Outbound.objects.select_for_update().filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='SMS'),\
+	orig_outbound = Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='SMS'),\
 				~Q(recipient=None),~Q(recipient=''),\
 				Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 				|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
@@ -1813,9 +1793,10 @@ def send_outbound_sms_messages():
 	outbound = list(orig_outbound.values_list('id',flat=True)[:250])
 
 	processing = orig_outbound.filter(id__in=outbound).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
-	#for ob in outbound:
-	#	send_outbound.delay(ob)
-	map_iterator = map(send_outbound.delay, outbound)
+
+	for ob in outbound:
+		send_outbound.delay(ob)
+	#map_iterator = map(send_outbound.delay, outbound)
 	#x = np.array(outbound)
 	#vfunc = np.vectorize(send_outbound.delay)
 	#v_iterator = vfunc(x)
@@ -1829,7 +1810,7 @@ def send_outbound_email_messages():
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	#Check for created outbounds or processing and gte(last try) 4 hours ago within the last 3 days| Check for failed transactions within the last 10 minutes
-	outbound = Outbound.objects.select_for_update().filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='EMAIL'),\
+	outbound = Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='EMAIL'),\
 				Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 				|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 				|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=2),date_created__gte=timezone.now()-timezone.timedelta(hours=6)),\
@@ -1867,15 +1848,15 @@ def send_outbound_email_messages():
 					#d = Context({'message':unescape(i.message), 'gateway':gateway})
 					d = {'message':unescape(i.message), 'gateway':gateway}
 					html_content = html_content.render(d)
-					html_content = smart_str(html_content)
+					html_content = smart_text(html_content)
 					msg = EmailMultiAlternatives(subject, text_content, from_email, [to.strip()], headers={'Reply-To': from_email})
 
 					msg.attach_alternative(html_content, "text/html")
-					msg.send()              
+					msg.send()	      
 
 					i.state = OutBoundState.objects.get(name='SENT')
 
-				except Exception, e:
+				except Exception as e:
 					lgr.info('Error Sending Mail: %s' % e)
 					i.state = OutBoundState.objects.get(name='FAILED')
 
@@ -1888,7 +1869,7 @@ def send_outbound_email_messages():
 				i.state = OutBoundState.objects.get(name='FAILED')
 
 			i.save()
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error Sending item: %s | %s' % (i, e))
 
 
@@ -1925,8 +1906,8 @@ def send_bulk_sms():
 				service = Service.objects.get(name=service)
 				w = Wrappers()
 				try:w.service_call(w, service, gateway_profile, payload) #No async as float deduction needs sync
-				except Exception, e: lgr.info('Error on Service Call: %s' % e)
-		except Exception, e: lgr.info('Error On Send Bulk SMS: %s' % e)
+				except Exception as e: lgr.info('Error on Service Call: %s' % e)
+		except Exception as e: lgr.info('Error On Send Bulk SMS: %s' % e)
 
 
 '''
@@ -1950,8 +1931,8 @@ def add_gateway_bulk_contact():
 			gateway_profile = GatewayProfile.objects.get(id=295739)
 			service = Service.objects.get(name=service)
 			try:Wrappers().service_call.delay(service, gateway_profile, payload) #No async as float deduction needs sync
-			except Exception, e: lgr.info('Error on Service Call: %s' % e)
-		except Exception, e: lgr.info('Error On Add Notification Contact: %s' % e)
+			except Exception as e: lgr.info('Error on Service Call: %s' % e)
+		except Exception as e: lgr.info('Error On Add Notification Contact: %s' % e)
 
 '''
 
@@ -1990,14 +1971,14 @@ def add_bulk_contact():
 			service = Service.objects.get(name=service)
 			'''
 			try:Wrappers().service_call.delay(service, gateway_profile, payload) #No async as float deduction needs sync
-			except Exception, e: lgr.info('Error on Service Call: %s' % e)
+			except Exception as e: lgr.info('Error on Service Call: %s' % e)
 			'''
 
 			w = Wrappers()
 			try:w.service_call.apply_async((w, service, gateway_profile, payload), serializer='pickle')
-			except Exception, e: lgr.info('Error on Service Call: %s' % e)
+			except Exception as e: lgr.info('Error on Service Call: %s' % e)
 
-		except Exception, e: lgr.info('Error On Add Notification Contact: %s' % e)
+		except Exception as e: lgr.info('Error On Add Notification Contact: %s' % e)
 
 
 
@@ -2026,7 +2007,3 @@ def f():
 		p.terminate()
 
 '''
-
-
-
-

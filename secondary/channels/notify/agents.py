@@ -1,0 +1,25 @@
+import faust
+from faust.types import StreamT
+from switch.faust import app
+from .models import *
+
+from primary.core.administration.views import WebService
+import logging
+lgr = logging.getLogger('secondary.channels.notify')
+
+class Notification(faust.Record):
+    name: str
+    score: float
+    active: bool
+
+
+@app.agent()
+async def Test(alert: StreamT[Notification]):
+	async for a in alert:
+
+		lgr.info('Alert: %s' % a)
+		payload = WebService().post_request({}, 'http://192.168.137.21:732/test/notification/')
+		lgr.info('Response: %s' % payload)
+
+		yield payload['response']
+

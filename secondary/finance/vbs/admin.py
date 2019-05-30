@@ -50,7 +50,7 @@ class AccountManagerAdmin(admin.ModelAdmin):
 			'incoming_payment','outgoing_payment','status','purchase_order',)
 	list_filter = ('credit','source_account__account_type__gateway','dest_account__account_type__gateway',\
 			'source_account__account_type','dest_account__account_type','credit_paid','credit_overdue','updated','status',)
-        search_fields = ('id','transaction_reference','source_account__profile__user__username',\
+	search_fields = ('id','transaction_reference','source_account__profile__user__username',\
 			'dest_account__profile__user__username',\
 			'source_account__profile__user__last_name',\
 			'dest_account__profile__user__last_name',\

@@ -1,15 +1,16 @@
 from django.shortcuts import HttpResponseRedirect, HttpResponse
-import simplejson as json
+import json
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth import authenticate
 from primary.core.api.views import *
 from primary.core.bridge.models import Service
 from primary.core.upc.models import Profile
 from django.views.decorators.csrf import csrf_protect
-from django.contrib.gis.geoip import GeoIP
+from django.contrib.gis.geoip2 import GeoIP2
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 import pytz, time, json, pycurl
+from io import StringIO, BytesIO
 
 import logging
 lgr = logging.getLogger('primary.core.administration')
@@ -20,47 +21,46 @@ class WebService:
 		try:
 			val(url)
 			return True
-		except ValidationError, e:
+		except ValidationError as e:
 			lgr.info("URL Validation Error: %s" % e)
 			return False
 
-        def post_request(self, payload, node, timeout=30):
-                try:
-                        if self.validate_url(node):
-                                jdata = json.dumps(payload)
-                                #response = urllib2.urlopen(node, jdata, timeout = timeout)
-                                #jdata = response.read()
-                                #payload = json.loads(jdata)
-                                c = pycurl.Curl()
-                                #Timeout in 30 seconds
-                                c.setopt(c.CONNECTTIMEOUT, timeout)
-                                c.setopt(c.VERBOSE, True)
-                                c.setopt(c.FOLLOWLOCATION, True)
-                        	c.setopt(c.USERAGENT, 'InterIntel Switch')
-                                c.setopt(c.CONNECTTIMEOUT, timeout)
-                                c.setopt(c.TIMEOUT, timeout)
-                                c.setopt(c.NOSIGNAL, 1)
-                                c.setopt(c.URL, str(node) )
-                                c.setopt(c.POST, 1)
-                                content_type = 'Content-Type: application/json; charset=utf-8'
-                                content_length = 'Content-Length: '+str(len(jdata))
-                                header=[str(content_type),str(content_length)]
-                                c.setopt(c.HTTPHEADER, header)
-                                c.setopt(c.POSTFIELDS, str(jdata))
-                                import StringIO
-                                b = StringIO.StringIO()
-                                c.setopt(c.WRITEFUNCTION, b.write)
-                                c.perform()
-                                response = b.getvalue()
-                                payload = json.loads(response)
-                except Exception, e:
-                        lgr.info("Error Posting Request: %s" % e)
-                        payload['response_status'] = '96'
-                        
-                return payload
+	def post_request(self, payload, node, timeout=30):
+		try:
+			if self.validate_url(node):
+				jdata = json.dumps(payload)
+				#response = urllib2.urlopen(node, jdata, timeout = timeout)
+				#jdata = response.read()
+				#payload = json.loads(jdata)
+				c = pycurl.Curl()
+				#Timeout in 30 seconds
+				c.setopt(c.CONNECTTIMEOUT, timeout)
+				c.setopt(c.VERBOSE, True)
+				c.setopt(c.FOLLOWLOCATION, True)
+				c.setopt(c.USERAGENT, 'InterIntel Switch')
+				c.setopt(c.CONNECTTIMEOUT, timeout)
+				c.setopt(c.TIMEOUT, timeout)
+				c.setopt(c.NOSIGNAL, 1)
+				c.setopt(c.URL, str(node) )
+				c.setopt(c.POST, 1)
+				content_type = 'Content-Type: application/json; charset=utf-8'
+				content_length = 'Content-Length: '+str(len(jdata))
+				header=[str(content_type),str(content_length)]
+				c.setopt(c.HTTPHEADER, header)
+				c.setopt(c.POSTFIELDS, str(jdata))
+				b = BytesIO()
+				c.setopt(c.WRITEFUNCTION, b.write)
+				c.perform()
+				response = b.getvalue().decode('UTF-8')
+				payload = json.loads(response)
+		except Exception as e:
+			lgr.info("Error Posting Request: %s" % e)
+			payload['response_status'] = '96'
+			
+		return payload
 
-        def create_payload(self, request, payload):
-                lgr.info('Started Creating Payload')
+	def create_payload(self, request, payload):
+		lgr.info('Started Creating Payload')
 
 		ip_address = request.META.get('REMOTE_ADDR')
 
@@ -68,7 +68,7 @@ class WebService:
 		def on_site(request, payload):
 			payload['chid'] = '1'
 			payload['gateway'] = 'SWITCH'
-			g = GeoIP()
+			g = GeoIP2()
 			city = g.city(ip_address)
 			lgr.info('City: %s' % city)
 			if city is not None:
@@ -91,7 +91,7 @@ class WebService:
 			payload_check = on_site(request, payload)
 			if payload_check.status_code == 403:
 				lgr.info('Did Not Pass Onsite Check')
-				if payload['ip_address'] <> ip_address:
+				if payload['ip_address'] != ip_address:
 					lgr.info('IP ADDRESS: %s' % ip_address)
 					payload['ip_address'] = None
 			elif payload_check.status_code == 200:
@@ -102,10 +102,10 @@ class WebService:
 				pass
 			lgr.info('Payload with Protect: %s' % str(payload)[:100])
 
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error on Protect: %s ' % e)
 
-                return payload
+		return payload
 
 
 	def response_processor(self, request, service, payload):
@@ -128,7 +128,7 @@ class WebService:
 					request.session['session_id'] = payload['response']['session']
 			else:
 				lgr.info('Failed Transaction')
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error Processing response: %s' % e)
 			payload['response_status'] = '96'
 
@@ -157,7 +157,7 @@ class WebService:
 				payload['response_status'] = '96'
 			#return HttpResponseRedirect(reverse('polls:results', payload))
 			lgr.info('Final Payload: %s' % str(payload)[:100])	
-		except Exception, e:
+		except Exception as e:
 			lgr.info('Error Processing request: %s' % e)
 			payload['response_status'] = '96'
 
