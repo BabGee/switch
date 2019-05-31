@@ -12,7 +12,7 @@ class InstitutionStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class MSISDN(models.Model):
@@ -22,7 +22,7 @@ class MSISDN(models.Model):
 	phone_regex = RegexValidator(regex=r'^\+\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
 	phone_number = models.CharField(validators=[phone_regex], max_length=15, unique=True) # validators should be a list
 	is_active = models.NullBooleanField(default=False)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.phone_number)
 
 class Institution(models.Model):
@@ -55,7 +55,7 @@ class Institution(models.Model):
 	registration_number = models.CharField(max_length=200, blank=True, null=True)
 	tax_pin = models.CharField(max_length=100, blank=True, null=True)
 	template = models.ForeignKey(Template, blank=True, null=True, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.name)
 	def gateway_list(self):
 		return "\n".join([a.name for a in self.gateway.all()])
@@ -67,7 +67,7 @@ class ProfileStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 		
 class Profile(models.Model):
@@ -96,7 +96,7 @@ class Profile(models.Model):
 	tax_pin = models.CharField(max_length=100, blank=True, null=True)
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
-	def __unicode__(self):
+	def __str__(self):
 		return '%s %s %s %s %s' % (self.user.username, self.user.first_name, self.user.last_name, self.national_id, self.user.email)
 
 class GatewayProfile(models.Model):#Enforce one gateway profile per gateway per user
@@ -116,7 +116,7 @@ class GatewayProfile(models.Model):#Enforce one gateway profile per gateway per 
 	activation_device_id = models.CharField(max_length=200, blank=True, null=True)
 	email_activation_code = models.CharField(max_length=45, blank=True, null=True)
 	allowed_host = models.ManyToManyField(Host, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s %s %s %s' % (self.id, self.user.first_name, self.user.last_name, self.msisdn,self.gateway, self.access_level)
 	def allowed_host_list(self):
 		return "\n".join([a.host for a in self.allowed_host.all()])
@@ -131,7 +131,7 @@ class GatewayProfileDevice(models.Model):#Enforce one gateway profile per gatewa
 	device_id = models.CharField(max_length=200, blank=True, null=True)
 	activation_device_id = models.CharField(max_length=200, blank=True, null=True)
 	email_activation_code = models.CharField(max_length=45, blank=True, null=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s %s' % (self.id, self.gateway_profile, self.channel, self.device_id)
 
 class ChangeProfileMSISDNStatus(models.Model):
@@ -139,7 +139,7 @@ class ChangeProfileMSISDNStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 
@@ -151,7 +151,7 @@ class ChangeProfileMSISDN(models.Model):
 	expiry = models.DateTimeField()
 	change_pin = models.CharField(max_length=200, null=True, blank=True)
 	status = models.ForeignKey(ChangeProfileMSISDNStatus, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.gateway_profile, self.msisdn, self.expiry)
 
 class SessionStatus(models.Model):
@@ -159,7 +159,7 @@ class SessionStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Session(models.Model):
@@ -173,6 +173,6 @@ class Session(models.Model):
 	num_of_sends = models.IntegerField(null=True, blank=True)
 	status = models.ForeignKey(SessionStatus, on_delete=models.CASCADE)
 	last_access = models.DateTimeField(default=timezone.now)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.session_id, self.gateway_profile, self.reference)
 

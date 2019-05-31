@@ -12,7 +12,7 @@ class VariableType(models.Model):
 	description = models.CharField(max_length=200)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 		
@@ -30,7 +30,7 @@ class InputVariable(models.Model):
 	service = models.ForeignKey(Service, null=True, blank=True, on_delete=models.CASCADE)	
 	#details = models.CharField(max_length=512, default=json.dumps({}))
 	details = JSONField(max_length=512, default=dict)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.id, self.name, self.variable_type)		
 
 class PageGroup(models.Model):
@@ -41,7 +41,7 @@ class PageGroup(models.Model):
 	description = models.CharField(max_length=200)
 	icon = models.ForeignKey(Icon, null=True, blank=True, on_delete=models.CASCADE)
 	gateway = models.ManyToManyField(Gateway, blank=True)	
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 	def gateway_list(self):
 		return "\n".join([a.name for a in self.gateway.all()])
@@ -58,7 +58,7 @@ class Page(models.Model):
 	icon = models.ForeignKey(Icon, null=True, blank=True, on_delete=models.CASCADE)
 	gateway = models.ManyToManyField(Gateway, blank=True)	
 	service = models.ManyToManyField(Service, blank=True)	
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s %s' % (self.id, self.name, self.service_list(), self.access_level_list())
 	def access_level_list(self):
 		return "\n".join([a.name for a in self.access_level.all()])
@@ -74,7 +74,7 @@ class RoleAction(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 
@@ -84,7 +84,7 @@ class RoleRight(models.Model):
 	name = models.CharField(max_length=128, unique=True)
 	description = models.CharField(max_length=256)
 	page = models.ManyToManyField(Page)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 	def page_list(self):
 		return "\n".join([a.name for a in self.page.all()])
@@ -96,7 +96,7 @@ class RolePermission(models.Model):
 	role = models.ForeignKey(Role, on_delete=models.CASCADE)
 	role_right = models.ForeignKey(RoleRight, on_delete=models.CASCADE)
 	role_action = models.ManyToManyField(RoleAction, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.role, self.role_right)
 	def role_action_list(self):
 		return "\n".join([a.name for a in self.role_action.all()])
@@ -110,7 +110,7 @@ class PageInputStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class BindPosition(models.Model):
@@ -118,7 +118,7 @@ class BindPosition(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class PageInputGroup(models.Model):
@@ -135,7 +135,7 @@ class PageInputGroup(models.Model):
 	icon = models.ForeignKey(Icon, null=True, blank=True, on_delete=models.CASCADE)
 	bind_position = models.ForeignKey(BindPosition, null=True, blank=True, on_delete=models.CASCADE)
 	gateway = models.ManyToManyField(Gateway, blank=True)	
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.id, self.name, self.input_variable)
 	def gateway_list(self):
 		return "\n".join([a.name for a in self.gateway.all()])
@@ -167,7 +167,7 @@ class PageInput(models.Model):
 	role_action = models.ManyToManyField(RoleAction, blank=True)
 	structure = models.ManyToManyField(Structure, blank=True)
 	template = models.ManyToManyField(Template, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.page_input)
 	def trigger_list(self):
 		return "\n".join([a.name for a in self.trigger.all()])

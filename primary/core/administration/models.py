@@ -13,7 +13,7 @@ class UserPasswordHistory(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	user = models.ForeignKey(User, on_delete=models.CASCADE)
 	password = models.CharField(max_length=200)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.user, self.date_created.isoformat())
 
 
@@ -22,7 +22,7 @@ class CountryStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Country(models.Model):
@@ -40,7 +40,7 @@ class Country(models.Model):
 	mpoly = models.MultiPolygonField()
 	objects = GeoManager()
 	ccode = models.CharField('3 Digit Country Code', max_length=3, blank=True, null=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Currency(models.Model):
@@ -50,7 +50,7 @@ class Currency(models.Model):
 	currency = models.CharField(max_length=200, unique=True)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.code)
 
 class Language(models.Model):
@@ -58,7 +58,7 @@ class Language(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class IndustrySection(models.Model):
@@ -66,7 +66,7 @@ class IndustrySection(models.Model):
 	description = models.CharField(max_length=512)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.isic_code)
 
 class IndustryDivision(models.Model):
@@ -75,7 +75,7 @@ class IndustryDivision(models.Model):
 	section = models.ForeignKey(IndustrySection, blank=True, null=True, on_delete=models.CASCADE)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.isic_code)
 
 class IndustryGroup(models.Model):
@@ -84,7 +84,7 @@ class IndustryGroup(models.Model):
 	division = models.ForeignKey(IndustryDivision, blank=True, null=True, on_delete=models.CASCADE)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.isic_code)
 
 class IndustryClass(models.Model):
@@ -93,7 +93,7 @@ class IndustryClass(models.Model):
 	group = models.ForeignKey(IndustryGroup, blank=True, null=True, on_delete=models.CASCADE)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s%s' % (self.group.division.section.isic_code,self.isic_code)
 
 class Industry(models.Model):
@@ -101,7 +101,7 @@ class Industry(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class HostStatus(models.Model):
@@ -109,7 +109,7 @@ class HostStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Host(models.Model):
@@ -118,7 +118,7 @@ class Host(models.Model):
 	description =  models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.host)
 
 class Structure(models.Model):
@@ -126,7 +126,7 @@ class Structure(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class DesignSystem(models.Model):
@@ -134,7 +134,7 @@ class DesignSystem(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Gateway(models.Model):
@@ -154,7 +154,7 @@ class Gateway(models.Model):
 	max_pin_retries = models.SmallIntegerField(default=3)
 	session_expiry = models.IntegerField(blank=True, null=True, help_text='In Minutes')
 	structure = models.ForeignKey(Structure, blank=True, null=True, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 	def default_host_list(self):
 		return "\n".join([a.host for a in self.default_host.all()])
@@ -166,7 +166,7 @@ class PasswordComplexity(models.Model):
 	description = models.CharField(max_length=100)
 	regex = models.CharField(max_length=100)
 	validation_response = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class PasswordPolicy(models.Model):
@@ -178,7 +178,7 @@ class PasswordPolicy(models.Model):
 	min_characters = models.PositiveSmallIntegerField(default=1)
 	max_characters = models.PositiveSmallIntegerField(default=16)
 	expiration_days = models.PositiveSmallIntegerField(default=900)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.gateway)
 	def password_complexity_list(self):
 		return "\n".join([p.name for p in self.password_complexity.all()])
@@ -189,7 +189,7 @@ class Template(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class AccessLevelStatus(models.Model):
@@ -197,7 +197,7 @@ class AccessLevelStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class AccessLevel(models.Model):
@@ -207,7 +207,7 @@ class AccessLevel(models.Model):
 	status = models.ForeignKey(AccessLevelStatus, on_delete=models.CASCADE)
 	description = models.CharField(max_length=100)
 	hierarchy = models.IntegerField()
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)  
        
 class Role(models.Model):
@@ -219,7 +219,7 @@ class Role(models.Model):
 	access_level = models.ForeignKey(AccessLevel, on_delete=models.CASCADE)
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	session_expiry = models.IntegerField(blank=True, null=True, help_text='In Minutes')
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.gateway)
        
 class Channel(models.Model):
@@ -227,7 +227,7 @@ class Channel(models.Model):
 	description = models.CharField(max_length=200)	
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)	
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)        
 
 class Gender(models.Model):
@@ -235,7 +235,7 @@ class Gender(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.code)
 
 class Uploading(models.Model):
@@ -246,7 +246,7 @@ class Uploading(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)  
 
 class AuditTrails(models.Model):
@@ -254,7 +254,7 @@ class AuditTrails(models.Model):
 	action = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.action, self.user)   
 
 #This gives a response status on whether a transactions was succesful failed aborted rejected etc
@@ -265,7 +265,7 @@ class ResponseStatus(models.Model):
 	action_description = models.CharField(max_length=50)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.description)
 
 class MNO(models.Model):
@@ -274,7 +274,7 @@ class MNO(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	country = models.ForeignKey(Country, on_delete=models.CASCADE)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.country.ccode)
 
 class MNOPrefix(models.Model):
@@ -283,7 +283,7 @@ class MNOPrefix(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.mno, self.prefix)
 
 class Forex(models.Model):
@@ -294,7 +294,7 @@ class Forex(models.Model):
 	exchange_rate = models.DecimalField(max_digits=19, decimal_places=2)
 	trading_date = models.DateField(default=date.today)
 	description = models.CharField(max_length=200, null=True, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s %s' % (self.base_currency.code, self.quote_currency.code, self.exchange_rate, self.trading_date)
 
 class IconGroup(models.Model):
@@ -302,7 +302,7 @@ class IconGroup(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Icon(models.Model):
@@ -311,7 +311,7 @@ class Icon(models.Model):
 	icon = models.CharField(max_length=50, unique=True)	
 	description = models.CharField(max_length=200,null=True,blank=True)
 	group = models.ForeignKey(IconGroup, blank=True, null=True, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.icon)
 
 class TradingBox(models.Model):
@@ -322,6 +322,6 @@ class TradingBox(models.Model):
 	open_time = models.TimeField()
 	close_time = models.TimeField()
 	timezone = models.CharField(max_length=50)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 

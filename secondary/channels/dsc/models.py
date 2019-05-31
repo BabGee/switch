@@ -6,7 +6,7 @@ class DataListStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class DataListGroup(models.Model):
@@ -14,7 +14,7 @@ class DataListGroup(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class DataListQuery(models.Model):
@@ -52,7 +52,7 @@ class DataListQuery(models.Model):
 	order = models.CharField(max_length=512, blank=True, null=True)
 	distinct = models.CharField(max_length=512, blank=True, null=True)
 	limit = models.IntegerField(blank=True, null=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.name)  
 
 class DataListCaseQuery(models.Model):
@@ -63,7 +63,7 @@ class DataListCaseQuery(models.Model):
 	case_values = models.CharField(max_length=2048, help_text='field%value%newvalue|')
 	case_default_value = models.CharField(max_length=128)
 	case_inactive = models.BooleanField(default=False)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.query)
 
 class DataListLinkQuery(models.Model):
@@ -82,7 +82,7 @@ class DataListLinkQuery(models.Model):
 	channel = models.ManyToManyField(Channel, blank=True)
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	role = models.ManyToManyField(Role, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.query)
 	def access_level_list(self):
 		return "\n".join([a.name for a in self.access_level.all()])
@@ -116,7 +116,7 @@ class DataListJoinQuery(models.Model):
 	join_not_fields = models.CharField(max_length=512, null=True, blank=True)
 	join_manytomany_not_fields = models.CharField(max_length=512, null=True, blank=True)
 	join_inactive = models.BooleanField(default=False)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.query)  
 
 
@@ -125,7 +125,7 @@ class PushAction(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class DataResponseType(models.Model):
@@ -133,7 +133,7 @@ class DataResponseType(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 
@@ -163,7 +163,7 @@ class DataList(models.Model):
 	institution = models.ManyToManyField(Institution, blank=True)
 	channel = models.ManyToManyField(Channel, blank=True)
 	gateway = models.ManyToManyField(Gateway, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.data_name)
 	def institution_list(self):
 		return "\n".join([a.name for a in self.institution.all()])
@@ -184,7 +184,7 @@ class FileUpload(models.Model):
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	trigger_service = models.ManyToManyField(Service)
 	activity_service = models.ForeignKey(Service, related_name='dsc_fileupload_activity_service', on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.activity_service)  
 	def institution_list(self):
 		return "\n".join([a.name for a in self.institution.all()])
@@ -200,7 +200,7 @@ class FileUploadActivityStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 
@@ -216,7 +216,7 @@ class FileUploadActivity(models.Model):
 	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
 	details = models.CharField(max_length=1920)
 	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.name)
 
 class ImageListType(models.Model):
@@ -224,7 +224,7 @@ class ImageListType(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class ImageList(models.Model):
@@ -239,7 +239,7 @@ class ImageList(models.Model):
 	institution = models.ManyToManyField(Institution, blank=True)
 	channel = models.ManyToManyField(Channel, blank=True)
 	gateway = models.ManyToManyField(Gateway, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 	def institution_list(self):
 		return "\n".join([a.name for a in self.institution.all()])

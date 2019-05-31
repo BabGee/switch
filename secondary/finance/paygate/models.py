@@ -14,7 +14,7 @@ class FloatType(models.Model):
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	float_product_type = models.ForeignKey(ProductType, blank=True, null=True, related_name='float_product_type', on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.id, self.name, self.float_product_type)
 	def payment_method_list(self):
 		return "\n".join([a.name for a in self.payment_method.all()])
@@ -43,7 +43,7 @@ class FloatCharge(models.Model):
 	product_type = models.ManyToManyField(ProductType, blank=True)
 	institution = models.ManyToManyField(Institution, blank=True)
 	gateway = models.ManyToManyField(Gateway, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.id, self.float_type, self.charge_value)
 	def payment_method_list(self):
 		return "\n".join([a.name for a in self.payment_method.all()])
@@ -68,7 +68,7 @@ class FloatManager(models.Model):
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	institution = models.ForeignKey(Institution, blank=True, null=True, on_delete=models.CASCADE)
 	updated = models.BooleanField(default=False, help_text="True for record that is not the last record")
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.id, self.float_type, self.balance_bf)
 
 
@@ -85,7 +85,7 @@ class AgentFloatManager(models.Model):
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	agent = models.ForeignKey(Agent, on_delete=models.CASCADE)
 	updated = models.BooleanField(default=False, help_text="True for record that is not the last record")
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.id, self.float_type, self.balance_bf)
 
 
@@ -99,7 +99,7 @@ class Endpoint(models.Model):
 	account_id = models.CharField(max_length=512, null=True, blank=True)
 	username = models.CharField(max_length=128, null=True, blank=True)
 	password = models.CharField(max_length=1024, null=True, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class RemittanceStatus(models.Model):
@@ -107,7 +107,7 @@ class RemittanceStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Remittance(models.Model):
@@ -122,7 +122,7 @@ class Remittance(models.Model):
 	ext_service_details = models.CharField(max_length=1920, null=True, blank=True)
 	service = models.ForeignKey(Service, null=True, blank=True, on_delete=models.CASCADE) #Service for processing outgoing tasks
 	gateway = models.ManyToManyField(Gateway, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.ext_service_id)
 	def gateway_list(self):
 		return "\n".join([a.name for a in self.gateway.all()])
@@ -143,7 +143,7 @@ class RemittanceProduct(models.Model):
 	fail_continues = models.BooleanField(default=False)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	currency = models.ManyToManyField(Currency, blank=True) #Allowed Currencies
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.remittance)
 	def product_type_list(self):
 		return "\n".join([a.name for a in self.product_type.all()])
@@ -165,7 +165,7 @@ class InstitutionNotification(models.Model):
 	account_id = models.CharField(max_length=512, null=True, blank=True)
 	username = models.CharField(max_length=128, null=True, blank=True)
 	password = models.CharField(max_length=1024, null=True, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.institution, self.remittance_product)
 
 
@@ -179,7 +179,7 @@ class InstitutionIncomingService(models.Model):
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	details = models.CharField(max_length=512, default=json.dumps({}))
 	process_order = models.NullBooleanField(help_text='Null=Both Order & None-Order, True=Only Order, False=Only Non-Orders')
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.product_item.institution, self.service)
 
 class IncomingState(models.Model):
@@ -187,7 +187,7 @@ class IncomingState(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Incoming(models.Model):
@@ -212,7 +212,7 @@ class Incoming(models.Model):
 	institution_incoming_service = models.ForeignKey(InstitutionIncomingService, blank=True, null=True, on_delete=models.CASCADE)
 	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s %s' % (self.remittance_product, self.amount, self.currency, self.ext_inbound_id)
 
 class PollerFrequency(models.Model):
@@ -221,7 +221,7 @@ class PollerFrequency(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
 	run_every = models.IntegerField(help_text='In Seconds')
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class IncomingPollerStatus(models.Model):
@@ -229,7 +229,7 @@ class IncomingPollerStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class IncomingPoller(models.Model):
@@ -245,7 +245,7 @@ class IncomingPoller(models.Model):
 	next_run = models.DateTimeField()
 	status = models.ForeignKey(IncomingPollerStatus, on_delete=models.CASCADE)
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class OutgoingState(models.Model):
@@ -253,7 +253,7 @@ class OutgoingState(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Outgoing(models.Model):
@@ -275,7 +275,7 @@ class Outgoing(models.Model):
 	state = models.ForeignKey(OutgoingState, null=True, blank=True, on_delete=models.CASCADE)
 	institution_notification = models.ForeignKey(InstitutionNotification, null=True, blank=True, on_delete=models.CASCADE)
 	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.remittance_product, self.amount, self.currency)
 
 class FloatAlertType(models.Model):
@@ -290,7 +290,7 @@ class FloatAlertType(models.Model):
 	institution = models.ForeignKey(Institution, blank=True, null=True, on_delete=models.CASCADE)
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	profile = models.ManyToManyField(Profile)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.float_type, self.service)
 	def profile_list(self):
 		return "\n".join([a.user.username for a in self.profile.all()])
@@ -301,7 +301,7 @@ class FloatAlertActivity(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	float_manager = models.ForeignKey(FloatManager, on_delete=models.CASCADE)
 	float_alert_type = models.ForeignKey(FloatAlertType, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.float_manager, self.float_alert_type)
 
 

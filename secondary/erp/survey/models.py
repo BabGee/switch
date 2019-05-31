@@ -7,7 +7,7 @@ class SurveyStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class SurveyGroup(models.Model):
@@ -16,7 +16,7 @@ class SurveyGroup(models.Model):
 	name = models.CharField(max_length=45)
 	description = models.CharField(max_length=100)
 	data_name = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Survey(models.Model):
@@ -29,7 +29,7 @@ class Survey(models.Model):
 	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
 	status = models.ForeignKey(SurveyStatus, on_delete=models.CASCADE)
 	product_item = models.ForeignKey(ProductItem, blank=True, null=True, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 	def institution_list(self):
 		return "\n".join([a.name for a in self.institution.all()])
@@ -39,7 +39,7 @@ class SurveyItemStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class SurveyItem(models.Model):
@@ -51,7 +51,7 @@ class SurveyItem(models.Model):
 	status = models.ForeignKey(SurveyItemStatus, on_delete=models.CASCADE)
 	expiry = models.DateTimeField(null=True, blank=True)
 	code = models.CharField(max_length=45, null=True, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class SurveyResponseStatus(models.Model):
@@ -59,7 +59,7 @@ class SurveyResponseStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class SurveyResponse(models.Model):
@@ -69,6 +69,6 @@ class SurveyResponse(models.Model):
 	status = models.ForeignKey(SurveyResponseStatus, on_delete=models.CASCADE)
 	transaction_reference = models.CharField(max_length=45, null=True, blank=True) #Transaction ID
 	gateway_profile = models.ForeignKey(GatewayProfile, null=True, blank=True, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.item.name, self.gateway_profile)
 

@@ -11,7 +11,7 @@ class CardTypeStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class CardType(models.Model):
@@ -21,7 +21,7 @@ class CardType(models.Model):
 	description = models.CharField(max_length=100)
 	status = models.ForeignKey(CardTypeStatus, on_delete=models.CASCADE)
 	code = models.CharField(max_length=5, unique=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class CardVerificationAmount(models.Model):
@@ -30,7 +30,7 @@ class CardVerificationAmount(models.Model):
 	currency = models.OneToOneField(Currency, on_delete=models.CASCADE)
 	min_amount = models.DecimalField(max_digits=19, decimal_places=2)
 	max_amount = models.DecimalField(max_digits=19, decimal_places=2)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.currency, self.min_amount, self.max_amount)
 
 class CardRecordStatus(models.Model):
@@ -38,7 +38,7 @@ class CardRecordStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class CardRecord(models.Model):
@@ -56,7 +56,7 @@ class CardRecord(models.Model):
 	activation_pin = models.CharField(max_length=200, null=True, blank=True)
 	pin_retries = models.SmallIntegerField(default=0, help_text="Max PIN retries=3 then locks record")
 	is_default = models.NullBooleanField(default=False)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.card_number)
 
 class CardRecordActivity(models.Model):
@@ -76,5 +76,5 @@ class CardRecordActivity(models.Model):
 	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
 	scheduled_send = models.DateTimeField(blank=True, null=True)
 	sends = models.IntegerField()
-	def __unicode__(self):
+	def __str__(self):
  		return '%s' % (self.request)

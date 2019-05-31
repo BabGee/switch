@@ -9,7 +9,7 @@ class PaymentMethodStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class PaymentMethod(models.Model):
@@ -29,7 +29,7 @@ class PaymentMethod(models.Model):
 	country = models.ManyToManyField(Country, blank=True)
 	currency = models.ManyToManyField(Currency, blank=True)
 	channel = models.ManyToManyField(Channel, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 	def gateway_list(self):
 		return "\n".join([a.name for a in self.gateway.all()])
@@ -45,7 +45,7 @@ class Product(models.Model):
 	description = models.CharField(max_length=100)	
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)	
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)	
 
 class Retry(models.Model):
@@ -54,7 +54,7 @@ class Retry(models.Model):
 	name = models.CharField(max_length=50, unique=True)	
 	max_retry = models.IntegerField(null=True, blank=True)
 	max_retry_hours = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)	
 
 class ServiceStatus(models.Model):
@@ -62,7 +62,7 @@ class ServiceStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Service(models.Model):
@@ -78,7 +78,7 @@ class Service(models.Model):
 	retry = models.ForeignKey(Retry, null=True, blank=True, on_delete=models.CASCADE)
 	allowed_response_key = models.CharField(max_length=1024, null=True, blank=True, help_text='Comma Delimitted')
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 	def access_level_list(self):
 		return "\n".join([a.name for a in self.access_level.all()])
@@ -88,7 +88,7 @@ class Trigger(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 
@@ -98,7 +98,7 @@ class CommandStatus(models.Model):
 	description = models.CharField(max_length=100)	
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class ServiceCommand(models.Model):
@@ -134,7 +134,7 @@ class ServiceCommand(models.Model):
 		return "\n".join([a.name for a in self.gateway.all()])
 	def success_response_status_list(self):
 		return "\n".join([a.response for a in self.success_response_status.all()])
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.command_function, self.status.name, self.access_level_list())
 
 class ServiceCutOff(models.Model):
@@ -143,7 +143,7 @@ class ServiceCutOff(models.Model):
 	service = models.OneToOneField(Service, on_delete=models.CASCADE)
 	cut_off_command = models.ForeignKey(ServiceCommand, null=True, blank=True, on_delete=models.CASCADE)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.service)  
 
 #This expalains the state of a transaction. Whether Processed or pending
@@ -152,7 +152,7 @@ class TransactionStatus(models.Model):
 	description = models.CharField(max_length=200)	
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Transaction(models.Model):
@@ -181,7 +181,7 @@ class Transaction(models.Model):
 	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
 	fingerprint = models.CharField(max_length=1024, editable=False, null=True, blank=True)
 	token = models.CharField(max_length=1024, editable=False, null=True, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		#return '%s %s %s' % (self.request, self.geometry.x, self.geometry.y)
  		return '%s' % (self.request)
 
@@ -197,7 +197,7 @@ class BackgroundService(models.Model):
 	details = models.CharField(max_length=3840, default=json.dumps({}))
 	cut_off_command = models.ForeignKey(ServiceCommand, null=True, blank=True, on_delete=models.CASCADE)
 	trigger = models.ManyToManyField(Trigger, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.service)  
 	def institution_list(self):
 		return "\n".join([a.name for a in self.institution.all()])
@@ -230,7 +230,7 @@ class BackgroundServiceActivity(models.Model):
 	message = models.CharField(max_length=3840, blank=True, null=True)
 	sends = models.IntegerField()
 	ext_outbound_id = models.CharField(max_length=256, blank=True, null=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.service, self.gateway_profile)
 
 class ActivityStatus(models.Model):
@@ -238,7 +238,7 @@ class ActivityStatus(models.Model):
 	description = models.CharField(max_length=200)	
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Activity(models.Model):
@@ -253,7 +253,7 @@ class Activity(models.Model):
 	ext_service_details = models.CharField(max_length=1920, null=True, blank=True)
 	service = models.ForeignKey(Service, null=True, blank=True, on_delete=models.CASCADE) #Service for processing outgoing tasks
 	gateway = models.ManyToManyField(Gateway, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.ext_service_id)
 	def gateway_list(self):
 		return "\n".join([a.name for a in self.gateway.all()])
@@ -268,7 +268,7 @@ class ActivityEndpoint(models.Model):
 	account_id = models.CharField(max_length=512, null=True, blank=True)
 	username = models.CharField(max_length=128, null=True, blank=True)
 	password = models.CharField(max_length=1024, null=True, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class ActivityProduct(models.Model):
@@ -286,7 +286,7 @@ class ActivityProduct(models.Model):
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	currency = models.ManyToManyField(Currency, blank=True) #Allowed Currencies
 	trigger = models.ManyToManyField(Trigger, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.investment)
 	def service_list(self):
 		return "\n".join([a.name for a in self.service.all()])
@@ -316,7 +316,7 @@ class ActivityTransaction(models.Model):
 	message = models.CharField(max_length=3840, blank=True, null=True)
 	sends = models.IntegerField()
 	ext_outbound_id = models.CharField(max_length=200, blank=True, null=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.activity_product, self.gateway_profile)
 
 
@@ -336,7 +336,7 @@ class Approval(models.Model):
 	pending_count = models.IntegerField(null=True,blank=True,default=0) # null is unlimited
 	approval_identifier = models.CharField(max_length=200, blank=True, null=True)
 	pending_related_service = models.ManyToManyField(Service, related_name='pending_related_service', blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.service)
 	def institution_list(self):
 		return "\n".join([a.name for a in self.institution.all()])
@@ -355,7 +355,7 @@ class ApprovalActivityStatus(models.Model):
 	description = models.CharField(max_length=200)
 	date_modified = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 
@@ -373,7 +373,7 @@ class ApprovalActivity(models.Model):
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
 	identifier = models.CharField(null=True,blank=True,max_length=20)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.approval)
 
 
@@ -386,7 +386,7 @@ class GatewayProfileChange(models.Model):
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	details = models.CharField(max_length=3840, default=json.dumps({}))
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.name)  
 	def institution_list(self):
 		return "\n".join([a.name for a in self.institution.all()])
@@ -407,7 +407,7 @@ class GatewayProfileChangeActivity(models.Model):
 	processed = models.BooleanField(default=False)
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.change, self.gateway_profile)
 
 

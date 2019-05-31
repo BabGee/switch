@@ -8,7 +8,7 @@ class LoyaltyAccountType(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
 	point_amount = models.DecimalField(max_digits=19, decimal_places=2)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class LoyaltyTransactionType(models.Model):
@@ -16,7 +16,7 @@ class LoyaltyTransactionType(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class LoyaltyAccountStatus(models.Model):
@@ -24,7 +24,7 @@ class LoyaltyAccountStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class LoyaltyAccount(models.Model):
@@ -34,7 +34,7 @@ class LoyaltyAccount(models.Model):
 	account_status = models.ForeignKey(LoyaltyAccountStatus, on_delete=models.CASCADE)	
 	account_type = models.ForeignKey(LoyaltyAccountType, on_delete=models.CASCADE)
 	created_by = models.ForeignKey(GatewayProfile, related_name="loyalty_account_created_by", on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.gateway_profile, self.is_default, self.account_type)
 
 class LoyaltyAccountManager(models.Model):
@@ -47,5 +47,5 @@ class LoyaltyAccountManager(models.Model):
 	dest_account = models.ForeignKey(LoyaltyAccount, related_name="dest_account", on_delete=models.CASCADE)
 	amount = models.DecimalField(max_digits=19, decimal_places=2)
 	balance_bf = models.DecimalField(max_digits=19, decimal_places=2)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.credit)

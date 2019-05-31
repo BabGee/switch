@@ -8,7 +8,7 @@ class Metric(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	si_unit = models.CharField(max_length=45)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.si_unit)
 
 class ProductStatus(models.Model):
@@ -16,7 +16,7 @@ class ProductStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class ProductCategory(models.Model):
@@ -28,7 +28,7 @@ class ProductCategory(models.Model):
 	status = models.ForeignKey(ProductStatus, on_delete=models.CASCADE)
 	icon_old= models.CharField(max_length=45, null=True, blank=True)
 	icon = models.ForeignKey(Icon, null=True, blank=True, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.industry)
 
 class ShopProductCategory(models.Model): #Doesn't need institution as categories need to be controlled
@@ -40,7 +40,7 @@ class ShopProductCategory(models.Model): #Doesn't need institution as categories
 	icon_old= models.CharField(max_length=45, null=True, blank=True)
 	industry = models.ForeignKey(IndustryClass,null=True, blank=True, on_delete=models.CASCADE)
 	icon = models.ForeignKey(Icon, null=True, blank=True, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.industry)
 
 class ProductionFrequency(models.Model):
@@ -49,7 +49,7 @@ class ProductionFrequency(models.Model):
 	status = models.ForeignKey(ProductStatus, on_delete=models.CASCADE)
 	date_modified = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class ProductType(models.Model):
@@ -65,7 +65,7 @@ class ProductType(models.Model):
 	icon = models.ForeignKey(Icon, null=True, blank=True, on_delete=models.CASCADE)
 	settlement_service = models.ForeignKey(Service, related_name='settlement_service', null=True, blank=True, on_delete=models.CASCADE) #For Processing LOCAL endpoints
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.name)
 	def payment_method_list(self):
 		return "\n".join([a.name for a in self.payment_method.all()])
@@ -80,7 +80,7 @@ class ShopProductType(models.Model):
 	icon_old= models.CharField(max_length=45, null=True, blank=True)
 	institution = models.ForeignKey(Institution, on_delete=models.CASCADE)
 	icon = models.ForeignKey(Icon, null=True, blank=True, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.name)
 
 
@@ -99,7 +99,7 @@ class ProductCharge(models.Model):
 	description = models.CharField(max_length=200, null=True, blank=True)
 	for_float = models.NullBooleanField(default=False) #True=Float Manager Charge
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.product_type,self.charge_value)
 	def institution_list(self):
 		return "\n".join([a.name for a in self.institution.all()])
@@ -123,7 +123,7 @@ class ProductDiscount(models.Model):
 	is_percentage = models.BooleanField(default=False)
 	description = models.CharField(max_length=200, null=True, blank=True)
 	for_float = models.NullBooleanField(default=False) #True=Float Manager Coupon
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.coupon)
 	def institution_list(self):
 		return "\n".join([a.name for a in self.institution.all()])
@@ -135,7 +135,7 @@ class ProductDisplay(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class ProductItem(models.Model):
@@ -167,7 +167,7 @@ class ProductItem(models.Model):
 	buying_cost =  models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) 
 	shop_product_type = models.ForeignKey(ShopProductType, blank=True, null=True, on_delete=models.CASCADE)
 	barcode = models.CharField(max_length=256,blank=True,null=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.name)
 
 class ProductImage(models.Model):
@@ -178,7 +178,7 @@ class ProductImage(models.Model):
 	name = models.CharField(max_length=45, blank=True, null=True)
 	description = models.CharField(max_length=100, blank=True, null=True)
 	default = models.BooleanField(default=False)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class ItemExtra(models.Model):
@@ -194,7 +194,7 @@ class ItemExtra(models.Model):
 	manufactured = models.DateField(null=True, blank=True)
 	product_owner = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE) #Seller
 	details = models.CharField(max_length=1240, null=True, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.product_item)
 
 
@@ -203,7 +203,7 @@ class EnrollmentStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class EnrollmentType(models.Model):
@@ -212,7 +212,7 @@ class EnrollmentType(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
 	product_item = models.ForeignKey(ProductItem, blank=True, null=True, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.product_item)
 
 class Enrollment(models.Model):
@@ -226,7 +226,7 @@ class Enrollment(models.Model):
 	profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
 	expiry = models.DateTimeField()
 	updated = models.BooleanField(default=False, help_text="True for record that is not the last record")
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.profile, self.record, self.alias)
 
 class PaymentOptionStatus(models.Model):
@@ -234,7 +234,7 @@ class PaymentOptionStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class PaymentOption(models.Model):
@@ -245,7 +245,7 @@ class PaymentOption(models.Model):
 	status = models.ForeignKey(PaymentOptionStatus, on_delete=models.CASCADE)
 	payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)
 	profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.profile, self.account_alias)
 
 
@@ -254,7 +254,7 @@ class NominationStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Nomination(models.Model):
@@ -266,7 +266,7 @@ class Nomination(models.Model):
 	institution = models.ForeignKey(Institution, on_delete=models.CASCADE)
 	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
 	status = models.ForeignKey(NominationStatus, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.profile, self.account_record)
 
 class RecurrentServiceStatus(models.Model):
@@ -274,7 +274,7 @@ class RecurrentServiceStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class RecurrentService(models.Model):
@@ -291,7 +291,7 @@ class RecurrentService(models.Model):
 	scheduled_days = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	expiry = models.DateTimeField(null=True, blank=True)
 	status = models.ForeignKey(RecurrentServiceStatus, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.enrollment, self.service, self.amount)
 
 class AgentStatus(models.Model):
@@ -299,7 +299,7 @@ class AgentStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.description)
 
 class Agent(models.Model):
@@ -309,7 +309,7 @@ class Agent(models.Model):
 	profile = models.OneToOneField(Profile, on_delete=models.CASCADE) #Primary Profile
 	status = models.ForeignKey(AgentStatus, on_delete=models.CASCADE)
 	registrar = models.ForeignKey(Profile, related_name='registrar', on_delete=models.CASCADE) #Agent who created the institution and primary profile
-	def __unicode__(self):
+	def __str__(self):
 		return '%s %s %s' % (self.profile, self.status, self.registrar)
 
 
@@ -317,7 +317,7 @@ class AgentInstitutionType(models.Model):
 	date_modified = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return '%s' % (self.name)
 
 
@@ -327,7 +327,7 @@ class AgentInstitution(models.Model):
 	agent = models.ForeignKey(Agent, on_delete=models.CASCADE)
 	institution = models.ForeignKey(Institution, on_delete=models.CASCADE)
 	institution_type = models.ForeignKey(AgentInstitutionType, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return '%s %s %s' % (self.agent,self.institution,self.institution_type)
 
 

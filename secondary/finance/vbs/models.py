@@ -17,7 +17,7 @@ class AccountType(models.Model):
 	institution = models.ForeignKey(Institution, blank=True, null=True, on_delete=models.CASCADE)
 	disburse_deductions = models.BooleanField(default=False)
 	restrict_multiple_credit = models.BooleanField(default=False)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.product_item.currency)
 	def credit_type_list(self):
 		return "\n".join([a.name for a in self.credit_type.all()])
@@ -34,7 +34,7 @@ class SavingsCreditType(models.Model):
 	min_time = models.IntegerField(null=True, blank=True, help_text="In Days") #For Loan Interest Rate
 	max_time = models.IntegerField(null=True, blank=True, help_text="In Days") #For Loan Interest Rate
 	installment_time = models.IntegerField(null=True, blank=True, help_text="In Days") #For Loan Interest Rate
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.account_type, self.interest_rate, self.interest_time)
 
 class AccountCharge(models.Model):#Add either withdrawal/deposit charge, add institution & gateway, null=True for specific individual rates
@@ -51,7 +51,7 @@ class AccountCharge(models.Model):#Add either withdrawal/deposit charge, add ins
 	for_charge = models.BooleanField(default=False) #Dr | Cr (Credit/Debit Charge to amount)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	service = models.ManyToManyField(Service, blank=True)	
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.charge_value)
 	def payment_method_list(self):
 		return "\n".join([a.name for a in self.payment_method.all()])
@@ -63,7 +63,7 @@ class AccountStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Account(models.Model):
@@ -76,7 +76,7 @@ class Account(models.Model):
 	profile = models.ForeignKey(Profile, null=True, blank=True, on_delete=models.CASCADE) #Account Owner
 	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE) #Account Owner
 	gateway_profile = models.ManyToManyField(GatewayProfile, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.profile, self.is_default, self.account_type)
 	def gateway_profile_list(self):
 		return "\n".join([a.msisdn.phone_number for a in self.gateway_profile.all() if a.msisdn])
@@ -87,7 +87,7 @@ class CreditOverdueStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class CreditOverdue(models.Model):
@@ -100,7 +100,7 @@ class CreditOverdue(models.Model):
 	account_type = models.ForeignKey(AccountType, on_delete=models.CASCADE) #Determines the institution ETC
 	status = models.ForeignKey(CreditOverdueStatus, on_delete=models.CASCADE)
 	product_item = models.ForeignKey(ProductItem, null=True, blank=True, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.description)
 
  
@@ -109,7 +109,7 @@ class ManagerStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class AccountManager(models.Model):
@@ -133,7 +133,7 @@ class AccountManager(models.Model):
 	outgoing_payment = models.ForeignKey(Outgoing, null=True, blank=True, on_delete=models.CASCADE)
 	status = models.ForeignKey(ManagerStatus, null=True, blank=True, on_delete=models.CASCADE)
 	purchase_order = models.ForeignKey(PurchaseOrder, null=True, blank=True, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.id, self.credit, self.credit_paid)
 	def credit_overdue_list(self):
 		return "\n".join([a.description for a in self.credit_overdue.all()])
@@ -155,7 +155,7 @@ class SavingsCreditManager(models.Model):
 	incoming_payment = models.ForeignKey(Incoming, null=True, blank=True, on_delete=models.CASCADE)
 	outgoing_payment = models.ForeignKey(Outgoing, null=True, blank=True, on_delete=models.CASCADE)
 	follow_on = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.account_manager, self.installment_time, self.due_date)
 
 
@@ -165,7 +165,7 @@ class CreditOverdueManager(models.Model):
 	savings_credit_manager = models.ForeignKey(SavingsCreditManager, on_delete=models.CASCADE)
 	credit_overdue = models.ForeignKey(CreditOverdue, on_delete=models.CASCADE)
 	processed = models.BooleanField(default=False)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.savings_credit_manager, self.credit_overdue, self.processed)
 
 class InvestmentAccountType(models.Model):
@@ -177,7 +177,7 @@ class InvestmentAccountType(models.Model):
 	investment_loan_allowed = models.DecimalField(max_digits=19, decimal_places=2, help_text='In Percentage')
 	product_item = models.OneToOneField(ProductItem, on_delete=models.CASCADE)
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.name, self.nominal_value, self.product_item.currency)
 
 
@@ -190,6 +190,6 @@ class InvestmentManager(models.Model):
 	share_value = models.DecimalField(max_digits=19, decimal_places=2)
 	balance_bf = models.DecimalField(max_digits=19, decimal_places=2)
 	processed = models.BooleanField(default=False)
-	def __unicode__(self):
+	def __str__(self):
 		return '%s %s %s %s %s %s' % (self.investment_type, self.account, self.amount, self.share_value, self.balance_bf, self.processed)
 

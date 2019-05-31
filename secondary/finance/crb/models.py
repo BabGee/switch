@@ -18,7 +18,7 @@ class ConsumerCrb(models.Model):
     probability = models.CharField(max_length=100)
     grade = models.CharField(max_length=100)
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s' % (self.service_api_name)
 '''
 class ReportSector(models.Model):
@@ -27,7 +27,7 @@ class ReportSector(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
 	sector_code = models.IntegerField()
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.sector_code, self.name)
 
 
@@ -37,7 +37,7 @@ class ReportReason(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
 	reason_code = models.IntegerField()
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.reason_code, self.name)
 
 
@@ -50,7 +50,7 @@ class CreditGrade(models.Model):
 	min_credit_score = models.IntegerField(null=True, blank=True)
 	max_credit_score = models.IntegerField(null=True, blank=True)
 	hierarchy = models.IntegerField()
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.code, self.name)
 
 class IdentificationProfileStatus(models.Model):
@@ -58,7 +58,7 @@ class IdentificationProfileStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.description)
 
 class IdentificationProfile(models.Model):
@@ -67,7 +67,7 @@ class IdentificationProfile(models.Model):
 	middle_name = models.CharField(max_length=30, null=True, blank=True)
 	last_name = models.CharField(max_length=30, null=True, blank=True)
 	status = models.ForeignKey(IdentificationProfileStatus, null=True, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.national_id)
 
 class ReferenceAccountStatus(models.Model):
@@ -76,7 +76,7 @@ class ReferenceAccountStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=250)
 	defaulted = models.BooleanField(default=False)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.description)
 
 
@@ -100,7 +100,7 @@ class Reference(models.Model):
 	credit_score = models.IntegerField(null=True, blank=True)
 	credit_account_list = models.CharField(max_length=1920, null=True, blank=True)
 	credit_account_summary = models.CharField(max_length=1920, null=True, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.identification_profile, self.surname)
 
 '''
@@ -174,7 +174,7 @@ class Reference(models.Model):
 	Last payment amount 	
 	Type of Security
 	##############################################
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.identification_profile)
 '''
 
@@ -188,7 +188,7 @@ class ReferenceActivityType(models.Model):
 	report_sector = models.ForeignKey(ReportSector)
 	report_reason =models.ForeignKey(ReportReason)
 	details = models.CharField(max_length=1920, default=json.dumps({}))
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.description)
 
 class ReferenceActivity(models.Model):
@@ -204,7 +204,7 @@ class ReferenceActivity(models.Model):
 	transaction_reference = models.CharField(max_length=45, null=True, blank=True) #Transaction ID
 	gateway = models.ForeignKey(Gateway)
 	institution = models.ForeignKey(Institution, null=True, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.identification_profile, self.gateway_profile, self.reference_activity_type)
 
 
@@ -218,7 +218,7 @@ class ReferenceRisk(models.Model):
 	min_credit_score = models.IntegerField(null=True, blank=True)
 	base_initial_credit_limit = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	lend_to_defaulters = models.BooleanField(default=False)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.gateway, self.institution, self.min_credit_grade)
 
 

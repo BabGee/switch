@@ -10,7 +10,7 @@ class SaleChargeType(models.Model):
 	name = models.CharField(max_length=50)
 	description = models.CharField(max_length=256)
 	product_item = models.ForeignKey(ProductItem, on_delete=models.CASCADE) #ProductItem Institution can be different from the institution exerting the charge
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 
@@ -36,7 +36,7 @@ class SaleCharge(models.Model):
 	product_type = models.ManyToManyField(ProductType, blank=True)
 	institution = models.ManyToManyField(Institution, blank=True)
 	gateway = models.ManyToManyField(Gateway, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.id, self.sale_charge_type, self.charge_value)
 	def product_display_list(self):
 		return "\n".join([a.name for a in self.product_display.all()])
@@ -55,7 +55,7 @@ class CartType(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class CartStatus(models.Model):
@@ -63,7 +63,7 @@ class CartStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 
@@ -89,7 +89,7 @@ class CartItem(models.Model):
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
 	cart_type = models.ForeignKey(CartType, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.product_item, self.gateway_profile, self.quantity)
 
 
@@ -98,7 +98,7 @@ class OrderStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class PurchaseOrder(models.Model):
@@ -115,7 +115,7 @@ class PurchaseOrder(models.Model):
 	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE) #Gateway Profile to Match Cart Items for checkout
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.reference, self.status.name)
 	def cart_item_list(self):
 		return "\n".join([a.product_item.name for a in self.cart_item.all()])
@@ -125,7 +125,7 @@ class BillManagerStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class BillManager(models.Model):
@@ -142,7 +142,7 @@ class BillManager(models.Model):
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
 	status = models.ForeignKey(BillManagerStatus, null=True, blank=True, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.id, self.credit)
 
 class OrderProduct(models.Model):
@@ -159,7 +159,7 @@ class OrderProduct(models.Model):
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	currency = models.ManyToManyField(Currency, blank=True) #Allowed Currencies
 	trigger = models.ManyToManyField(Trigger, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.name, self.description)
 	def product_type_list(self):
 		return "\n".join([a.name for a in self.product_type.all()])
@@ -186,7 +186,7 @@ class OrderCharge(models.Model):
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	product_type = models.ManyToManyField(ProductType, blank=True)
 	gateway = models.ManyToManyField(Gateway, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.id, self.institution, self.charge_value)
 	def order_product_list(self):
 		return "\n".join([a.name for a in self.order_product.all()])
@@ -217,7 +217,7 @@ class OrderActivity(models.Model):
 	message = models.CharField(max_length=3840, blank=True, null=True)
 	sends = models.IntegerField()
 	ext_inbound_id = models.CharField(max_length=256, blank=True, null=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.order_type, self.gateway_profile)
 
 class DeliveryStatus(models.Model):
@@ -229,7 +229,7 @@ class DeliveryStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 
@@ -252,7 +252,7 @@ class Delivery(models.Model):
 
 	follow_on = models.ForeignKey('self',null=True, on_delete=models.CASCADE)
 
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.order, self.status)
 
 

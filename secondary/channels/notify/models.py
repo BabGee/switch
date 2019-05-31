@@ -14,7 +14,7 @@ class Endpoint(models.Model):
 	password = models.CharField(max_length=256)
 	api_key = models.CharField(max_length=256,blank=True, null=True)
 	batch = models.SmallIntegerField(default=1)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class NotificationStatus(models.Model):
@@ -22,7 +22,7 @@ class NotificationStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Notification(models.Model):
@@ -43,7 +43,7 @@ class Notification(models.Model):
 	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
 	code = models.ForeignKey(Code, on_delete=models.CASCADE)#Code Required for Email & InApp notifications (Create Code named EMAIL|IN APP for institution)
 	service = models.ForeignKey(Service, blank=True, null=True, on_delete=models.CASCADE) #Service for processing inbound tasks
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.id, self.name, self.ext_service_id)
 	def channel_list(self):
 		return "\n".join([a.name for a in self.channel.all()])
@@ -65,7 +65,7 @@ class NotificationProduct(models.Model):
 	unsubscription_endpoint = models.ForeignKey(Endpoint, null=True, blank=True, related_name="unsubscription_endpoint", on_delete=models.CASCADE)
 	create_subscribe = models.BooleanField(default=False)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s %s' % (self.id, self.name, self.unit_credit_charge, self.notification)
 	def product_type_list(self):
 		return "\n".join([a.name for a in self.product_type.all()])
@@ -80,7 +80,7 @@ class ResponseProduct(models.Model):#If response product exists, use response pr
 	product = models.OneToOneField(NotificationProduct, on_delete=models.CASCADE)
 	auto = models.BooleanField(default=False)
 	response_product = models.ForeignKey(NotificationProduct, related_name="autoresponse_auto_notification", on_delete=models.CASCADE) #If None, use Default/Self Notification to respond
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.notification, self.auto)
 
 class ContactStatus(models.Model):
@@ -88,7 +88,7 @@ class ContactStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Contact(models.Model):
@@ -100,7 +100,7 @@ class Contact(models.Model):
 	subscribed = models.BooleanField(default=False)
 	linkid = models.CharField(max_length=200, null=True,blank=True)
 	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE) # A gateway profile has only one MSISDN
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.gateway_profile, self.product)
 
 class ContactGroupStatus(models.Model):
@@ -108,7 +108,7 @@ class ContactGroupStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 
@@ -120,7 +120,7 @@ class ContactGroup(models.Model):
 	institution = models.ForeignKey(Institution, blank=True, null=True, on_delete=models.CASCADE)
 	gateway = models.ForeignKey(Gateway, blank=True, null=True, on_delete=models.CASCADE)
 	status = models.ForeignKey(ContactGroupStatus, on_delete=models.CASCADE) 
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Recipient(models.Model):
@@ -131,7 +131,7 @@ class Recipient(models.Model):
 	subscribed = models.BooleanField(default=False)
 	recipient = models.CharField(max_length=200)
 	contact_group = models.ForeignKey(ContactGroup, on_delete=models.CASCADE)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.recipient, self.contact_group)
 
 class Credit(models.Model):
@@ -141,7 +141,7 @@ class Credit(models.Model):
 	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
 	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
 	credit_value = models.IntegerField()
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.credit_value)
 
 class TemplateStatus(models.Model):
@@ -149,7 +149,7 @@ class TemplateStatus(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 
@@ -159,7 +159,7 @@ class TemplateFile(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
 	file_path = models.FileField(upload_to='notify_templatefile_path/', max_length=200, null=True,blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 			
 class NotificationTemplate(models.Model):
@@ -174,7 +174,7 @@ class NotificationTemplate(models.Model):
 	template_file = models.ForeignKey(TemplateFile, null=True,blank=True, on_delete=models.CASCADE)
 	protected = models.BooleanField(default=False)
 	trigger = models.ManyToManyField(Trigger, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s' % (self.product, self.template_message)
 	def product_list(self):
 		return "\n".join([a.name for a in self.product.all()])
@@ -187,7 +187,7 @@ class NotificationAttachment(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
 	file_path = models.FileField(upload_to='notify_notificationattachment_path/', max_length=200, null=True,blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class InBoundState(models.Model):
@@ -195,7 +195,7 @@ class InBoundState(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Inbound(models.Model):
@@ -209,7 +209,7 @@ class Inbound(models.Model):
 	inst_num_tries = models.IntegerField(null=True,blank=True)
 	attachment = models.ManyToManyField(NotificationAttachment, blank=True)
 	recipient = models.CharField(max_length=200, blank=True, null=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.contact, self.heading, self.message)
 	def attachment_list(self):
 		return "\n".join([a.name for a in self.attachment.all()])
@@ -219,7 +219,7 @@ class OutBoundState(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Outbound(models.Model):
@@ -242,7 +242,7 @@ class Outbound(models.Model):
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False,
 								 help_text="Push Notification Acknowledged")
 
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.contact, self.heading, self.message)
 	def attachment_list(self):
 		return "\n".join([a.name for a in self.attachment.all()])

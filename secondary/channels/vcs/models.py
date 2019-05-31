@@ -7,7 +7,7 @@ class CodeType(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class Code(models.Model):
@@ -21,7 +21,7 @@ class Code(models.Model):
 	description = models.CharField(max_length=100)
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	alias = models.CharField(max_length=45, blank=True, null=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s %s' % (self.id, self.code, self.mno, self.institution)
 
 class SessionState(models.Model):
@@ -29,7 +29,7 @@ class SessionState(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class SessionHop(models.Model):
@@ -41,7 +41,7 @@ class SessionHop(models.Model):
 	reference = models.CharField(max_length=100, null=True, blank=True) #For tracking sends and recording unregistered users
 	num_of_tries = models.IntegerField(null=True, blank=True)
 	num_of_sends = models.IntegerField(null=True, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.session_id, self.gateway_profile, self.reference)
 
 class MenuStatus(models.Model):
@@ -49,7 +49,7 @@ class MenuStatus(models.Model):
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 class VariableType(models.Model):
@@ -57,7 +57,7 @@ class VariableType(models.Model):
 	variable = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 		
 class InputVariable(models.Model):
@@ -77,7 +77,7 @@ class InputVariable(models.Model):
 	init_nav_step = models.BooleanField(default=False)
 	min_amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	max_amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)		
 
 class Menu(models.Model):
@@ -105,7 +105,7 @@ class Menu(models.Model):
 	selection = models.CharField(max_length=64, null=True, blank=True)
 	enrollment_type_included = models.ManyToManyField(EnrollmentType, blank=True)
 	enrollment_type_excluded = models.ManyToManyField(EnrollmentType, blank=True, related_name='menu_enrollment_type_excluded')
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s' % (self.id, self.code_list(), self.page_string)
 	def access_level_list(self):
 		return "\n".join([a.name for a in self.access_level.all()])
@@ -132,7 +132,7 @@ class MenuItem(models.Model):
 	response_status = models.ForeignKey(ResponseStatus, null=True, blank=True, on_delete=models.CASCADE)
 	enrollment_type_included = models.ManyToManyField(EnrollmentType, blank=True)
 	enrollment_type_excluded = models.ManyToManyField(EnrollmentType, blank=True, related_name='menuitem_enrollment_type_excluded')
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.menu_item)
 	def access_level_list(self):
 		return "\n".join([a.name for a in self.access_level.all()])
@@ -157,5 +157,5 @@ class Navigator(models.Model):
 	level = models.IntegerField()
 	group_select = models.IntegerField(null=True, blank=True)
 	invalid = models.BooleanField(default=False)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s %s %s %s' % (self.id, self.session, self.menu, self.nav_step)

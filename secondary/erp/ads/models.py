@@ -11,7 +11,7 @@ class InstitutionAd(models.Model):
 	country = models.ForeignKey(Country, on_delete=models.CASCADE)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	def __unicode__(self):
+	def __str__(self):
 		return u'%s' % (self.name)
 
 
