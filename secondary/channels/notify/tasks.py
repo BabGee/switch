@@ -688,16 +688,13 @@ class System(Wrappers):
 
 	def send_notification(self, payload, node_info):
 		try:
-			lgr.info('Got Here')
 			if 'notification_product_id' not in payload.keys():
 				payload['response'] = "Notification not found"
 				payload['response_status']= '25'
 
-				lgr.info('Got Here Failed')
 			else:
 				gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-				lgr.info('Got Here')
 				ext_outbound_id = None
 				if "ext_outbound_id" in payload.keys():
 					ext_outbound_id = payload['ext_outbound_id']
@@ -713,7 +710,6 @@ class System(Wrappers):
 					scheduled_send = timezone.now()
 				notification_product = NotificationProduct.objects.get(id=payload['notification_product_id'])
 
-				lgr.info('Got Here')
 				if 'session_gateway_profile_id' in payload.keys():
 					session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 				else:
@@ -722,7 +718,6 @@ class System(Wrappers):
 				#Check if Contact exists in notification product
 				contact = Contact.objects.filter(product=notification_product, gateway_profile=session_gateway_profile) 
 
-				lgr.info('Got Here')
 				#Construct Message to send
 				if 'message' in payload.keys() and payload['message'] not in ['',None]:
 					message = payload['message']
@@ -730,7 +725,6 @@ class System(Wrappers):
 					if "linkid" in payload.keys():
 						contact = contact.filter(linkid=payload['linkid'])
 
-					lgr.info('Got Here')
 					status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
 					if not contact.exists():
 						details = json.dumps({})
@@ -760,7 +754,6 @@ class System(Wrappers):
 					message = smart_text(message)
 					message = escape(message)
 
-					lgr.info('Got Here')
 					outbound = Outbound(contact=new_contact,message=message,scheduled_send=scheduled_send,state=state, sends=0)
 					if ext_outbound_id is not None:
 						outbound.ext_outbound_id = ext_outbound_id
@@ -782,7 +775,6 @@ class System(Wrappers):
 						else:
 							outbound.recipient = new_contact.gateway_profile.user.profile.id
 
-					lgr.info('Got Here')
 					if 'notification_template_id' in payload.keys():
 						template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
 						outbound.template = template
@@ -810,15 +802,12 @@ class System(Wrappers):
 
 						outbound.heading = heading
 
-					lgr.info('Got Here')
 					outbound.save()
 
-					lgr.info('Got Here')
 					payload['response'] = "Notification Sent. Please check %s" % notification_product.notification.code.channel.name
 					payload['response_status']= '00'
 				else:
 
-					lgr.info('Got Here No message')
 					payload['response'] = 'No message to send'
 					payload['response_status'] = '25'
 		except Exception as e:
@@ -1477,7 +1466,7 @@ def contact_unsubscription():
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	#Check for inactive contacts that are still subscribed and have an unsubscription_endpoint
-	contact = Contact.objects.select_for_update(of=('self',)).filter(Q(subscribed=True),Q(status__name='INACTIVE'),\
+	contact = Contact.objects.select_for_update().filter(Q(subscribed=True),Q(status__name='INACTIVE'),\
 			~Q(product__unsubscription_endpoint=None))[:10]
 
 	for i in contact:
@@ -1609,7 +1598,7 @@ def contact_subscription():
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	#Check for created outbounds or processing and gte(last try) one hour ago
-	contact = Contact.objects.select_for_update(of=('self',)).filter(Q(subscribed=False),\
+	contact = Contact.objects.select_for_update().filter(Q(subscribed=False),\
 			Q(status__name='ACTIVE')|Q(status__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=1)))[:10]
 
 	for i in contact:
@@ -1784,7 +1773,7 @@ def send_outbound_sms_messages():
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	#Check for created outbounds or processing and gte(last try) 4 hours ago within the last 3 days| Check for failed transactions within the last 10 minutes
-	orig_outbound = Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='SMS'),\
+	orig_outbound = Outbound.objects.select_for_update().filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='SMS'),\
 				~Q(recipient=None),~Q(recipient=''),\
 				Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 				|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
@@ -1794,9 +1783,9 @@ def send_outbound_sms_messages():
 
 	processing = orig_outbound.filter(id__in=outbound).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
 
-	for ob in outbound:
-		send_outbound.delay(ob)
-	#map_iterator = map(send_outbound.delay, outbound)
+	#for ob in outbound:
+	#	send_outbound.delay(ob)
+	map_iterator = map(send_outbound.delay, outbound)
 	#x = np.array(outbound)
 	#vfunc = np.vectorize(send_outbound.delay)
 	#v_iterator = vfunc(x)
@@ -1810,7 +1799,7 @@ def send_outbound_email_messages():
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	#Check for created outbounds or processing and gte(last try) 4 hours ago within the last 3 days| Check for failed transactions within the last 10 minutes
-	outbound = Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='EMAIL'),\
+	outbound = Outbound.objects.select_for_update().filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='EMAIL'),\
 				Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 				|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 				|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=2),date_created__gte=timezone.now()-timezone.timedelta(hours=6)),\

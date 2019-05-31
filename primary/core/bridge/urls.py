@@ -1,9 +1,8 @@
-from django.conf.urls import patterns, include, url
-from bridge.views import *
+from django.conf.urls import include, url
 
-urlpatterns = patterns('',
+urlpatterns = [
      #url(r'^fetch_files/$',  Files().fetch_files),
-)
+]
 
 
 

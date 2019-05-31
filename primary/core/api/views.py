@@ -32,6 +32,7 @@ class ServiceCall:
 			payload = dict(filter(lambda x:x[1], payload.items())) #Remove empty value items
 
 			lgr.info('To Call Processor: %s' % ServiceProcessor().do_process)
+			lgr.info(payload)
 			payload = ServiceProcessor().do_process(service, gateway_profile, payload.copy())
 
 			lgr.info('End Processor: %s' % payload)

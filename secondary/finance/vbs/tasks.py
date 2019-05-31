@@ -511,7 +511,7 @@ class System(Wrappers):
 			session_account = Account.objects.get(id=payload['session_account_id'])
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			session_account_manager = AccountManager.objects.select_for_update(of=('self',),nowait=True).filter(dest_account = session_account,dest_account__account_type=session_account.account_type).order_by('-date_created')
+			session_account_manager = AccountManager.objects.select_for_update(nowait=True).filter(dest_account = session_account,dest_account__account_type=session_account.account_type).order_by('-date_created')
 
 
 			amount = Decimal(payload['amount']) if 'amount' in payload.keys() else Decimal(0)
@@ -665,7 +665,7 @@ class System(Wrappers):
 
 			session_account = Account.objects.get(id=payload['session_account_id'])
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			session_account_manager = AccountManager.objects.select_for_update(of=('self',),nowait=True).filter(dest_account = session_account, dest_account__account_type=session_account.account_type).order_by('-date_created')
+			session_account_manager = AccountManager.objects.select_for_update(nowait=True).filter(dest_account = session_account, dest_account__account_type=session_account.account_type).order_by('-date_created')
 
 			amount = Decimal(payload['amount']) if 'amount' in payload.keys() else Decimal(0)
 			charge = Decimal(0)
@@ -1613,7 +1613,7 @@ def process_overdue_credit():
 	for c in credit_overdue:
 		try:
 			lgr.info('Credit Overdue: %s' % c)
-			orig_savings_credit_manager = SavingsCreditManager.objects.select_for_update(of=('self',)).filter(Q(due_date__lte=(timezone.now()-timezone.timedelta(days=c.overdue_time))),\
+			orig_savings_credit_manager = SavingsCreditManager.objects.select_for_update().filter(Q(due_date__lte=(timezone.now()-timezone.timedelta(days=c.overdue_time))),\
 					Q(due_date__gte=(timezone.now()-timezone.timedelta(days=(c.overdue_time+3) ))),\
 					Q(credit_paid=False, processed_overdue_credit=False))
 

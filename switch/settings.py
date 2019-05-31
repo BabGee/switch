@@ -23,7 +23,7 @@ cf.read('switch/conf/switch.properties')
 
 #faust
 FAUST_BROKER_URL = 'kafka://localhost:9092'
-FAUST_STORE_URL = 'redis://'
+FAUST_STORE_URL = 'rocksdb://'
 
 
 try:conf_products = cf.get('INSTALLED_APPS','products')

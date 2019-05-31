@@ -555,7 +555,7 @@ class System(Wrappers):
 
 
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = FloatManager.objects.select_for_update(of=('self',),nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = FloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
 				if 'institution_id' in payload.keys():
 					float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
@@ -668,7 +668,7 @@ class System(Wrappers):
 
 
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = AgentFloatManager.objects.select_for_update(of=('self',),nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = AgentFloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
 				if 'agent_id' in payload.keys():
 					float_balance = float_balance.filter(Q(agent__id=payload['agent_id'])|Q(agent=None))
@@ -782,7 +782,7 @@ class System(Wrappers):
 
 
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = FloatManager.objects.select_for_update(of=('self',),nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = FloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
 
 				if 'institution_id' in payload.keys():
@@ -898,7 +898,7 @@ class System(Wrappers):
 				float_type = float_type.filter(product_type=None)
 			lgr.info('Float Type: %s' % float_type)
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = FloatManager.objects.select_for_update(of=('self',),nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = FloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
 				if 'institution_id' in payload.keys():
 					float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
@@ -1018,7 +1018,7 @@ class System(Wrappers):
 
 
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = AgentFloatManager.objects.select_for_update(of=('self',),nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = AgentFloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
 
 				if 'agent_id' in payload.keys():
@@ -1134,7 +1134,7 @@ class System(Wrappers):
 				float_type = float_type.filter(product_type=None)
 			lgr.info('Float Type: %s' % float_type)
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = AgentFloatManager.objects.select_for_update(of=('self',),nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = AgentFloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
 				if 'agent_id' in payload.keys():
 					float_balance = float_balance.filter(Q(agent__id=payload['agent_id'])|Q(agent=None))
@@ -1669,7 +1669,7 @@ def incoming_poller():
 	try:
 		lgr.info('Poller 1')
 
-		orig_incoming_poller = IncomingPoller.objects.select_for_update(of=('self',)).filter(Q(status__name='PROCESSED'),Q(next_run__lte=timezone.now()))
+		orig_incoming_poller = IncomingPoller.objects.select_for_update().filter(Q(status__name='PROCESSED'),Q(next_run__lte=timezone.now()))
 
 		lgr.info('Poller 1.1: %s' % orig_incoming_poller)
 		incoming = list(orig_incoming_poller.values_list('id',flat=True)[:100])
@@ -1693,7 +1693,7 @@ def send_paygate_outgoing():
 	lgr = get_task_logger(__name__)
 	#Check for created outbounds or processing and gte(last try) 4 hours ago within the last 3 days| Check for failed transactions within the last 10 minutes
 	try:
-		orig_outgoing = Outgoing.objects.select_for_update(of=('self',)).filter(Q(scheduled_send__lte=timezone.now()),\
+		orig_outgoing = Outgoing.objects.select_for_update().filter(Q(scheduled_send__lte=timezone.now()),\
 					Q(Q(remittance_product__realtime=False),Q(state__name='CREATED'))|Q(state__name='RESEND'),\
 					~Q(response_status__action__in=['0']),\
 					~Q(remittance_product__endpoint=None),Q(remittance_product__remittance__status__name='ACTIVE'))
@@ -1714,7 +1714,7 @@ def send_paygate_outgoing_deprecated():
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	#Check for created outbounds or processing and gte(last try) one hour ago | Send all non realtime created and resends all, realtime and non-relatime
-	outgoing = Outgoing.objects.select_for_update(of=('self',)).filter(Q(scheduled_send__lte=timezone.now()),\
+	outgoing = Outgoing.objects.select_for_update().filter(Q(scheduled_send__lte=timezone.now()),\
 				Q(Q(remittance_product__realtime=False),Q(state__name='CREATED'))|Q(state__name='RESEND'),\
 				~Q(response_status__action__in=['0']),\
 				~Q(remittance_product__endpoint=None),Q(remittance_product__remittance__status__name='ACTIVE'))[:100]
@@ -1773,7 +1773,7 @@ def send_paygate_outgoing_deprecated():
 def process_incoming_payments():
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
-	incoming = Incoming.objects.select_for_update(of=('self',)).filter(Q(processed=False),~Q(institution_incoming_service=None),Q( date_modified__lte=timezone.now()-timezone.timedelta(seconds=2) ))[:10]
+	incoming = Incoming.objects.select_for_update().filter(Q(processed=False),~Q(institution_incoming_service=None),Q( date_modified__lte=timezone.now()-timezone.timedelta(seconds=2) ))[:10]
 
 	for c in incoming:
 		try:

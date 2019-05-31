@@ -1274,7 +1274,7 @@ class Wrappers:
 						#Lock Query till Marked as sent (SELECT FOR UPDATE) & Select for trigger and Update Unfiltered List
 						#original_filtered_report_list = original_report_list.filter(query).select_for_update()
 
-						original_filtered_report_list = report_list.filter(query).select_for_update(of=('self',))
+						original_filtered_report_list = report_list.filter(query).select_for_update()
 
 						if data.pn_action.filter(name='REPLACE').exists():
 							#Return full list to REPLACE existing list
@@ -1519,7 +1519,7 @@ class Wrappers:
 				#push = {}
 				import copy
 				# Loop through a report to get the different pn_id_fields to be updated | Limit to 50 for optimization
-				bid_req_app =  BidRequirementApplication.objects.select_for_update(of=('self',)).filter(pn=False)[:50]
+				bid_req_app =  BidRequirementApplication.objects.select_for_update().filter(pn=False)[:50]
 			#lgr.info(bid_req_app)	
 			if bid_req_app.exists():
 				#lgr.info('push updates exist')
@@ -2330,7 +2330,7 @@ def process_file_upload():
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	# One file every 10 seconds, means a total of 6 files per minute
-	upload = FileUploadActivity.objects.select_for_update(of=('self',)).filter(status__name='CREATED', \
+	upload = FileUploadActivity.objects.select_for_update().filter(status__name='CREATED', \
 								   date_modified__lte=timezone.now() - timezone.timedelta(
 									   seconds=10))[:1]
 

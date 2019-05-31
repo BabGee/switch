@@ -529,7 +529,7 @@ def process_background_service():
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
-		orig_background = BackgroundServiceActivity.objects.select_for_update(of=('self',)).filter(response_status__response='DEFAULT',\
+		orig_background = BackgroundServiceActivity.objects.select_for_update().filter(response_status__response='DEFAULT',\
 					status__name='CREATED', date_modified__lte=timezone.now()-timezone.timedelta(seconds=2),\
 					scheduled_send__lte=timezone.now())
 		background = list(orig_background.values_list('id',flat=True)[:250])
