@@ -446,6 +446,17 @@ def process_pending_transactions(id_list):
 
 
 @app.task(ignore_result=True)
+def service_call(service_name, gateway_profile_id, payload):
+	try:
+		lgr.info('Received Service Task: %s' % service_name)
+		service = Service.objects.get(name=service_name)
+		gateway_profile = GatewayProfile.objects.get(id=gateway_profile_id)
+		Wrappers().service_call(service, gateway_profile, payload)
+	except Exception as e:
+		lgr.info('Error on Service Call: %s' % e)
+
+
+@app.task(ignore_result=True)
 def background_service_call(service_name, gateway_profile_id, payload):
 	try:
 		lgr.info('Received BG Task: %s' % service_name)

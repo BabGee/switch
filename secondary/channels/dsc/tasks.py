@@ -13,7 +13,7 @@ from functools import reduce
 import pytz
 import re
 from celery import shared_task
-from celery import task
+from celery import task, group, chain
 #from celery.contrib.methods import task_method
 from celery.utils.log import get_task_logger
 from secondary.finance.crc.models import *
@@ -42,6 +42,7 @@ from switch.celery import app
 from switch.celery import single_instance_task
 from secondary.finance.vbs.models import *
 import numpy as np
+import pandas as pd
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core import serializers
@@ -1948,6 +1949,8 @@ class Wrappers:
 						class_name = d.data_response_type.name.title()
 						#lgr.info("Node To Call: %s Class Name: %s" % (node_to_call, class_name))
 
+
+						'''
 						class_command = 'from '+node_to_call+'.data import '+class_name+' as c'
 						#lgr.info('Class Command: %s' % class_command)
 						try:exec (class_command)
@@ -1957,6 +1960,19 @@ class Wrappers:
 						fn = c()
 						func = getattr(fn, d.command_function)
 						#lgr.info("Run Func: %s TimeOut: %s" % (func, d.node_system.timeout_time))
+						'''
+
+						import importlib
+						module =  importlib.import_module(node_to_call+'.data')
+						#module = __import__.import_module(node_to_call+'.tasks')
+						lgr.info('Module: %s' % module)
+						my_class = getattr(module, class_name)
+						lgr.info('My Class: %s' % my_class)
+						fn = my_class()
+						lgr.info("Call Class: %s" % fn)
+
+						func = getattr(fn, d.command_function)
+
 
 						#responseParams = func(payload, node_info)
 						params,max_id,min_id,t_count,push[d.data_name] = func(payload, gateway_profile, profile_tz, d)
@@ -2214,6 +2230,54 @@ class Trade(System):
 class Payments(System):
 	pass
 
+#Process File with Pands
+@app.task(ignore_result=True, soft_time_limit=259200)
+def pre_process_file_upload(payload):
+	payload = json.loads(payload)
+	#from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	u =FileUploadActivity.objects.get(id=payload['id'])
+	try:
+
+		rf = u.file_path
+		df = pd.read_csv(rf)
+		lgr.info('Data Frame Columns: %s' % df.columns)
+		lgr.info('Data Frame: \n%s' % df.head())
+		lgr.info('Data Frame: \n%s' % df.tail())
+
+		df.fillna('', inplace=True)
+		tasks = []
+		for row in df.itertuples():
+			payload = json.loads(u.details)
+			for i in range(len(df.columns)):
+				payload[df.columns[i].lower()] = row[i+1]
+
+			payload['chid'] = u.channel.id
+			payload['ip_address'] = '127.0.0.1'
+			payload['gateway_host'] = '127.0.0.1'
+
+			lgr.info('Payload: %s' % payload)
+			service = u.file_upload.activity_service
+			gateway_profile = u.gateway_profile
+
+			tasks.append(bridgetasks.service_call.s(service.name, gateway_profile.id, payload))
+
+
+		chunks, chunk_size = len(tasks), 500
+		file_tasks= [ group(*tasks[i:i+chunk_size])() for i in range(0, chunks, chunk_size) ]
+
+		#file_tasks = group(*tasks)()
+
+
+		payload['response'] = "File Processed"
+		payload['response_status'] = '00'
+	except Exception as e:
+		payload['response_status'] = '96'
+		lgr.info('Unable to make service call: %s' % e)
+	return payload
+
+
+
 # Allow file to process for 72hrs| Means maximum records can process is: 432,000
 @app.task(ignore_result=True, soft_time_limit=259200)
 def process_file_upload_activity(payload):
@@ -2329,33 +2393,38 @@ def process_file_upload_activity(payload):
 def process_file_upload():
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
-	# One file every 10 seconds, means a total of 6 files per minute
-	upload = FileUploadActivity.objects.select_for_update().filter(status__name='CREATED', \
-								   date_modified__lte=timezone.now() - timezone.timedelta(
-									   seconds=10))[:1]
+	try:
+		upload = FileUploadActivity.objects.select_for_update().filter(status__name='CREATED', \
+									   date_modified__lte=timezone.now() - timezone.timedelta(
+										   seconds=10))
+		tasks = []
+		for u in upload:
+			try:
+				u.status = FileUploadActivityStatus.objects.get(name='PROCESSING')
+				u.save()
+				lgr.info('Captured Upload: %s' % u)
+				payload = {}
+				payload['id'] = u.id
 
-	for u in upload:
-		try:
-			u.status = FileUploadActivityStatus.objects.get(name='PROCESSING')
-			u.save()
-			lgr.info('Captured Upload: %s' % u)
-			payload = {}
-			payload['id'] = u.id
+
+				payload = json.dumps(payload, cls=DjangoJSONEncoder)
+				#process_file_upload_activity.delay(payload)
+				tasks.append(pre_process_file_upload.s(payload))
+
+				u.status = FileUploadActivityStatus.objects.get(name='PROCESSED')
+				u.save()
+
+				lgr.info("Files Written to and Closed")
+			except Exception as e:
+				u.status = FileUploadActivityStatus.objects.get(name='FAILED')
+				u.save()
+
+				lgr.info('Error on creating file preprocessing request: %s | %s' % (u, e))
 
 
-			payload = json.dumps(payload, cls=DjangoJSONEncoder)
-			process_file_upload_activity.delay(payload)
-
-			u.status = FileUploadActivityStatus.objects.get(name='PROCESSED')
-			u.save()
-
-			lgr.info("Files Written to and Closed")
-		except Exception as e:
-			u.status = FileUploadActivityStatus.objects.get(name='FAILED')
-			u.save()
-
-			lgr.info('Error processing file upload: %s | %s' % (u, e))
-
+		file_tasks = group(*tasks)()
+	except Exception as e:
+		lgr.info('Error on process file upload')
 
 
 def push_update(k, v):

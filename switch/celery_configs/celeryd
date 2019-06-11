@@ -7,7 +7,7 @@
 #   for each in CELERYD_OPTS
 #CELERYD_NODES="worker1 worker2 worker3"
 #   alternatively, you can specify the number of nodes to start:
-CELERYD_NODES=60
+CELERYD_NODES=55
 
 # Absolute or relative path to the 'celery' command:
 CELERY_BIN="/usr/local/bin/celery"
@@ -26,18 +26,31 @@ CELERYD_CHDIR="/srv/applications/switch"
 
 # Extra command-line arguments to the worker
 
+#CELERYD_OPTS="--time-limit=300  --without-mingle -Ofair
+#-Q:1-4 celery -c:1-4 300 -P:1-4 gevent
+#-Q:5-8 io_task -c:5-8 300 -P:5-8 gevent
+#-Q:9-12 comp_task -c:9-12 10
+#-Q:13-16 notification -c:13-16 300 -P:13-16 gevent
+#-Q:17-20 files -c:17-20 300 -P:17-20 gevent
+#-Q:21-24 payments -c:21-24 300 -P:21-24 gevent 
+#-Q:25-45 spawned_bulk_notification -c:25-45 300 -P:25-45 gevent 
+#-Q:46-49 bulk_notification -c:46-49 300 -P:46-49 gevent 
+#-Q:50-53 services -c:50-53 300 -P:50-53 gevent
+#-Q:54-57 push_request -c:54-57 300 -P:54-57 gevent
+#-Q:57-60 commandline -c:57-60 10"
+
+
 CELERYD_OPTS="--time-limit=300  --without-mingle -Ofair
--Q:1-4 celery -c:1-4 300 -P:1-4 gevent
--Q:5-8 io_task -c:5-8 300 -P:5-8 gevent
--Q:9-12 comp_task -c:9-12 10
--Q:13-16 notification -c:13-16 300 -P:13-16 gevent
--Q:17-20 files -c:17-20 300 -P:17-20 gevent
--Q:21-24 payments -c:21-24 300 -P:21-24 gevent 
--Q:25-45 spawned_bulk_notification -c:25-45 300 -P:25-45 gevent 
--Q:46-49 bulk_notification -c:46-49 300 -P:46-49 gevent 
--Q:50-53 services -c:50-53 300 -P:50-53 gevent
--Q:54-57 push_request -c:54-57 300 -P:54-57 gevent
--Q:57-60 commandline -c:57-60 10"
+-Q:1-4 celery -c:1-4 3
+-Q:5-8 push_request -c:5-8 3
+-Q:9-12 services -c:9-12 3
+-Q:13-16 notification -c:13-16 3
+-Q:17-20 files -c:17-20 3
+-Q:21-24 payments -c:21-24 3
+-Q:25-45 spawned_bulk_notification -c:25-45 3
+-Q:46-49 bulk_notification -c:46-49 3
+-Q:50-52 products -c:50-52 3
+-Q:53-55 thirdparty -c:53-55 3"
 
 # Configure node-specific settings by appending node name to arguments:
 #CELERYD_OPTS="--time-limit=300 -c 8 -c:worker2 4 -c:worker3 2 -Ofair:worker1"

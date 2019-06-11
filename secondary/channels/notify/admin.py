@@ -30,7 +30,8 @@ class NotificationProductAdmin(admin.ModelAdmin):
 	list_display = ('id','name', 'description', 'notification','ext_product_id',\
 			'keyword','subscribable','expires','subscription_endpoint',\
 			'product_type_list','unit_credit_charge','service_list',\
-			'unsubscription_endpoint','create_subscribe','payment_method_list',)
+			'unsubscription_endpoint','create_subscribe','payment_method_list',\
+			'trading_box',)
 	list_filter = ('notification','notification__code','notification__code__institution','service','notification__code__gateway',)
 admin.site.register(NotificationProduct, NotificationProductAdmin)
 

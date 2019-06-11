@@ -2,6 +2,7 @@ from django.contrib.gis.db import models
 from secondary.channels.vcs.models import *
 from secondary.erp.crm.models import *
 from django.contrib.postgres.fields import JSONField
+from postgres_copy import CopyManager
 
 class Endpoint(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -64,6 +65,7 @@ class NotificationProduct(models.Model):
 	service = models.ManyToManyField(Service, blank=True)
 	unsubscription_endpoint = models.ForeignKey(Endpoint, null=True, blank=True, related_name="unsubscription_endpoint", on_delete=models.CASCADE)
 	create_subscribe = models.BooleanField(default=False)
+	trading_box = models.ForeignKey(TradingBox, null=True, blank=True, on_delete=models.CASCADE)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	def __str__(self):
 		return u'%s %s %s %s' % (self.id, self.name, self.unit_credit_charge, self.notification)
@@ -241,7 +243,7 @@ class Outbound(models.Model):
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False,
 								 help_text="Push Notification Acknowledged")
-
+	objects = CopyManager()
 	def __str__(self):
 		return u'%s %s %s' % (self.contact, self.heading, self.message)
 	def attachment_list(self):

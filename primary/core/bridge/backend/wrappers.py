@@ -77,37 +77,6 @@ class Wrappers:
 
 		return new_payload
 
-
-	def post_request(self, payload, node):
-		try:
-			if self.validate_url(node):
-				jdata = json.dumps(payload)
-				c = pycurl.Curl()
-				c.setopt(pycurl.CONNECTTIMEOUT, 30)
-				c.setopt(pycurl.TIMEOUT, 30)
-				c.setopt(pycurl.NOSIGNAL, 1)
-				c.setopt(pycurl.URL, str(node) )
-				c.setopt(pycurl.POST, 1)
-				header=['Content-Type: application/json; charset=utf-8','Content-Length: '+str(len(jdata))]
-				c.setopt(pycurl.HTTPHEADER, header)
-				c.setopt(pycurl.POSTFIELDS, str(jdata))
-				import StringIO
-				b = StringIO.StringIO()
-				c.setopt(pycurl.WRITEFUNCTION, b.write)
-				c.perform()
-				response = b.getvalue()
-				payload = json.loads(response)
-
-			else:
-				lgr.info('Invalid URL')
-				payload['response_status'] = '96'
-		except Exception as e:
-			lgr.info("Error Posting Request: %s" % e)
-			payload['response_status'] = '96'
-
-		return payload
-
-
 	def process_responsestatus(self,response_status, un_payload):
 		payload = {}
 		try:

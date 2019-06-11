@@ -14,6 +14,6 @@ urlpatterns = [
 	url(r'^auth/user',     notify_views.user),
 	url(r'^auth/vhost',    notify_views.vhost),
 	url(r'^auth/resource', notify_views.resource),
-	#url(r'^iic_editor/', include(iic.editor.urls),name='editor'),
+	url(r'^iic_editor/', include("secondary.channels.iic.editor.urls"),name='editor'),
 
 	]

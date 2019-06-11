@@ -321,7 +321,6 @@ class TradingBox(models.Model):
 	description = models.CharField(max_length=200,null=True,blank=True)
 	open_time = models.TimeField()
 	close_time = models.TimeField()
-	timezone = models.CharField(max_length=50)
 	def __str__(self):
 		return u'%s' % (self.name)
 

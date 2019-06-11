@@ -329,7 +329,7 @@ class Wrappers:
 
 		#try: msisdn = msisdn.encode('ascii','ignore').decode('utf-8','ignore')
 		#except: pass
-		msisdn = msisdn.strip()
+		msisdn = str(msisdn).strip()
 		msisdn = msisdn.replace(' ','').replace('-','')
 		is_num = False
 		try:
@@ -342,7 +342,7 @@ class Wrappers:
 			msisdn = str(msisdn)
 		elif is_num and len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
 			country_list = Country.objects.filter(mpoly__intersects=trans_point)
-			ip_point = g.geos(str(payload['ip_address']))
+			ip_point = g.geos(str(payload['ip_address'])) if 'ip_address' in payload.keys() else None
 			#Allow Country from web and apps
 			if country_list.exists() and country_list[0].ccode and int(payload['chid']) in [1,3,7,8,9,10]:
 				msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
@@ -354,7 +354,22 @@ class Wrappers:
 					msisdn = None
 			else:
 				msisdn = '+254%s' % msisdn[1:]
-		elif is_num and len(msisdn) >=10  and msisdn[:1] != '0' and msisdn[:1] != '+':
+
+		elif is_num and len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] != '0':
+			country_list = Country.objects.filter(mpoly__intersects=trans_point)
+			ip_point = g.geos(str(payload['ip_address'])) if 'ip_address' in payload.keys() else None
+			#Allow Country from web and apps
+			if country_list.exists() and country_list[0].ccode and int(payload['chid']) in [1,3,7,8,9,10]:
+				msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
+			elif ip_point and int(payload['chid']) in [1,3,7,8,9,10]:
+				country_list = Country.objects.filter(mpoly__intersects=ip_point)
+				if country_list.exists() and country_list[0].ccode:
+					msisdn = '+%s%s' % (country_list[0].ccode,msisdn)
+				else:
+					msisdn = None
+			else:
+				msisdn = '+254%s' % msisdn
+		elif is_num and len(msisdn) >10  and msisdn[:1] != '0' and msisdn[:1] != '+':
 			msisdn = '+%s' % msisdn #clean msisdn for lookup
 		else:
 			msisdn = None
@@ -374,7 +389,7 @@ class Wrappers:
 
 			#try: msisdn = msisdn.encode('ascii','ignore').decode('utf-8','ignore')
 			#except: pass
-			msisdn = msisdn.strip()
+			msisdn = str(msisdn).strip()
 			msisdn = msisdn.replace(' ','').replace('-','')
 
 			is_num = False
@@ -387,7 +402,7 @@ class Wrappers:
 				msisdn = str(msisdn)
 			elif is_num and len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
 				country_list = Country.objects.filter(mpoly__intersects=trans_point)
-				ip_point = g.geos(str(payload['ip_address']))
+				ip_point = g.geos(str(payload['ip_address'])) if 'ip_address' in payload.keys() else None
 				#Allow Country from web and apps
 				if country_list.exists() and country_list[0].ccode and int(payload['chid']) in [1,3,7,8,9,10]:
 					msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
@@ -399,7 +414,21 @@ class Wrappers:
 						msisdn = None
 				else:
 					msisdn = '+254%s' % msisdn[1:]
-			elif is_num and len(msisdn) >=10  and msisdn[:1] != '0' and msisdn[:1] != '+':
+			elif is_num and len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] != '0':
+				country_list = Country.objects.filter(mpoly__intersects=trans_point)
+				ip_point = g.geos(str(payload['ip_address'])) if 'ip_address' in payload.keys() else None
+				#Allow Country from web and apps
+				if country_list.exists() and country_list[0].ccode and int(payload['chid']) in [1,3,7,8,9,10]:
+					msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
+				elif ip_point and int(payload['chid']) in [1,3,7,8,9,10]:
+					country_list = Country.objects.filter(mpoly__intersects=ip_point)
+					if country_list.exists() and country_list[0].ccode:
+						msisdn = '+%s%s' % (country_list[0].ccode,msisdn)
+					else:
+						msisdn = None
+				else:
+					msisdn = '+254%s' % msisdn
+			elif is_num and len(msisdn) >10  and msisdn[:1] != '0' and msisdn[:1] != '+':
 				msisdn = '+%s' % msisdn #clean msisdn for lookup
 			else:
 				msisdn = None

@@ -1,7 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 from celery import shared_task
 #from celery.contrib.methods import task_method
-from celery import task
+from celery import task, group, chain
 from switch.celery import app
 from celery.utils.log import get_task_logger
 from switch.celery import single_instance_task
@@ -13,7 +13,7 @@ from django.utils.timezone import utc
 from django.contrib.gis.geos import Point
 from django.contrib.gis.geoip2 import GeoIP2
 
-from django.db import IntegrityError
+from django.db import IntegrityError, DatabaseError
 import pytz, time, json, pycurl
 from django.utils.timezone import localtime
 from datetime import datetime
@@ -32,11 +32,13 @@ from django.db.models import Q, F
 from django.db.models import Count, Sum, Max, Min, Avg
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core import serializers
-
+from django.db.models.functions import TruncTime
 import operator, string
+from itertools import islice
 from django.core.mail import EmailMultiAlternatives
 from primary.core.upc.tasks import Wrappers as UPCWrappers
 import numpy as np
+import pandas as pd
 from django.conf import settings
 
 from primary.core.administration.views import WebService
@@ -57,7 +59,8 @@ class Wrappers:
 					   'gpid','sec','fingerprint','vpc_securehash','currency','amount',\
 					   'institution_id','response','input','trigger','send_minutes_period','send_hours_period',\
 					   'send_days_period','send_years_period','token','repeat_bridge_transaction','transaction_auth',\
-					   'gateway_id','file_upload','recipient','contact_group_id','gateway_profile_id']
+					   'gateway_id','file_upload','recipient','contact_group_id','gateway_profile_id','contact_group_name',\
+					   'contact_group_description']
 
 		for k, v in payload.items():
 			try:
@@ -322,20 +325,23 @@ class System(Wrappers):
 		try:
 			lgr.info("Add Recipient: %s" % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			status = ContactStatus.objects.get(name='ACTIVE')
-			contact_group = ContactGroup.objects.get(id=payload['contact_group_id'].strip())
-			if not Recipient.objects.filter(recipient=payload['recipient'].strip(),contact_group=contact_group).exists():
-				recipient = Recipient(status=status,subscribed=True,recipient=payload['recipient'].strip(),\
-						details=json.dumps(self.recipient_payload(payload)),\
-						contact_group=contact_group)
-				recipient.save()
+			if 'recipient' in payload.keys() and (  UPCWrappers().simple_get_msisdn(str(payload['recipient']).strip()) or UPCWrappers.validateEmail(str(payload['recipient']).strip()) ):
+				status = ContactStatus.objects.get(name='ACTIVE')
+				contact_group = ContactGroup.objects.get(id=str(payload['contact_group_id']).strip())
+				if not Recipient.objects.filter(recipient=str(payload['recipient']).strip(),contact_group=contact_group).exists():
+					recipient = Recipient(status=status,subscribed=True,recipient=str(payload['recipient']).strip(),\
+							details=json.dumps(self.recipient_payload(payload)),\
+							contact_group=contact_group)
+					recipient.save()
 
-				payload['response_status'] = '00'
-				payload['response'] = 'Recipient Added'
+					payload['response_status'] = '00'
+					payload['response'] = 'Recipient Added'
+				else:
+					payload['response_status'] = '26'
+					payload['response'] = 'Recipient Exists'
 			else:
-				payload['response_status'] = '26'
-				payload['response'] = 'Recipient Exists'
-			
+					payload['response_status'] = '12'
+					payload['response'] = 'Invalid Recipient'
 		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Add Recipient: %s" % e)
@@ -654,6 +660,7 @@ class System(Wrappers):
 					message = escape(message)
 					chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters
 					messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
+					payload['message_len'] = len(messages)
 					float_amount = float_amount*len(messages)
 
 				#Finally
@@ -674,7 +681,7 @@ class System(Wrappers):
 				payload["response_status"] = "25"
 		except Exception as e:
 			payload['response_status'] = '96'
-			lgr.info("Error on Get Notification: %s" % e)
+			lgr.info("Error on Get Notification: %s" % e,exc_info=True)
 		return payload
 
 	def get_email_notification(self, payload, node_info):
@@ -822,7 +829,9 @@ class System(Wrappers):
 
 			outbound_id = payload['outbound_id']
 			delivery_status = payload['delivery_status']
-			outbound = Outbound.objects.select_related('contact').filter(id=outbound_id)
+			outbound = Outbound.objects.select_related('contact').filter(ext_outbound_id=outbound_id.strip())
+			if 'recipient' in payload.keys():
+				outbound = outbound.filter(recipient=payload['recipient'].strip())
 			if 'ext_service_id' in payload.keys() and payload['ext_service_id'] not in [None,'']:
 				outbound = outbound.filter(contact__product__notification__ext_service_id=payload['ext_service_id'])
 
@@ -1055,13 +1064,16 @@ class System(Wrappers):
 			lgr.info('Get Product Outbound Notification: %s' % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			recipient = Recipient.objects.filter(subscribed=True,status__name='ACTIVE',\
+			recipient_list = Recipient.objects.filter(subscribed=True,status__name='ACTIVE',\
 							contact_group__id__in=[a for a in payload['contact_group_id'].split(',') if a],\
 							contact_group__institution=gateway_profile.institution,\
-							contact_group__gateway=gateway_profile.gateway)
+							contact_group__gateway=gateway_profile.gateway).values_list('recipient', flat=True)
 
-			recipient_count = recipient.count()
+			#recipient_count = recipient.count()
 
+			recipient=np.asarray(recipient_list)
+			recipient = np.unique(recipient)
+			recipient_count = recipient.size
 			payload['recipient_count'] = recipient_count
 
 			product = NotificationProduct.objects.get(id=payload['notification_product_id'])
@@ -1144,19 +1156,50 @@ class System(Wrappers):
 
 			notification_product = NotificationProduct.objects.get(id=payload['notification_product_id'])
 
+			'''
+
+			recipient_list = Recipient.objects.filter(Q(subscribed=True,status__name='ACTIVE',\
+							contact_group__id__in=[a for a in payload['contact_group_id'].split(',') if a],\
+							contact_group__institution=gateway_profile.institution,\
+							contact_group__gateway=gateway_profile.gateway),\
+							~Q(recipient__in=Outbound.objects.filter(date_created__gte=timezone.now()-timezone.timedelta(hours=2),message__icontains='TONIGHT SURE FIXED 108 ODDS ARE IN! ID:XX97').values_list('recipient',flat=True)))\
+							.values_list('recipient', flat=True)
+
+
+
+			'''
+
 			recipient_list = Recipient.objects.filter(subscribed=True,status__name='ACTIVE',\
 							contact_group__id__in=[a for a in payload['contact_group_id'].split(',') if a],\
 							contact_group__institution=gateway_profile.institution,\
-							contact_group__gateway=gateway_profile.gateway).values_list('recipient', flat=True)
+							contact_group__gateway=gateway_profile.gateway)\
+							.values_list('recipient', flat=True)
 
 			if 'message' in payload.keys() and recipient_list.exists():
 				lgr.info('Message and Contact Captured')
 				#Bulk Create Outbound
-				#self.outbound_bulk_logger.delay(payload, contact_list, scheduled_send)
-				recipient_list = np.asarray(recipient_list).tolist()
-				#lgr.info('Recipient List: %s' % recipient_list)
-				#recipient_outbound_bulk_logger.apply_async((payload, recipient_list, scheduled_send), serializer='json')
-				recipient_outbound_bulk_logger.delay(payload, recipient_list, scheduled_send)
+				recipient=np.asarray(recipient_list)
+				recipient = np.unique(recipient)
+				recipient_outbound_bulk_logger.delay(payload, recipient, scheduled_send)
+
+				'''
+				df = pd.DataFrame({'recipient': recipient})
+				df['message'] = payload['message']
+				df['scheduled_send'] = scheduled_send
+				df['contact'] = payload['contact_id']
+				df['state'] = OutBoundState.objects.get(name='CREATED').id
+				df['date_modified'] = timezone.now()
+				df['date_created'] = timezone.now()
+				df['sends'] = 0
+				df['pn'] = False
+				df['pn_ack'] = False
+				df['inst_notified'] = False
+
+				from django.core.files.base import ContentFile
+				f1 = ContentFile(df.to_csv(index=False))
+				outbound_log = Outbound.objects.from_csv(f1)
+				'''
+
 				payload['response'] = 'Outbound Message Processed'
 				payload['response_status']= '00'
 			elif 'message' not in payload.keys() and recipient_list.exists():
@@ -1502,9 +1545,53 @@ def contact_unsubscription():
 			lgr.info('Error unsubscribing item: %s | %s' % (i,e))
 
 
-@app.task(ignore_result=True)
+
+#PAUSED not used
+@app.task(ignore_result=True, serializer='pickle', time_limit=1000, soft_time_limit=900)
 @transaction.atomic
-def recipient_outbound_bulk_logger(payload, recipient_list, scheduled_send):
+def outbound_bulk_logger(batch):
+	try:
+		outbound = Outbound.objects.bulk_create(batch)
+		lgr.info('Succesfully Logged to Outbound')
+	except Exception as e:
+		lgr.info("Error on Outbound Bulk Logger: %s" % e)
+
+
+@app.task(ignore_result=True, serializer='pickle', time_limit=1000, soft_time_limit=900)
+def recipient_outbound_bulk_logger(payload, recipient, scheduled_send):
+	#from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+		import time
+		start_time = time.time()
+		lgr.info('Recipient Outbound Bulk Logger Started')
+
+		df = pd.DataFrame({'recipient': recipient})
+		df['message'] = payload['message']
+		df['scheduled_send'] = scheduled_send
+		df['contact'] = payload['contact_id']
+		df['state'] = OutBoundState.objects.get(name='CREATED').id
+		df['date_modified'] = timezone.now()
+		df['date_created'] = timezone.now()
+		df['sends'] = 0
+		df['pn'] = False
+		df['pn_ack'] = False
+		df['inst_notified'] = False
+
+		from django.core.files.base import ContentFile
+
+		f1 = ContentFile(df.to_csv(index=False))
+
+		outbound_log = Outbound.objects.from_csv(f1)
+
+		lgr.info('Recipient Outbound Bulk Logger Completed Task')
+	except Exception as e:
+		lgr.info("Error on Outbound Bulk Logger: %s" % e)
+
+
+@app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
+@transaction.atomic
+def recipient_outbound_bulk_logger_deprecated(payload, recipient_list, scheduled_send):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
@@ -1512,42 +1599,24 @@ def recipient_outbound_bulk_logger(payload, recipient_list, scheduled_send):
 
 		state = OutBoundState.objects.get(name='CREATED')
 		contact = Contact.objects.get(id=payload['contact_id'])
+		#'''
+		objs = [Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r, sends=0) for r in recipient_list]
+		outbound = Outbound.objects.bulk_create(objs, 10000)
 
-		from itertools import islice
-		batch_size = 10000
+		'''
+
 		objs = (Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r, sends=0) for r in recipient_list)
-		while True:
-			batch = list(islice(objs, batch_size))
-			if not batch:
-				break
-			try: 
-				outbound = Outbound.objects.bulk_create(batch)
-				lgr.info('Succesfully Logged to Outbound')
-			except DatabaseError as e:
-				lgr.info('Database Error, Retry Transaction')
-				transaction.set_rollback(True)
-
-		'''
-		#For Bulk Create, do not save each model in loop
-		outbound_list = []
-		for r in recipient_list:
-			outbound = Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r[0], sends=0)
-			outbound_list.append(outbound)
-		if outbound_list:
-			lgr.info('Outbound Bulk Logger Captured')
-			Outbound.objects.bulk_create(outbound_list)
-		'''
-
-		'''
-		from itertools import islice
-
 		batch_size = 10000
-		objs = (Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r[0], sends=0) for r in recipient_list)
+		start = 0
+		tasks = []
 		while True:
-			batch = list(islice(objs, batch_size))
-			if not batch:
-				break
-			Outbound.objects.bulk_create(batch, batch_size)
+			batch = list(islice(objs, start, start+batch_size))
+			start+=batch_size
+			if not batch: break
+			tasks.append(outbound_bulk_logger.s(batch))
+
+		chunks, chunk_size = len(tasks), 500
+		outbound_tasks= [ group(*tasks[i:i+chunk_size])() for i in range(0, chunks, chunk_size) ]
 
 		'''
 		lgr.info('Recipient Outbound Bulk Logger Completed Task')
@@ -1644,13 +1713,71 @@ def contact_subscription():
 			lgr.info('Error subscribing item: %s | %s' % (i,e))
 
 
+
+@app.task(ignore_result=True)
+def send_outbound_batch(message_list):
+	#from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+		i = Outbound.objects.filter(id__in=message_list)
+
+		#add a valid phone number check
+		message = i.first().message
+		message = unescape(message)
+		message = smart_text(message)
+		message = escape(message)
+		payload = {}
+
+		i.update(ext_outbound_id = i.first().id)
+
+		payload['kmp_correlator'] = i.first().id
+
+		payload['kmp_correlator'] = i.first().id
+		#payload['kmp_correlator'] = 'e'.join(message_list)
+		payload['outbound_id'] = i.first().id
+
+		payload['kmp_service_id'] = i.first().contact.product.notification.ext_service_id
+		payload['kmp_code'] = i.first().contact.product.notification.code.code
+		payload['kmp_message'] = message
+
+		payload['kmp_recipients'] = list(i.values_list('recipient', flat=True))
+
+		if i.first().contact.product.notification.endpoint:
+			payload['kmp_spid'] = i.first().contact.product.notification.endpoint.account_id
+			payload['kmp_password'] = i.first().contact.product.notification.endpoint.password
+
+			payload['node_account_id'] = i.first().contact.product.notification.endpoint.account_id
+			payload['node_username'] = i.first().contact.product.notification.endpoint.username
+			payload['node_password'] = i.first().contact.product.notification.endpoint.password
+			payload['node_api_key'] = i.first().contact.product.notification.endpoint.api_key
+
+			payload['contact_info'] = json.loads(i.first().contact.subscription_details)
+
+			#Send SMS
+			node = i.first().contact.product.notification.endpoint.url
+			lgr.info("Payload: %s| Node: %s" % (payload, node) )
+			payload = WebService().post_request(payload, node)
+			lgr.info('Batch Response: %s' % payload)
+
+			if 'response_status' in payload.keys() and payload['response_status'] == '00':
+				i.update(state = OutBoundState.objects.get(name='SENT'))
+			else:
+				i.update(state = OutBoundState.objects.get(name='FAILED'))
+		else:
+			lgr.info('No Endpoint')
+			i.update(state = OutBoundState.objects.get(name='SENT'))
+
+	except Exception as e:
+		lgr.info("Error on Sending Outbound Batch: %s" % e)
+
+
+
 @app.task(ignore_result=True)
 def send_outbound(message):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
 		i = Outbound.objects.get(id=message)
-
 		#add a valid phone number check
 		message = i.message
 		message = unescape(message)
@@ -1658,7 +1785,12 @@ def send_outbound(message):
 		message = escape(message)
 
 		payload = {}
-		payload['kmp_correlator'] = i.id
+
+		if not i.ext_outbound_id:
+			i.ext_outbound_id = i.id
+			i.save()
+
+		payload['kmp_correlator'] = i.ext_outbound_id
 		payload['outbound_id'] = i.id
 
 		payload['kmp_service_id'] = i.contact.product.notification.ext_service_id
@@ -1666,26 +1798,7 @@ def send_outbound(message):
 		payload['kmp_message'] = message
 
 
-		#USE A CHANGE PROFILE MSISDN
-		try:
-			payload['kmp_recipients'] = [str(i.recipient)]
-			'''
-			if i.contact.gateway_profile.changeprofilemsisdn and i.contact.gateway_profile.changeprofilemsisdn.status.name == 'ACTIVE' and i.contact.gateway_profile.changeprofilemsisdn.expiry >= timezone.now():
-				payload['kmp_recipients'] = [str(i.contact.gateway_profile.changeprofilemsisdn.msisdn.phone_number)]
-
-				#Disable Contact as it is temprorary awaiting confirmation
-				i.contact.status = ContactStatus.objects.get(name='INACTIVE')
-				i.contact.subscribed = False
-				i.contact.save()
-				#Change the Change MSISDN profile status to PROCESSING
-				i.contact.gateway_profile.changeprofilemsisdn.status = ChangeProfileMSISDNStatus.objects.get(name='PROCESSED')
-				i.contact.gateway_profile.changeprofilemsisdn.save()
-
-			else:
-				payload['kmp_recipients'] = [str(i.recipient)]
-			'''
-		except ObjectDoesNotExist:
-			payload['kmp_recipients'] = [str(i.recipient)]
+		payload['kmp_recipients'] = [str(i.recipient)]
 
 		if i.contact.product.notification.endpoint:
 			payload['kmp_spid'] = i.contact.product.notification.endpoint.account_id
@@ -1703,12 +1816,6 @@ def send_outbound(message):
 
 			#Send SMS
 			node = i.contact.product.notification.endpoint.url
-			#No response is required on celery use (ignore results)
-			#Wrappers().send_outbound.delay(payload, node)
-
-			############################
-
-
 			#lgr.info("Payload: %s| Node: %s" % (payload, node) )
 			payload = WebService().post_request(payload, node)
 			#lgr.info('Response: %s' % payload)
@@ -1726,13 +1833,18 @@ def send_outbound(message):
 
 			else:
 				i.state = OutBoundState.objects.get(name='FAILED')
-			i.save()
-			###############################
 			#lgr.info('SMS Sent')
+			###############################
+			#Save all actions
+			i.save()
+
 		else:
 			lgr.info('No Endpoint')
 			i.state = OutBoundState.objects.get(name='SENT')
+			###############################
+			#Save all actions
 			i.save()
+
 
 	except Exception as e:
 		lgr.info("Error on Sending Outbound: %s" % e)
@@ -1770,26 +1882,84 @@ def send_outbound2(payload, node):
 @transaction.atomic
 @single_instance_task(60*10)
 def send_outbound_sms_messages():
-	#from celery.utils.log import get_task_logger
-	lgr = get_task_logger(__name__)
-	#Check for created outbounds or processing and gte(last try) 4 hours ago within the last 3 days| Check for failed transactions within the last 10 minutes
-	orig_outbound = Outbound.objects.select_for_update().filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='SMS'),\
-				~Q(recipient=None),~Q(recipient=''),\
-				Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
-				|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
-				|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=2),date_created__gte=timezone.now()-timezone.timedelta(hours=6)),\
-				Q(contact__status__name='ACTIVE'))
-	outbound = list(orig_outbound.values_list('id',flat=True)[:250])
+	try:
+		#from celery.utils.log import get_task_logger
+		lgr = get_task_logger(__name__)
+		#Check for created outbounds or processing and gte(last try) 4 hours ago within the last 3 days| Check for failed transactions within the last 10 minutes
+		orig_outbound = Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='SMS'),\
+					Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),contact__product__trading_box__close_time__gte=timezone.localtime().time())),\
+					~Q(recipient=None),~Q(recipient=''),\
+					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
+					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
+					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=18)),\
+					Q(contact__status__name='ACTIVE')).prefetch_related('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
 
-	processing = orig_outbound.filter(id__in=outbound).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
+		outbound = orig_outbound[:500].values_list('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
 
-	#for ob in outbound:
-	#	send_outbound.delay(ob)
-	map_iterator = map(send_outbound.delay, outbound)
-	#x = np.array(outbound)
-	#vfunc = np.vectorize(send_outbound.delay)
-	#v_iterator = vfunc(x)
+		messages=np.asarray(outbound)
 
+		if messages.size > 0:
+
+			#Update State
+			processing = orig_outbound.filter(id__in=messages[:,0].tolist()).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
+
+			df = pd.DataFrame({'ID':messages[:,0], 'MSISDN':messages[:,1], 'STATE':messages[:,2], 'MESSAGE':messages[:,3], 'PRODUCT':messages[:,4], 'BATCH':messages[:,5]  })
+
+			df['BATCH'] = pd.to_numeric(df['BATCH'])
+
+			df.set_index(['MESSAGE','PRODUCT','BATCH'], inplace=True)
+			df = df.sort_index()
+
+			tasks = []
+			for x in df.index.unique():
+				batch_size = x[2]
+				ID= df.loc[(x),:]['ID']
+				lgr.info('MULTI: %s \n %s' % (df.loc[(x),:].shape,df.loc[(x),:].head()))
+				if batch_size>1 and len(df.loc[(x),:].shape)>1 and df.loc[(x),:].shape[0]>1:
+					objs = ID.values
+					#lgr.info('Got Here (multi): %s' % x[0])
+					start = 0
+					while True:
+						batch = list(islice(objs, start, start+batch_size))
+						start+=batch_size
+						if not batch: break
+						tasks.append(send_outbound_batch.s(batch))
+				elif len(df.loc[(x),:].shape)>1 :
+					#lgr.info('Got Here (list of singles): %s' % x[0])
+					for d in ID: tasks.append(send_outbound.s(d))
+				else:
+
+					#lgr.info('Got Here (single): %s' % x[0])
+					tasks.append(send_outbound.s(ID))
+
+			#lgr.info('Got Here 10: %s' % tasks)
+
+			chunks, chunk_size = len(tasks), 500
+			sms_tasks= [ group(*tasks[i:i+chunk_size])() for i in range(0, chunks, chunk_size) ]
+
+			#sms_tasks  = group(*tasks)()
+			#lgr.info('Got Here 11: %s' % sms_tasks)
+			#'''
+			#lgr.info('Got Here 6')
+			#sms_tasks  = group(send_outbound_batch.s([ob]) for ob in messages[:,0].tolist())()
+
+		#sms_tasks  = group(send_outbound_batch.s([ob]) for ob in outbound)()
+		#for ob in outbound:
+		#	send_outbound.delay(ob)
+
+		#sms_tasks  = group(send_outbound.s(ob) for ob in outbound)()
+
+		#Not working. Will cause celery to not run with no exception
+		#map_iterator = map(send_outbound.delay, outbound)
+		#x = np.array(outbound)
+		#vfunc = np.vectorize(send_outbound.delay)
+		#v_iterator = vfunc(x)
+
+
+	except Exception as e:
+		lgr.info('Error on Send Outbound SMS Messages: %s ' % e)
+	#except DatabaseError as e:
+	#	transaction.set_rollback(True)
 
 
 @app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk

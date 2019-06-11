@@ -55,7 +55,7 @@ app.conf.task_queues = (Broadcast('celery'),Broadcast('commandline'),Broadcast('
 '''
 
 app.conf.task_routes = {
-		'secondary.channels.notify.tasks.send_bulk_notification': {'queue': 'commandline','exchange': 'commandline','routing_key':'commandline','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.send_bulk_notification': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
 
 		'secondary.channels.notify.tasks.contact_outbound_bulk_logger': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'},
 		'secondary.channels.notify.tasks.recipient_outbound_bulk_logger': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'},
@@ -64,13 +64,17 @@ app.conf.task_routes = {
 		'secondary.channels.notify.tasks.send_contact_subscription': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.contact_subscription': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.send_outbound_sms_messages': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'}, 
+
+		'secondary.channels.notify.tasks.send_outbound_batch': {'queue': 'spawned_bulk_notification','exchange': 'spawned_bulk_notification','routing_key':'spawned_bulk_notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.send_outbound': {'queue': 'spawned_bulk_notification','exchange': 'spawned_bulk_notification','routing_key':'spawned_bulk_notification','delivery_mode': 'transient'}, 
+
 		'secondary.channels.notify.tasks.send_outbound_email_messages': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
 
+		'secondary.channels.dsc.tasks.pre_process_file_upload': {'queue': 'files','exchange': 'files','routing_key':'files','delivery_mode': 'transient'},
 		'secondary.channels.dsc.tasks.process_file_upload': {'queue': 'files','exchange': 'files','routing_key':'files','delivery_mode': 'transient'},
 		'secondary.channels.dsc.tasks.process_file_upload_activity': {'queue': 'files','exchange': 'files','routing_key':'files','delivery_mode': 'transient'},
-		'secondary.channels.notify.tasks.add_bulk_contact': {'queue': 'commandline','exchange': 'commandline','routing_key':'commandline','delivery_mode': 'transient'},
-		'secondary.channels.notify.tasks.add_gateway_bulk_contact': {'queue': 'commandline','exchange': 'commandline','routing_key':'commandline','delivery_mode': 'transient'},
+		'secondary.channels.notify.tasks.add_bulk_contact': {'queue': 'files','exchange': 'files','routing_key':'files','delivery_mode': 'transient'},
+		'secondary.channels.notify.tasks.add_gateway_bulk_contact': {'queue': 'files','exchange': 'files','routing_key':'files','delivery_mode': 'transient'},
 
 		'secondary.finance.vbs.tasks.process_overdue_credit': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
 		'secondary.finance.paygate.tasks.incoming_poller': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
@@ -80,6 +84,7 @@ app.conf.task_routes = {
 		'secondary.finance.paygate.tasks.process_incoming_payments': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
 
 		'secondary.channels.notify.tasks.service_call': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
+		'primary.core.bridge.tasks.service_call': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
 		'primary.core.bridge.tasks.background_service_call': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
 		'primary.core.bridge.tasks.process_background_service_call': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
 		'primary.core.bridge.tasks.process_background_service': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
@@ -87,10 +92,10 @@ app.conf.task_routes = {
 		'secondary.channels.dsc.tasks.process_push_request': {'queue': 'push_request','exchange': 'push_request','routing_key':'push_request','delivery_mode': 'transient'},
 
 
-		'thirdparty.bidfather.tasks.closed_bids_invoicing': {'queue': 'io_task','exchange': 'io_task','routing_key':'io_task','delivery_mode': 'transient'},
-		'thirdparty.wahi.tasks.process_approved_loan': {'queue': 'io_task','exchange': 'io_task','routing_key':'io_task','delivery_mode': 'transient'},
-		'products.crb.tasks.reference_activity_service_call': {'queue': 'io_task','exchange': 'io_task','routing_key':'io_task','delivery_mode': 'transient'},
-		'products.crb.tasks.process_reference_activity': {'queue': 'io_task','exchange': 'io_task','routing_key':'io_task','delivery_mode': 'transient'},
+		'thirdparty.bidfather.tasks.closed_bids_invoicing': {'queue': 'thirdparty','exchange': 'thirdparty','routing_key':'thirdparty','delivery_mode': 'transient'},
+		'thirdparty.wahi.tasks.process_approved_loan': {'queue': 'thirdparty','exchange': 'thirdparty','routing_key':'thirdparty','delivery_mode': 'transient'},
+		'products.crb.tasks.reference_activity_service_call': {'queue': 'products','exchange': 'products','routing_key':'products','delivery_mode': 'transient'},
+		'products.crb.tasks.process_reference_activity': {'queue': 'products','exchange': 'products','routing_key':'products','delivery_mode': 'transient'},
 		}
 
 
@@ -101,8 +106,6 @@ app.conf.task_routes = {
 
 app.conf.task_queues = (
     Queue('celery', Exchange('celery'), routing_key='celery', delivery_mode=1),
-    Queue('io_task', Exchange('io_task'), routing_key='io_task', delivery_mode=1),
-    Queue('comp_task', Exchange('comp_task'), routing_key='comp_task', delivery_mode=1),
     Queue('notification', Exchange('notification'), routing_key='notification', delivery_mode=1),
     Queue('spawned_bulk_notification', Exchange('spawned_bulk_notification'), routing_key='spawned_bulk_notification', delivery_mode=1),
     Queue('bulk_notification', Exchange('bulk_notification'), routing_key='bulk_notification', delivery_mode=1),
@@ -110,7 +113,8 @@ app.conf.task_queues = (
     Queue('payments', Exchange('payments'), routing_key='payments', delivery_mode=1),
     Queue('services', Exchange('services'), routing_key='services', delivery_mode=1),
     Queue('push_request', Exchange('push_request'), routing_key='push_request', delivery_mode=1),
-    Queue('commandline', Exchange('commandline'), routing_key='commandline', delivery_mode=1),
+    Queue('thirdparty', Exchange('thirdparty'), routing_key='thirdparty', delivery_mode=1),
+    Queue('products', Exchange('products'), routing_key='products', delivery_mode=1),
 )
 '''
 app.conf.task_queues = (
@@ -129,9 +133,9 @@ app.conf.task_queues = (
 #app.conf.task_queues = ()
 
 #app.conf.broker_url = "redis://192.168.137.22:6379/"
-app.conf.broker_url = "redis://localhost:6379/"
+#app.conf.broker_url = "redis://localhost:6379/"
 #app.conf.broker_url = "amqp://guest:guest@192.168.137.23:5672"
-#app.conf.broker_url = "librabbitmq://guest:guest@192.168.137.23:5672"
+app.conf.broker_url = "librabbitmq://guest:guest@192.168.137.23:5672"
 
 app.conf.task_default_queue = 'celery'
 app.conf.task_default_exchange_type = 'direct'
@@ -151,17 +155,17 @@ app.conf.timezone = 'Africa/Nairobi'
 app.conf.task_soft_time_limit = 60
 app.conf.task_acks_late = False
 
-app.conf.worker_prefetch_multiplier = 1
-#app.conf.worker_prefetch_multiplier = 128
+#app.conf.worker_prefetch_multiplier = 1
+app.conf.worker_prefetch_multiplier = 128
 app.conf.worker_disable_rate_limits = True
 #app.conf.broker_pool_limit = 10000
 
 app.conf.broker_connection_max_retries = None
 app.conf.broker_pool_limit = None
 
-app.conf.broker_heartbeat = 0 #workaround for rabbitmq gevent issue "Connection Reset"
-#app.conf.broker_heartbeat = 10
-#app.conf.broker_heartbeat_checkrate = 2.0
+#app.conf.broker_heartbeat = 0 #workaround for rabbitmq gevent issue "Connection Reset"
+app.conf.broker_heartbeat = 10
+app.conf.broker_heartbeat_checkrate = 2.0
 #broker_transport_options = {'confirm_publish': True}
 
 '''
