@@ -863,9 +863,9 @@ class System(Wrappers):
 					state = OutBoundState.objects.get(name='DELIVERED')
 					this_outbound.state = state
 					this_outbound.save()
-				elif delivery_status in ['FAILED']:
+				elif delivery_status in ['INVALID','UNDELIVERED']:
 					#lgr.info('Delivery Status: Failed')
-					state = OutBoundState.objects.get(name='FAILED')
+					state = OutBoundState.objects.get(name='UNDELIVERED')
 					this_outbound.state = state
 					this_outbound.save()
 				else:
@@ -1760,9 +1760,17 @@ def send_outbound_batch(message_list):
 			lgr.info('Batch Response: %s' % payload)
 
 			if 'response_status' in payload.keys() and payload['response_status'] == '00':
-				i.update(state = OutBoundState.objects.get(name='SENT'))
+				updates = {}
+				updates['state'] = OutBoundState.objects.get(name='SENT')
+				if 'response' in payload.keys(): updates['response'] = payload['response'][:200]
+				
+				i.update(**updates)
 			else:
-				i.update(state = OutBoundState.objects.get(name='FAILED'))
+				updates = {}
+				updates['state'] = OutBoundState.objects.get(name='FAILED')
+				if 'response' in payload.keys(): updates['response'] = payload['response'][:200]
+
+				i.update(**updates)
 		else:
 			lgr.info('No Endpoint')
 			i.update(state = OutBoundState.objects.get(name='SENT'))
@@ -1835,6 +1843,7 @@ def send_outbound(message):
 				i.state = OutBoundState.objects.get(name='FAILED')
 			#lgr.info('SMS Sent')
 			###############################
+			if 'response' in payload.keys(): i.response = payload['response'][:200]
 			#Save all actions
 			i.save()
 
@@ -1892,7 +1901,7 @@ def send_outbound_sms_messages():
 					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=18)),\
-					Q(contact__status__name='ACTIVE')).prefetch_related('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
+					Q(contact__status__name='ACTIVE')).select_related()
 
 		outbound = orig_outbound[:500].values_list('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
 
@@ -1974,7 +1983,7 @@ def send_outbound_email_messages():
 				|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 				|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=2),date_created__gte=timezone.now()-timezone.timedelta(hours=6)),\
 				Q(contact__status__name='ACTIVE')).\
-				prefetch_related('contact').select_related('contact__gateway_profile','contact__product','contact__product__notification','contact__product__notification__code')[:500]
+				select_related('contact').select_related()[:500]
 
 	for i in outbound:
 		try:

@@ -113,11 +113,12 @@ class HostStatus(models.Model):
 		return u'%s' % (self.name)
 
 class Host(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
 	host = models.CharField(max_length=50) #Not GenericIPAddress as hostnames are allowed|not unique to allow diff descriptions
 	status = models.ForeignKey(HostStatus, on_delete=models.CASCADE)
 	description =  models.CharField(max_length=100)
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
+	api_token = models.CharField(max_length=256, blank=True, null=True)
 	def __str__(self):
 		return u'%s' % (self.host)
 

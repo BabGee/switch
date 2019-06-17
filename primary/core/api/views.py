@@ -9,7 +9,7 @@ from primary.core.bridge.views import *
 from django.db.models import Q
 from django.http import Http404
 from decimal import Decimal, ROUND_DOWN
-import binascii
+import binascii, random, time
 
 import logging
 lgr = logging.getLogger('primary.core.api')
@@ -17,10 +17,14 @@ lgr = logging.getLogger('primary.core.api')
 @csrf_protect
 #@csrf_exempt
 def default(request):
-	import time
+	x = random.randint(1240, 12400)
+	y = random.randint(0, 9)
+	z = x*y
+	#z  = ''
+	#status = NodeStatus.objects.first().name
+	status = ''
 	time.sleep(2)
-	return HttpResponse()  
-
+	return HttpResponse(json.dumps({'response': f'SUCCESS: {z} {status}', 'response_status': '00'}), content_type='application/json')
 
 @csrf_protect
 def service_call(request):
@@ -32,7 +36,6 @@ class ServiceCall:
 			payload = dict(filter(lambda x:x[1], payload.items())) #Remove empty value items
 
 			lgr.info('To Call Processor: %s' % ServiceProcessor().do_process)
-			lgr.info(payload)
 			payload = ServiceProcessor().do_process(service, gateway_profile, payload.copy())
 
 			lgr.info('End Processor: %s' % payload)
@@ -69,7 +72,7 @@ class Authorize:
 
 	def check_hash(self, payload, API_KEY):
 		lgr.info("Check Hash: %s" % base64.b64decode(API_KEY))
-		payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1]) ), payload.items()))
+		payload = dict(map(lambda x:(str(x[0]).lower(), json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1]) ), payload.items()))
 		secret = payload['sec_hash'].encode('utf-8')
 		#remove sec_hash and hash_type	
 		sec_hash = self.secure(payload,API_KEY) 
@@ -111,8 +114,7 @@ class Interface(Authorize, ServiceCall):
 						break
 					count = count+1
 				'''
-				#payload = dict(map(lambda (key, value):(string.lower(key),json.dumps(value) if isinstance(value, dict) else str(value) ), un_payload.items()))
-
+				
 				payload = dict(map(lambda x:(str(x[0]).lower(), x[1] ), un_payload.items()))
 
 				'''#RISK IN REVIEW
@@ -135,7 +137,7 @@ class Interface(Authorize, ServiceCall):
 					lgr.info('# A system User Login')
 					gateway_profile_list = GatewayProfile.objects.filter(Q(Q(allowed_host__host=str(payload['gateway_host'])),Q(allowed_host__status__name='ENABLED'))\
 								|Q(Q(gateway__default_host__host=str(payload['gateway_host'])),Q(gateway__default_host__status__name='ENABLED')),\
-								Q(user__username='System@User'),Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS']))
+								Q(user__username='System@User'),Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS'])).select_related()
 
 				#Integration would need an API Key for the specific user.
 				#Integration would require the user credentials on call so as to select user for API KEY check
@@ -149,7 +151,7 @@ class Interface(Authorize, ServiceCall):
 								allowed_host__status__name='ENABLED')|Q(gateway__default_host__host=payload['gateway_host'],\
 								gateway__default_host__status__name='ENABLED'),\
 								Q(Q(user__username=credentials['username'])|Q(user__email=credentials['username'])),\
-								Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS']))#Cant Filter as password check continues
+								Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS'])).select_related()#Cant Filter as password check continues
 
 					if gateway_profile_list.exists():
 						gp = None
@@ -159,7 +161,7 @@ class Interface(Authorize, ServiceCall):
 								break
 						if gp !=  None:
 							lgr.info('This User Active')
-							gateway_profile_list = gateway_profile_list.filter(id=gp.id)
+							gateway_profile_list = gateway_profile_list.filter(id=gp.id).select_related()
 						else:
 							gateway_profile_list = GatewayProfile.objects.none()
 					else:
@@ -178,7 +180,7 @@ class Interface(Authorize, ServiceCall):
 							gateway_profile__allowed_host__status__name='ENABLED')|\
 							Q(gateway_profile__gateway__default_host__host=payload['gateway_host'],\
 							gateway_profile__gateway__default_host__status__name='ENABLED'),\
-							Q(gateway_profile__status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS']))
+							Q(gateway_profile__status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS'])).select_related()
 
 						if session.exists():
 							lgr.info('Session Exists')
@@ -199,7 +201,7 @@ class Interface(Authorize, ServiceCall):
 
 
 							if (session_expiry == None) or (session_expiry and session_active):
-								try: gateway_profile_list = GatewayProfile.objects.filter(id=user_session.gateway_profile.id)
+								try: gateway_profile_list = GatewayProfile.objects.filter(id=user_session.gateway_profile.id).select_related()
 								except: pass
 					except Exception as e:
 						lgr.info('Error: %s' % e)
@@ -215,32 +217,36 @@ class Interface(Authorize, ServiceCall):
 				if gateway_profile_list.exists():
 					lgr.info('Got Gateway Profile')
 					gateway_profile = gateway_profile_list.first()
-					service = Service.objects.filter(Q(name=SERVICE),Q(access_level=gateway_profile.access_level)|Q(access_level=None))
+					service = Service.objects.filter(Q(name=SERVICE),Q(access_level=gateway_profile.access_level)|Q(access_level=None)).select_related() 
 					if service.exists():
-						payload_check = service_call(request)
-						#lgr.info(payload_check)
-						if payload_check.status_code == 403:
-							lgr.info('Did Not Pass Onsite Check')
-							API_KEY = gateway_profile.user.profile.api_key
-							#lgr.info('Payload: %s' % payload)
-							payload = self.check_hash(payload, API_KEY)
-							if payload['response_status'] == '00':
-								#Call Services as 
+						if 'api_token' in payload.keys() and gateway_profile.allowed_host.filter(host=payload['ip_address'], api_token=payload['api_token']).exists():
+								lgr.info('API Token Check Passed')
 								payload = self.api_service_call(service.first(), gateway_profile, payload)
-							else:
-								payload['response'] = {'overall_status': 'Hash Check Failed'}	
-							#Remove sensitive data
-							#try: del payload["session_id"]
-							#except: pass
-							#lgr.info('Payload: %s' % payload)
-							payload = self.return_hash(payload, API_KEY)
-
-							#lgr.info('Payload: %s' % payload)
-						elif payload_check.status_code == 200:
-							lgr.info('Onsite Check Passed')
-							payload = self.api_service_call(service.first(), gateway_profile, payload)
 						else:
-							pass
+							payload_check = service_call(request)
+							#lgr.info(payload_check)
+							if payload_check.status_code == 403:
+								lgr.info('Did Not Pass Onsite Check')
+								API_KEY = gateway_profile.user.profile.api_key
+								#lgr.info('Payload: %s' % payload)
+
+								payload = self.check_hash(payload, API_KEY)
+								if payload['response_status'] == '00':
+									#Call Services as 
+									payload = self.api_service_call(service.first(), gateway_profile, payload)
+								else:
+									payload['response'] = {'overall_status': 'Hash Check Failed'}	
+								#Remove sensitive data
+								#try: del payload["session_id"]
+								#except: pass
+								#lgr.info('Payload: %s' % payload)
+								payload = self.return_hash(payload, API_KEY)
+
+								#lgr.info('Payload: %s' % payload)
+							elif payload_check.status_code == 200:
+								lgr.info('Onsite Check Passed')
+								payload = self.api_service_call(service.first(), gateway_profile, payload)
+
 					else: 
 						payload['response'] = {'overall_status': 'Service Does not Exist' }
 						payload['response_status'] = '96'

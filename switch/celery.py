@@ -133,9 +133,9 @@ app.conf.task_queues = (
 #app.conf.task_queues = ()
 
 #app.conf.broker_url = "redis://192.168.137.22:6379/"
-#app.conf.broker_url = "redis://localhost:6379/"
+app.conf.broker_url = "redis://localhost:6379/"
 #app.conf.broker_url = "amqp://guest:guest@192.168.137.23:5672"
-app.conf.broker_url = "librabbitmq://guest:guest@192.168.137.23:5672"
+#app.conf.broker_url = "librabbitmq://guest:guest@192.168.137.23:5672"
 
 app.conf.task_default_queue = 'celery'
 app.conf.task_default_exchange_type = 'direct'

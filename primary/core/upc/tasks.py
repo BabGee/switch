@@ -965,9 +965,11 @@ class System(Wrappers):
 			profile = user.profile
 
 			payload["email"] = user.email
+			payload['username'] = user.username
 			payload['first_name'] = user.first_name if user.first_name else ''
 			payload['last_name'] = user.last_name if user.last_name else ''
 			payload['middle_name'] = profile.middle_name if profile.middle_name else ''
+			payload['profile_api_key'] = profile.api_key
 			payload['national_id'] = profile.national_id
 			payload['passport_number'] = profile.passport_number
 			if profile.passport_expiry_date: payload['passport_expiry_date'] = profile.passport_expiry_date.isoformat()

@@ -56,7 +56,7 @@ class HostStatusAdmin(admin.ModelAdmin):
 admin.site.register(HostStatus, HostStatusAdmin)
 
 class HostAdmin(admin.ModelAdmin):
-	list_display = ('id', 'host', 'status', 'description', 'date_modified', 'date_created')
+	list_display = ('id', 'date_modified','date_created','host', 'status', 'description', 'api_token')
 	search_fields = ('host',)
 admin.site.register(Host, HostAdmin)
 

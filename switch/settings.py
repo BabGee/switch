@@ -82,7 +82,7 @@ installed_apps = primary + secondary + tuple(installed_apps)
 
 
 timezone='Africa/Nairobi'
-DEBUG = True
+DEBUG = False
 #TEMPLATE_DEBUG = DEBUG #Deprecated 1.8
 
 GEOIP_PATH = '/usr/share/GeoIP'
@@ -303,6 +303,7 @@ LOGGING = {
         'file_actions': {                # define and name a handler
             'level': 'DEBUG',
             'class': 'logging.FileHandler', # set the logging class to log to a file
+            #'class': 'logging.handlers.QueueHandler', # set the logging class to log to a file
             'formatter': 'verbose',         # define the formatter to associate
             'filename': os.path.join(VENV_ROOT, '', LOGFILE) # log file
         },     
@@ -333,10 +334,11 @@ for app in installed_apps:
             'level' : 'INFO',
             'formatter' : 'verbose', # from the django doc example
             'class' : 'logging.handlers.TimedRotatingFileHandler',
+            #'class' : 'logging.handlers.QueueHandler',
             'filename' : os.path.join(VENV_ROOT, '', app+'.log'), # full path works
             'when' : 'midnight',
             'interval' : 1,
-            'backupCount' : 7,
+	    'backupCount': 5,
         }
 
 	LOGGING['loggers'][app] = {

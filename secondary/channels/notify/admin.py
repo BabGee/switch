@@ -56,7 +56,7 @@ admin.site.register(ContactGroup, ContactGroupAdmin)
 
 class RecipientAdmin(admin.ModelAdmin):
 	list_display = ('id','status','details','subscribed', 'recipient','contact_group')
-	list_filter = ('contact_group__gateway','contact_group__institution','subscribed','status',)
+	list_filter = ('contact_group__gateway','contact_group__institution','subscribed','status','contact_group__name',)
 	search_fields = ('recipient',)
 admin.site.register(Recipient, RecipientAdmin)
 
@@ -96,9 +96,9 @@ class OutboundAdmin(admin.ModelAdmin):
 		list_display = ('id','contact','heading','message',\
 			'template','scheduled_send','state','sends',\
 			'ext_outbound_id','inst_notified','inst_num_tries','attachment_list',\
-			'recipient','pn','pn_ack')
+			'recipient','response','pn','pn_ack')
 		list_filter = ('contact__product','state','contact__subscribed','contact__status',)
-		search_fields = ('id','contact__gateway_profile__msisdn__phone_number','contact__gateway_profile__user__email','contact__gateway_profile__user__username','message',)
+		search_fields = ('id','recipient','contact__gateway_profile__msisdn__phone_number','contact__gateway_profile__user__email','contact__gateway_profile__user__username','message',)
 
 		def suit_row_attributes(self, obj, request):
 			css_class = {

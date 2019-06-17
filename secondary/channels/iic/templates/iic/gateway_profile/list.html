@@ -31,11 +31,14 @@
                 <strong> uid {{ page_group.user.pk }}</strong>
                 <strong> gpid {{ page_group.pk }}</strong>
 
-                <a href="/iic_editor/gateways/{{ gateway.pk }}/gateway_profiles/{{ page_group.pk }}/">
-                    {{ page_group.user.username }}
-                    ({{ page_group.user.first_name }} {{ page_group.user.last_name }})</a> <br>
+                <a href="/iic_editor/gateways/{{ gateway.pk }}/gateway_profiles/{{ page_group.pk }}/">{{ page_group.user.first_name }} {{ page_group.user.last_name }}</a> <br>
 
-                <strong> msisdn </strong>: {{ page_group.msisdn }}
+
+<strong>username</strong>     {{ page_group.user.username }}  <br>
+
+<strong>api key</strong>     {{ page_group.user.profile.api_key }}  <br>
+
+            <strong> msisdn </strong>: {{ page_group.msisdn }}
                 <strong> email </strong> : {{ page_group.user.email }} <br>
                 institution : {{ page_group.institution }}
 

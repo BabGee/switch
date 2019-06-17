@@ -96,7 +96,7 @@ class ServiceProcessor:
 		response = 'No Response'
 		#Reverse any action below the command (Less Than) not (Less Than or Equal)
 		commands = commands.filter(~Q(reverse_function__isnull=True),~Q(reverse_function__iexact=''), level__lt=level,\
-				 status__name='ENABLED').order_by('-level')
+				 status__name='ENABLED').order_by('-level').select_related()
 		lgr.info('Got Reversal Commands:%s' % commands)
 
 		#do reverse
@@ -113,7 +113,7 @@ class ServiceProcessor:
 					#Check if trigger Exists
 					if 'trigger' in payload.keys():
 						triggers = str(payload['trigger'].strip()).split(',')
-						trigger_list = Trigger.objects.filter(name__in=triggers)
+						trigger_list = Trigger.objects.filter(name__in=triggers).select_related()
 
 						lgr.info('Reverse Command Triggers: %s' % trigger_list)
 						#Ensure matches all existing triggers for action
@@ -142,8 +142,9 @@ class ServiceProcessor:
 				elif node_system.node_status.name == 'LOCAL' and item.reverse_function != 'no_reverse':
 					payload = Wrappers().call_local(item, item.reverse_function, payload)
 				elif node_system.node_status.name == 'BLANK' and item.reverse_function != 'no_reverse':
-					pass
+					payload['response_status'] = '00' #In future, add colum for blank response_status to allow injection of required response_status
 				elif item.reverse_function == 'no_reverse':
+					payload['response_status'] = '00' #No reverse is a service command hence success, but shouldn't affect transacting response status. (affects only overall_status)
 					break
 
 				if payload['response_status'] != '00' and payload['response_status'] not in [rs.response for rs in item.success_response_status.all()]:
@@ -173,13 +174,13 @@ class ServiceProcessor:
 		reverse = False
 		lgr.info('Action Exec Started: %s' % service)
 		all_commands = ServiceCommand.objects.filter(Q(service=service),Q(gateway=gateway_profile.gateway)|Q(gateway=None),\
-								Q(channel__id=payload['chid'])|Q(channel=None)).order_by('level')
+								Q(channel__id=payload['chid'])|Q(channel=None)).order_by('level').select_related()
 		if 'payment_method' in payload.keys():
-			all_commands = all_commands.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
+			all_commands = all_commands.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None)).select_related()
 		else:
-			all_commands = all_commands.filter(payment_method=None)
+			all_commands = all_commands.filter(payment_method=None).select_related()
 		#To handle multi level authorization
-		commands = all_commands.filter(Q(access_level=None) |Q(access_level=gateway_profile.access_level),Q(status__name='ENABLED'))
+		commands = all_commands.filter(Q(access_level=None) |Q(access_level=gateway_profile.access_level),Q(status__name='ENABLED')).select_related()
 		#do request
 		count = 1
 		for item in commands:
@@ -197,7 +198,7 @@ class ServiceProcessor:
 					if 'trigger' in payload.keys():
 						lgr.info("payload['trigger'] : %s"%payload['trigger'])
 						triggers = str(payload['trigger'].strip()).split(',')
-						trigger_list = Trigger.objects.filter(name__in=triggers)
+						trigger_list = Trigger.objects.filter(name__in=triggers).select_related()
 
 						lgr.info('Command Triggers: %s' % trigger_list)
 						#Ensure matches all existing triggers for action
@@ -226,7 +227,7 @@ class ServiceProcessor:
 					if 'ext_transaction_id' in payload_ext.keys():
 						payload['ext_transaction_id'] = str(payload_ext['ext_transaction_id'])
 				elif node_system.node_status.name == 'BLANK':	
-					pass
+					payload['response_status'] = '00' #In future, add colum for blank response_status to allow injection of required response_status
 				elif node_system.node_status.name == 'LOCAL':	
 					payload = Wrappers().call_local(item, item.command_function, payload)
 				if payload['response_status'] != '00' and payload['response_status'] not in [rs.response for rs in item.success_response_status.all()]:
@@ -246,7 +247,7 @@ class ServiceProcessor:
 					#Log command to transaction
 					if trans is not None:
 						trans.current_command = item
-						all_commands = all_commands.filter(level__gt=item.level)
+						all_commands = all_commands.filter(level__gt=item.level).select_related()
 						if len(all_commands)>0:
 							trans.next_command = all_commands[0]
 						else:
@@ -347,7 +348,7 @@ class ServiceProcessor:
 			if 'transaction_auth' in payload.keys() and payload['transaction_auth'] not in [None,'']:
 				transaction_list = Transaction.objects.filter(Q(id__in=str(payload['transaction_auth']).split(",")),\
 						~Q(next_command=None),Q(next_command__access_level=gateway_profile.access_level)).\
-						prefetch_related('service','institution')
+						select_related('service','institution')
 				lgr.info("Auth Transaction List: %s" % transaction_list)
 				del payload['transaction_auth']
 				for t in transaction_list:
@@ -361,7 +362,7 @@ class ServiceProcessor:
 				response_tree['response'] = 'Auth Transaction Captured'
 
 			elif 'repeat_bridge_transaction' in payload.keys() and payload['repeat_bridge_transaction'] not in [None,'']:
-				transaction_list = Transaction.objects.filter(id__in=str(payload['repeat_bridge_transaction']).split(","))
+				transaction_list = Transaction.objects.filter(id__in=str(payload['repeat_bridge_transaction']).split(",")).select_related()
 				lgr.info("Repeat Transaction List: %s" % transaction_list)
 				del payload['repeat_bridge_transaction']
 				for t in transaction_list:

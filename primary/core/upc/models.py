@@ -38,7 +38,7 @@ class Institution(models.Model):
 	icon_image = models.ImageField(upload_to='upc_institution_icon_image/', max_length=200, blank=True, null=True)
 	documents = models.FileField(upload_to='upc_institution_documents/', max_length=200, blank=True, null=True)
 	details = models.CharField(max_length=1200, null=True, blank=True)
-	industries = models.ManyToManyField(IndustryClass,related_name='industries')
+	industries = models.ManyToManyField(IndustryClass,related_name='industries',blank=True)
 	default_color = models.CharField(max_length=100)
 	website = models.CharField(max_length=200, blank=True, null=True)
 	physical_address = models.CharField(max_length=200, blank=True, null=True) #HQ

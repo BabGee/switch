@@ -1,3 +1,7 @@
+#from gevent import monkey; monkey.patch_all(socket=True, dns=True, time=True, select=True,thread=False, os=True, ssl=True, httplib=False, aggressive=True)
+#from psycogreen.gevent import patch_psycopg; patch_psycopg()
+
+
 """
 WSGI config for switch project.
 
@@ -27,14 +31,13 @@ os.environ["CELERY_LOADER"] = "django"
 # This application object is used by any WSGI server configured to use this
 # file. This includes Django's development server, if the WSGI_APPLICATION
 # setting points here.
+
 from django.core.wsgi import get_wsgi_application
-#from gevent import monkey
-#from psycogreen.gevent import patch_psycopg
 
 
 
-#monkey.patch_all(thread=False)
-#patch_psycopg()
+
+
 
 application = get_wsgi_application()
 
