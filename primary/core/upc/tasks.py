@@ -855,7 +855,7 @@ class System(Wrappers):
 
 			lgr.info('Got Here')
 			#session_id = s.encode('base64')
-			session_id = s.encode()
+			session_id = s.encode().decode('utf-8')
 			lgr.info('Got Here')
 			channel = Channel.objects.get(id=payload["chid"])
 			session = Session(session_id=session_id,channel=channel,num_of_tries=0,num_of_sends=0,status=SessionStatus.objects.get(name='CREATED'))
@@ -873,7 +873,7 @@ class System(Wrappers):
 
 			lgr.info('Got Here')
 			#encoded_session = base64.urlsafe_b64encode(session.session_id.encode('hex'))
-			encoded_session = base64.urlsafe_b64encode(session.session_id)
+			encoded_session = base64.urlsafe_b64encode(session.session_id.encode()).decode('utf-8')
 
 			lgr.info('Got Here')
 			payload['session'] = urlquote(encoded_session)
@@ -2528,7 +2528,7 @@ class System(Wrappers):
 				trans_point = Point(float(lng), float(lat))
 
 				profile_status = ProfileStatus.objects.get(name="REGISTERED")
-				profile = Profile(api_key=base64.urlsafe_b64encode(api_key.encode()),timezone=gateway_profile.user.profile.timezone,\
+				profile = Profile(api_key=base64.urlsafe_b64encode(api_key.encode()).decode('utf-8'),timezone=gateway_profile.user.profile.timezone,\
 					language=gateway_profile.user.profile.language,geometry=trans_point,
 					user=user)
 				profile.status = profile_status

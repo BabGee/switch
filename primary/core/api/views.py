@@ -172,7 +172,7 @@ class Interface(Authorize, ServiceCall):
 					lgr.info('Session ID available')
 					try:
 						lgr.info('SessionID: %s' % payload['session_id'])
-						session_id = base64.urlsafe_b64decode(str(payload['session_id']))
+						session_id = base64.urlsafe_b64decode(str(payload['session_id']).encode()).decode('utf-8')
 						session = Session.objects.filter(Q(session_id=session_id),\
 							Q(channel__id=payload['chid']),\
 							Q(status__name='CREATED'),\
