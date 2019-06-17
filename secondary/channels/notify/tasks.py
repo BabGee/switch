@@ -863,7 +863,12 @@ class System(Wrappers):
 					state = OutBoundState.objects.get(name='DELIVERED')
 					this_outbound.state = state
 					this_outbound.save()
-				elif delivery_status in ['INVALID','UNDELIVERED']:
+				elif delivery_status in ['INVALID']:
+					#lgr.info('Delivery Status: Failed')
+					state = OutBoundState.objects.get(name='INVALID')
+					this_outbound.state = state
+					this_outbound.save()
+				elif delivery_status in ['UNDELIVERED']:
 					#lgr.info('Delivery Status: Failed')
 					state = OutBoundState.objects.get(name='UNDELIVERED')
 					this_outbound.state = state
