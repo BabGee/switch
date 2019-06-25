@@ -67,17 +67,17 @@ class Authorize:
 			p.append(k)
 		p1 = '&'.join(p)
 		lgr.info('Hash: %s' % p1)
-		a = hmac.new( base64.b64decode(API_KEY), p1.encode('utf-8'), hashlib.sha256)
-		return base64.b64encode(a.digest())
+		a = hmac.new( base64.urlsafe_b64decode(API_KEY), p1.encode('utf-8'), hashlib.sha256)
+		return base64.urlsafe_b64encode(a.digest())
 
 	def check_hash(self, payload, API_KEY):
-		lgr.info("Check Hash: %s" % base64.b64decode(API_KEY))
+		lgr.info("Check Hash: %s" % base64.urlsafe_b64decode(API_KEY))
 		payload = dict(map(lambda x:(str(x[0]).lower(), json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1]) ), payload.items()))
 		secret = payload['sec_hash'].encode('utf-8')
 		#remove sec_hash and hash_type	
 		sec_hash = self.secure(payload,API_KEY) 
 
-		if base64.b64decode(secret) == base64.b64decode(sec_hash):
+		if base64.urlsafe_b64decode(secret) == base64.urlsafe_b64decode(sec_hash):
 			payload['response_status'] = '00'
 		else:
 			lgr.info("Secret: %s Sec Hash: %s" % (str(secret)[:100], str(sec_hash)[:100]))
@@ -93,7 +93,7 @@ class Authorize:
 
 class Interface(Authorize, ServiceCall):
 	@csrf_exempt
-	def interface(self, request, SERVICE):
+	def interface(self, request, service_name):
 		#if request.method == 'POST':
 
 		if request.method:
@@ -127,7 +127,7 @@ class Interface(Authorize, ServiceCall):
 				payload = {}
 				lgr.info('Error on Post%s' % e)
 			try:
-				lgr.info("SERVICE: %s" % SERVICE)
+				lgr.info("SERVICE: %s" % service_name)
 				gateway_profile_list, service = GatewayProfile.objects.none(), Service.objects.none()
 				session_active = True
 
@@ -217,7 +217,9 @@ class Interface(Authorize, ServiceCall):
 				if gateway_profile_list.exists():
 					lgr.info('Got Gateway Profile')
 					gateway_profile = gateway_profile_list.first()
-					service = Service.objects.filter(Q(name=SERVICE),Q(access_level=gateway_profile.access_level)|Q(access_level=None)).select_related() 
+					#lgr.info('Got Profile:%s' % gateway_profile)
+					service = Service.objects.filter(Q(name=service_name),Q(Q(access_level=gateway_profile.access_level)|Q(access_level=None))).select_related() 
+					#lgr.info('Got Service: %s (%s)' % (service, service_name))
 					if service.exists():
 						if 'api_token' in payload.keys() and gateway_profile.allowed_host.filter(host=payload['ip_address'], api_token=payload['api_token']).exists():
 								lgr.info('API Token Check Passed')

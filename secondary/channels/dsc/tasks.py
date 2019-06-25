@@ -2246,11 +2246,19 @@ def pre_process_file_upload(payload):
 		lgr.info('Data Frame: \n%s' % df.tail())
 
 		df.fillna('', inplace=True)
+
+		df.columns = [c.lower().replace(' ','_')   for c in df.columns]
+
+		lgr.info('Data Frame Columns: %s' % df.columns)
+		if 'msisdn' in df.columns:
+			lgr.info('MSISDN Exists: %s' % df['msisdn'].dtype)
+			df['msisdn'] = df['msisdn'].astype(int)
+
 		tasks = []
 		for row in df.itertuples():
 			payload = json.loads(u.details)
 			for i in range(len(df.columns)):
-				payload[df.columns[i].lower()] = row[i+1]
+				payload[df.columns[i]] = row[i+1]
 
 			payload['chid'] = u.channel.id
 			payload['ip_address'] = '127.0.0.1'

@@ -610,9 +610,16 @@ class System(Wrappers):
 				lgr.info('missing required property, shop product type')
 
 			product.product_type_id = payload['product_type_id']
-			product.buying_cost = payload['product_buying_cost']
+			if 'product_buying_cost' in payload.keys():product.buying_cost = payload['product_buying_cost']
 			product.unit_cost = payload['product_selling_cost']
-			product.institution = gateway_profile.institution
+			if 'unit_limit_min' in payload.keys():product.unit_limit_min = payload['unit_limit_min']
+			if 'unit_limit_max' in payload.keys():product.unit_limit_max = payload['unit_limit_max']
+
+
+			if 'institution_id' in payload.keys():
+				product.institution_id = payload['institution_id']
+			else:
+				product.institution = gateway_profile.institution
 			product.currency = Currency.objects.get(code=payload['product_currency']) # KES
 			product.product_display = ProductDisplay.objects.get(name=payload['product_display']) # DEFAULT
 			if 'is_vat_inclusive' in payload.keys() and str(payload['is_vat_inclusive']) == 'True':

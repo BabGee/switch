@@ -2386,6 +2386,7 @@ class System(Wrappers):
 			elif gateway_profile.institution is not None:
 				institution = gateway_profile.institution
 			if institution is not None:
+				details['institution_id'] = institution.pk
 				details['logo'] =institution.logo.name
 				details['icon_image'] =institution.icon_image.name
 				details['name'] =institution.name
@@ -2564,7 +2565,7 @@ class System(Wrappers):
 					elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
 						create_gateway_profile.institution = gateway_profile.institution 
 				elif "role" in payload.keys() and create_gateway_profile.institution in [None,'']:
-					role = Role.objects.get(name=payload["role"])
+					role = Role.objects.get(gateway=gateway_profile.gateway,name=payload["role"])
 					access_level = role.access_level
 					create_gateway_profile.role = role
 					if 'institution_id' in payload.keys():
