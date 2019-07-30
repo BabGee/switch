@@ -278,6 +278,38 @@ class Outgoing(models.Model):
 	def __str__(self):
 		return u'%s %s %s' % (self.remittance_product, self.amount, self.currency)
 
+class RemittanceManagerStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __str__(self):
+		return u'%s' % (self.name)
+
+class RemittanceManager(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	remittance_product = models.ForeignKey(RemittanceProduct, on_delete=models.CASCADE)
+	status = models.ForeignKey(RemittanceManagerStatus, on_delete=models.CASCADE)
+	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
+	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+	response_status = models.ForeignKey(ResponseStatus, on_delete=models.CASCADE)
+	transaction_reference = models.CharField(max_length=45, null=True, blank=True) #Transaction ID
+	ext_outbound_id = models.CharField(max_length=200, blank=True, null=True)
+	incoming_payment = models.ForeignKey(Incoming, null=True, blank=True, on_delete=models.CASCADE)
+	outgoing_payment = models.ForeignKey(Outgoing, null=True, blank=True, on_delete=models.CASCADE)
+	credit = models.BooleanField(default=False) #Dr | Cr
+	currency = models.ForeignKey(Currency, null=True, blank=True, on_delete=models.CASCADE)
+	amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	charges = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	updated = models.BooleanField(default=False, help_text="True for record that is not the last record")
+	payment_method = models.ForeignKey(PaymentMethod, null=True, blank=True, on_delete=models.CASCADE)
+	follow_on = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
+	sends = models.IntegerField()
+	def __unicode__(self):
+		return u'%s %s' % (self.remittance_product, self.gateway_profile)
+
+
 class FloatAlertType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)

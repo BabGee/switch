@@ -2247,7 +2247,7 @@ def pre_process_file_upload(payload):
 
 		df.fillna('', inplace=True)
 
-		df.columns = [c.lower().replace(' ','_')   for c in df.columns]
+		df.columns = [c.strip().lower().replace(' ','_')   for c in df.columns]
 
 		lgr.info('Data Frame Columns: %s' % df.columns)
 		if 'msisdn' in df.columns:

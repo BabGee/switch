@@ -142,7 +142,7 @@ class Wrappers:
 			 'action_id' not in key and 'bridge__transaction_id' not in key and \
 			 'merchant_data' not in key and 'signedpares' not in key and \
 			 key != 'gpid' and key != 'sec' and \
-			 key not in ['vpc_securehash','currency','amount'] and \
+			 key not in ['vpc_securehash','currency','amount'] and 'balance' not in key and \
 			 'institution_id' not in key and key != 'response' and key != 'input' and 'url' not in key and \
 			 'availablefund' not in key and key != 'repeat_bridge_transaction' and key != 'transaction_auth':
 				if count <= 30:

@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from celery import shared_task
 #from celery.contrib.methods import task_method
-from celery import task
+from celery import task, group, chain
 from switch.celery import app
 from celery.utils.log import get_task_logger
 from switch.celery import single_instance_task
@@ -11,7 +11,8 @@ from django.utils import timezone
 from django.utils.timezone import utc
 from django.contrib.gis.geos import Point
 from django.db import IntegrityError
-import pytz, time, os, random, string, json
+import simplejson as json
+import pytz, time, os, random, string
 from django.utils.timezone import localtime
 from datetime import datetime
 from decimal import Decimal, ROUND_DOWN, ROUND_UP
@@ -26,6 +27,8 @@ import operator
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core import serializers
 
+from primary.core.administration.views import WebService
+from primary.core.api.views import Authorize
 
 from secondary.erp.pos.models import *
 
@@ -105,6 +108,11 @@ class Wrappers:
 			cart_item.token = payload['csrfmiddlewaretoken']
 		elif "token" in payload.keys():
 			cart_item.token = payload['token']
+
+		if 'callback_url' in payload.keys():
+			cart_item.api_callback_url = payload['callback_url']
+			cart_item.api_callback_status = APICallBackStatus.objects.get(name='CREATED')
+			cart_item.api_gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 		cart_item.save()
 
@@ -231,6 +239,26 @@ class Wrappers:
 
 
 class System(Wrappers):
+
+	def update_outgoing_payment(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			purchase_order = PurchaseOrder.objects.get(id=payload['purchase_order_id'])
+			purchase_order.outgoing_payment=Outgoing.objects.get(id=payload['paygate_outgoing_id'])
+			purchase_order.save()
+
+			payload['response'] = 'Outgoing Payment Updated'
+			payload['response_status'] = '00'
+		except Exception as e:
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+			lgr.info("Error on Update Outgoing Payment: %s" % e)
+
+		return payload
+
+
+
 	def log_order_activity(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
@@ -1372,6 +1400,44 @@ class Payments(System):
 	pass
 
 
+
+@app.task(ignore_result=True)
+def callback_url_call(bill, cart):
+	lgr = get_task_logger(__name__)
+	try:
+		bill_manager = BillManager.objects.get(id=bill)
+		cart_item = CartItem.objects.get(id=cart)
+
+		payload = json.loads(cart_item.details)
+
+		payload.update(json.loads(bill_manager.incoming_payment.request))
+		payload['quantity'] = cart_item.quantity
+		payload['currency'] = cart_item.currency.code
+		payload['amount'] = cart_item.total
+
+		payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
+
+		API_KEY = cart_item.api_gateway_profile.user.profile.api_key
+		payload = Authorize().return_hash(payload, API_KEY)
+		node = cart_item.api_callback_url
+
+		lgr.info("Payload: %s| Node: %s" % (payload, node) )
+
+		payload = WebService().post_request(payload, node)
+
+		lgr.info('CallBack Response: %s' % payload)
+		if 'response' in payload.keys(): cart_item.api_message = payload['response'][:128]
+		if 'response_status' in payload.keys() and payload['response_status'] == '00':
+			cart_item.api_callback_status = APICallBackStatus.objects.get(name='SENT')
+		else:
+			cart_item.api_callback_status = APICallBackStatus.objects.get(name='FAILED')
+
+		cart_item.save()
+
+	except Exception as e:
+		lgr.info('Error on CallBack URL Call: %s' % e)
+
+
 @app.task(ignore_result=True)
 @transaction.atomic
 def settle_orders(order_list):
@@ -1427,6 +1493,7 @@ def order_background_service_call(order, status):
 			payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
 
 			payload = BridgeWrappers().background_service_call(service, gateway_profile, payload)
+
 			lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
 	except Exception as e:
 		payload['response_status'] = '96'
@@ -1531,5 +1598,43 @@ def process_paid_order():
 		transaction.set_rollback(True)
 
 	except Exception as e: lgr.info('Error on process paid order: %s' % e)
+
+
+@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def process_callback_url():
+	lgr = get_task_logger(__name__)
+	try:
+		lgr.info('Process CallBack URL')
+
+		all_bill = BillManager.objects.filter(Q(order__status__name='PAID',order__cart_item__api_callback_status__name='CREATED'),\
+					~Q(order__cart_item__api_gateway_profile=None),~Q(incoming_payment=None),\
+					~Q(order__cart_item__api_callback_url__in=[None,''])).values_list('id','order__cart_item__id').distinct()[:500]
+
+		lgr.info('Bill %s' % all_bill)
+		bill = np.asarray(all_bill)
+
+		lgr.info('BillL %s' % bill.size)
+		lgr.info('BillL %s' % bill)
+		if bill.size>0:
+			orig_cart  = CartItem.objects.select_for_update(nowait=True).filter(id__in=bill[:,1])
+
+			lgr.info('Cart Items List %s' % bill[:,1])
+			processing = orig_cart.filter(id__in=bill[:,1].tolist()).update(api_callback_status=APICallBackStatus.objects.get(name='PROCESSING'), date_modified=timezone.now())
+			tasks = []
+			for b, c in bill.tolist():
+				lgr.info('Call Back: %s | %s' % (b, c))
+				tasks.append(callback_url_call.s(b, c))
+
+			chunks, chunk_size = len(tasks), 500
+			callback_tasks= [ group(*tasks[i:i+chunk_size])() for i in range(0, chunks, chunk_size) ]
+
+
+	except Exception as e: lgr.info('Error on process callback url: %s' % e)
+	#except DatabaseError as e:
+	#	lgr.info('Transaction Rolled Back')
+	#	transaction.set_rollback(True)
+
 
 

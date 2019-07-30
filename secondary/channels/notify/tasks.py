@@ -325,7 +325,7 @@ class System(Wrappers):
 		try:
 			lgr.info("Add Recipient: %s" % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			if 'recipient' in payload.keys() and (  UPCWrappers().simple_get_msisdn(str(payload['recipient']).strip()) or UPCWrappers.validateEmail(str(payload['recipient']).strip()) ):
+			if 'recipient' in payload.keys() and (  UPCWrappers().simple_get_msisdn(str(payload['recipient']).strip()) or UPCWrappers.validateEmail(None,str(payload['recipient']).strip()) ):
 				status = ContactStatus.objects.get(name='ACTIVE')
 				contact_group = ContactGroup.objects.get(id=str(payload['contact_group_id']).strip())
 				if not Recipient.objects.filter(recipient=str(payload['recipient']).strip(),contact_group=contact_group).exists():
@@ -808,8 +808,33 @@ class System(Wrappers):
 							heading = heading.replace('['+v+']',str(heading_item).strip())
 
 						outbound.heading = heading
+					elif 'subject' in payload.keys():
+						outbound.heading = payload['subject'].strip()[:512]
 
 					outbound.save()
+
+					'''
+					if 'attachment' in payload.keys() and payload['attachment'] not in [None, '']:
+
+						template_file = NotificationAttachment()
+
+						template_file.name = notification_template.template_heading
+						template_file.description = notification_template.template_heading
+
+						template_file.save()
+						##########################
+						media_temp = settings.MEDIA_ROOT + '/tmp/uploads/'
+
+
+						filename = payload['attachment']
+
+						tmp_file = media_temp + str(filename)
+						with open(tmp_file, 'r') as f:
+							template_file.file_path.save(filename, File(f), save=False)
+						f.close()
+						#######################
+						notification_template.template_file = template_file
+					'''
 
 					payload['response'] = "Notification Sent. Please check %s" % notification_product.notification.code.channel.name
 					payload['response_status']= '00'
@@ -1008,6 +1033,9 @@ class System(Wrappers):
 					notification_template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
 					outbound.template = notification_template
 					outbound.heading = notification_template.template_heading
+				elif 'subject' in payload.keys():
+					outbound.heading = payload['subject'].strip()[:512]
+
 				outbound.save()
 
 				payload['response'] = 'Notification Sent. Subscription: %s' % outbound.contact.product.name
@@ -1514,7 +1542,7 @@ def contact_unsubscription():
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	#Check for inactive contacts that are still subscribed and have an unsubscription_endpoint
-	contact = Contact.objects.select_for_update().filter(Q(subscribed=True),Q(status__name='INACTIVE'),\
+	contact = Contact.objects.select_for_update().filter(Q(subscribed=True),Q(status__name='INACTIVE'),Q(product__subscribable=True),\
 			~Q(product__unsubscription_endpoint=None))[:10]
 
 	for i in contact:
@@ -1656,6 +1684,9 @@ def contact_outbound_bulk_logger(payload, contact_list, scheduled_send):
 				template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
 				outbound.template = template
 				outbound.heading = template.template_heading
+			elif 'subject' in payload.keys():
+				outbound.heading = payload['subject'].strip()[:512]
+
 			outbound_list.append(outbound)
 		if len(outbound_list)>0:
 			lgr.info('Outbound Bulk Logger Captured')
@@ -1672,7 +1703,7 @@ def contact_subscription():
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	#Check for created outbounds or processing and gte(last try) one hour ago
-	contact = Contact.objects.select_for_update().filter(Q(subscribed=False),\
+	contact = Contact.objects.select_for_update().filter(Q(subscribed=False),Q(product__subscribable=True),\
 			Q(status__name='ACTIVE')|Q(status__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=1)))[:10]
 
 	for i in contact:
@@ -1838,7 +1869,7 @@ def send_outbound(message):
 				i.state = OutBoundState.objects.get(name='SENT')
 
 				#lgr.info('Product Expires(On-demand): %s' % i.contact.product.expires)
-				if i.contact.product.expires == True:
+				if i.contact.product.expires:
 					#lgr.info('Unsubscribe On-Demand Contact')
 					i.contact.status = ContactStatus.objects.get(name='INACTIVE')
 					i.contact.subscribed = False
@@ -1879,7 +1910,7 @@ def send_outbound2(payload, node):
 			outbound.state = OutBoundState.objects.get(name='SENT')
 
 			lgr.info('Product Expires(On-demand): %s' % outbound.contact.product.expires)
-			if outbound.contact.product.expires == True:
+			if outbound.contact.product.expires:
 				lgr.info('Unsubscribe On-Demand Contact')
 				outbound.contact.status = ContactStatus.objects.get(name='INACTIVE')
 				outbound.contact.subscribed = False
@@ -1892,7 +1923,8 @@ def send_outbound2(payload, node):
 		lgr.info("Error on Sending Outbound: %s" % e)
 
 
-@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
+@app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
+#@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
 def send_outbound_sms_messages():
@@ -1904,8 +1936,8 @@ def send_outbound_sms_messages():
 					Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),contact__product__trading_box__close_time__gte=timezone.localtime().time())),\
 					~Q(recipient=None),~Q(recipient=''),\
 					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
-					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
-					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=18)),\
+					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
+					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24)),\
 					Q(contact__status__name='ACTIVE')).select_related()
 
 		outbound = orig_outbound[:500].values_list('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
@@ -2014,18 +2046,27 @@ def send_outbound_email_messages():
 
 					text_content = i.message 
 
-					if i.template.template_file.file_path:
+					if i.template and i.template.template_file.file_path:
 						html_content = loader.get_template(i.template.template_file.file_path.name) #html template with utf-8 charset
-					else:
-						html_content = loader.get_template('default_send_mail.html') #html template with utf-8 charset
-					#d = Context({'message':unescape(i.message), 'gateway':gateway})
-					d = {'message':unescape(i.message), 'gateway':gateway}
-					html_content = html_content.render(d)
-					html_content = smart_text(html_content)
-					msg = EmailMultiAlternatives(subject, text_content, from_email, [to.strip()], headers={'Reply-To': from_email})
+						#d = Context({'message':unescape(i.message), 'gateway':gateway})
+						d = {'message':unescape(i.message), 'gateway':gateway}
+						html_content = html_content.render(d)
+						html_content = smart_text(html_content)
 
-					msg.attach_alternative(html_content, "text/html")
-					msg.send()	      
+						text_content = smart_text(text_content)
+						msg = EmailMultiAlternatives(subject, text_content, from_email, [to.strip()], headers={'Reply-To': from_email})
+
+						msg.attach_alternative(html_content, "text/html")
+						msg.send()	      
+					else:
+						html_content = unescape(i.message)
+
+						text_content = smart_text(text_content)
+						msg = EmailMultiAlternatives(subject, text_content, from_email, [to.strip()], headers={'Reply-To': from_email})
+
+						msg.attach_alternative(html_content, "text/html")
+						msg.send()	      
+
 
 					i.state = OutBoundState.objects.get(name='SENT')
 

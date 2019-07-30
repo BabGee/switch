@@ -88,7 +88,7 @@ class Authorize:
 	def return_hash(self, payload, API_KEY):
 		lgr.info("Return Hash")
 		sec_hash = self.secure(payload,API_KEY) 
-		payload['sec_hash'] =  sec_hash
+		payload['sec_hash'] =  sec_hash.decode('UTF-8')
 		return payload
 
 class Interface(Authorize, ServiceCall):

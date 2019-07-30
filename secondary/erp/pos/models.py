@@ -66,6 +66,15 @@ class CartStatus(models.Model):
 	def __str__(self):
 		return u'%s' % (self.name)
 
+class APICallBackStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __str__(self):
+		return u'%s' % (self.name)
+
+
 
 class CartItem(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -89,6 +98,10 @@ class CartItem(models.Model):
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
 	cart_type = models.ForeignKey(CartType, on_delete=models.CASCADE)
+	api_callback_url = models.CharField(max_length=512, null=True, blank=True)
+	api_gateway_profile = models.ForeignKey(GatewayProfile, related_name='api_gateway_profile', blank=True, null=True, on_delete=models.CASCADE)
+	api_callback_status = models.ForeignKey(APICallBackStatus, blank=True, null=True, on_delete=models.CASCADE)
+	api_message = models.CharField(max_length=128, null=True, blank=True)
 	def __str__(self):
 		return u'%s %s %s' % (self.product_item, self.gateway_profile, self.quantity)
 
@@ -115,6 +128,7 @@ class PurchaseOrder(models.Model):
 	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE) #Gateway Profile to Match Cart Items for checkout
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
+	outgoing_payment = models.ForeignKey(Outgoing, null=True, blank=True, on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s %s' % (self.reference, self.status.name)
 	def cart_item_list(self):

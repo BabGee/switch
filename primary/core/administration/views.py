@@ -1,5 +1,4 @@
 from django.shortcuts import HttpResponseRedirect, HttpResponse
-import json
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth import authenticate
 from primary.core.api.views import *
@@ -9,7 +8,9 @@ from django.views.decorators.csrf import csrf_protect
 from django.contrib.gis.geoip2 import GeoIP2
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
-import pytz, time, json, pycurl
+
+import simplejson as json
+import pytz, time, pycurl
 from io import StringIO, BytesIO
 
 import logging
@@ -28,11 +29,16 @@ class WebService:
 	def post_request(self, payload, node, timeout=30):
 		try:
 			if self.validate_url(node):
+				lgr.info('Got Here')
 				jdata = json.dumps(payload)
+
+				lgr.info('Got Here')
 				#response = urllib2.urlopen(node, jdata, timeout = timeout)
 				#jdata = response.read()
 				#payload = json.loads(jdata)
 				c = pycurl.Curl()
+
+				lgr.info('Got Here')
 				#Timeout in 30 seconds
 				c.setopt(c.CONNECTTIMEOUT, timeout)
 				c.setopt(c.VERBOSE, True)
@@ -48,11 +54,20 @@ class WebService:
 				header=[str(content_type),str(content_length)]
 				c.setopt(c.HTTPHEADER, header)
 				c.setopt(c.POSTFIELDS, str(jdata))
+
+				lgr.info('Got Here')
 				b = BytesIO()
 				c.setopt(c.WRITEFUNCTION, b.write)
 				c.perform()
 				response = b.getvalue().decode('UTF-8')
-				payload = json.loads(response)
+
+				lgr.info('Got Here')
+				try: payload = json.loads(response)
+				except Exception as e:
+					lgr.info('Response Not JSON: %s' % e)
+					payload = {}
+					payload['response'] = 'Response not JSON'
+					payload['response_status'] = '30'
 		except Exception as e:
 			lgr.info("Error Posting Request: %s" % e)
 			payload['response_status'] = '96'

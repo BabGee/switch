@@ -228,8 +228,8 @@ class Outbound(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	contact = models.ForeignKey(Contact, on_delete=models.CASCADE)
-	heading = models.CharField(max_length=200,blank=True, null=True)
-	message = models.CharField(max_length=38400)
+	heading = models.CharField(max_length=512,blank=True, null=True)
+	message = models.TextField()
 	template = models.ForeignKey(NotificationTemplate, blank=True, null=True, on_delete=models.CASCADE)
 	scheduled_send = models.DateTimeField()
 	state = models.ForeignKey(OutBoundState, on_delete=models.CASCADE) #Sent/Delivered or Undelivered
