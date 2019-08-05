@@ -25,7 +25,7 @@ cf.read('switch/conf/switch.properties')
 FAUST_BROKER_URL = 'kafka://localhost:9092'
 FAUST_STORE_URL = 'rocksdb://'
 
-
+'''
 try:conf_products = cf.get('INSTALLED_APPS','products')
 except:conf_products=''
 products=conf_products.split(",")
@@ -53,6 +53,37 @@ smtptls = tls_default[smtptls_default]
 conf_hosts = cf.get('ALLOWED_HOSTS','hosts')
 hosts = conf_hosts.split(",")
 
+#for s in cf.sections(): 
+#	options = cf.options(s) 
+#	for o in options: 
+#		print(cf.get(s, o)) 
+'''
+try:conf_products = os.getenv("INSTALLED_APPS_products", cf.get('INSTALLED_APPS','products'))
+except:conf_products=''
+products=conf_products.split(",")
+
+try:conf_thirdparty =  os.getenv("INSTALLED_APPS_thirdparty", cf.get('INSTALLED_APPS','thirdparty'))
+except:conf_thirdparty = ''
+thirdparty=conf_thirdparty.split(",")
+
+dbengine =  os.getenv("DATABASES_default_dbengine", cf.get('DATABASES','default_dbengine'))
+dbname =  os.getenv("DATABASES_default_dbname", cf.get('DATABASES','default_dbname'))
+dbuser =  os.getenv("DATABASES_default_dbuser", cf.get('DATABASES','default_dbuser'))
+dbuser = crypter.Decrypt(dbuser)   
+dbpassword =  os.getenv("DATABASES_default_dbpassword", cf.get('DATABASES','default_dbpassword'))
+dbpassword = crypter.Decrypt(dbpassword)
+dbhost =  os.getenv("DATABASES_default_dbhost", cf.get('DATABASES','default_dbhost'))
+dbport =  os.getenv("DATABASES_default_dbport", cf.get('DATABASES','default_dbport'))
+                                   
+smtphost =  os.getenv("SMTP_default_host", cf.get('SMTP','default_host'))
+smtpport =  os.getenv("SMTP_default_port", cf.get('SMTP','default_port'))
+smtptls_default =  os.getenv("SMTP_tls", cf.get('SMTP','tls'))
+tls_default = {'True': True, 'False': False}
+smtptls = tls_default[smtptls_default]
+                                     
+conf_hosts =  os.getenv("ALLOWED_HOSTS_hosts", cf.get('ALLOWED_HOSTS','hosts'))
+hosts = conf_hosts.split(",")        
+    
 installed_apps = products+thirdparty
 installed_apps = filter(None, installed_apps)
 
