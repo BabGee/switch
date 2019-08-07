@@ -16,6 +16,7 @@ switch/media.bkp/
 products/**
 !products
 !products/__init__.py
+
 #Leave thirdparty folder, ignore contents
 thirdparty/**
 !thirdparty
