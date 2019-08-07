@@ -97,7 +97,7 @@ class List:
 							contact__product__notification__code__gateway=gateway_profile.gateway)\
 							.annotate(send_date=Cast(DateTrunc('day','scheduled_send'), CharField(max_length=32)))\
 							.values('send_date')\
-							.annotate(total_count=Count('send_date'))\
+							.annotate(total_count=Count('send_date')).filter(total_count__gt=1)\
 							.values_list('send_date','message','contact__product__notification__code__alias','state__name','total_count')\
 							.order_by('-send_date')
 

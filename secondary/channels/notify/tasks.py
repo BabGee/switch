@@ -1937,7 +1937,8 @@ def send_outbound_sms_messages():
 					~Q(recipient=None),~Q(recipient=''),\
 					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
-					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24)),\
+					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
+					|Q(state__name="SENT", response__icontains='SVC0002|',date_modified__lte=timezone.now()-timezone.timedelta(seconds=240),date_created__gte=timezone.now()-timezone.timedelta(seconds=600)),\
 					Q(contact__status__name='ACTIVE')).select_related()
 
 		outbound = orig_outbound[:500].values_list('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')

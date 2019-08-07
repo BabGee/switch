@@ -2147,7 +2147,7 @@ class System(Wrappers):
 				extension_chunks = str(filename).split('.')
 				extension = extension_chunks[len(extension_chunks) - 1]
 				try:
-					original_filename = base64.urlsafe_b64decode(filename.replace(extension, ''))
+					original_filename = base64.urlsafe_b64decode(filename.replace(extension, '')).decode()
 				except:
 					original_filename = filename.replace(extension, '')
 				activity_status = FileUploadActivityStatus.objects.get(name='CREATED')
@@ -2158,7 +2158,7 @@ class System(Wrappers):
 				if 'description' in payload.keys():
 					activity.description = payload['description']
 
-				with open(tmp_file, 'r') as f:
+				with open(tmp_file, 'r',encoding="utf8", errors='ignore') as f:
 					activity.file_path.save(filename, File(f), save=False)
 				activity.save()
 				f.close()
