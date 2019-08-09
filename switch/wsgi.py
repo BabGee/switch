@@ -24,7 +24,12 @@ import os, sys
 # mod_wsgi daemon mode with each site in its own daemon process, or use
 # os.environ["DJANGO_SETTINGS_MODULE"] = "switch.settings"
 
-sys.path.append('/srv/applications/switch')
+#sys.path.append('/srv/applications/switch')
+
+path = os.path.abspath(os.path.join(__file__, '..', '..'))
+if path not in sys.path:
+    sys.path.append(path)
+
 os.environ["DJANGO_SETTINGS_MODULE"] = "switch.settings"
 
 os.environ["CELERY_LOADER"] = "django"
