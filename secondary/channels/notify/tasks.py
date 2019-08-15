@@ -870,7 +870,7 @@ class System(Wrappers):
 					this_outbound.state = state
 					this_outbound.scheduled_send=timezone.now()+timezone.timedelta(hours=1)
 					this_outbound.save()
-				elif delivery_status in ['UNSUBSCRIBED']:
+				elif delivery_status in ['UNSUBSCRIBED'] and outbound.contact.product.subscribable:
 					#lgr.info('Delivery Status: Unsubscribed User, Initiating Subscription')
 
 					if this_outbound.sends >= 2:
@@ -881,6 +881,12 @@ class System(Wrappers):
 					this_outbound.contact.subscribed = False
 					this_outbound.contact.save()
 					state = OutBoundState.objects.get(name='CREATED')
+					this_outbound.state = state
+					this_outbound.save()
+
+				elif delivery_status in ['UNSUBSCRIBED']:
+					#lgr.info('Delivery Status: Unsubscribed User, UNSUBSCRIBED on unsubscribable')
+					state = OutBoundState.objects.get(name='UNSUBSCRIBED')
 					this_outbound.state = state
 					this_outbound.save()
 				elif delivery_status in ['DELIVERED']:

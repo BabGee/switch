@@ -58,8 +58,11 @@ class List:
 
 			#manager_list = FloatManager.objects.filter(Q(Q(institution=gateway_profile.institution)|Q(institution=None)),\
 			lgr.info('Balance')
-			manager_list = FloatManager.objects.filter(Q(institution=gateway_profile.institution),\
-									Q(gateway=gateway_profile.gateway))
+			if gateway_profile.institution:
+				manager_list = FloatManager.objects.filter(Q(institution=gateway_profile.institution),\
+										Q(gateway=gateway_profile.gateway))
+			else:
+				manager_list = FloatManager.objects.filter(Q(gateway=gateway_profile.gateway))
 
 			float_type_list = manager_list.values('float_type__name','float_type__id').annotate(count=Count('float_type__id'))
 

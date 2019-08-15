@@ -94,10 +94,10 @@ class List:
 		try:
 
 			outbound_list = Outbound.objects.filter(contact__product__notification__code__institution=gateway_profile.institution,\
-							contact__product__notification__code__gateway=gateway_profile.gateway)\
+							contact__product__notification__code__gateway=gateway_profile.gateway, date_created__gte=timezone.now()-timezone.timedelta(days=30))\
 							.annotate(send_date=Cast(DateTrunc('day','scheduled_send'), CharField(max_length=32)))\
 							.values('send_date')\
-							.annotate(total_count=Count('send_date')).filter(total_count__gt=1)\
+							.annotate(total_count=Count('send_date')).filter(total_count__gte=5)\
 							.values_list('send_date','message','contact__product__notification__code__alias','state__name','total_count')\
 							.order_by('-send_date')
 
@@ -117,7 +117,25 @@ class List:
 				lgr.info(df[c].dtype)
 				params['cols'].append({'label': c, 'type': 'string' })
 
-			params['rows'] = df.values.tolist()
+
+			report_list  = df.values.tolist()
+			paginator = Paginator(report_list, payload.get('limit',50))
+
+			try:
+				page = int(payload.get('page', '1'))
+			except ValueError:
+				page = 1
+
+			try:
+				results = paginator.page(page)
+			except(EmptyPage, InvalidPage):
+				results = paginator.page(paginator.num_pages)
+
+
+			report_list = results.object_list
+
+
+			params['rows'] = report_list
 
 
 		except Exception as e:
