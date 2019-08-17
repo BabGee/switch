@@ -115,7 +115,7 @@ def node_system_service_commands_code(request, node_system_pk, service_command_p
             # print(line)
 
             # if (not in_block) and 'def ' in line and service_command.command_function == line.split('(')[0].split(' ')[1].strip():
-            if (not in_block) and 'def ' in line and service_command.command_function in line:
+            if (not in_block) and 'def ' in line and service_command.command_function == line.split('(')[0].split(' ')[1].strip():
                 code.append('\n')
                 in_block = True
             elif (in_block) and ('class ' in line or (
