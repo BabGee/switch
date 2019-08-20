@@ -2250,6 +2250,10 @@ def pre_process_file_upload(payload):
 		df.columns = [c.strip().lower().replace(' ','_')   for c in df.columns]
 
 		lgr.info('Data Frame Columns: %s' % df.columns)
+		if 'recipient' in df.columns:
+			lgr.info('RECIPIENT Exists: %s' % df['recipient'].dtype)
+			df['recipient'] = df['recipient'].astype(int)
+
 		if 'msisdn' in df.columns:
 			lgr.info('MSISDN Exists: %s' % df['msisdn'].dtype)
 			df['msisdn'] = df['msisdn'].astype(int)
