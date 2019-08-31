@@ -9,10 +9,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 #import ConfigParser
 import configparser
-from keyczar import keyczar
-
-location = '/opt/kz'
-crypter = keyczar.Crypter.Read(location)
 
 #cf = ConfigParser.ConfigParser()
 
@@ -37,9 +33,7 @@ thirdparty=conf_thirdparty.split(",")
 dbengine =  os.getenv("DATABASES_default_dbengine", cf.get('DATABASES','default_dbengine'))
 dbname =  os.getenv("DATABASES_default_dbname", cf.get('DATABASES','default_dbname'))
 dbuser =  os.getenv("DATABASES_default_dbuser", cf.get('DATABASES','default_dbuser'))
-dbuser = crypter.Decrypt(dbuser)   
 dbpassword =  os.getenv("DATABASES_default_dbpassword", cf.get('DATABASES','default_dbpassword'))
-dbpassword = crypter.Decrypt(dbpassword)
 dbhost =  os.getenv("DATABASES_default_dbhost", cf.get('DATABASES','default_dbhost'))
 dbport =  os.getenv("DATABASES_default_dbport", cf.get('DATABASES','default_dbport'))
                                    
