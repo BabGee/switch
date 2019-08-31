@@ -17,7 +17,7 @@ crypter = keyczar.Crypter.Read(location)
 #cf = ConfigParser.ConfigParser()
 
 cf = configparser.ConfigParser()
-cf.read(os.path.join(BASE_DIR, 'integrator/conf/switch.properties'))
+cf.read(os.path.join(BASE_DIR, 'switch/conf/switch.properties'))
 logroot =  os.getenv("LOG_root", cf.get('LOG','root')).strip()
 
 #print cf._sections
