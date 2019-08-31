@@ -31,3 +31,6 @@
 	path = thirdparty/wahi
 	url = https://bitbucket.org/interintel/switch.thirdparty.wahi.git
 
+[submodule "products/gus"]
+	path = products/gus
+	url = https://bitbucket.org/interintel/switch.products.gus.git

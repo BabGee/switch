@@ -17,7 +17,8 @@ crypter = keyczar.Crypter.Read(location)
 #cf = ConfigParser.ConfigParser()
 
 cf = configparser.ConfigParser()
-cf.read('switch/conf/switch.properties')
+cf.read(os.path.join(BASE_DIR, 'integrator/conf/switch.properties'))
+logroot =  os.getenv("LOG_root", cf.get('LOG','root')).strip()
 
 #print cf._sections
 
@@ -25,39 +26,6 @@ cf.read('switch/conf/switch.properties')
 FAUST_BROKER_URL = 'kafka://localhost:9092'
 FAUST_STORE_URL = 'rocksdb://'
 
-'''
-try:conf_products = cf.get('INSTALLED_APPS','products')
-except:conf_products=''
-products=conf_products.split(",")
-
-try:conf_thirdparty = cf.get('INSTALLED_APPS','thirdparty')
-except:conf_thirdparty = ''
-thirdparty=conf_thirdparty.split(",")
-
-
-dbengine = cf.get('DATABASES','default_dbengine')
-dbname = cf.get('DATABASES','default_dbname')
-dbuser = cf.get('DATABASES','default_dbuser')
-dbuser = crypter.Decrypt(dbuser)
-dbpassword = cf.get('DATABASES','default_dbpassword')
-dbpassword = crypter.Decrypt(dbpassword)
-dbhost = cf.get('DATABASES','default_dbhost')
-dbport = cf.get('DATABASES','default_dbport')
-
-smtphost = cf.get('SMTP','default_host')
-smtpport = cf.get('SMTP','default_port')
-smtptls_default = cf.get('SMTP','tls')
-tls_default = {'True': True, 'False': False}
-smtptls = tls_default[smtptls_default]
-
-conf_hosts = cf.get('ALLOWED_HOSTS','hosts')
-hosts = conf_hosts.split(",")
-
-#for s in cf.sections(): 
-#	options = cf.options(s) 
-#	for o in options: 
-#		print(cf.get(s, o)) 
-'''
 try:conf_products = os.getenv("INSTALLED_APPS_products", cf.get('INSTALLED_APPS','products'))
 except:conf_products=''
 products=conf_products.split(",")
@@ -303,10 +271,6 @@ TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 # the site admins on every HTTP 500 error when DEBUG=False.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
-#VENV_ROOT = os.path.join(os.path.dirname(__file__), 'logs').replace('\\','/')
-VENV_ROOT = '/opt/logs/switch/'
-
-#print VENV_ROOT
 
 LOGFILE='info.log'
 
@@ -332,22 +296,10 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler',
             'filters': ['special']
         },
-        'file_actions': {                # define and name a handler
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler', # set the logging class to log to a file
-            #'class': 'logging.handlers.QueueHandler', # set the logging class to log to a file
-            'formatter': 'verbose',         # define the formatter to associate
-            'filename': os.path.join(VENV_ROOT, '', LOGFILE) # log file
-        },     
         
     },
 
     'loggers': {
-        'logview.usersaves': {               # define another logger
-            'handlers': ['file_actions'],  # associate a different handler
-            'level': 'INFO',                 # specify the logging level
-            'propagate': True,
-        }, 
         'django.request': {
             'handlers': ['mail_admins'],
             'level': 'ERROR',
@@ -356,33 +308,61 @@ LOGGING = {
 
     }
 }
-#for app in installed_apps:
-#	print app
 
-
-
-for app in installed_apps:
-	LOGGING['handlers'][app] = {
-            'level' : 'INFO',
-            'formatter' : 'verbose', # from the django doc example
-            'class' : 'logging.handlers.TimedRotatingFileHandler',
-            #'class' : 'logging.handlers.QueueHandler',
-            'filename' : os.path.join(VENV_ROOT, '', app+'.log'), # full path works
-            'when' : 'midnight',
-            'interval' : 1,
-	    'backupCount': 5,
+if logroot not in [None,""]:
+	LOGGING['handlers']['file_actions'] = {                # define and name a handler
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler', # set the logging class to log to a file
+            #'class': 'logging.handlers.QueueHandler', # set the logging class to log to a file
+            'formatter': 'verbose',         # define the formatter to associate
+            'filename': os.path.join(logroot, '', LOGFILE) # log file
         }
+	LOGGING['loggers']['logview.usersaves']: {               # define another logger
+            'handlers': ['file_actions'],  # associate a different handler
+            'level': 'INFO',                 # specify the logging level
+            'propagate': True,
+        } 
 
-	LOGGING['loggers'][app] = {
-            'handlers': [app],
-            'level': 'INFO',
+	for app in installed_apps:
+		LOGGING['handlers'][app] = {
+	            'level' : 'INFO',
+        	    'formatter' : 'verbose', # from the django doc example
+	            'class' : 'logging.handlers.TimedRotatingFileHandler',
+	            #'class' : 'logging.handlers.QueueHandler',
+        	    'filename' : os.path.join(logroot, '', app+'.log'), # full path works
+	            'when' : 'midnight',
+	            'interval' : 1,
+		    'backupCount': 5,
+	        }
+
+		LOGGING['loggers'][app] = {
+	            'handlers': [app],
+	            'level': 'INFO',
+	        }
+
+else:
+	LOGGING['file_actions'] = {
+            'level':'INFO',
+            'class':'logging.StreamHandler',
+            'formatter': 'verbose',
         }
+	LOGGING['loggers']['logview.usersaves']: {               # define another logger
+            'handlers': ['file_actions'],  # associate a different handler
+            'level': 'INFO',                 # specify the logging level
+            'propagate': True,
+        } 
 
-'''
-print 'HANDLERS' 
-for handle in LOGGING['handlers']:
-	print handle, LOGGING['handlers'][handle]
-print 'LOGGERS' 
-for log in LOGGING['loggers']:
-	print log, LOGGING['loggers'][log]
-'''
+	for app in installed_apps:
+		LOGGING['handlers'][app] = {
+	            'level':'INFO',
+        	    'class':'logging.StreamHandler',
+	            'formatter': 'verbose',
+	        }
+
+		LOGGING['loggers'][app] = {
+	            'handlers': [app],
+	            'level': 'INFO',
+	        }
+
+
+
