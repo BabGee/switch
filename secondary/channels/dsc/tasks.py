@@ -2252,10 +2252,14 @@ def pre_process_file_upload(payload):
 		lgr.info('Data Frame Columns: %s' % df.columns)
 		if 'recipient' in df.columns:
 			lgr.info('RECIPIENT Exists: %s' % df['recipient'].dtype)
+			df['recipient'] = pd.to_numeric(df['recipient'], errors='coerce')
+			df = df.dropna()
 			df['recipient'] = df['recipient'].astype(int)
 
 		if 'msisdn' in df.columns:
 			lgr.info('MSISDN Exists: %s' % df['msisdn'].dtype)
+			df['msisdn'] = pd.to_numeric(df['msisdn'], errors='coerce')
+			df = df.dropna()
 			df['msisdn'] = df['msisdn'].astype(int)
 
 		tasks = []
