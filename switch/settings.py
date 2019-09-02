@@ -75,7 +75,7 @@ installed_apps = primary + secondary + tuple(installed_apps)
 
 
 timezone='Africa/Nairobi'
-DEBUG = False
+DEBUG = True
 #TEMPLATE_DEBUG = DEBUG #Deprecated 1.8
 
 GEOIP_PATH = '/usr/share/GeoIP'
