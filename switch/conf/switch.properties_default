@@ -16,3 +16,6 @@ default_port=587
 tls=True
 [LOG]
 root=
+[BROKER]
+celery=redis://localhost:6379/
+faust=kafka://localhost:9092

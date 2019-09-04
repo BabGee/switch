@@ -2,7 +2,7 @@ from __future__ import absolute_import, unicode_literals
 import os
 from celery import Celery
 
-#from django.conf import settings
+from django.conf import settings
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'switch.settings')
@@ -132,8 +132,9 @@ app.conf.task_queues = (
 '''
 #app.conf.task_queues = ()
 
+app.conf.broker_url = settings.CELERY_BROKER_URL
 #app.conf.broker_url = "redis://192.168.137.22:6379/"
-app.conf.broker_url = "redis://localhost:6379/"
+#app.conf.broker_url = "redis://localhost:6379/"
 #app.conf.broker_url = "amqp://guest:guest@192.168.137.23:5672"
 #app.conf.broker_url = "librabbitmq://guest:guest@192.168.137.23:5672"
 
