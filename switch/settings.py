@@ -14,12 +14,18 @@ import configparser
 
 cf = configparser.ConfigParser()
 cf.read(os.path.join(BASE_DIR, 'switch/conf/switch.properties'))
+
 logroot =  os.getenv("LOG_root", cf.get('LOG','root')).strip()
 
-#print cf._sections
+celery_broker =  os.getenv("BROKER_celery", cf.get('BROKER','celery')).strip()
+faust_broker =  os.getenv("BROKER_faust", cf.get('BROKER','faust')).strip()
 
+#celery
+CELERY_BROKER_URL = celery_broker
+
+ 
 #faust
-FAUST_BROKER_URL = 'kafka://localhost:9092'
+FAUST_BROKER_URL = faust_broker
 FAUST_STORE_URL = 'rocksdb://'
 
 try:conf_products = os.getenv("INSTALLED_APPS_products", cf.get('INSTALLED_APPS','products'))
