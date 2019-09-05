@@ -1947,7 +1947,7 @@ def send_outbound_sms_messages():
 					|Q(state__name="SENT", response__icontains='SVC0002|',date_modified__lte=timezone.now()-timezone.timedelta(seconds=240),date_created__gte=timezone.now()-timezone.timedelta(seconds=600)),\
 					Q(contact__status__name='ACTIVE')).select_related()
 
-		outbound = orig_outbound[:100].values_list('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
+		outbound = orig_outbound[:500].values_list('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
 
 		messages=np.asarray(outbound)
 
@@ -1987,7 +1987,7 @@ def send_outbound_sms_messages():
 
 			#lgr.info('Got Here 10: %s' % tasks)
 
-			chunks, chunk_size = len(tasks), 100
+			chunks, chunk_size = len(tasks), 500
 			sms_tasks= [ group(*tasks[i:i+chunk_size])() for i in range(0, chunks, chunk_size) ]
 
 			#sms_tasks  = group(*tasks)()
@@ -2027,7 +2027,7 @@ def send_outbound_email_messages():
 				|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 				|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=2),date_created__gte=timezone.now()-timezone.timedelta(hours=6)),\
 				Q(contact__status__name='ACTIVE')).\
-				select_related('contact').select_related()[:100]
+				select_related('contact').select_related()[:500]
 
 	for i in outbound:
 		try:

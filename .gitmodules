@@ -34,3 +34,30 @@
 [submodule "products/gus"]
 	path = products/gus
 	url = https://bitbucket.org/interintel/switch.products.gus.git
+[submodule "products/muziqbit"]
+	path = products/muziqbit
+	url = https://bitbucket.org/interintel/switch.products.muziqbit.git
+[submodule "products/nikobizz"]
+	path = products/nikobizz
+	url = https://bitbucket.org/interintel/switch.products.nikobizz.git
+[submodule "thirdparty/amkagroup_co_ke"]
+	path = thirdparty/amkagroup_co_ke
+	url = https://bitbucket.org/interintel/switch.thirdparty.amkagroup_co_ke.git
+[submodule "thirdparty/bidfather"]
+	path = thirdparty/bidfather
+	url = https://bitbucket.org/interintel/switch.thirdparty.bidfather.git
+[submodule "thirdparty/mcsk"]
+	path = thirdparty/mcsk
+	url = https://bitbucket.org/interintel/switch.thirdparty.mcsk.git
+[submodule "thirdparty/regix"]
+	path = thirdparty/regix
+	url = https://bitbucket.org/interintel/switch.thirdparty.regix.git
+[submodule "thirdparty/roadroute"]
+	path = thirdparty/roadroute
+	url = https://bitbucket.org/interintel/switch.thirdparty.roadroute.git
+[submodule "thirdparty/sortika"]
+	path = thirdparty/sortika
+	url = https://bitbucket.org/interintel/switch.thirdparty.sortika.git
+[submodule "thirdparty/wahi"]
+	path = thirdparty/wahi
+	url = https://bitbucket.org/interintel/switch.thirdparty.wahi.git
