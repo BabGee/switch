@@ -40,9 +40,11 @@ dbengine =  os.getenv("DATABASES_default_dbengine", cf.get('DATABASES','default_
 dbname =  os.getenv("DATABASES_default_dbname", cf.get('DATABASES','default_dbname'))
 dbuser =  os.getenv("DATABASES_default_dbuser", cf.get('DATABASES','default_dbuser'))
 dbpassword =  os.getenv("DATABASES_default_dbpassword", cf.get('DATABASES','default_dbpassword'))
-dbhost =  os.getenv("DATABASES_default_dbhost", cf.get('DATABASES','default_dbhost'))
-dbport =  os.getenv("DATABASES_default_dbport", cf.get('DATABASES','default_dbport'))
-                                   
+default_dbhost =  os.getenv("DATABASES_default_dbhost", cf.get('DATABASES','default_dbhost'))
+default_dbport =  os.getenv("DATABASES_default_dbport", cf.get('DATABASES','default_dbport'))
+read_dbhost =  os.getenv("DATABASES_default_dbhost", cf.get('DATABASES','default_dbhost'))
+read_dbport =  os.getenv("DATABASES_default_dbport", cf.get('DATABASES','default_dbport'))
+                                  
 smtphost =  os.getenv("SMTP_default_host", cf.get('SMTP','default_host'))
 smtpport =  os.getenv("SMTP_default_port", cf.get('SMTP','default_port'))
 smtptls_default =  os.getenv("SMTP_tls", cf.get('SMTP','tls'))
@@ -128,6 +130,14 @@ DATABASES = {
         'PASSWORD': dbpassword,
         'HOST': dbhost,                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': dbport,                      # Set to empty string for default.
+    }
+    'read': {
+        'ENGINE': dbengine, 
+        'NAME': dbname, 
+        'USER': dbuser,
+        'PASSWORD': dbpassword,
+        'HOST': read_dbhost,
+        'PORT': read_dbport,
     }
 }
 

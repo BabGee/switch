@@ -31,6 +31,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.core import serializers
 import numpy as np
 import pandas as pd
+#from django.db.models.functions import TruncDate, TruncDay, TruncHour, TruncMinute, TruncSecond
 
 from .models import *
 
@@ -92,7 +93,6 @@ class List:
 		lgr.info('Started Outbound Status Report')
 
 		try:
-
 			outbound_list = Outbound.objects.filter(contact__product__notification__code__institution=gateway_profile.institution,\
 							contact__product__notification__code__gateway=gateway_profile.gateway, date_created__gte=timezone.now()-timezone.timedelta(days=7))\
 							.annotate(send_date=Cast(DateTrunc('day','scheduled_send'), CharField(max_length=32)))\

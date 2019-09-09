@@ -61,3 +61,6 @@
 [submodule "thirdparty/wahi"]
 	path = thirdparty/wahi
 	url = https://bitbucket.org/interintel/switch.thirdparty.wahi.git
+[submodule "products/bulksms"]
+	path = products/bulksms
+	url = https://bitbucket.org/interintel/switch.products.bulksms.git
