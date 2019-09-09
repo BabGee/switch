@@ -1806,13 +1806,13 @@ def send_outbound_batch(message_list):
 				updates['state'] = OutBoundState.objects.get(name='SENT')
 				if 'response' in payload.keys(): updates['response'] = payload['response'][:200]
 				
-				i.update(**updates)
+				i.using('default').update(**updates)
 			else:
 				updates = {}
 				updates['state'] = OutBoundState.objects.get(name='FAILED')
 				if 'response' in payload.keys(): updates['response'] = payload['response'][:200]
 
-				i.update(**updates)
+				i.using('default').update(**updates)
 		else:
 			lgr.info('No Endpoint')
 			i.using('default').update(state = OutBoundState.objects.get(name='SENT'))
