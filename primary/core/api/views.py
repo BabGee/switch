@@ -194,10 +194,10 @@ class Interface(Authorize, ServiceCall):
 								lgr.info('Expired Session')
 								session_active = False
 								user_session.status = SessionStatus.objects.using('read').get(name='EXPIRED')
-								user_session.save()
+								user_session.save(using='default')
 							else:
 								user_session.last_access = timezone.now()
-								user_session.save()
+								user_session.save(using='default')
 
 
 							if (session_expiry == None) or (session_expiry and session_active):
