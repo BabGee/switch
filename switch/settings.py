@@ -42,8 +42,8 @@ dbuser =  os.getenv("DATABASES_default_dbuser", cf.get('DATABASES','default_dbus
 dbpassword =  os.getenv("DATABASES_default_dbpassword", cf.get('DATABASES','default_dbpassword'))
 default_dbhost =  os.getenv("DATABASES_default_dbhost", cf.get('DATABASES','default_dbhost'))
 default_dbport =  os.getenv("DATABASES_default_dbport", cf.get('DATABASES','default_dbport'))
-read_dbhost =  os.getenv("DATABASES_default_dbhost", cf.get('DATABASES','default_dbhost'))
-read_dbport =  os.getenv("DATABASES_default_dbport", cf.get('DATABASES','default_dbport'))
+read_dbhost =  os.getenv("DATABASES_read_dbhost", cf.get('DATABASES','read_dbhost'))
+read_dbport =  os.getenv("DATABASES_read_dbport", cf.get('DATABASES','read_dbport'))
                                   
 smtphost =  os.getenv("SMTP_default_host", cf.get('SMTP','default_host'))
 smtpport =  os.getenv("SMTP_default_port", cf.get('SMTP','default_port'))
