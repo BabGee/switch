@@ -1208,7 +1208,7 @@ class System(Wrappers):
 
 			'''
 
-			recipient_list = Recipient.objects.filter(subscribed=True,status__name='ACTIVE',\
+			recipient_list = Recipient.objects.using('read').filter(subscribed=True,status__name='ACTIVE',\
 							contact_group__id__in=[a for a in payload['contact_group_id'].split(',') if a],\
 							contact_group__institution=gateway_profile.institution,\
 							contact_group__gateway=gateway_profile.gateway)\
