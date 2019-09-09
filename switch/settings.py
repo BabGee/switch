@@ -129,7 +129,7 @@ DATABASES = {
         'USER': dbuser,
         'PASSWORD': dbpassword,
         'HOST': default_dbhost,                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-        'PORT': default_dbhost,                      # Set to empty string for default.
+        'PORT': default_dbport,                      # Set to empty string for default.
     },
     'read': {
         'ENGINE': dbengine, 
