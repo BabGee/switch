@@ -128,9 +128,9 @@ DATABASES = {
         # The following settings are not used with sqlite3:
         'USER': dbuser,
         'PASSWORD': dbpassword,
-        'HOST': dbhost,                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-        'PORT': dbport,                      # Set to empty string for default.
-    }
+        'HOST': default_dbhost,                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        'PORT': default_dbhost,                      # Set to empty string for default.
+    },
     'read': {
         'ENGINE': dbengine, 
         'NAME': dbname, 
