@@ -63,7 +63,7 @@ def background_transact(gateway_profile_id, transaction_id, service_id, payload,
 
 		trans = {}
 		trans['response_status'] = '00'
-		t = Transaction.objects.using('read').get(id=transaction_id)
+		t = Transaction.objects.get(id=transaction_id)
 		trans['trans'] = t
 		lgr.info("Transaction: %s" % trans)
 
@@ -313,38 +313,7 @@ class ServiceProcessor:
 
 		try:
 			lgr.info('Service: %s, Service Status: %s, Access Level: %s' % (service.name, service.status.name, service.access_level_list()))
-			'''
-			def transact(gateway_profile, transaction, service, payload, response_tree):
-				transaction_object = transaction['transaction']
-				profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
-				timestamp = profile_tz.normalize(transaction_object.date_modified.astimezone(profile_tz)).isoformat()
-				if 'response_status' in transaction.keys() and transaction['response_status'] == '00':
-					payload['bridge__transaction_id'] = transaction_object.id
 
-					#payload['transaction_timestamp'] = transaction.date_created.isoformat()
-					#payload['transaction_timestamp'] = transaction.date_created.strftime("%Y-%m-%dT%H:%M:%SZ")
-					#payload['transaction_timestamp'] = profile_tz.normalize(transaction.date_modified.astimezone(profile_tz)).strftime("%Y-%m-%dT%H:%M:%SZ")
-					payload['transaction_timestamp'] = timestamp 
-
-					response_tree = self.action_exec(service, gateway_profile, payload, transaction_object) 
-					if Loggers().update_transaction(transaction_object, payload, response_tree) is False:
-						lgr.critical('Transaction Update Failed')
-						response_tree['response_status'] = '96'
-					else:
-						lgr.info("Transaction Succesfully Updated")
-				elif 'response_status' in transaction.keys() and transaction['response_status'] != '00':
-					response_tree['response_status'] = transaction['response_status']
-					lgr.info("Transaction Wasn't Succesfully Processed")
-					response_status = Wrappers().process_responsestatus(response_tree['response_status'], payload)
-				else:
-					response_tree['response_status'] = '96'
-					lgr.info("No Response Status in Response Tree")
-					response_status = Wrappers().process_responsestatus(response_tree['response_status'],payload)
-
-				response_tree['timestamp'] = timestamp
-				response_tree['transaction_reference'] = transaction_object.id
-				return response_tree
-			'''
 			if 'transaction_auth' in payload.keys() and payload['transaction_auth'] not in [None,'']:
 				transaction_list = Transaction.objects.using('read').filter(Q(id__in=str(payload['transaction_auth']).split(",")),\
 						~Q(next_command=None),Q(next_command__access_level=gateway_profile.access_level)).\

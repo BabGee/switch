@@ -1761,7 +1761,7 @@ def send_outbound_batch(message_list):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
-		i = Outbound.objects.using('read').filter(id__in=message_list)
+		i = Outbound.objects.filter(id__in=message_list)
 
 		#add a valid phone number check
 		message = i.first().message
@@ -1770,7 +1770,7 @@ def send_outbound_batch(message_list):
 		message = escape(message)
 		payload = {}
 
-		i.using('default').update(ext_outbound_id = i.first().id)
+		i.update(ext_outbound_id = i.first().id)
 
 		payload['kmp_correlator'] = i.first().id
 
@@ -1806,16 +1806,16 @@ def send_outbound_batch(message_list):
 				updates['state'] = OutBoundState.objects.get(name='SENT')
 				if 'response' in payload.keys(): updates['response'] = payload['response'][:200]
 				
-				i.using('default').update(**updates)
+				i.update(**updates)
 			else:
 				updates = {}
 				updates['state'] = OutBoundState.objects.get(name='FAILED')
 				if 'response' in payload.keys(): updates['response'] = payload['response'][:200]
 
-				i.using('default').update(**updates)
+				i.update(**updates)
 		else:
 			lgr.info('No Endpoint')
-			i.using('default').update(state = OutBoundState.objects.get(name='SENT'))
+			i.update(state = OutBoundState.objects.get(name='SENT'))
 
 	except Exception as e:
 		lgr.info("Error on Sending Outbound Batch: %s" % e)
@@ -1827,7 +1827,7 @@ def send_outbound(message):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
-		i = Outbound.objects.using('read').get(id=message)
+		i = Outbound.objects.get(id=message)
 		#add a valid phone number check
 		message = i.message
 		message = unescape(message)
@@ -1838,7 +1838,7 @@ def send_outbound(message):
 
 		if not i.ext_outbound_id:
 			i.ext_outbound_id = i.id
-			i.save(using='default')
+			i.save()
 
 		payload['kmp_correlator'] = i.ext_outbound_id
 		payload['outbound_id'] = i.id
@@ -1879,7 +1879,7 @@ def send_outbound(message):
 					#lgr.info('Unsubscribe On-Demand Contact')
 					i.contact.status = ContactStatus.objects.get(name='INACTIVE')
 					i.contact.subscribed = False
-					i.contact.save(using='default')
+					i.contact.save()
 
 			else:
 				i.state = OutBoundState.objects.get(name='FAILED')
@@ -1887,14 +1887,14 @@ def send_outbound(message):
 			###############################
 			if 'response' in payload.keys(): i.response = payload['response'][:200]
 			#Save all actions
-			i.save(using='default')
+			i.save()
 
 		else:
 			lgr.info('No Endpoint')
 			i.state = OutBoundState.objects.get(name='SENT')
 			###############################
 			#Save all actions
-			i.save(using='default')
+			i.save()
 
 
 	except Exception as e:
