@@ -226,12 +226,12 @@ class Wrappers:
 		lgr.info('Profile Capture')
 
 		if 'session_gateway_profile_id' in payload.keys():
-			session_gateway_profile = GatewayProfile.objects.filter(id=payload['session_gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.using('read').filter(id=payload['session_gateway_profile_id'])
 		elif ('email' in payload.keys() and self.validateEmail(payload["email"]) ) and \
 		('msisdn' in payload.keys() and self.get_msisdn(payload)):
-			msisdn_session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.get_msisdn(payload)),\
+			msisdn_session_gateway_profile = GatewayProfile.objects.using('read').filter(Q(msisdn__phone_number=self.get_msisdn(payload)),\
 								~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
-			email_session_gateway_profile = GatewayProfile.objects.filter(Q(user__email__iexact=payload["email"]),\
+			email_session_gateway_profile = GatewayProfile.objects.using('read').filter(Q(user__email__iexact=payload["email"]),\
 								~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 
 			if msisdn_session_gateway_profile.exists() and email_session_gateway_profile.exists():
@@ -241,7 +241,7 @@ class Wrappers:
 					session_gateway_profile = msisdn_session_gateway_profile
 				else:
 					profile_error = email_session_gateway_profile[0]
-					session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
+					session_gateway_profile = GatewayProfile.objects.using('read').filter(id=gateway_profile.id)
 			elif msisdn_session_gateway_profile.exists():
 				session_gateway_profile = msisdn_session_gateway_profile
 			elif email_session_gateway_profile.exists():
@@ -250,46 +250,46 @@ class Wrappers:
 				session_gateway_profile = msisdn_session_gateway_profile
 
 		elif 'email' in payload.keys() and self.validateEmail(payload["email"]):
-			session_gateway_profile = GatewayProfile.objects.filter(Q(user__email__iexact=payload["email"]),\
+			session_gateway_profile = GatewayProfile.objects.using('read').filter(Q(user__email__iexact=payload["email"]),\
 					 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 		elif 'msisdn' in payload.keys() and self.get_msisdn(payload):
-			session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.get_msisdn(payload)),\
+			session_gateway_profile = GatewayProfile.objects.using('read').filter(Q(msisdn__phone_number=self.get_msisdn(payload)),\
 					 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 		elif 'national_id' in payload.keys() and payload['national_id'] not in ["",None,"None"]:
-			session_gateway_profile = GatewayProfile.objects.filter(Q(user__profile__national_id__iexact=payload['national_id'].replace(' ','').strip()),\
+			session_gateway_profile = GatewayProfile.objects.using('read').filter(Q(user__profile__national_id__iexact=payload['national_id'].replace(' ','').strip()),\
 					 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 		elif 'passport_number' in payload.keys() and payload['passport_number'] not in ["",None,"None"]:
-			session_gateway_profile = GatewayProfile.objects.filter(Q(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip()),\
+			session_gateway_profile = GatewayProfile.objects.using('read').filter(Q(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip()),\
 					 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 		elif 'reference' in payload.keys() and (self.validateEmail(payload['reference']) or self.simple_get_msisdn(payload['reference'], payload)):
 			if self.validateEmail(payload["reference"]):
-				session_gateway_profile = GatewayProfile.objects.filter(Q(user__email__iexact=payload["reference"]),\
+				session_gateway_profile = GatewayProfile.objects.using('read').filter(Q(user__email__iexact=payload["reference"]),\
 						 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 			else:
 				msisdn = self.simple_get_msisdn(payload['reference'], payload)
 				if msisdn:
-					session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=msisdn),\
+					session_gateway_profile = GatewayProfile.objects.using('read').filter(Q(msisdn__phone_number=msisdn),\
 							 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 					payload['msisdn'] = msisdn
 				else:
-					session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
+					session_gateway_profile = GatewayProfile.objects.using('read').filter(id=gateway_profile.id)
 
 		elif 'email_msisdn' in payload.keys() and  self.validateEmail(payload['email_msisdn'].strip()):
 			lgr.info('profile capture using email')
-			session_gateway_profile = GatewayProfile.objects.filter(Q(user__email__iexact=payload['email_msisdn'].strip()),\
+			session_gateway_profile = GatewayProfile.objects.using('read').filter(Q(user__email__iexact=payload['email_msisdn'].strip()),\
 									~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 		elif  'email_msisdn' in payload.keys() and  self.simple_get_msisdn(payload['email_msisdn'].strip(), payload):
 			lgr.info('profile capture using msisdn')
-			session_gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.simple_get_msisdn(payload['email_msisdn'].strip(), payload)),\
+			session_gateway_profile = GatewayProfile.objects.using('read').filter(Q(msisdn__phone_number=self.simple_get_msisdn(payload['email_msisdn'].strip(), payload)),\
 											 ~Q(status__name__in=['DEACTIVATED','DELETED']), Q(gateway=gateway_profile.gateway))
-		elif  'email_msisdn' in payload.keys() and  GatewayProfile.objects.filter(gateway=gateway_profile.gateway, user__username__iexact=payload['email_msisdn'].strip()).exists():
+		elif  'email_msisdn' in payload.keys() and  GatewayProfile.objects.using('read').filter(gateway=gateway_profile.gateway, user__username__iexact=payload['email_msisdn'].strip()).exists():
 			lgr.info('profile capture using username')
 			lgr.info(payload['email_msisdn'])
 			lgr.info(gateway_profile.gateway)
-			session_gateway_profile = GatewayProfile.objects.filter(Q(user__username__iexact=payload['email_msisdn'].strip()),\
+			session_gateway_profile = GatewayProfile.objects.using('read').filter(Q(user__username__iexact=payload['email_msisdn'].strip()),\
 										~Q(status__name__in=['DEACTIVATED','DELETED']), Q(gateway=gateway_profile.gateway))
 		else:
-			session_gateway_profile = GatewayProfile.objects.filter(id=gateway_profile.id)
+			session_gateway_profile = GatewayProfile.objects.using('read').filter(id=gateway_profile.id)
 
 		return session_gateway_profile, payload, profile_error
 
@@ -341,13 +341,13 @@ class Wrappers:
 		if is_num and len(msisdn) >= 9 and msisdn[:1] == '+':
 			msisdn = str(msisdn)
 		elif is_num and len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
-			country_list = Country.objects.filter(mpoly__intersects=trans_point)
+			country_list = Country.objects.using('read').filter(mpoly__intersects=trans_point)
 			ip_point = g.geos(str(payload['ip_address'])) if 'ip_address' in payload.keys() else None
 			#Allow Country from web and apps
 			if country_list.exists() and country_list[0].ccode and int(payload['chid']) in [1,3,7,8,9,10]:
 				msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
 			elif ip_point and int(payload['chid']) in [1,3,7,8,9,10]:
-				country_list = Country.objects.filter(mpoly__intersects=ip_point)
+				country_list = Country.objects.using('read').filter(mpoly__intersects=ip_point)
 				if country_list.exists() and country_list[0].ccode:
 					msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
 				else:
@@ -356,13 +356,13 @@ class Wrappers:
 				msisdn = '+254%s' % msisdn[1:]
 
 		elif is_num and len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] != '0':
-			country_list = Country.objects.filter(mpoly__intersects=trans_point)
+			country_list = Country.objects.using('read').filter(mpoly__intersects=trans_point)
 			ip_point = g.geos(str(payload['ip_address'])) if 'ip_address' in payload.keys() else None
 			#Allow Country from web and apps
 			if country_list.exists() and country_list[0].ccode and int(payload['chid']) in [1,3,7,8,9,10]:
 				msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
 			elif ip_point and int(payload['chid']) in [1,3,7,8,9,10]:
-				country_list = Country.objects.filter(mpoly__intersects=ip_point)
+				country_list = Country.objects.using('read').filter(mpoly__intersects=ip_point)
 				if country_list.exists() and country_list[0].ccode:
 					msisdn = '+%s%s' % (country_list[0].ccode,msisdn)
 				else:
@@ -401,13 +401,13 @@ class Wrappers:
 			if is_num and len(msisdn) >= 9 and msisdn[:1] == '+':
 				msisdn = str(msisdn)
 			elif is_num and len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
-				country_list = Country.objects.filter(mpoly__intersects=trans_point)
+				country_list = Country.objects.using('read').filter(mpoly__intersects=trans_point)
 				ip_point = g.geos(str(payload['ip_address'])) if 'ip_address' in payload.keys() else None
 				#Allow Country from web and apps
 				if country_list.exists() and country_list[0].ccode and int(payload['chid']) in [1,3,7,8,9,10]:
 					msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
 				elif ip_point and int(payload['chid']) in [1,3,7,8,9,10]:
-					country_list = Country.objects.filter(mpoly__intersects=ip_point)
+					country_list = Country.objects.using('read').filter(mpoly__intersects=ip_point)
 					if country_list.exists() and country_list[0].ccode:
 						msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
 					else:
@@ -415,13 +415,13 @@ class Wrappers:
 				else:
 					msisdn = '+254%s' % msisdn[1:]
 			elif is_num and len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] != '0':
-				country_list = Country.objects.filter(mpoly__intersects=trans_point)
+				country_list = Country.objects.using('read').filter(mpoly__intersects=trans_point)
 				ip_point = g.geos(str(payload['ip_address'])) if 'ip_address' in payload.keys() else None
 				#Allow Country from web and apps
 				if country_list.exists() and country_list[0].ccode and int(payload['chid']) in [1,3,7,8,9,10]:
 					msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
 				elif ip_point and int(payload['chid']) in [1,3,7,8,9,10]:
-					country_list = Country.objects.filter(mpoly__intersects=ip_point)
+					country_list = Country.objects.using('read').filter(mpoly__intersects=ip_point)
 					if country_list.exists() and country_list[0].ccode:
 						msisdn = '+%s%s' % (country_list[0].ccode,msisdn)
 					else:
@@ -2599,7 +2599,7 @@ class System(Wrappers):
 
 	def get_profile(self, payload, node_info):
 		try:
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
 
 			profile_error = None
 			session_gateway_profile, payload, profile_error = self.profile_capture(gateway_profile, payload, profile_error)

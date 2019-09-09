@@ -33,7 +33,7 @@ class Generator:
 		try:
 			lgr.info('Starting Interface: %s' % this_page_inputs)
 
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
 
 			if 'payment_method' in payload.keys():
 				payment_method_list = payload['payment_method'].split(',')
@@ -53,7 +53,7 @@ class Generator:
 
 			# Add Interface for a product_type
 			if 'product_item_id' in payload.keys() and payload['product_item_id'] not in ["", None, 'None']:
-				product_item = ProductItem.objects.get(id=payload['product_item_id'])
+				product_item = ProductItem.objects.using('read').get(id=payload['product_item_id'])
 				this_page_inputs = this_page_inputs.filter(
 				Q(product_type=None) | Q(product_type=product_item.product_type))
 			elif 'product_type_id' in payload.keys() and payload['product_type_id'] not in ["", None, 'None']:
@@ -67,7 +67,7 @@ class Generator:
 			if 'trigger' in payload.keys():
 				triggers = str(payload['trigger'].strip()).split(',')
 				lgr.info('Triggers: %s' % triggers)
-				trigger_list = Trigger.objects.filter(name__in=triggers).distinct()
+				trigger_list = Trigger.objects.using('read').filter(name__in=triggers).distinct()
 				this_page_inputs = this_page_inputs.filter(Q(trigger__in=trigger_list) | Q(trigger=None))
 				# Eliminate none matching trigger list
 				for i in this_page_inputs:
@@ -81,7 +81,7 @@ class Generator:
 				this_page_inputs = this_page_inputs.filter(Q(trigger=None))
 
 			# FIlter Enrollments
-			enrollment_list = Enrollment.objects.filter(profile=gateway_profile.user.profile,
+			enrollment_list = Enrollment.objects.using('read').filter(profile=gateway_profile.user.profile,
 								expiry__gte=timezone.now())
 			if enrollment_list.exists():
 				this_page_inputs = this_page_inputs.filter(
@@ -231,10 +231,10 @@ class System(Generator):
 			gui = {}
 
 			# This Page
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
 
 			lgr.info('Started This Page Inputs')
-			this_page_inputs = PageInput.objects.filter(Q(page__service__name=payload['SERVICE']),
+			this_page_inputs = PageInput.objects.using('read').filter(Q(page__service__name=payload['SERVICE']),
 							Q(page_input_status__name='ACTIVE'), \
 							Q(Q(access_level=gateway_profile.access_level) | Q(
 								access_level=None)), \
@@ -265,7 +265,7 @@ class System(Generator):
 				if gateway_profile.institution and gateway_profile.institution.template:
 					this_page_inputs = this_page_inputs.filter(template=gateway_profile.institution.template)
 				elif 'institution_id' in payload.keys(): #Explicitly defined institution
-					institution = Institution.objects.get(id=payload['institution_id'])
+					institution = Institution.objects.using('read').get(id=payload['institution_id'])
 					if institution.template: this_page_inputs = this_page_inputs.filter(template=institution.template)
 					else:this_page_inputs = this_page_inputs.filter(template=None)
 				else:
@@ -274,7 +274,7 @@ class System(Generator):
 			lgr.info('This Page Inputs 1L %s' % this_page_inputs)
 			#Role Filters
 			if gateway_profile.role:
-				role_permission = RolePermission.objects.filter(role=gateway_profile.role)
+				role_permission = RolePermission.objects.using('read').filter(role=gateway_profile.role)
 
 				pages = {}
 				for permission in role_permission:
@@ -306,10 +306,10 @@ class System(Generator):
 			gui = {}
 
 			# This Page
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
 
 			lgr.info('Started This Page Inputs')
-			this_page_inputs = PageInput.objects.filter(Q(page__service__name=payload['SERVICE']),
+			this_page_inputs = PageInput.objects.using('read').filter(Q(page__service__name=payload['SERVICE']),
 							Q(page_input_status__name='ACTIVE'), \
 							Q(Q(access_level=gateway_profile.access_level) | Q(
 								access_level=None)), \

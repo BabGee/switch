@@ -63,7 +63,7 @@ class List:
 		lgr.info('Started Notifications')
 
 		try:
-			outbound = Outbound.objects.filter(
+			outbound = Outbound.objects.using('read').filter(
 				contact__product__notification__code__institution=gateway_profile.institution, date_created__gte=timezone.now()-timezone.timedelta(days=7)). \
 				values('state__name'). \
 				annotate(state_count=Count('state__name'))
@@ -93,7 +93,7 @@ class List:
 		lgr.info('Started Outbound Status Report')
 
 		try:
-			outbound_list = Outbound.objects.filter(contact__product__notification__code__institution=gateway_profile.institution,\
+			outbound_list = Outbound.objects.using('read').filter(contact__product__notification__code__institution=gateway_profile.institution,\
 							contact__product__notification__code__gateway=gateway_profile.gateway, date_created__gte=timezone.now()-timezone.timedelta(days=7))\
 							.annotate(send_date=Cast(DateTrunc('day','scheduled_send'), CharField(max_length=32)))\
 							.values('send_date')\

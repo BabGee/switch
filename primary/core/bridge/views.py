@@ -63,7 +63,7 @@ def background_transact(gateway_profile_id, transaction_id, service_id, payload,
 
 		trans = {}
 		trans['response_status'] = '00'
-		t = Transaction.objects.get(id=transaction_id)
+		t = Transaction.objects.using('read').get(id=transaction_id)
 		trans['trans'] = t
 		lgr.info("Transaction: %s" % trans)
 
@@ -82,8 +82,8 @@ def background_transact(gateway_profile_id, transaction_id, service_id, payload,
 		new_payload.update(payload)
 		lgr.info('New Payload: %s' % new_payload)
 
-		gateway_profile = GatewayProfile.objects.get(id=gateway_profile_id)
-		service = Service.objects.get(id=service_id)
+		gateway_profile = GatewayProfile.objects.using('read').get(id=gateway_profile_id)
+		service = Service.objects.using('read').get(id=service_id)
 		response_tree = transact(gateway_profile, trans, service, new_payload, response_tree)
 	except Exception as e:
 		lgr.info('Error on BackgroundService Call: %s' % e)
@@ -113,7 +113,7 @@ class ServiceProcessor:
 					#Check if trigger Exists
 					if 'trigger' in payload.keys():
 						triggers = str(payload['trigger'].strip()).split(',')
-						trigger_list = Trigger.objects.filter(name__in=triggers).select_related()
+						trigger_list = Trigger.objects.using('read').filter(name__in=triggers).select_related()
 
 						lgr.info('Reverse Command Triggers: %s' % trigger_list)
 						#Ensure matches all existing triggers for action
@@ -173,7 +173,7 @@ class ServiceProcessor:
 		level = None
 		reverse = False
 		lgr.info('Action Exec Started: %s' % service)
-		all_commands = ServiceCommand.objects.filter(Q(service=service),Q(gateway=gateway_profile.gateway)|Q(gateway=None),\
+		all_commands = ServiceCommand.objects.using('read').filter(Q(service=service),Q(gateway=gateway_profile.gateway)|Q(gateway=None),\
 								Q(channel__id=payload['chid'])|Q(channel=None)).order_by('level').select_related()
 		if 'payment_method' in payload.keys():
 			all_commands = all_commands.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None)).select_related()
@@ -198,7 +198,7 @@ class ServiceProcessor:
 					if 'trigger' in payload.keys():
 						lgr.info("payload['trigger'] : %s"%payload['trigger'])
 						triggers = str(payload['trigger'].strip()).split(',')
-						trigger_list = Trigger.objects.filter(name__in=triggers).select_related()
+						trigger_list = Trigger.objects.using('read').filter(name__in=triggers).select_related()
 
 						lgr.info('Command Triggers: %s' % trigger_list)
 						#Ensure matches all existing triggers for action
@@ -346,7 +346,7 @@ class ServiceProcessor:
 				return response_tree
 			'''
 			if 'transaction_auth' in payload.keys() and payload['transaction_auth'] not in [None,'']:
-				transaction_list = Transaction.objects.filter(Q(id__in=str(payload['transaction_auth']).split(",")),\
+				transaction_list = Transaction.objects.using('read').filter(Q(id__in=str(payload['transaction_auth']).split(",")),\
 						~Q(next_command=None),Q(next_command__access_level=gateway_profile.access_level)).\
 						select_related('service','institution')
 				lgr.info("Auth Transaction List: %s" % transaction_list)
@@ -362,7 +362,7 @@ class ServiceProcessor:
 				response_tree['response'] = 'Auth Transaction Captured'
 
 			elif 'repeat_bridge_transaction' in payload.keys() and payload['repeat_bridge_transaction'] not in [None,'']:
-				transaction_list = Transaction.objects.filter(id__in=str(payload['repeat_bridge_transaction']).split(",")).select_related()
+				transaction_list = Transaction.objects.using('read').filter(id__in=str(payload['repeat_bridge_transaction']).split(",")).select_related()
 				lgr.info("Repeat Transaction List: %s" % transaction_list)
 				del payload['repeat_bridge_transaction']
 				for t in transaction_list:

@@ -114,7 +114,7 @@ class Wrappers:
 			from secondary.erp.survey.tasks import System  as SurveySystem
 
 
-			code_request = CodeRequest.objects.all().values('code_allocation','region__name','code_preview').\
+			code_request = CodeRequest.objects.using('read').all().values('code_allocation','region__name','code_preview').\
 					annotate(name=F('code_preview'),type=F('region__name'))
 
 			for i in code_request:
@@ -147,7 +147,7 @@ class Wrappers:
 			from secondary.erp.survey.tasks import System  as SurveySystem
 
 
-			code_request = CodeRequest.objects.all().values('code_allocation','region__name','code_preview').\
+			code_request = CodeRequest.objects.using('read').all().values('code_allocation','region__name','code_preview').\
 					annotate(name=F('code_preview'),type=F('region__name'))
 
 			for i in code_request:
@@ -230,7 +230,7 @@ class Wrappers:
 
 			#lgr.info('\n\n\n')
 			#lgr.info('Model Name: %s' % data.query.name)
-			report_list = model_class.objects.all()
+			report_list = model_class.objects.using('read').all()
 
 
 
@@ -522,7 +522,7 @@ class Wrappers:
 
 
 
-			join_query = DataListJoinQuery.objects.filter(query=data.query,join_inactive=False)
+			join_query = DataListJoinQuery.objects.using('read').filter(query=data.query,join_inactive=False)
 
 			for join in join_query:
 				if join.join_fields or join.join_manytomany_fields or join.join_not_fields or join.join_manytomany_not_fields:
@@ -565,7 +565,7 @@ class Wrappers:
 					join_not_fields_data = {}
 					join_manytomany_not_fields_data = {}
 
-					join_report_list = join_model_class.objects.all()
+					join_report_list = join_model_class.objects.using('read').all()
 
 					if join_gateway_filters not in ['', None]:
 						for f in join_gateway_filters.split("|"):
@@ -961,7 +961,7 @@ class Wrappers:
 
 			
 			#lgr.info('Last Balance')
-			case_query = DataListCaseQuery.objects.filter(query=data.query,case_inactive=False)
+			case_query = DataListCaseQuery.objects.using('read').filter(query=data.query,case_inactive=False)
 
 			for case in case_query:
 				case_name = case.case_name
@@ -993,7 +993,7 @@ class Wrappers:
 					report_list = report_list.annotate(**case_values_data)
 
 			#lgr.info('Case Values')
-			link_query = DataListLinkQuery.objects.filter(Q(query=data.query), Q(link_inactive=False),\
+			link_query = DataListLinkQuery.objects.using('read').filter(Q(query=data.query), Q(link_inactive=False),\
 							   Q(Q(gateway=gateway_profile.gateway) | Q(gateway=None)),\
 						   Q(Q(channel__id=payload['chid']) | Q(channel=None)),\
 						   Q(Q(access_level=gateway_profile.access_level) | Q(access_level=None)))
@@ -1324,13 +1324,13 @@ class Wrappers:
 
 							#lgr.info('Model Data: %s | Field Data: %s | PK: %s' % (update_model_data.model, update_model_field, update_model_pk))
 							record = original_filtered_report_list.values_list(update_model_pk,flat=True)
-							update_filtered_report = update_model_data.model.objects.filter(**{ 'pk__in': list(record) })
+							update_filtered_report = update_model_data.model.objects.using('read').filter(**{ 'pk__in': list(record) })
 
 							#lgr.info('UPDATE Model Data. Count: %s' % update_filtered_report.count())
 							pn_update = {}
 							pn_update[update_model_field] = True
 							update_filtered_report.query.annotations.clear()
-							update_filtered_report.filter().update(**pn_update)
+							update_filtered_report.filter().using('default').update(**pn_update)
 
 							'''
 							pn_update = {}
@@ -1420,7 +1420,7 @@ class Wrappers:
 
 			#manager_list = FloatManager.objects.filter(Q(Q(institution=gateway_profile.institution)|Q(institution=None)),\
 
-			manager_list = FloatManager.objects.filter(Q(institution=gateway_profile.institution),\
+			manager_list = FloatManager.objects.using('read').filter(Q(institution=gateway_profile.institution),\
 								Q(gateway=gateway_profile.gateway))
 
 			float_type_list = manager_list.values('float_type__name','float_type__id').annotate(count=Count('float_type__id'))
@@ -1450,7 +1450,7 @@ class Wrappers:
 
 		try:
 
-			contact = Contact.objects.filter(contact_group__institution=gateway_profile.institution,\
+			contact = Contact.objects.using('read').filter(contact_group__institution=gateway_profile.institution,\
 					 product__notification__code__institution=gateway_profile.institution).\
 			values('status__name', 'cart_item__currency__code'). \
 			annotate(status_count=Count('status__name'), total_amount=Sum('cart_item__total'))
@@ -1477,7 +1477,7 @@ class Wrappers:
 
 
 		try:
-			order = PurchaseOrder.objects.filter(cart_item__product_item__institution=gateway_profile.institution). \
+			order = PurchaseOrder.objects.using('read').filter(cart_item__product_item__institution=gateway_profile.institution). \
 			values('status__name', 'cart_item__currency__code'). \
 			annotate(status_count=Count('status__name'), total_amount=Sum('cart_item__total'))
 
@@ -1520,7 +1520,7 @@ class Wrappers:
 				#push = {}
 				import copy
 				# Loop through a report to get the different pn_id_fields to be updated | Limit to 50 for optimization
-				bid_req_app =  BidRequirementApplication.objects.select_for_update().filter(pn=False)[:50]
+				bid_req_app =  BidRequirementApplication.objects.using('read').select_for_update().filter(pn=False)[:50]
 			#lgr.info(bid_req_app)	
 			if bid_req_app.exists():
 				#lgr.info('push updates exist')
@@ -1537,13 +1537,13 @@ class Wrappers:
 					push[channel] = copy.deepcopy(params)
 
 				#Update gotta come at the end to prevent filter of data on loop
-				bid_req_app.update(pn=True)
+				bid_req_app.using('default').update(pn=True)
 
 				#lgr.info(push)
 
 				return params,max_id, min_id, ct, push
 			else:
-				bid = Bid.objects.get(pk=payload['bid_id'])
+				bid = Bid.objects.using('read').get(pk=payload['bid_id'])
 				rows = bid.app_rankings(gateway_profile.institution, gateway_profile)
 				params['rows'] = rows
 
@@ -1555,7 +1555,7 @@ class Wrappers:
 
 	def industries_categories(self,payload,gateway_profile,profile_tz,data):
 		r = []
-		iss = IndustrySection.objects.all()
+		iss = IndustrySection.objects.using('read').all()
 		'''
 		for i in iss:
 			cl = {
@@ -1623,7 +1623,7 @@ class Wrappers:
 
 
 		try:
-			order = PurchaseOrder.objects.filter(cart_item__product_item__institution=gateway_profile.institution). \
+			order = PurchaseOrder.objects.using('read').filter(cart_item__product_item__institution=gateway_profile.institution). \
 			extra(select={'month_year': "to_char(pos_purchaseorder.date_created, 'Month, YYYY')"}). \
 			values('cart_item__product_item__product_type__name', 'status__name', 'cart_item__currency__code',
 				   'month_year'). \
@@ -1652,7 +1652,7 @@ class Wrappers:
 
 		try:
 
-			account_manager = AccountManager.objects.filter(credit=False,credit_paid=False,dest_account__account_type__institution=gateway_profile.institution,\
+			account_manager = AccountManager.objects.using('read').filter(credit=False,credit_paid=False,dest_account__account_type__institution=gateway_profile.institution,\
 					dest_account__account_type__gateway=gateway_profile.gateway,\
 					dest_account__account_type__deposit_taking=False, credit_due_date__lt=timezone.now()-timezone.timedelta(days=60))
 
@@ -1685,7 +1685,7 @@ class Wrappers:
 
 		try:
 
-			account_manager = AccountManager.objects.\
+			account_manager = AccountManager.objects.using('read').\
 					filter(credit=False,dest_account__account_type__institution=gateway_profile.institution,\
 					dest_account__account_type__gateway=gateway_profile.gateway,dest_account__account_type__deposit_taking=False).\
 					extra(select={'month_year': "to_char( vbs_accountmanager.date_created, 'Month, YYYY')"}).\
@@ -1720,7 +1720,7 @@ class Wrappers:
 
 
 		try:
-			account_manager = AccountManager.objects.filter(credit=False,dest_account__account_type__institution=gateway_profile.institution,\
+			account_manager = AccountManager.objects.using('read').filter(credit=False,dest_account__account_type__institution=gateway_profile.institution,\
 					dest_account__account_type__gateway=gateway_profile.gateway,\
 					dest_account__account_type__deposit_taking=False)
 
@@ -1773,7 +1773,7 @@ class Wrappers:
 		try:
 
 			from thirdparty.amkagroup_co_ke.models import Investment, InvestmentType
-			investment_list = Investment.objects.all().\
+			investment_list = Investment.objects.using('read').all().\
 					extra(select={'month_year': "to_char( amkagroup_co_ke_investment.date_created, 'Month, YYYY')"}).values('investment_type__product_item__product_type__name','month_year').\
 					annotate(Count('investment_type__product_item__product_type__name'))
 
@@ -1809,7 +1809,7 @@ class Wrappers:
 		init_cols = []
 		try:
 
-			enrollment_list = Enrollment.objects.filter(enrollment_type__product_item__institution=gateway_profile.institution, status__name='ACTIVE').\
+			enrollment_list = Enrollment.objects.using('read').filter(enrollment_type__product_item__institution=gateway_profile.institution, status__name='ACTIVE').\
 					extra(select={'month_year': "to_char( crm_enrollment.date_created, 'Month, YYYY')"}).values('enrollment_type__product_item__product_type__name','month_year').\
 					annotate(Count('enrollment_type__product_item__product_type__name'))
 
@@ -1847,7 +1847,7 @@ class Wrappers:
 
 		try:
 
-			account_manager = AccountManager.objects.\
+			account_manager = AccountManager.objects.using('read').\
 					filter(credit=False,dest_account__account_type__institution=gateway_profile.institution,dest_account__account_type__gateway=gateway_profile.gateway,dest_account__account_type__deposit_taking=False).\
 					extra(select={'month_year': "to_char( vbs_accountmanager.date_created, 'Month, YYYY')"}).values('balance_bf','dest_account__account_type__name','month_year')
 
@@ -1881,7 +1881,7 @@ class Wrappers:
 		try:
 
 			from thirdparty.amkagroup_co_ke.models import Investment, InvestmentType
-			investment = Investment.objects.values('account__id').annotate(Count('account__id'))
+			investment = Investment.objects.using('read').values('account__id').annotate(Count('account__id'))
 
 			investment_type = investment.values('investment_type__id','investment_type__name','investment_type__value').annotate(Count('investment_type__id'))
 			for i in investment_type:
@@ -1908,7 +1908,7 @@ class Wrappers:
 
 
 		try:
-			outbound = Outbound.objects.filter(
+			outbound = Outbound.objects.using('read').filter(
 				contact__product__notification__code__institution=gateway_profile.institution). \
 			extra(select={'month_year': "to_char(notify_outbound.date_created, 'Month, YYYY')"}). \
 			values('contact__product__name', 'state__name', 'contact__product__notification__name', 'month_year'). \
@@ -2088,7 +2088,7 @@ class System(Wrappers):
 			min_id = 0
 			max_id = 0
 			t_count = 0
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
 			profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
 
 			# Get value from first = sign
@@ -2105,7 +2105,7 @@ class System(Wrappers):
 				payload[data_name] = data_name_val
 
 			#lgr.info('Data Source: data_name: %s val: %s' % (data_name, data_name_val))
-			data_list = DataList.objects.filter(Q(data_name=data_name.strip()), Q(status__name='ACTIVE'), \
+			data_list = DataList.objects.using('read').filter(Q(data_name=data_name.strip()), Q(status__name='ACTIVE'), \
 							Q(Q(gateway=gateway_profile.gateway) | Q(gateway=None)), \
 							Q(Q(channel__id=payload['chid']) | Q(channel=None)), \
 							Q(Q(access_level=gateway_profile.access_level) | Q(access_level=None))).order_by('level')
@@ -2136,12 +2136,12 @@ class System(Wrappers):
 
 	def upload_file(self, payload, node_info):
 		try:
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
 			media_temp = settings.MEDIA_ROOT + '/tmp/uploads/'
 			filename = payload['file_upload']
 			tmp_file = media_temp + str(filename)
 
-			upload = FileUpload.objects.filter(trigger_service__name=payload['SERVICE'])
+			upload = FileUpload.objects.using('read').filter(trigger_service__name=payload['SERVICE'])
 
 			if upload.exists():
 				extension_chunks = str(filename).split('.')
@@ -2150,8 +2150,8 @@ class System(Wrappers):
 					original_filename = base64.urlsafe_b64decode(filename.replace(extension, '')).decode()
 				except:
 					original_filename = filename.replace(extension, '')
-				activity_status = FileUploadActivityStatus.objects.get(name='CREATED')
-				channel = Channel.objects.get(id=payload['chid'])
+				activity_status = FileUploadActivityStatus.objects.using('read').get(name='CREATED')
+				channel = Channel.objects.using('read').get(id=payload['chid'])
 				activity = FileUploadActivity(name=original_filename, file_upload=upload[0], status=activity_status, \
 								  gateway_profile=gateway_profile,
 								  details=self.transaction_payload(payload), channel=channel)
@@ -2174,7 +2174,7 @@ class System(Wrappers):
 
 	def image_list_details(self,payload,node_info):
 		try:
-			image_lists  = ImageList.objects.filter(pk=payload['image_list_id'])
+			image_lists  = ImageList.objects.using('read').filter(pk=payload['image_list_id'])
 			if image_lists.exists():
 				image_list = image_lists[0]		
 				
@@ -2198,14 +2198,14 @@ class System(Wrappers):
 	def upload_image_list_bulk(self, payload, node_info):
 		try:
 			
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
 			bulk_uploads = payload['bulk_uploads']
 			for bulk_upload in bulk_uploads.split('|'):
 				response_name = bulk_upload.split(':')
 				image_list = ImageList()
 				image_list.name = response_name[1]
 				image_list.description = None
-				image_list.image_list_type = ImageListType.objects.get(name='GALLERY')
+				image_list.image_list_type = ImageListType.objects.using('read').get(name='GALLERY')
 				media_temp = settings.MEDIA_ROOT + '/tmp/uploads/'
 				tmp_image = media_temp + str(response_name[0])
 				with open(tmp_image, 'r') as f:
@@ -2236,7 +2236,7 @@ def pre_process_file_upload(payload):
 	payload = json.loads(payload)
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
-	u =FileUploadActivity.objects.get(id=payload['id'])
+	u =FileUploadActivity.objects.using('read').get(id=payload['id'])
 	try:
 
 		rf = u.file_path
@@ -2462,14 +2462,14 @@ def push_update(k, v):
 		elif len(channel_list) == 4:
 			for i in v['data']:
 				params = i.copy()
-				service = Service.objects.get(name=channel_list[3])
-				gateway = Gateway.objects.get(id=channel_list[0])
+				service = Service.objects.using('read').get(name=channel_list[3])
+				gateway = Gateway.objects.using('read').get(id=channel_list[0])
 				if 'session_gateway_profile_id' in params.keys():
-					gateway_profile = GatewayProfile.objects.get(id=params['session_gateway_profile_id'])
+					gateway_profile = GatewayProfile.objects.using('read').get(id=params['session_gateway_profile_id'])
 				elif 'gateway_profile_id' in params.keys():
-					gateway_profile = GatewayProfile.objects.get(id=params['gateway_profile_id'])
+					gateway_profile = GatewayProfile.objects.using('read').get(id=params['gateway_profile_id'])
 				else:
-					gateway_profile = GatewayProfile.objects.get(gateway=gateway,user__username='System@User',status__name__in=['ACTIVATED'])
+					gateway_profile = GatewayProfile.objects.using('read').get(gateway=gateway,user__username='System@User',status__name__in=['ACTIVATED'])
 				payload = {}
 				for k,v in params.items():
 					try: v = json.loads(v)
@@ -2507,10 +2507,10 @@ def process_push_request():
 		max_id = 0
 		t_count = 0
 
-		gateway_profile_list = GatewayProfile.objects.filter(access_level__name='SYSTEM',status__name='ACTIVATED',user__username='PushUser')
+		gateway_profile_list = GatewayProfile.objects.using('read').filter(access_level__name='SYSTEM',status__name='ACTIVATED',user__username='PushUser')
 		for gateway_profile in gateway_profile_list:
 			profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
-			data_list = DataList.objects.filter(Q(status__name='ACTIVE'),Q(pn_data=True),\
+			data_list = DataList.objects.using('read').filter(Q(status__name='ACTIVE'),Q(pn_data=True),\
 						Q(Q(gateway=gateway_profile.gateway) | Q(gateway=None))).order_by('level')
 
 			if data_list.exists():

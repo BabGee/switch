@@ -128,14 +128,14 @@ class Interface(Authorize, ServiceCall):
 				lgr.info('Error on Post%s' % e)
 			try:
 				lgr.info("SERVICE: %s" % service_name)
-				gateway_profile_list, service = GatewayProfile.objects.none(), Service.objects.none()
+				gateway_profile_list, service = GatewayProfile.objects.using('read').none(), Service.objects.using('read').none()
 				session_active = True
 
 				if 'session_id' not in payload.keys() and 'credentials' not in payload.keys():
 					#To use this access, one would require the System@User API_KEY
 					#This access can create any user's session thus get any users API_KEY
 					lgr.info('# A system User Login')
-					gateway_profile_list = GatewayProfile.objects.filter(Q(Q(allowed_host__host=str(payload['gateway_host'])),Q(allowed_host__status__name='ENABLED'))\
+					gateway_profile_list = GatewayProfile.objects.using('read').filter(Q(Q(allowed_host__host=str(payload['gateway_host'])),Q(allowed_host__status__name='ENABLED'))\
 								|Q(Q(gateway__default_host__host=str(payload['gateway_host'])),Q(gateway__default_host__status__name='ENABLED')),\
 								Q(user__username='System@User'),Q(status__name__in=['ACTIVATED','ONE TIME PIN','FIRST ACCESS'])).select_related()
 
@@ -147,7 +147,7 @@ class Interface(Authorize, ServiceCall):
 					#System services are excluded. (System services are the most sensitive)
 					lgr.info('# A Credentials User Login')
 					credentials = payload['credentials']
-					gateway_profile_list = GatewayProfile.objects.filter(Q(allowed_host__host=payload['gateway_host'],\
+					gateway_profile_list = GatewayProfile.objects.using('read').filter(Q(allowed_host__host=payload['gateway_host'],\
 								allowed_host__status__name='ENABLED')|Q(gateway__default_host__host=payload['gateway_host'],\
 								gateway__default_host__status__name='ENABLED'),\
 								Q(Q(user__username=credentials['username'])|Q(user__email=credentials['username'])),\
@@ -163,9 +163,9 @@ class Interface(Authorize, ServiceCall):
 							lgr.info('This User Active')
 							gateway_profile_list = gateway_profile_list.filter(id=gp.id).select_related()
 						else:
-							gateway_profile_list = GatewayProfile.objects.none()
+							gateway_profile_list = GatewayProfile.objects.using('read').none()
 					else:
-						gateway_profile_list = GatewayProfile.objects.none()
+						gateway_profile_list = GatewayProfile.objects.using('read').none()
 
 				elif 'session_id' in payload.keys():
 					#This user can access services within its access level
@@ -173,7 +173,7 @@ class Interface(Authorize, ServiceCall):
 					try:
 						lgr.info('SessionID: %s' % payload['session_id'])
 						session_id = base64.urlsafe_b64decode(str(payload['session_id']).encode()).decode('utf-8')
-						session = Session.objects.filter(Q(session_id=session_id),\
+						session = Session.objects.using('read').filter(Q(session_id=session_id),\
 							Q(channel__id=payload['chid']),\
 							Q(status__name='CREATED'),\
 							Q(gateway_profile__allowed_host__host=payload['gateway_host'],\
@@ -193,7 +193,7 @@ class Interface(Authorize, ServiceCall):
 							if session_expiry and timezone.now() > user_session.last_access + timezone.timedelta(minutes=session_expiry):
 								lgr.info('Expired Session')
 								session_active = False
-								user_session.status = SessionStatus.objects.get(name='EXPIRED')
+								user_session.status = SessionStatus.objects.using('read').get(name='EXPIRED')
 								user_session.save()
 							else:
 								user_session.last_access = timezone.now()
@@ -201,7 +201,7 @@ class Interface(Authorize, ServiceCall):
 
 
 							if (session_expiry == None) or (session_expiry and session_active):
-								try: gateway_profile_list = GatewayProfile.objects.filter(id=user_session.gateway_profile.id).select_related()
+								try: gateway_profile_list = GatewayProfile.objects.using('read').filter(id=user_session.gateway_profile.id).select_related()
 								except: pass
 					except Exception as e:
 						lgr.info('Error: %s' % e)
@@ -218,7 +218,7 @@ class Interface(Authorize, ServiceCall):
 					lgr.info('Got Gateway Profile')
 					gateway_profile = gateway_profile_list.first()
 					#lgr.info('Got Profile:%s' % gateway_profile)
-					service = Service.objects.filter(Q(name=service_name),Q(Q(access_level=gateway_profile.access_level)|Q(access_level=None))).select_related() 
+					service = Service.objects.using('read').filter(Q(name=service_name),Q(Q(access_level=gateway_profile.access_level)|Q(access_level=None))).select_related() 
 					#lgr.info('Got Service: %s (%s)' % (service, service_name))
 					if service.exists():
 						if 'api_token' in payload.keys() and gateway_profile.allowed_host.filter(host=payload['ip_address'], api_token=payload['api_token']).exists():
