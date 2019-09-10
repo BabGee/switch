@@ -42,14 +42,14 @@ class Loggers:
 	def log_transaction(self, service, gateway_profile, payload):
 		try:
 
-			channel = Channel.objects.using('read').get(id=int(payload['chid']))
+			channel = Channel.objects.get(id=int(payload['chid']))
 			currency_code = payload['currency'] if 'currency' in payload.keys() and payload['currency']!='' else None
-			currency = Currency.objects.using('read').get(code=currency_code) if currency_code is not None  else None
+			currency = Currency.objects.get(code=currency_code) if currency_code is not None  else None
 			amount = payload['amount'] if 'amount' in payload.keys() and payload['amount']!='' else None
 			charges = payload['charges'] if 'charges' in payload.keys() and payload['charges']!='' else None
 			raise_charges = payload['raise_charges'] if 'raise_charges' in payload.keys() and payload['raise_charges']!='' else None
-			transaction_status = TransactionStatus.objects.using('read').get(name='CREATED')
-			response_status = ResponseStatus.objects.using('read').get(response='DEFAULT')
+			transaction_status = TransactionStatus.objects.get(name='CREATED')
+			response_status = ResponseStatus.objects.get(response='DEFAULT')
 
 			#ip_address MUST exist in payload. Identification of the originating IP is compulsory in all requests
 			#Create co-ordinates if dont exist
@@ -64,12 +64,12 @@ class Loggers:
 				if len(msisdn) >= 9 and msisdn[:1] == '+':
 					msisdn = str(msisdn)
 				elif len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
-					country_list = Country.objects.using('read').filter(mpoly__intersects=trans_point)
+					country_list = Country.objects.filter(mpoly__intersects=trans_point)
 					ip_point = g.geos(str(payload['ip_address']))
 					if country_list.exists() and country_list[0].ccode:
 						msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
 					elif ip_point:
-						country_list = Country.objects.using('read').filter(mpoly__intersects=ip_point)
+						country_list = Country.objects.filter(mpoly__intersects=ip_point)
 						if country_list.exists() and country_list[0].ccode:
 							msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
 						else:
@@ -89,12 +89,12 @@ class Loggers:
 					ip_address = payload['ip_address'],geometry = trans_point)
 
 			if msisdn is not None:
-				try:msisdn = MSISDN.objects.using('read').get(phone_number=msisdn)
-				except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save(using='default');
+				try:msisdn = MSISDN.objects.get(phone_number=msisdn)
+				except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
 				trans.msisdn = msisdn
 
 			if 'institution_id' in payload.keys():
-				trans.institution = Institution.objects.using('read').get(id=payload['institution_id'])
+				trans.institution = Institution.objects.get(id=payload['institution_id'])
 
 			if 'fingerprint' in payload.keys():
 				trans.fingerprint = payload['fingerprint']
@@ -106,7 +106,7 @@ class Loggers:
 			elif 'token' in payload.keys():
 				trans.token = payload['token']
 
-			results = trans.save(using='default')
+			results = trans.save()
 
 			self.response_params['response_status'] = '00'
 			self.response_params['trans'] = trans
@@ -130,11 +130,11 @@ class Loggers:
 							break
 						count = count+1
 			lgr.info('Response Tree on Update: %s' % response_tree)
-			trans.response_status = ResponseStatus.objects.using('read').get(response=str(response['response_status']))	
-			trans.transaction_status = TransactionStatus.objects.using('read').get(name='PROCESSED')
-			trans.overall_status = ResponseStatus.objects.using('read').get(response=str(response['overall_status']))	
+			trans.response_status = ResponseStatus.objects.get(response=str(response['response_status']))	
+			trans.transaction_status = TransactionStatus.objects.get(name='PROCESSED')
+			trans.overall_status = ResponseStatus.objects.get(response=str(response['overall_status']))	
 			trans.response = json.dumps(response_tree)
-			trans.save(using='default')
+			trans.save()
 			response = True
 		except Exception as e:
 			response = False				 
