@@ -63,7 +63,7 @@ def background_transact(gateway_profile_id, transaction_id, service_id, payload,
 
 		trans = {}
 		trans['response_status'] = '00'
-		t = Transaction.objects.get(id=transaction_id)
+		t = Transaction.objects.using('read').get(id=transaction_id)
 		trans['trans'] = t
 		lgr.info("Transaction: %s" % trans)
 
@@ -180,7 +180,7 @@ class ServiceProcessor:
 		else:
 			all_commands = all_commands.filter(payment_method=None).select_related()
 		#To handle multi level authorization
-		commands = all_commands.filter(Q(access_level=None) |Q(access_level=gateway_profile.access_level),Q(status__name='ENABLED')).select_related()
+		commands = all_commands.filter(Q(access_level=None) |Q(access_level=gateway_profile.access_level),Q(status__name='ENABLED')).select_related().using('read')
 		#do request
 		count = 1
 		for item in commands:
@@ -246,8 +246,8 @@ class ServiceProcessor:
 				else:
 					#Log command to transaction
 					if trans is not None:
-						trans.current_command = item
-						all_commands = all_commands.filter(level__gt=item.level).select_related()
+						trans.current_command = Command.object.get(id=item.id)
+						all_commands = all_commands.using('default').filter(level__gt=item.level).select_related()
 						if len(all_commands)>0:
 							trans.next_command = all_commands[0]
 						else:
