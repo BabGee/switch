@@ -63,7 +63,7 @@ def background_transact(gateway_profile_id, transaction_id, service_id, payload,
 
 		trans = {}
 		trans['response_status'] = '00'
-		t = Transaction.objects.using('read').get(id=transaction_id)
+		t = Transaction.objects.get(id=transaction_id)
 		trans['trans'] = t
 		lgr.info("Transaction: %s" % trans)
 
