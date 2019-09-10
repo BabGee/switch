@@ -246,7 +246,7 @@ class ServiceProcessor:
 				else:
 					#Log command to transaction
 					if trans is not None:
-						trans.current_command = Command.object.get(id=item.id)
+						trans.current_command = ServiceCommand.objects.using('default').get(id=item.id)
 						all_commands = all_commands.using('default').filter(level__gt=item.level).select_related()
 						if len(all_commands)>0:
 							trans.next_command = all_commands[0]
@@ -345,7 +345,7 @@ class ServiceProcessor:
 			else:
 				if service.status.name == 'ENABLED':
 
-					trans = Loggers().log_transaction(service, gateway_profile, payload)
+					trans = Loggers().log_transaction(service.id, gateway_profile.id, payload)
 					response_tree = transact(gateway_profile, trans, service, payload, response_tree)
 
 				elif service.status.name == 'POLLER':
