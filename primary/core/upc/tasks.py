@@ -2613,7 +2613,7 @@ class System(Wrappers):
 			if profile_error: pass
 			elif session_gateway_profile.exists():
 				payload['session_gateway_profile_id'] = session_gateway_profile[0].id
-				user, payload = self.profile_update_if_null(session_gateway_profile[0].user, payload)
+				user, payload = self.profile_update_if_null(session_gateway_profile.using('default')[0].user, payload)
 
 				payload['username'] = user.username 
 				if user.first_name: payload['first_name'] = user.first_name
