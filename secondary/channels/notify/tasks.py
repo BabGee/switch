@@ -1755,10 +1755,7 @@ def contact_subscription():
 		except Exception as e:
 			lgr.info('Error subscribing item: %s | %s' % (i,e))
 
-
-
-@app.task(ignore_result=True)
-def send_outbound_batch(message_list):
+def _send_outbound_batch(message_list):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
@@ -1821,10 +1818,7 @@ def send_outbound_batch(message_list):
 	except Exception as e:
 		lgr.info("Error on Sending Outbound Batch: %s" % e)
 
-
-
-@app.task(ignore_result=True)
-def send_outbound(message):
+def _send_outbound(message):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
@@ -1903,6 +1897,24 @@ def send_outbound(message):
 
 
 @app.task(ignore_result=True)
+def send_outbound_batch(message):
+	_send_outbound_batch(message)
+
+@app.task(ignore_result=True)
+def send_outbound(message):
+	_send_outbound(message)
+
+
+@app.task(ignore_result=True)
+def bulk_send_outbound_batch(message):
+	_send_outbound_batch(message)
+
+@app.task(ignore_result=True)
+def bulk_send_outbound(message):
+	_send_outbound(message)
+
+
+@app.task(ignore_result=True)
 def send_outbound2(payload, node):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
@@ -1929,19 +1941,7 @@ def send_outbound2(payload, node):
 	except Exception as e:
 		lgr.info("Error on Sending Outbound: %s" % e)
 
-@app.task(ignore_result=True)
-def bulk_send_outbound_batch(message):
-	send_outbound_batch(message)
-
-@app.task(ignore_result=True)
-def bulk_send_outbound(message):
-	send_outbound(message)
-
-@app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
-#@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
-@transaction.atomic
-@single_instance_task(60*10)
-def send_outbound_sms_messages(is_bulk=False, limit_batch=300):
+def _send_outbound_sms_messages(is_bulk, limit_batch):
 	try:
 		#from celery.utils.log import get_task_logger
 		lgr = get_task_logger(__name__)
@@ -1983,14 +1983,17 @@ def send_outbound_sms_messages(is_bulk=False, limit_batch=300):
 						batch = list(islice(objs, start, start+batch_size))
 						start+=batch_size
 						if not batch: break
-						tasks.append(send_outbound_batch.s(batch))
+						if is_bulk: tasks.append(bulk_send_outbound_batch.s(batch))
+						else: tasks.append(send_outbound_batch.s(batch))
 				elif len(df.loc[(x),:].shape)>1 :
 					#lgr.info('Got Here (list of singles): %s' % x[0])
-					for d in ID: tasks.append(send_outbound.s(d))
+					for d in ID: 
+						if is_bulk: tasks.append(bulk_send_outbound.s(d))
+						else: tasks.append(send_outbound.s(d))
 				else:
-
 					#lgr.info('Got Here (single): %s' % x[0])
-					tasks.append(send_outbound.s(ID))
+					if is_bulk: tasks.append(bulk_send_outbound.s(ID))
+					else: tasks.append(send_outbound.s(ID))
 
 			#lgr.info('Got Here 10: %s' % tasks)
 
@@ -2000,12 +2003,21 @@ def send_outbound_sms_messages(is_bulk=False, limit_batch=300):
 	except Exception as e:
 		lgr.info('Error on Send Outbound SMS Messages: %s ' % e)
 
+
+@app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
+#@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def send_outbound_sms_messages():
+	_send_outbound_sms_messages(is_bulk=False, limit_batch=300)
+
+
 @app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
 #@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
 def bulk_send_outbound_sms_messages():
-	send_outbound_sms_messages(is_bulk=True, limit_batch=500)
+	_send_outbound_sms_messages(is_bulk=True, limit_batch=500)
 
 
 @app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
