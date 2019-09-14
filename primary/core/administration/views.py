@@ -29,19 +29,16 @@ class WebService:
 	def post_request(self, payload, node, timeout=30):
 		try:
 			if self.validate_url(node):
-				lgr.info('Got Here')
 				jdata = json.dumps(payload)
 
-				lgr.info('Got Here')
 				#response = urllib2.urlopen(node, jdata, timeout = timeout)
 				#jdata = response.read()
 				#payload = json.loads(jdata)
 				c = pycurl.Curl()
 
-				lgr.info('Got Here')
 				#Timeout in 30 seconds
 				c.setopt(c.CONNECTTIMEOUT, timeout)
-				c.setopt(c.VERBOSE, True)
+				c.setopt(c.VERBOSE, False)
 				c.setopt(c.FOLLOWLOCATION, True)
 				c.setopt(c.USERAGENT, 'InterIntel Switch')
 				c.setopt(c.CONNECTTIMEOUT, timeout)
@@ -55,13 +52,11 @@ class WebService:
 				c.setopt(c.HTTPHEADER, header)
 				c.setopt(c.POSTFIELDS, str(jdata))
 
-				lgr.info('Got Here')
 				b = BytesIO()
 				c.setopt(c.WRITEFUNCTION, b.write)
 				c.perform()
 				response = b.getvalue().decode('UTF-8')
 
-				lgr.info('Got Here')
 				try: payload = json.loads(response)
 				except Exception as e:
 					lgr.info('Response Not JSON: %s' % e)
