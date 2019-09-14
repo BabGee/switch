@@ -67,6 +67,8 @@ class NotificationProduct(models.Model):
 	create_subscribe = models.BooleanField(default=False)
 	trading_box = models.ForeignKey(TradingBox, null=True, blank=True, on_delete=models.CASCADE)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
+	priority = models.SmallIntegerField(default=10)
+	is_bulk = models.BooleanField(default=True)
 	def __str__(self):
 		return u'%s %s %s %s' % (self.id, self.name, self.unit_credit_charge, self.notification)
 	def product_type_list(self):

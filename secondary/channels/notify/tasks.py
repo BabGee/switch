@@ -1929,12 +1929,19 @@ def send_outbound2(payload, node):
 	except Exception as e:
 		lgr.info("Error on Sending Outbound: %s" % e)
 
+@app.task(ignore_result=True)
+def bulk_send_outbound_batch(message):
+	send_outbound_batch(message)
+
+@app.task(ignore_result=True)
+def bulk_send_outbound(message):
+	send_outbound(message)
 
 @app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
 #@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
-def send_outbound_sms_messages():
+def send_outbound_sms_messages(is_bulk=False, limit_batch=300):
 	try:
 		#from celery.utils.log import get_task_logger
 		lgr = get_task_logger(__name__)
@@ -1944,15 +1951,14 @@ def send_outbound_sms_messages():
 					~Q(recipient=None),~Q(recipient=''),\
 					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
-					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
-					|Q(state__name="SENT", response__icontains='SVC0002|',date_modified__lte=timezone.now()-timezone.timedelta(seconds=240),date_created__gte=timezone.now()-timezone.timedelta(seconds=600)),\
-					Q(contact__status__name='ACTIVE')).select_related()
-
-		outbound = orig_outbound[:500].values_list('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
+					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24)),\
+					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related()
+		outbound = orig_outbound[:limit_batch].values_list('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
 
 		messages=np.asarray(outbound)
 
-		if messages.size > 0:
+		#lgr.info('Here 3: %s' % messages.size)
+		if messages.size > 0 and outbound.count():
 
 			#Update State
 			processing = orig_outbound.filter(id__in=messages[:,0].tolist()).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
@@ -1991,29 +1997,15 @@ def send_outbound_sms_messages():
 			chunks, chunk_size = len(tasks), 100
 			sms_tasks= [ group(*tasks[i:i+chunk_size])() for i in range(0, chunks, chunk_size) ]
 
-			#sms_tasks  = group(*tasks)()
-			#lgr.info('Got Here 11: %s' % sms_tasks)
-			#'''
-			#lgr.info('Got Here 6')
-			#sms_tasks  = group(send_outbound_batch.s([ob]) for ob in messages[:,0].tolist())()
-
-		#sms_tasks  = group(send_outbound_batch.s([ob]) for ob in outbound)()
-		#for ob in outbound:
-		#	send_outbound.delay(ob)
-
-		#sms_tasks  = group(send_outbound.s(ob) for ob in outbound)()
-
-		#Not working. Will cause celery to not run with no exception
-		#map_iterator = map(send_outbound.delay, outbound)
-		#x = np.array(outbound)
-		#vfunc = np.vectorize(send_outbound.delay)
-		#v_iterator = vfunc(x)
-
-
 	except Exception as e:
 		lgr.info('Error on Send Outbound SMS Messages: %s ' % e)
-	#except DatabaseError as e:
-	#	transaction.set_rollback(True)
+
+@app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
+#@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def bulk_send_outbound_sms_messages():
+	send_outbound_sms_messages(is_bulk=True, limit_batch=500)
 
 
 @app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk

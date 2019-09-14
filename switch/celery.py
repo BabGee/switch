@@ -48,11 +48,6 @@ def single_instance_task(timeout):
 from kombu import Exchange, Queue
 from kombu.common import Broadcast
 
-'''
-app.conf.task_queues = (Broadcast('celery'),Broadcast('commandline'),Broadcast('commandline'),Broadcast('notification'),
-    			Broadcast('spawned_bulk_notification'),Broadcast('bulk_notification'),Broadcast('files'),Broadcast('payments'),
-			Broadcast('services'),Broadcast('push_request'))
-'''
 
 app.conf.task_routes = {
 		'secondary.channels.notify.tasks.send_bulk_notification': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
@@ -64,9 +59,12 @@ app.conf.task_routes = {
 		'secondary.channels.notify.tasks.send_contact_subscription': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.contact_subscription': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.send_outbound_sms_messages': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.bulk_send_outbound_sms_messages': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
 
-		'secondary.channels.notify.tasks.send_outbound_batch': {'queue': 'spawned_bulk_notification','exchange': 'spawned_bulk_notification','routing_key':'spawned_bulk_notification','delivery_mode': 'transient'}, 
-		'secondary.channels.notify.tasks.send_outbound': {'queue': 'spawned_bulk_notification','exchange': 'spawned_bulk_notification','routing_key':'spawned_bulk_notification','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.bulk_send_outbound_batch': {'queue': 'bulk_spawned_outbound_notification','exchange': 'bulk_spawned_outbound_notification','routing_key':'bulk_spawned_outbound_notification','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.bulk_send_outbound': {'queue': 'bulk_spawned_outbound_notification','exchange': 'bulk_spawned_outbound_notification','routing_key':'bulk_spawned_outbound_notification','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.send_outbound_batch': {'queue': 'spawned_outbound_notification','exchange': 'spawned_outbound_notification','routing_key':'spawned_outbound_notification','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.send_outbound': {'queue': 'spawned_outbound_notification','exchange': 'spawned_outbound_notification','routing_key':'spawned_outbound_notification','delivery_mode': 'transient'}, 
 
 		'secondary.channels.notify.tasks.send_outbound_email_messages': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
 
@@ -107,7 +105,8 @@ app.conf.task_routes = {
 app.conf.task_queues = (
     Queue('celery', Exchange('celery'), routing_key='celery', delivery_mode=1),
     Queue('notification', Exchange('notification'), routing_key='notification', delivery_mode=1),
-    Queue('spawned_bulk_notification', Exchange('spawned_bulk_notification'), routing_key='spawned_bulk_notification', delivery_mode=1),
+    Queue('bulk_spawned_outbound_notification', Exchange('bulk_spawned_outbound_notification'), routing_key='bulk_spawned_outbound_notification', delivery_mode=1),
+    Queue('spawned_outbound_notification', Exchange('spawned_outbound_notification'), routing_key='spawned_outbound_notification', delivery_mode=1),
     Queue('bulk_notification', Exchange('bulk_notification'), routing_key='bulk_notification', delivery_mode=1),
     Queue('files', Exchange('files'), routing_key='files', delivery_mode=1),
     Queue('payments', Exchange('payments'), routing_key='payments', delivery_mode=1),
@@ -116,20 +115,7 @@ app.conf.task_queues = (
     Queue('thirdparty', Exchange('thirdparty'), routing_key='thirdparty', delivery_mode=1),
     Queue('products', Exchange('products'), routing_key='products', delivery_mode=1),
 )
-'''
-app.conf.task_queues = (
-    Queue('celery', Exchange('celery'), routing_key='celery', delivery_mode=1, exchange_type="x-consistent-hash"),
-    Queue('commandline', Exchange('commandline'), routing_key='commandline', delivery_mode=1, exchange_type="x-consistent-hash"),
-    Queue('commandline', Exchange('commandline'), routing_key='commandline', delivery_mode=1, exchange_type="x-consistent-hash"),
-    Queue('notification', Exchange('notification'), routing_key='notification', delivery_mode=1, exchange_type="x-consistent-hash"),
-    Queue('spawned_bulk_notification', Exchange('spawned_bulk_notification'), routing_key='spawned_bulk_notification', delivery_mode=1, exchange_type="x-consistent-hash"),
-    Queue('bulk_notification', Exchange('bulk_notification'), routing_key='bulk_notification', delivery_mode=1, exchange_type="x-consistent-hash"),
-    Queue('files', Exchange('files'), routing_key='files', delivery_mode=1, exchange_type="x-consistent-hash"),
-    Queue('payments', Exchange('payments'), routing_key='payments', delivery_mode=1, exchange_type="x-consistent-hash"),
-    Queue('services', Exchange('services'), routing_key='services', delivery_mode=1, exchange_type="x-consistent-hash"),
-    Queue('push_request', Exchange('push_request'), routing_key='push_request', delivery_mode=1, exchange_type="x-consistent-hash"),
-)
-'''
+
 #app.conf.task_queues = ()
 
 app.conf.broker_url = settings.CELERY_BROKER_URL

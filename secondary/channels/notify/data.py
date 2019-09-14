@@ -105,6 +105,8 @@ class List:
 
 			outbound=np.asarray(outbound_list)
 			df = pd.DataFrame({'DATE': outbound[:,0], 'MESSAGE': outbound[:,1], 'CODE': outbound[:,2], 'STATE': outbound[:,3], 'TOTAL': outbound[:,4],})
+
+			df['DATE'] = pd.to_datetime(df['DATE'])
 			df['TOTAL'] = pd.to_numeric(df['TOTAL'])
 			df1=df[['DATE','MESSAGE','CODE']]
 			df2= df[['STATE','TOTAL']].pivot(columns='STATE',values='TOTAL').fillna(0)
@@ -114,13 +116,19 @@ class List:
 				df[d+'(%)'] = ((df[d]/df[df2.columns].sum(axis=1))*100).round(2)
 
 			df = df.reset_index().sort_values('DATE',ascending=False)
-			dtype = {'float64': 'float','int64': 'int','datetime64[ns]': 'datetime', 'object': 'string' }
+			dtype = {'float': 'number','int': 'number','datetime': 'date', 'object': 'string' }
 			for c in df.columns:
 				lgr.info(df[c].dtype)
-				params['cols'].append({'label': c, 'type': 'string' })
+				if df[c].dtype in dtype.keys():
+					cols = {'label': c, 'type': 'string' }
+					for k,v in dtype.keys(): 
+						if k in df[c].dtype:
+							cols = {'label': c, 'type': v }
+					params['cols'].append(cols)
+				else:
+					params['cols'].append({'label': c, 'type': 'string' })
 
-
-			report_list  = df.values.tolist()
+			report_list  = df.astype(str).values.tolist()
 			paginator = Paginator(report_list, payload.get('limit',50))
 
 			try:
