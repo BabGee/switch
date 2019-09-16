@@ -2136,7 +2136,7 @@ class System(Wrappers):
 
 	def upload_file(self, payload, node_info):
 		try:
-			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			media_temp = settings.MEDIA_ROOT + '/tmp/uploads/'
 			filename = payload['file_upload']
 			tmp_file = media_temp + str(filename)
