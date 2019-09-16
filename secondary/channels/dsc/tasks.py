@@ -2141,7 +2141,7 @@ class System(Wrappers):
 			filename = payload['file_upload']
 			tmp_file = media_temp + str(filename)
 
-			upload = FileUpload.objects.using('read').filter(trigger_service__name=payload['SERVICE'])
+			upload = FileUpload.objects.filter(trigger_service__name=payload['SERVICE'])
 
 			if upload.exists():
 				extension_chunks = str(filename).split('.')
@@ -2150,8 +2150,8 @@ class System(Wrappers):
 					original_filename = base64.urlsafe_b64decode(filename.replace(extension, '')).decode()
 				except:
 					original_filename = filename.replace(extension, '')
-				activity_status = FileUploadActivityStatus.objects.using('read').get(name='CREATED')
-				channel = Channel.objects.using('read').get(id=payload['chid'])
+				activity_status = FileUploadActivityStatus.objects.get(name='CREATED')
+				channel = Channel.objects.get(id=payload['chid'])
 				activity = FileUploadActivity(name=original_filename, file_upload=upload[0], status=activity_status, \
 								  gateway_profile=gateway_profile,
 								  details=self.transaction_payload(payload), channel=channel)
@@ -2198,14 +2198,14 @@ class System(Wrappers):
 	def upload_image_list_bulk(self, payload, node_info):
 		try:
 			
-			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			bulk_uploads = payload['bulk_uploads']
 			for bulk_upload in bulk_uploads.split('|'):
 				response_name = bulk_upload.split(':')
 				image_list = ImageList()
 				image_list.name = response_name[1]
 				image_list.description = None
-				image_list.image_list_type = ImageListType.objects.using('read').get(name='GALLERY')
+				image_list.image_list_type = ImageListType.objects.get(name='GALLERY')
 				media_temp = settings.MEDIA_ROOT + '/tmp/uploads/'
 				tmp_image = media_temp + str(response_name[0])
 				with open(tmp_image, 'r') as f:

@@ -1953,6 +1953,7 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
 					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24)),\
 					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related()
+
 		outbound = orig_outbound[:limit_batch].values_list('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
 
 		messages=np.asarray(outbound)
@@ -2009,7 +2010,7 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 @transaction.atomic
 @single_instance_task(60*10)
 def send_outbound_sms_messages():
-	_send_outbound_sms_messages(is_bulk=False, limit_batch=300)
+	_send_outbound_sms_messages(is_bulk=False, limit_batch=500)
 
 
 @app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
@@ -2017,7 +2018,7 @@ def send_outbound_sms_messages():
 @transaction.atomic
 @single_instance_task(60*10)
 def bulk_send_outbound_sms_messages():
-	_send_outbound_sms_messages(is_bulk=True, limit_batch=500)
+	_send_outbound_sms_messages(is_bulk=True, limit_batch=1000)
 
 
 @app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk

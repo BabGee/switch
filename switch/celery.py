@@ -142,17 +142,28 @@ app.conf.timezone = 'Africa/Nairobi'
 app.conf.task_soft_time_limit = 60
 app.conf.task_acks_late = False
 
-#app.conf.worker_prefetch_multiplier = 1
-app.conf.worker_prefetch_multiplier = 128
-app.conf.worker_disable_rate_limits = True
-#app.conf.broker_pool_limit = 10000
-
+app.conf.worker_prefetch_multiplier = 1
+##app.conf.worker_prefetch_multiplier = 1
+#app.conf.worker_prefetch_multiplier = 128
+#app.conf.worker_disable_rate_limits = True
+##app.conf.broker_pool_limit = 10000
+app.conf.worker_send_task_events = True
 app.conf.broker_connection_max_retries = None
-app.conf.broker_pool_limit = None
+#app.conf.broker_pool_limit = None
+app.conf.broker_pool_limit = 1
 
-#app.conf.broker_heartbeat = 0 #workaround for rabbitmq gevent issue "Connection Reset"
-app.conf.broker_heartbeat = 10
-app.conf.broker_heartbeat_checkrate = 2.0
+app.conf.worker_concurrency = 50
+app.conf.event_queue_expires = 60
+app.conf.result_backend = None
+app.conf.broker_connection_timeout = 30
+
+
+
+app.conf.broker_heartbeat = None
+##app.conf.broker_heartbeat = 0 #workaround for rabbitmq gevent issue "Connection Reset"
+#app.conf.broker_heartbeat = 10
+#app.conf.broker_heartbeat_checkrate = 2.0
+
 #broker_transport_options = {'confirm_publish': True}
 
 '''
