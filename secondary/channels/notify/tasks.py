@@ -1780,7 +1780,7 @@ def _send_outbound_batch(message_list):
 		payload['kmp_code'] = i.first().contact.product.notification.code.code
 		payload['kmp_message'] = message
 
-		payload['kmp_recipients'] = list(i.values_list('recipient', flat=True))
+		payload['kmp_recipients'] = np.unique(np.asarray(i.values_list('recipient', flat=True))).tolist()
 
 		if i.first().contact.product.notification.endpoint:
 			payload['kmp_spid'] = i.first().contact.product.notification.endpoint.account_id
