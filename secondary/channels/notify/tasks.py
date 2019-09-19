@@ -1953,13 +1953,13 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
 					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24)),\
 					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related()
+		if orig_outbound.exists():
+			outbound = orig_outbound[:limit_batch].values_list('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
 
-		outbound = orig_outbound[:limit_batch].values_list('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
+			messages=np.asarray(outbound)
 
-		messages=np.asarray(outbound)
-
-		#lgr.info('Here 3: %s' % messages.size)
-		if messages.size > 0 and outbound.count():
+			#lgr.info('Here 3: %s' % messages.size)
+			##if messages.size > 0 and outbound.count():
 
 			#Update State
 			processing = orig_outbound.filter(id__in=messages[:,0].tolist()).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
@@ -2010,7 +2010,7 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 @transaction.atomic
 @single_instance_task(60*10)
 def send_outbound_sms_messages():
-	_send_outbound_sms_messages(is_bulk=False, limit_batch=500)
+	_send_outbound_sms_messages(is_bulk=False, limit_batch=1000)
 
 
 @app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)

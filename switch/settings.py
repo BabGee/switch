@@ -305,7 +305,10 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler',
             'filters': ['special']
         },
-        
+   	'console': {
+      		'level': 'DEBUG',
+      		'class': 'logging.StreamHandler',
+    	},        
     },
 
     'loggers': {
@@ -314,7 +317,10 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
-
+    'django.db.backends': {
+      'level': 'DEBUG',
+      'handlers': ['console'],
+     },
     }
 }
 
