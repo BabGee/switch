@@ -306,7 +306,7 @@ LOGGING = {
             'filters': ['special']
         },
    	'console': {
-      		'level': 'DEBUG',
+      		'level': 'ERROR',
       		'class': 'logging.StreamHandler',
     	},        
     },
@@ -318,7 +318,7 @@ LOGGING = {
             'propagate': False,
         },
     'django.db.backends': {
-      'level': 'DEBUG',
+      'level': 'ERROR',
       'handlers': ['console'],
      },
     }

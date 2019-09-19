@@ -1953,13 +1953,14 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
 					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24)),\
 					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related()
-		if orig_outbound.exists():
-			outbound = orig_outbound[:limit_batch].values_list('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
 
+		outbound = orig_outbound[:limit_batch].values_list('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
+		if len(outbound):
 			messages=np.asarray(outbound)
 
+			#if messages.size > 0 and outbound.exists():
 			#lgr.info('Here 3: %s' % messages.size)
-			##if messages.size > 0 and outbound.count():
+			#if messages.size > 0:
 
 			#Update State
 			processing = orig_outbound.filter(id__in=messages[:,0].tolist()).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
@@ -2035,69 +2036,70 @@ def send_outbound_email_messages():
 				Q(contact__status__name='ACTIVE')).\
 				select_related('contact').select_related()[:100]
 
-	for i in outbound:
-		try:
-			i.state = OutBoundState.objects.get(name='PROCESSING')
-			i.sends = i.sends + 1
-			i.save()
+	if len(outbound):
+		for i in outbound:
+			try:
+				i.state = OutBoundState.objects.get(name='PROCESSING')
+				i.sends = i.sends + 1
+				i.save()
 
-			channel = i.contact.product.notification.code.channel.name
-			endpoint = i.contact.product.notification.endpoint
-			email = i.recipient if i.recipient not in [None, ""] else i.contact.gateway_profile.user.email
-			lgr.info('Before Sender')
-			sender = '<%s>' % i.contact.product.notification.code.code
-	
-			lgr.info('Sender: %s' % sender)	
-			if i.contact.product.notification.code.alias not in ['',None]:
-				sender = '%s %s' % (i.contact.product.notification.code.alias, sender)
-			lgr.info('Sender: %s' % sender)	
-			if email not in [None,''] and Wrappers().validateEmail(email):
-				try:
-					gateway = i.contact.product.notification.code.gateway
-					#subject, from_email, to = gateway.name +': '+str(i.heading), sender, email
-					subject, from_email, to = str(i.heading), sender, email
+				channel = i.contact.product.notification.code.channel.name
+				endpoint = i.contact.product.notification.endpoint
+				email = i.recipient if i.recipient not in [None, ""] else i.contact.gateway_profile.user.email
+				lgr.info('Before Sender')
+				sender = '<%s>' % i.contact.product.notification.code.code
+		
+				lgr.info('Sender: %s' % sender)	
+				if i.contact.product.notification.code.alias not in ['',None]:
+					sender = '%s %s' % (i.contact.product.notification.code.alias, sender)
+				lgr.info('Sender: %s' % sender)	
+				if email not in [None,''] and Wrappers().validateEmail(email):
+					try:
+						gateway = i.contact.product.notification.code.gateway
+						#subject, from_email, to = gateway.name +': '+str(i.heading), sender, email
+						subject, from_email, to = str(i.heading), sender, email
 
-					text_content = i.message 
+						text_content = i.message 
 
-					if i.template and i.template.template_file.file_path:
-						html_content = loader.get_template(i.template.template_file.file_path.name) #html template with utf-8 charset
-						#d = Context({'message':unescape(i.message), 'gateway':gateway})
-						d = {'message':unescape(i.message), 'gateway':gateway}
-						html_content = html_content.render(d)
-						html_content = smart_text(html_content)
+						if i.template and i.template.template_file.file_path:
+							html_content = loader.get_template(i.template.template_file.file_path.name) #html template with utf-8 charset
+							#d = Context({'message':unescape(i.message), 'gateway':gateway})
+							d = {'message':unescape(i.message), 'gateway':gateway}
+							html_content = html_content.render(d)
+							html_content = smart_text(html_content)
 
-						text_content = smart_text(text_content)
-						msg = EmailMultiAlternatives(subject, text_content, from_email, [to.strip()], headers={'Reply-To': from_email})
+							text_content = smart_text(text_content)
+							msg = EmailMultiAlternatives(subject, text_content, from_email, [to.strip()], headers={'Reply-To': from_email})
 
-						msg.attach_alternative(html_content, "text/html")
-						msg.send()	      
-					else:
-						html_content = unescape(i.message)
+							msg.attach_alternative(html_content, "text/html")
+							msg.send()	      
+						else:
+							html_content = unescape(i.message)
 
-						text_content = smart_text(text_content)
-						msg = EmailMultiAlternatives(subject, text_content, from_email, [to.strip()], headers={'Reply-To': from_email})
+							text_content = smart_text(text_content)
+							msg = EmailMultiAlternatives(subject, text_content, from_email, [to.strip()], headers={'Reply-To': from_email})
 
-						msg.attach_alternative(html_content, "text/html")
-						msg.send()	      
+							msg.attach_alternative(html_content, "text/html")
+							msg.send()	      
 
 
-					i.state = OutBoundState.objects.get(name='SENT')
+						i.state = OutBoundState.objects.get(name='SENT')
 
-				except Exception as e:
-					lgr.info('Error Sending Mail: %s' % e)
+					except Exception as e:
+						lgr.info('Error Sending Mail: %s' % e)
+						i.state = OutBoundState.objects.get(name='FAILED')
+
+					except BadHeaderError:
+						lgr.info('Bad Header: Error Sending Mail')
+						i.state = OutBoundState.objects.get(name='FAILED')
+
+				else:
+					lgr.info('No Valid Email')
 					i.state = OutBoundState.objects.get(name='FAILED')
 
-				except BadHeaderError:
-					lgr.info('Bad Header: Error Sending Mail')
-					i.state = OutBoundState.objects.get(name='FAILED')
-
-			else:
-				lgr.info('No Valid Email')
-				i.state = OutBoundState.objects.get(name='FAILED')
-
-			i.save()
-		except Exception as e:
-			lgr.info('Error Sending item: %s | %s' % (i, e))
+				i.save()
+			except Exception as e:
+				lgr.info('Error Sending item: %s | %s' % (i, e))
 
 
 

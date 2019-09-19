@@ -793,7 +793,7 @@ class Wrappers:
 					if value_type == 'DateField':
 						column_type = 'date'
 					elif value_type == 'DateTimeField':
-						column_type = 'date'
+						column_type = 'datetime'
 					elif value_type == 'DecimalField':
 						column_type = 'number'
 					elif value_type == 'IntegerField':

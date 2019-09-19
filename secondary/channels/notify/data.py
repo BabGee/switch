@@ -116,13 +116,13 @@ class List:
 				df[d+'(%)'] = ((df[d]/df[df2.columns].sum(axis=1))*100).round(2)
 
 			df = df.reset_index().sort_values('DATE',ascending=False)
-			dtype = {'float': 'number','int': 'number','datetime': 'date', 'object': 'string' }
+			dtype = {'float': 'number','int': 'number','datetime': 'datetime', 'object': 'string','datetime64[ns, UTC]':'datetime','float64':'number','int64':'number'}
 			for c in df.columns:
 				lgr.info(df[c].dtype)
 				if df[c].dtype in dtype.keys():
 					cols = {'label': c, 'type': 'string' }
-					for k,v in dtype.keys(): 
-						if k in df[c].dtype:
+					for k,v in dtype.items(): 
+						if k == str(df[c].dtype):
 							cols = {'label': c, 'type': v }
 					params['cols'].append(cols)
 				else:
