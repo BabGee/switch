@@ -128,19 +128,19 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': dbengine, # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': dbname,                      # Or path to database file if using sqlite3.
+        'ENGINE': default_dbengine, # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': default_dbname,                      # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
-        'USER': dbuser,
-        'PASSWORD': dbpassword,
+        'USER': default_dbuser,
+        'PASSWORD': default_dbpassword,
         'HOST': default_dbhost,                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': default_dbport,                      # Set to empty string for default.
     },
     'read': {
-        'ENGINE': dbengine, 
-        'NAME': dbname, 
-        'USER': dbuser,
-        'PASSWORD': dbpassword,
+        'ENGINE': read_dbengine, 
+        'NAME': read_dbname, 
+        'USER': read_dbuser,
+        'PASSWORD': read_dbpassword,
         'HOST': read_dbhost,
         'PORT': read_dbport,
     }
