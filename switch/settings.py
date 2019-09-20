@@ -36,12 +36,17 @@ try:conf_thirdparty =  os.getenv("INSTALLED_APPS_thirdparty", cf.get('INSTALLED_
 except:conf_thirdparty = ''
 thirdparty=conf_thirdparty.split(",")
 
-dbengine =  os.getenv("DATABASES_default_dbengine", cf.get('DATABASES','default_dbengine'))
-dbname =  os.getenv("DATABASES_default_dbname", cf.get('DATABASES','default_dbname'))
-dbuser =  os.getenv("DATABASES_default_dbuser", cf.get('DATABASES','default_dbuser'))
-dbpassword =  os.getenv("DATABASES_default_dbpassword", cf.get('DATABASES','default_dbpassword'))
+default_dbengine =  os.getenv("DATABASES_default_dbengine", cf.get('DATABASES','default_dbengine'))
+default_dbname =  os.getenv("DATABASES_default_dbname", cf.get('DATABASES','default_dbname'))
+default_dbuser =  os.getenv("DATABASES_default_dbuser", cf.get('DATABASES','default_dbuser'))
+default_dbpassword =  os.getenv("DATABASES_default_dbpassword", cf.get('DATABASES','default_dbpassword'))
 default_dbhost =  os.getenv("DATABASES_default_dbhost", cf.get('DATABASES','default_dbhost'))
 default_dbport =  os.getenv("DATABASES_default_dbport", cf.get('DATABASES','default_dbport'))
+
+read_dbengine =  os.getenv("DATABASES_read_dbengine", cf.get('DATABASES','read_dbengine'))
+read_dbname =  os.getenv("DATABASES_read_dbname", cf.get('DATABASES','read_dbname'))
+read_dbuser =  os.getenv("DATABASES_read_dbuser", cf.get('DATABASES','read_dbuser'))
+read_dbpassword =  os.getenv("DATABASES_read_dbpassword", cf.get('DATABASES','read_dbpassword'))
 read_dbhost =  os.getenv("DATABASES_read_dbhost", cf.get('DATABASES','read_dbhost'))
 read_dbport =  os.getenv("DATABASES_read_dbport", cf.get('DATABASES','read_dbport'))
                                   
