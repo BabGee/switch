@@ -533,9 +533,9 @@ class System(Wrappers):
 				code3=(len(msisdn) -5)
 
 				prefix = MNOPrefix.objects.filter(prefix=msisdn[:code3])
-				if not prefix.exists():
+				if not len(prefix):
 					prefix = MNOPrefix.objects.filter(prefix=msisdn[:code2])
-					if not prefix.exists():
+					if not len(prefix):
 						prefix = MNOPrefix.objects.filter(prefix=msisdn[:code1])
 
 				lgr.info('MNO Prefix: %s|%s' % (prefix,msisdn))
@@ -543,56 +543,56 @@ class System(Wrappers):
 				notification_product = notification_product.filter(Q(notification__code__mno=prefix[0].mno)|Q(notification__code__mno=None))
 			elif 'session_gateway_profile_id' in payload.keys():
 				contact = Contact.objects.filter(product__in=[p for p in notification_product],gateway_profile__id=payload['session_gateway_profile_id'])
-				if contact.exists():
+				if len(contact):
 					lgr.info(contact)
 					notification_product = notification_product.filter(id__in=[c.product.id for c in contact])
 
-			lgr.info('Notification Product: %s ' % notification_product)
+			#lgr.info('Notification Product: %s ' % notification_product)
 
 			if 'notification_delivery_channel' in payload.keys():
 				notification_product = notification_product.filter(notification__code__channel__name=payload['notification_delivery_channel'])
 
-			lgr.info('Notification Product: %s ' % notification_product)
+			#lgr.info('Notification Product: %s ' % notification_product)
 			if 'notification_product_id' in payload.keys():
 				notification_product = notification_product.filter(id=payload['notification_product_id'])
 
-			lgr.info('Notification Product: %s ' % notification_product)
+			#lgr.info('Notification Product: %s ' % notification_product)
 			if 'product_item_id' in payload.keys():
 				product_type = ProductItem.objects.get(id=payload['product_item_id']).product_type
 				notification_product = notification_product.filter(product_type=product_type)
 
-			lgr.info('Notification Product: %s ' % notification_product)
+			#lgr.info('Notification Product: %s ' % notification_product)
 			if 'product_type_id' in payload.keys():
 				notification_product = notification_product.filter(product_type__id=payload['product_type_id'])
 
-			lgr.info('Notification Product: %s ' % notification_product)
+			#lgr.info('Notification Product: %s ' % notification_product)
 			if 'product_type' in payload.keys():
 				notification_product = notification_product.filter(product_type__name=payload['product_type'])
 
-			lgr.info('Notification Product: %s ' % notification_product)
+			#lgr.info('Notification Product: %s ' % notification_product)
 			if 'payment_method' in payload.keys():
 				notification_product = notification_product.filter(payment_method__name=payload['payment_method'])
 
-			lgr.info('Notification Product: %s ' % notification_product)
+			#lgr.info('Notification Product: %s ' % notification_product)
 			if 'code' in payload.keys():
 				notification_product = notification_product.filter(notification__code__code=payload['code'])
 
-			lgr.info('Notification Product: %s ' % notification_product)
+			#lgr.info('Notification Product: %s ' % notification_product)
 			if 'alias' in payload.keys():
 				notification_product = notification_product.filter(notification__code__alias=payload['alias'])
 
-			lgr.info('Notification Product: %s ' % notification_product)
+			#lgr.info('Notification Product: %s ' % notification_product)
 			if 'institution_id' in payload.keys():
 				#Filter to send an institution notification or otherwise a gateway if institution does not exist (gateway only has institution as None)
 				institution_notification_product = notification_product.filter(notification__code__institution__id=payload['institution_id'])
 				gateway_notification_product = notification_product.filter(notification__code__institution=None)
-				notification_product =  institution_notification_product if institution_notification_product.exists() else gateway_notification_product
+				notification_product =  institution_notification_product if len(institution_notification_product) else gateway_notification_product
 
-			lgr.info('Notification Product: %s ' % notification_product)
+			#lgr.info('Notification Product: %s ' % notification_product)
 			if "keyword" in payload.keys():
 				notification_product=notification_product.filter(keyword__iexact=payload['keyword'])
 
-			lgr.info('Notification Product: %s ' % notification_product)
+			#lgr.info('Notification Product: %s ' % notification_product)
 
 
 			if 'notification_template_id' in payload.keys():
@@ -603,13 +603,13 @@ class System(Wrappers):
 				notification_template_list = NotificationTemplate.objects.filter(product__in=notification_product,service__name=payload['SERVICE'])
 
 				notification_template_list = self.trigger_notification_template(payload,notification_template_list)
-				notification_template = notification_template_list[0] if notification_template_list.exists() else None
+				notification_template = notification_template_list[0] if len(notification_template_list) else None
 
 
 
-			lgr.info('Notification Product: %s ' % notification_product)
+			#lgr.info('Notification Product: %s ' % notification_product)
 
-			if notification_product.exists():
+			if len(notification_product):
 				#Construct Message to send
 				if 'message' not in payload.keys():
 					if notification_template:
@@ -733,7 +733,7 @@ class System(Wrappers):
 						contact = contact.filter(linkid=payload['linkid'])
 
 					status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
-					if not contact.exists():
+					if not len(contact):
 						details = json.dumps({})
 						new_contact = Contact(status=status,product=notification_product,subscription_details=details,\
 								gateway_profile=session_gateway_profile)
@@ -969,7 +969,7 @@ class System(Wrappers):
 				payload['notification_template_id'] = notification_template[0].id
 				details = json.dumps({})
 				status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
-				if not contact.exists():
+				if not len(contact):
 					new_contact = Contact(status=status,product=notification_product[0],subscription_details=details[:1920],\
 							gateway_profile=session_gateway_profile)
 
@@ -1118,7 +1118,7 @@ class System(Wrappers):
 			product = NotificationProduct.objects.get(id=payload['notification_product_id'])
 			contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
 			status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
-			if not contact.exists():
+			if not len(contact):
 				new_contact = Contact(status=status,product=product,subscription_details=json.dumps({}),\
 						subscribed=True, gateway_profile=gateway_profile)
 				new_contact.save()
@@ -1214,7 +1214,7 @@ class System(Wrappers):
 							contact_group__gateway=gateway_profile.gateway)\
 							.values_list('recipient', flat=True)
 
-			if 'message' in payload.keys() and recipient_list.exists():
+			if 'message' in payload.keys() and len(recipient_list):
 				lgr.info('Message and Contact Captured')
 				#Bulk Create Outbound
 				recipient=np.asarray(recipient_list)
@@ -1242,7 +1242,7 @@ class System(Wrappers):
 
 				payload['response'] = 'Outbound Message Processed'
 				payload['response_status']= '00'
-			elif 'message' not in payload.keys() and recipient_list.exists():
+			elif 'message' not in payload.keys() and len(recipient_list):
 				payload['response'] = 'No Message to Send'
 				payload['response_status']= '00'
 			else:
@@ -1351,9 +1351,9 @@ class System(Wrappers):
 			code3=(len(msisdn) -5)
 
 			prefix = MNOPrefix.objects.filter(prefix=msisdn[:code3])
-			if not prefix.exists():
+			if not len(prefix):
 				prefix = MNOPrefix.objects.filter(prefix=msisdn[:code2])
-				if not prefix.exists():
+				if not len(prefix):
 					prefix = MNOPrefix.objects.filter(prefix=msisdn[:code1])
 
 			lgr.info('MNO Prefix: %s' % prefix)
