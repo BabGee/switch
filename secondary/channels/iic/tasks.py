@@ -31,7 +31,7 @@ class Generator:
 		menu_page_group = None
 		lgr = node_info.log
 		try:
-			lgr.info('Starting Interface: %s' % this_page_inputs)
+			#lgr.info('Starting Interface: %s' % this_page_inputs)
 
 			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
 
@@ -40,7 +40,7 @@ class Generator:
 				this_page_inputs = this_page_inputs.filter(
 				Q(payment_method__name__in=payment_method_list) | Q(payment_method=None))
 
-			lgr.info('This Page Inputs: %s' % this_page_inputs)
+			#lgr.info('This Page Inputs: %s' % this_page_inputs)
 			# Add Interface for an Institution
 			if 'institution_id' in payload.keys() and payload['institution_id'] not in ["", None, 'None']:
 				this_page_inputs = this_page_inputs.filter(
@@ -61,12 +61,12 @@ class Generator:
 				Q(product_type=None) | Q(product_type__id=payload['product_type_id']))
 			else:
 				this_page_inputs = this_page_inputs.filter(product_type=None)
-				lgr.info('This Page Inputs:1 %s' % this_page_inputs)
+				#lgr.info('This Page Inputs:1 %s' % this_page_inputs)
 
 			# Check if trigger Exists
 			if 'trigger' in payload.keys():
 				triggers = str(payload['trigger'].strip()).split(',')
-				lgr.info('Triggers: %s' % triggers)
+				#lgr.info('Triggers: %s' % triggers)
 				trigger_list = Trigger.objects.using('read').filter(name__in=triggers).distinct()
 				this_page_inputs = this_page_inputs.filter(Q(trigger__in=trigger_list) | Q(trigger=None))
 				# Eliminate none matching trigger list
@@ -91,7 +91,7 @@ class Generator:
 			else:
 				this_page_inputs = this_page_inputs.filter(enrollment_type_included=None)
 
-			lgr.info('This Page Inputs:2 %s' % this_page_inputs)
+			#lgr.info('This Page Inputs:2 %s' % this_page_inputs)
 
 			for input in this_page_inputs:
 				input_page = input.page
@@ -163,8 +163,7 @@ class Generator:
 						input.page_input_group.item_level][input.page_input_group.name][input.item_level],
 						payload, node_info)
 				except Exception as e:
-					lgr.info(
-					'Error Getting Wrapper on Inputs: %s' % e)  # pass #Escape sections with similar leveling (item_level)
+					lgr.info('Error Getting Wrapper on Inputs: %s' % e)  # pass #Escape sections with similar leveling (item_level)
 		except Exception as e:
 			lgr.info('Error Generating Section: %s' % e)
 
@@ -175,10 +174,10 @@ class Generator:
 		lgr = node_info.log
 		page_groups = {}
 		try:
-			lgr.info('Starting All Pages')
+			#lgr.info('Starting All Pages')
 			for this_input in this_page_inputs:
 				a_page = this_input.page
-				lgr.info("Page: %s" % a_page.name)
+				#lgr.info("Page: %s" % a_page.name)
 				if a_page.page_group.item_level in page_groups and len(page_groups[a_page.page_group.item_level]) > 0:
 					if a_page.page_group.name in page_groups[a_page.page_group.item_level].keys() and len(
 					page_groups[a_page.page_group.item_level][a_page.page_group.name]) > 0:
@@ -233,7 +232,7 @@ class System(Generator):
 			# This Page
 			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
 
-			lgr.info('Started This Page Inputs')
+			#lgr.info('Started This Page Inputs')
 			this_page_inputs = PageInput.objects.using('read').filter(Q(page__service__name=payload['SERVICE']),
 							Q(page_input_status__name='ACTIVE'), \
 							Q(Q(access_level=gateway_profile.access_level) | Q(
@@ -271,7 +270,7 @@ class System(Generator):
 				else:
 					this_page_inputs = this_page_inputs.filter(template=None)
 
-			lgr.info('This Page Inputs 1L %s' % this_page_inputs)
+			#lgr.info('This Page Inputs 1L %s' % this_page_inputs)
 			#Role Filters
 			if gateway_profile.role:
 				role_permission = RolePermission.objects.using('read').filter(role=gateway_profile.role)
@@ -285,10 +284,10 @@ class System(Generator):
 								if action not in pages[page]: pages[page].append(action)
 				if pages:
 					query = reduce(operator.or_, ( Q(Q(page=k),Q(Q(role_action=None)|Q(role_action__in=v))) for k,v in pages.items() ))
-					lgr.info('Query: %s' % query)
+					#lgr.info('Query: %s' % query)
 					this_page_inputs = this_page_inputs.filter(query)
 
-			lgr.info('This Page Inputs 2L %s' % this_page_inputs)
+			#lgr.info('This Page Inputs 2L %s' % this_page_inputs)
 			gui['this_page_inputs'] = self.section_generator(payload, this_page_inputs, node_info)
 			gui['all_pages'] = self.all_pages_generator(payload, this_page_inputs, node_info)
 
@@ -302,13 +301,13 @@ class System(Generator):
 	def get_section(self, payload, node_info):
 		lgr = node_info.log
 		try:
-			lgr.info('Get Interface: %s' % payload)
+			#lgr.info('Get Interface: %s' % payload)
 			gui = {}
 
 			# This Page
 			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
 
-			lgr.info('Started This Page Inputs')
+			#lgr.info('Started This Page Inputs')
 			this_page_inputs = PageInput.objects.using('read').filter(Q(page__service__name=payload['SERVICE']),
 							Q(page_input_status__name='ACTIVE'), \
 							Q(Q(access_level=gateway_profile.access_level) | Q(
