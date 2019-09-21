@@ -850,7 +850,7 @@ class System(Wrappers):
 
 	def process_delivery_status(self, payload, node_info):
 		try:
-			lgr.info("Process Delivery Status: %s" % payload)
+			#lgr.info("Process Delivery Status: %s" % payload)
 
 			outbound_id = payload['outbound_id']
 			delivery_status = payload['delivery_status']
@@ -860,8 +860,8 @@ class System(Wrappers):
 			if 'ext_service_id' in payload.keys() and payload['ext_service_id'] not in [None,'']:
 				outbound = outbound.filter(contact__product__notification__ext_service_id=payload['ext_service_id'])
 
-			lgr.info('Outbound List: %s' % outbound)
-			if outbound.exists():
+			#lgr.info('Outbound List: %s' % outbound)
+			if len(outbound):
 				this_outbound = outbound[0]
 				#lgr.info("This outbound: %s|Delivery Status: %s" % (this_outbound, delivery_status) )
 				if delivery_status in ['RESEND']:
@@ -2011,7 +2011,7 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 @transaction.atomic
 @single_instance_task(60*10)
 def send_outbound_sms_messages():
-	_send_outbound_sms_messages(is_bulk=False, limit_batch=150)
+	_send_outbound_sms_messages(is_bulk=False, limit_batch=100)
 
 
 @app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
@@ -2019,7 +2019,7 @@ def send_outbound_sms_messages():
 @transaction.atomic
 @single_instance_task(60*10)
 def bulk_send_outbound_sms_messages():
-	_send_outbound_sms_messages(is_bulk=True, limit_batch=150)
+	_send_outbound_sms_messages(is_bulk=True, limit_batch=100)
 
 
 @app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
