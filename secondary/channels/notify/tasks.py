@@ -538,9 +538,10 @@ class System(Wrappers):
 					if not len(prefix):
 						prefix = MNOPrefix.objects.filter(prefix=msisdn[:code1])
 
-				lgr.info('MNO Prefix: %s|%s' % (prefix,msisdn))
+				#lgr.info('MNO Prefix: %s|%s' % (prefix,msisdn))
 				#Get Notification product
-				notification_product = notification_product.filter(Q(notification__code__mno=prefix[0].mno)|Q(notification__code__mno=None))
+				if len(prefix): notification_product = notification_product.filter(Q(notification__code__mno=prefix[0].mno)|Q(notification__code__mno=None))
+				else: notification_product = notification_product.none()
 			elif 'session_gateway_profile_id' in payload.keys():
 				contact = Contact.objects.filter(product__in=[p for p in notification_product],gateway_profile__id=payload['session_gateway_profile_id'])
 				if len(contact):
