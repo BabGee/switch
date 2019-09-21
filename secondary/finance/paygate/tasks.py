@@ -877,14 +877,14 @@ class System(Wrappers):
 			if 'payment_method' in payload.keys():
 				float_type = float_type.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
 
-			lgr.info('Float Type: %s' % float_type)
+			#lgr.info('Float Type: %s' % float_type)
 			if 'institution_id' in payload.keys():
 				float_type = float_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
 			else:
 				float_type = float_type.filter(institution=None)
 
-			lgr.info('Float Type: %s' % float_type)
-			lgr.info('Payload: %s' % payload)
+			#lgr.info('Float Type: %s' % float_type)
+			#lgr.info('Payload: %s' % payload)
 			if 'product_item_id' in payload.keys():
 				product_item = ProductItem.objects.get(id=payload['product_item_id'])
 				float_type = float_type.filter(product_type=product_item.product_type)
@@ -896,8 +896,8 @@ class System(Wrappers):
 				float_type = float_type.filter(product_type__name=payload['product_type'])
 			else:
 				float_type = float_type.filter(product_type=None)
-			lgr.info('Float Type: %s' % float_type)
-			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
+			#lgr.info('Float Type: %s' % float_type)
+			if len(float_type) and Decimal(payload['float_amount']) > Decimal(0):
 				float_balance = FloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 
 				if 'institution_id' in payload.keys():
@@ -906,7 +906,7 @@ class System(Wrappers):
 					float_balance = float_balance.filter(institution=None)
 				lgr.info('Float Balance: %s' % float_balance)
 				#check float exists
-				if float_balance.exists() and Decimal(float_balance[0].balance_bf) >= Decimal(payload['float_amount']):
+				if len(float_balance) and Decimal(float_balance[0].balance_bf) >= Decimal(payload['float_amount']):
 
 					charge = Decimal(0)
 					charge_list = FloatCharge.objects.filter(Q(float_type=float_type[0], min_amount__lte=Decimal(payload['float_amount']),\
