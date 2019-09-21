@@ -904,7 +904,7 @@ class System(Wrappers):
 					float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
 				else:
 					float_balance = float_balance.filter(institution=None)
-				lgr.info('Float Balance: %s' % float_balance)
+				#lgr.info('Float Balance: %s' % float_balance)
 				#check float exists
 				if len(float_balance) and Decimal(float_balance[0].balance_bf) >= Decimal(payload['float_amount']):
 
