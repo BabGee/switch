@@ -38,7 +38,7 @@ class WebService:
 
 				#Timeout in 30 seconds
 				c.setopt(c.CONNECTTIMEOUT, timeout)
-				c.setopt(c.VERBOSE, False)
+				c.setopt(c.VERBOSE, True)
 				c.setopt(c.FOLLOWLOCATION, True)
 				c.setopt(c.USERAGENT, 'InterIntel Switch')
 				c.setopt(c.CONNECTTIMEOUT, timeout)
