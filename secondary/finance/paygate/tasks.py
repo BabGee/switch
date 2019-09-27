@@ -898,7 +898,7 @@ class System(Wrappers):
 				float_type = float_type.filter(product_type=None)
 			#lgr.info('Float Type: %s' % float_type)
 			if len(float_type) and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = FloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = FloatManager.objects.select_for_update(of=('self',),nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created').select_related()
 
 				if 'institution_id' in payload.keys():
 					float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))

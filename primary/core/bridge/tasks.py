@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from celery import shared_task
 #from celery.contrib.methods import task_method
-from celery import task
+from celery import task, group, chain
 from switch.celery import app
 from celery.utils.log import get_task_logger
 from switch.celery import single_instance_task
@@ -466,7 +466,8 @@ def background_service_call(service_name, gateway_profile_id, payload):
 	except Exception as e:
 		lgr.info('Error on BackgroundService Call: %s' % e)
 
-@app.task(ignore_result=True)
+
+@app.task(ignore_result=True, time_limit=150, soft_time_limit=120)
 def process_background_service_call(background):
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
@@ -533,7 +534,7 @@ def process_background_service_call(background):
 		lgr.info('Unable to make service call: %s' % e)
 
 
-@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
+@app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
 @transaction.atomic
 @single_instance_task(60*10)
 def process_background_service():
@@ -543,11 +544,16 @@ def process_background_service():
 		orig_background = BackgroundServiceActivity.objects.select_for_update().filter(response_status__response='DEFAULT',\
 					status__name='CREATED', date_modified__lte=timezone.now()-timezone.timedelta(seconds=2),\
 					scheduled_send__lte=timezone.now())
-		background = list(orig_background.values_list('id',flat=True)[:250])
+		background = list(orig_background.values_list('id',flat=True)[:100])
 
 		processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
+		tasks = []
 		for bg in background:
-			process_background_service_call.delay(bg)
+			tasks.append(process_background_service_call.s(bg))
+
+		chunks, chunk_size = len(tasks), 100
+		bg_tasks= [ group(*tasks[i:i+chunk_size])() for i in range(0, chunks, chunk_size) ]
+
 	except Exception as e:
 		lgr.info('Error on Processing Background Service: %s' % e)
 

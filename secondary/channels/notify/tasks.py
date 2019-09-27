@@ -1222,7 +1222,32 @@ class System(Wrappers):
 				recipient = np.unique(recipient)
 				#recipient_outbound_bulk_logger.delay(payload, recipient, scheduled_send)
 
-				recipient_outbound_bulk_logger(payload, recipient, scheduled_send)
+				#recipient_outbound_bulk_logger(payload, recipient, scheduled_send)
+
+				lgr.info('Recipient Outbound Bulk Logger Started')
+
+				df = pd.DataFrame({'recipient': recipient})
+				df['message'] = payload['message']
+				df['scheduled_send'] = scheduled_send
+				df['contact'] = payload['contact_id']
+				df['state'] = OutBoundState.objects.get(name='CREATED').id
+				df['date_modified'] = timezone.now()
+				df['date_created'] = timezone.now()
+				df['sends'] = 0
+				df['pn'] = False
+				df['pn_ack'] = False
+				df['inst_notified'] = False
+
+				from django.core.files.base import ContentFile
+
+				f1 = ContentFile(df.to_csv(index=False))
+
+				outbound_log = Outbound.objects.from_csv(f1)
+
+				lgr.info('Recipient Outbound Bulk Logger Completed Task')
+
+
+
 				'''
 				df = pd.DataFrame({'recipient': recipient})
 				df['message'] = payload['message']
