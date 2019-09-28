@@ -814,6 +814,10 @@ class System(Wrappers):
 
 					outbound.save()
 
+					#Ensure there's a unique value for ext_outbound_id
+					if not outbound.ext_outbound_id: 
+						outbound.ext_outbound_id = outbound.id
+						outbound.save()
 					'''
 					if 'attachment' in payload.keys() and payload['attachment'] not in [None, '']:
 
@@ -1236,6 +1240,7 @@ class System(Wrappers):
 				df['sends'] = 0
 				df['pn'] = False
 				df['pn_ack'] = False
+				df['ext_outbound_id'] = payload['bridge__transaction_id']
 				df['inst_notified'] = False
 
 				from django.core.files.base import ContentFile
@@ -1922,6 +1927,39 @@ def _send_outbound(message):
 		lgr.info("Error on Sending Outbound: %s" % e)
 
 
+def _send_outbound_list(payload):
+	#from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+		#Send SMS
+		node = payload['node_url']
+		#lgr.info("Payload: %s| Node: %s" % (payload, node) )
+		payload = WebService().post_request(payload, node)
+		#lgr.info('Response: %s' % payload)
+
+	except Exception as e:
+		lgr.info("Error on Sending Outbound: %s" % e)
+
+
+@app.task(ignore_result=True)
+def send_outbound_batch_list(payload):
+	_send_outbound_list(payload)
+
+@app.task(ignore_result=True)
+def send_outbound_list(payload):
+	_send_outbound_list(payload)
+
+
+@app.task(ignore_result=True)
+def bulk_send_outbound_batch_list(payload):
+	_send_outbound_list(payload)
+
+@app.task(ignore_result=True)
+def bulk_send_outbound_list(payload):
+	_send_outbound_list(payload)
+
+
+
 @app.task(ignore_result=True)
 def send_outbound_batch(message):
 	_send_outbound_batch(message)
@@ -1966,6 +2004,83 @@ def send_outbound2(payload, node):
 		outbound.save()
 	except Exception as e:
 		lgr.info("Error on Sending Outbound: %s" % e)
+
+def _send_outbound_sms_message_list(is_bulk, limit_batch):
+	try:
+		#from celery.utils.log import get_task_logger
+		lgr = get_task_logger(__name__)
+		#Check for created outbounds or processing and gte(last try) 4 hours ago within the last 3 days| Check for failed transactions within the last 10 minutes
+		orig_outbound = Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='SMS'),\
+					Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),contact__product__trading_box__close_time__gte=timezone.localtime().time())),\
+					~Q(recipient=None),~Q(recipient=''),~Q(contact__product__notification__endpoint__url=None),~Q(contact__product__notification__endpoint__url=''),\
+					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
+					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
+					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24)),\
+					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related()
+
+		outbound = orig_outbound[:limit_batch].values_list('recipient','contact__product__id','contact__product__notification__endpoint__batch','ext_outbound_id',\
+                                                'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',\
+                                                'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',\
+                                                'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url')
+		
+		if len(outbound):
+			messages=np.asarray(outbound)
+			#Update State
+			processing = orig_outbound.filter(id__in=messages[:,0].tolist()).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
+
+			df = pd.DataFrame({'kmp_recipient':messages[:,0], 'product':messages[:,1], 'batch':messages[:,2],'kmp_correlator':messages[:,3],'kmp_service_id':messages[:,4],'kmp_code':messages[:,5],\
+				'kmp_message':messages[:,6],'kmp_spid':messages[:,7],'kmp_password':messages[:,8],'node_account_id':messages[:,7],'node_password':messages[:,8],'node_username':messages[:,9],\
+				'node_api_key':messages[:,10],'contact_info':messages[:,11],'linkid':messages[:,12],'node_url':messages[:,13]})
+
+			df['batch'] = pd.to_numeric(df['batch'])
+			df = df.dropna(axis='columns',how='all')
+			cols = df.columns.tolist()
+			cols.remove('kmp_recipient')
+			df.set_index(cols, inplace=True)
+			df = df.sort_index()
+
+			tasks = []
+			for x in df.index.unique():
+				batch_size = df.loc[(x),:].index.get_level_values('batch').unique().values[0]
+				kmp_recipient = df.loc[(x),:]['kmp_recipient']
+				payload = dict()    
+				for c in cols: payload[c] = df.loc[(x),:].index.get_level_values(c).unique().values[0]      
+				#lgr.info('MULTI: %s \n %s' % (df.loc[(x),:].shape,df.loc[(x),:].head()))
+				if batch_size>1 and len(df.loc[(x),:].shape)>1 and df.loc[(x),:].shape[0]>1:
+					objs = kmp_recipient.values
+					lgr.info('Got Here (multi): %s' % objs)
+					start = 0
+					while True:
+						batch = list(islice(objs, start, start+batch_size))
+						start+=batch_size
+						if not batch: break
+						payload['kmp_recipient'] = batch
+						#lgr.info(payload)
+						if is_bulk: tasks.append(bulk_send_outbound_batch_list.s(payload))
+						else: tasks.append(send_outbound_batch_list.s(payload))
+				elif len(df.loc[(x),:].shape)>1 :
+					lgr.info('Got Here (list of singles): %s' % kmp_recipient.values)
+					for d in kmp_recipient:
+						payload['kmp_recipient'] = [d]       
+						#lgr.info(payload)
+						if is_bulk: tasks.append(bulk_send_outbound_list.s(payload))
+						else: tasks.append(send_outbound_list.s(payload))
+				else:
+					lgr.info('Got Here (single): %s' % kmp_recipient.values)
+					payload['kmp_recipient'] = kmp_recipient.values
+					#lgr.info(payload)
+					if is_bulk: tasks.append(bulk_send_outbound_list.s(payload))
+					else: tasks.append(send_outbound_list.s(payload))
+
+			#lgr.info('Got Here 10: %s' % tasks)
+
+			chunks, chunk_size = len(tasks), 100
+			#sms_tasks= [ group(*tasks[i:i+chunk_size])() for i in range(0, chunks, chunk_size) ]
+
+	except Exception as e:
+		lgr.info('Error on Send Outbound SMS Messages: %s ' % e)
+
+
 
 def _send_outbound_sms_messages(is_bulk, limit_batch):
 	try:
