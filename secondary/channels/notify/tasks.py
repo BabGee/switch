@@ -2045,13 +2045,13 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 			grouped_df = df.groupby(cols)
 
 			tasks = []
-			for name,group in grouped_df:
-				batch_size = group['batch'].unique()[0]
-				kmp_recipient = group['kmp_recipient'].unique()
+			for name,group_df in grouped_df:
+				batch_size = group_df['batch'].unique()[0]
+				kmp_recipient = group_df['kmp_recipient'].unique()
 				payload = dict()    
-				for c in cols: payload[c] = group[c].unique()[0]      
-				#lgr.info('MULTI: %s \n %s' % (group.shape,group.head()))
-				if batch_size>1 and len(group.shape)>1 and group.shape[0]>1:
+				for c in cols: payload[c] = group_df[c].unique()[0]      
+				#lgr.info('MULTI: %s \n %s' % (group_df.shape,group_df.head()))
+				if batch_size>1 and len(group_df.shape)>1 and group_df.shape[0]>1:
 					objs = kmp_recipient
 					lgr.info('Got Here (multi): %s' % objs)
 					start = 0
@@ -2063,7 +2063,7 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 						lgr.info(payload)
 						if is_bulk: tasks.append(bulk_send_outbound_batch.s(payload))
 						else: tasks.append(send_outbound_batch.s(payload))
-				elif len(group.shape)>1 :
+				elif len(group_df.shape)>1 :
 					lgr.info('Got Here (list of singles): %s' % kmp_recipient)
 					for d in kmp_recipient:
 						payload['kmp_recipient'] = [d]       
