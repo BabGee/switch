@@ -2005,7 +2005,7 @@ def send_outbound2(payload, node):
 	except Exception as e:
 		lgr.info("Error on Sending Outbound: %s" % e)
 
-def _send_outbound_sms_message(is_bulk, limit_batch):
+def _send_outbound_sms_messages(is_bulk, limit_batch):
 	try:
 		#from celery.utils.log import get_task_logger
 		lgr = get_task_logger(__name__)
@@ -2039,20 +2039,20 @@ def _send_outbound_sms_message(is_bulk, limit_batch):
 			df['batch'] = pd.to_numeric(df['batch'])
 			df = df.dropna(axis='columns',how='all')
 			cols = df.columns.tolist()
+			#df.set_index(cols, inplace=True)
+			#df = df.sort_index()
 			cols.remove('kmp_recipient')
-			df.set_index(cols, inplace=True)
-			df = df.sort_index()
+			grouped_df = df.groupby(cols)
 
-			lgr.info('DF: %s' % df)
 			tasks = []
-			for x in df.index.unique():
-				batch_size = df.loc[(x),:].index.get_level_values('batch').unique().values[0]
-				kmp_recipient = df.loc[(x),:]['kmp_recipient']
+			for name,group in grouped_df:
+				batch_size = group['batch'].unique()[0]
+				kmp_recipient = group['kmp_recipient'].unique()
 				payload = dict()    
-				for c in cols: payload[c] = df.loc[(x),:].index.get_level_values(c).unique().values[0]      
-				lgr.info('MULTI: %s \n %s' % (df.loc[(x),:].shape,df.loc[(x),:].head()))
-				if batch_size>1 and len(df.loc[(x),:].shape)>1 and df.loc[(x),:].shape[0]>1:
-					objs = kmp_recipient.values
+				for c in cols: payload[c] = group[c].unique()[0]      
+				#lgr.info('MULTI: %s \n %s' % (group.shape,group.head()))
+				if batch_size>1 and len(group.shape)>1 and group.shape[0]>1:
+					objs = kmp_recipient
 					lgr.info('Got Here (multi): %s' % objs)
 					start = 0
 					while True:
@@ -2063,8 +2063,8 @@ def _send_outbound_sms_message(is_bulk, limit_batch):
 						lgr.info(payload)
 						if is_bulk: tasks.append(bulk_send_outbound_batch.s(payload))
 						else: tasks.append(send_outbound_batch.s(payload))
-				elif len(df.loc[(x),:].shape)>1 :
-					lgr.info('Got Here (list of singles): %s' % kmp_recipient.values)
+				elif len(group.shape)>1 :
+					lgr.info('Got Here (list of singles): %s' % kmp_recipient)
 					for d in kmp_recipient:
 						payload['kmp_recipient'] = [d]       
 						lgr.info(payload)
@@ -2072,7 +2072,7 @@ def _send_outbound_sms_message(is_bulk, limit_batch):
 						else: tasks.append(send_outbound.s(payload))
 				else:
 					lgr.info('Got Here (single): %s' % kmp_recipient.values)
-					payload['kmp_recipient'] = kmp_recipient.values
+					payload['kmp_recipient'] = kmp_recipient
 					lgr.info(payload)
 					if is_bulk: tasks.append(bulk_send_outbound.s(payload))
 					else: tasks.append(send_outbound.s(payload))
