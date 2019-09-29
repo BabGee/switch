@@ -1786,7 +1786,7 @@ def contact_subscription():
 		except Exception as e:
 			lgr.info('Error subscribing item: %s | %s' % (i,e))
 
-def _send_outbound_batch(message_list):
+def _send_outbound_batch_deprecated(message_list):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
@@ -1849,7 +1849,7 @@ def _send_outbound_batch(message_list):
 	except Exception as e:
 		lgr.info("Error on Sending Outbound Batch: %s" % e)
 
-def _send_outbound(message):
+def _send_outbound_deprecated(message):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
@@ -1927,15 +1927,15 @@ def _send_outbound(message):
 		lgr.info("Error on Sending Outbound: %s" % e)
 
 
-def _send_outbound_list(payload):
+def _send_outbound(payload):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
 		#Send SMS
 		node = payload['node_url']
-		#lgr.info("Payload: %s| Node: %s" % (payload, node) )
+		lgr.info("Payload: %s| Node: %s" % (payload, node) )
 		payload = WebService().post_request(payload, node)
-		#lgr.info('Response: %s' % payload)
+		lgr.info('Response: %s' % payload)
 
 	except Exception as e:
 		lgr.info("Error on Sending Outbound: %s" % e)
@@ -2017,14 +2017,17 @@ def _send_outbound_sms_message(is_bulk, limit_batch):
 					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
 					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24)),\
 					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related()
-
+		lgr.info('Orig Outbound: %s' % orig_outbound)
 		outbound = orig_outbound[:limit_batch].values_list('recipient','contact__product__id','contact__product__notification__endpoint__batch','ext_outbound_id',\
                                                 'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',\
                                                 'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',\
                                                 'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url')
-		
+	
+		lgr.info('Outbound: %s' % outbound)
 		if len(outbound):
 			messages=np.asarray(outbound)
+
+			lgr.info('Messages: %s' % messages)
 			#Update State
 			processing = orig_outbound.filter(id__in=messages[:,0].tolist()).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
 
@@ -2032,6 +2035,7 @@ def _send_outbound_sms_message(is_bulk, limit_batch):
 				'kmp_message':messages[:,6],'kmp_spid':messages[:,7],'kmp_password':messages[:,8],'node_account_id':messages[:,7],'node_password':messages[:,8],'node_username':messages[:,9],\
 				'node_api_key':messages[:,10],'contact_info':messages[:,11],'linkid':messages[:,12],'node_url':messages[:,13]})
 
+			lgr.info('DF: %s' % df)
 			df['batch'] = pd.to_numeric(df['batch'])
 			df = df.dropna(axis='columns',how='all')
 			cols = df.columns.tolist()
@@ -2039,13 +2043,14 @@ def _send_outbound_sms_message(is_bulk, limit_batch):
 			df.set_index(cols, inplace=True)
 			df = df.sort_index()
 
+			lgr.info('DF: %s' % df)
 			tasks = []
 			for x in df.index.unique():
 				batch_size = df.loc[(x),:].index.get_level_values('batch').unique().values[0]
 				kmp_recipient = df.loc[(x),:]['kmp_recipient']
 				payload = dict()    
 				for c in cols: payload[c] = df.loc[(x),:].index.get_level_values(c).unique().values[0]      
-				#lgr.info('MULTI: %s \n %s' % (df.loc[(x),:].shape,df.loc[(x),:].head()))
+				lgr.info('MULTI: %s \n %s' % (df.loc[(x),:].shape,df.loc[(x),:].head()))
 				if batch_size>1 and len(df.loc[(x),:].shape)>1 and df.loc[(x),:].shape[0]>1:
 					objs = kmp_recipient.values
 					lgr.info('Got Here (multi): %s' % objs)
@@ -2055,27 +2060,27 @@ def _send_outbound_sms_message(is_bulk, limit_batch):
 						start+=batch_size
 						if not batch: break
 						payload['kmp_recipient'] = batch
-						#lgr.info(payload)
+						lgr.info(payload)
 						if is_bulk: tasks.append(bulk_send_outbound_batch.s(payload))
 						else: tasks.append(send_outbound_batch.s(payload))
 				elif len(df.loc[(x),:].shape)>1 :
 					lgr.info('Got Here (list of singles): %s' % kmp_recipient.values)
 					for d in kmp_recipient:
 						payload['kmp_recipient'] = [d]       
-						#lgr.info(payload)
+						lgr.info(payload)
 						if is_bulk: tasks.append(bulk_send_outbound.s(payload))
 						else: tasks.append(send_outbound.s(payload))
 				else:
 					lgr.info('Got Here (single): %s' % kmp_recipient.values)
 					payload['kmp_recipient'] = kmp_recipient.values
-					#lgr.info(payload)
+					lgr.info(payload)
 					if is_bulk: tasks.append(bulk_send_outbound.s(payload))
 					else: tasks.append(send_outbound.s(payload))
 
-			#lgr.info('Got Here 10: %s' % tasks)
+			lgr.info('Got Here 10: %s' % tasks)
 
 			chunks, chunk_size = len(tasks), 100
-			#sms_tasks= [ group(*tasks[i:i+chunk_size])() for i in range(0, chunks, chunk_size) ]
+			sms_tasks= [ group(*tasks[i:i+chunk_size])() for i in range(0, chunks, chunk_size) ]
 
 	except Exception as e:
 		lgr.info('Error on Send Outbound SMS Messages: %s ' % e)
@@ -2087,6 +2092,14 @@ def _send_outbound_sms_message(is_bulk, limit_batch):
 @single_instance_task(60*10)
 def send_outbound_sms_messages():
 	_send_outbound_sms_messages(is_bulk=False, limit_batch=300)
+
+@app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
+#@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def bulk_send_outbound_sms_messages():
+	_send_outbound_sms_messages(is_bulk=True, limit_batch=300)
+
 
 
 def _send_outbound_sms_messages_deprecated(is_bulk, limit_batch):
