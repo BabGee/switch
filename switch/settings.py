@@ -135,6 +135,7 @@ DATABASES = {
         'PASSWORD': default_dbpassword,
         'HOST': default_dbhost,                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': default_dbport,                      # Set to empty string for default.
+	'DISABLE_SERVER_SIDE_CURSORS': True,
     },
     'read': {
         'ENGINE': read_dbengine, 

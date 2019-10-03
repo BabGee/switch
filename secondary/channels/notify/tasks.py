@@ -1786,7 +1786,7 @@ def contact_subscription():
 		except Exception as e:
 			lgr.info('Error subscribing item: %s | %s' % (i,e))
 
-def _send_outbound_batch_deprecated(message_list):
+def _send_outbound_batch(message_list):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
@@ -1849,7 +1849,7 @@ def _send_outbound_batch_deprecated(message_list):
 	except Exception as e:
 		lgr.info("Error on Sending Outbound Batch: %s" % e)
 
-def _send_outbound_deprecated(message):
+def _send_outbound(message):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
@@ -1927,7 +1927,7 @@ def _send_outbound_deprecated(message):
 		lgr.info("Error on Sending Outbound: %s" % e)
 
 
-def _send_outbound(payload):
+def _send_outbound_list(payload):
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
@@ -1942,40 +1942,40 @@ def _send_outbound(payload):
 
 
 @app.task(ignore_result=True)
-def send_outbound_batch(payload):
-	_send_outbound(payload)
+def send_outbound_batch_list(payload):
+	_send_outbound_list(payload)
 
 @app.task(ignore_result=True)
-def send_outbound(payload):
-	_send_outbound(payload)
-
-
-@app.task(ignore_result=True)
-def bulk_send_outbound_batch(payload):
-	_send_outbound(payload)
-
-@app.task(ignore_result=True)
-def bulk_send_outbound(payload):
-	_send_outbound(payload)
-
+def send_outbound_list(payload):
+	_send_outbound_list(payload)
 
 
 @app.task(ignore_result=True)
-def send_outbound_batch_deprecated(message):
-	_send_outbound_batch_deprecated(message)
+def bulk_send_outbound_batch_list(payload):
+	_send_outbound_list(payload)
 
 @app.task(ignore_result=True)
-def send_outbound_deprecated(message):
-	_send_outbound_deprecated(message)
+def bulk_send_outbound_list(payload):
+	_send_outbound_list(payload)
+
+
+
+@app.task(ignore_result=True)
+def send_outbound_batch(message):
+	_send_outbound_batch(message)
+
+@app.task(ignore_result=True)
+def send_outbound(message):
+	_send_outbound(message)
 
 
 @app.task(ignore_result=True)
-def bulk_send_outbound_batch_deprecated(message):
-	_send_outbound_batch_deprecated(message)
+def bulk_send_outbound_batch(message):
+	_send_outbound_batch(message)
 
 @app.task(ignore_result=True)
-def bulk_send_outbound_deprecated(message):
-	_send_outbound_deprecated(message)
+def bulk_send_outbound(message):
+	_send_outbound(message)
 
 
 @app.task(ignore_result=True)
@@ -2005,7 +2005,7 @@ def send_outbound2(payload, node):
 	except Exception as e:
 		lgr.info("Error on Sending Outbound: %s" % e)
 
-def _send_outbound_sms_messages(is_bulk, limit_batch):
+def _send_outbound_sms_messages_list(is_bulk, limit_batch):
 	try:
 		#from celery.utils.log import get_task_logger
 		lgr = get_task_logger(__name__)
@@ -2060,21 +2060,21 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 						if not batch: break
 						payload['kmp_recipients'] = batch
 						lgr.info(payload)
-						if is_bulk: tasks.append(bulk_send_outbound_batch.s(payload))
-						else: tasks.append(send_outbound_batch.s(payload))
+						if is_bulk: tasks.append(bulk_send_outbound_batch_list.s(payload))
+						else: tasks.append(send_outbound_batch_list.s(payload))
 				elif len(group_df.shape)>1 :
 					lgr.info('Got Here (list of singles): %s' % kmp_recipients)
 					for d in kmp_recipients:
 						payload['kmp_recipients'] = [d]       
 						lgr.info(payload)
-						if is_bulk: tasks.append(bulk_send_outbound.s(payload))
-						else: tasks.append(send_outbound.s(payload))
+						if is_bulk: tasks.append(bulk_send_outbound_list.s(payload))
+						else: tasks.append(send_outbound_list.s(payload))
 				else:
 					lgr.info('Got Here (single): %s' % kmp_recipients)
 					payload['kmp_recipients'] = kmp_recipients
 					lgr.info(payload)
-					if is_bulk: tasks.append(bulk_send_outbound.s(payload))
-					else: tasks.append(send_outbound.s(payload))
+					if is_bulk: tasks.append(bulk_send_outbound_list.s(payload))
+					else: tasks.append(send_outbound_list.s(payload))
 
 			lgr.info('Got Here 10: %s' % tasks)
 
@@ -2089,19 +2089,19 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 #@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
-def send_outbound_sms_messages():
-	_send_outbound_sms_messages(is_bulk=False, limit_batch=300)
+def send_outbound_sms_messages_list():
+	_send_outbound_sms_messages_list(is_bulk=False, limit_batch=300)
 
 @app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
 #@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
-def bulk_send_outbound_sms_messages():
-	_send_outbound_sms_messages(is_bulk=True, limit_batch=300)
+def bulk_send_outbound_sms_messages_list():
+	_send_outbound_sms_messages_list(is_bulk=True, limit_batch=300)
 
 
 
-def _send_outbound_sms_messages_deprecated(is_bulk, limit_batch):
+def _send_outbound_sms_messages(is_bulk, limit_batch):
 	try:
 		#from celery.utils.log import get_task_logger
 		lgr = get_task_logger(__name__)
@@ -2145,17 +2145,17 @@ def _send_outbound_sms_messages_deprecated(is_bulk, limit_batch):
 						batch = list(islice(objs, start, start+batch_size))
 						start+=batch_size
 						if not batch: break
-						if is_bulk: tasks.append(bulk_send_outbound_batch_deprecated.s(batch))
-						else: tasks.append(send_outbound_batch_deprecated.s(batch))
+						if is_bulk: tasks.append(bulk_send_outbound_batch.s(batch))
+						else: tasks.append(send_outbound_batch.s(batch))
 				elif len(df.loc[(x),:].shape)>1 :
 					#lgr.info('Got Here (list of singles): %s' % x[0])
 					for d in ID: 
-						if is_bulk: tasks.append(bulk_send_outbound_deprecated.s(d))
-						else: tasks.append(send_outbound_deprecated.s(d))
+						if is_bulk: tasks.append(bulk_send_outbound.s(d))
+						else: tasks.append(send_outbound.s(d))
 				else:
 					#lgr.info('Got Here (single): %s' % x[0])
-					if is_bulk: tasks.append(bulk_send_outbound_deprecated.s(ID))
-					else: tasks.append(send_outbound_deprecated.s(ID))
+					if is_bulk: tasks.append(bulk_send_outbound.s(ID))
+					else: tasks.append(send_outbound.s(ID))
 
 			#lgr.info('Got Here 10: %s' % tasks)
 
@@ -2169,16 +2169,16 @@ def _send_outbound_sms_messages_deprecated(is_bulk, limit_batch):
 #@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
-def send_outbound_sms_messages_deprecated():
-	_send_outbound_sms_messages_deprecated(is_bulk=False, limit_batch=300)
+def send_outbound_sms_messages():
+	_send_outbound_sms_messages(is_bulk=False, limit_batch=300)
 
 
 @app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
 #@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
-def bulk_send_outbound_sms_messages_deprecated():
-	_send_outbound_sms_messages_deprecated(is_bulk=True, limit_batch=300)
+def bulk_send_outbound_sms_messages():
+	_send_outbound_sms_messages(is_bulk=True, limit_batch=300)
 
 
 @app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
