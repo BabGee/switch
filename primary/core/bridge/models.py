@@ -1,5 +1,6 @@
 from django.contrib.gis.db import models
 from django.contrib.gis.db.models import Manager as GeoManager
+from django.contrib.postgres.fields import JSONField
 
 from primary.core.upc.models import *
 import json
@@ -39,6 +40,27 @@ class PaymentMethod(models.Model):
 		return "\n".join([a.code for a in self.currency.all()])
 	def channel_list(self):
 		return "\n".join([a.name for a in self.channel.all()])
+
+class PaymentMethodProductStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __str__(self):
+		return u'%s' % (self.name)
+
+class PaymentMethodProduct(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45)
+	description = models.CharField(max_length=100)
+	payment_method= models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)
+	ext_product_id = models.CharField(max_length=250, null=True, blank=True)
+	details = JSONField(max_length=1920, null=True, blank=True)
+	status = models.ForeignKey(PaymentMethodStatus, on_delete=models.CASCADE)
+	def __str__(self):
+		return u'%s %s' % (self.name, self.payment_method)
+
 
 class Product(models.Model):
 	name = models.CharField(max_length=50, unique=True)	

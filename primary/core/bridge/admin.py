@@ -13,6 +13,16 @@ class PaymentMethodAdmin(admin.ModelAdmin):
 				'max_amount','icon','gateway_list','country_list','currency_list','channel_list',)
 admin.site.register(PaymentMethod, PaymentMethodAdmin)
 
+class PaymentMethodProductStatusAdmin(admin.ModelAdmin):
+		list_display = ('id','name','description')	
+admin.site.register(PaymentMethodProductStatus, PaymentMethodProductStatusAdmin)
+
+
+class PaymentMethodProductAdmin(admin.ModelAdmin):
+		list_display = ('id','name','description','payment_method','ext_product_id','details','status')	
+admin.site.register(PaymentMethodProduct, PaymentMethodProductAdmin)
+
+
 class ProductAdmin(admin.ModelAdmin):
 		list_display = ('id','name','description','date_modified','date_created')	
 admin.site.register(Product, ProductAdmin)

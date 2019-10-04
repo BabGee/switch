@@ -2602,6 +2602,19 @@ class System(Wrappers):
 			lgr.info("Error on Creating User Profile: %s" % e,exc_info=True)
 		return payload
 
+	def get_gateway_profile(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
+			payload['response'] = 'Got Gateway Profile'
+			payload['response_status'] = '00'
+			payload['session_gateway_profile_id'] = gateway_profile.id
+
+		except Exception as e:
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+			lgr.info("Error on getting session gateway Profile: %s" % e)
+		return payload
+
 	def get_profile(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
