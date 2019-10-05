@@ -2109,9 +2109,9 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 		orig_outbound = Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='SMS'),\
 					Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),contact__product__trading_box__close_time__gte=timezone.localtime().time())),\
 					~Q(recipient=None),~Q(recipient=''),\
-					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
-					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
-					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=24)),\
+					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
+					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=1),date_created__gte=timezone.now()-timezone.timedelta(hours=3))\
+					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=1),date_created__gte=timezone.now()-timezone.timedelta(hours=3)),\
 					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related()
 
 		outbound = orig_outbound[:limit_batch].values_list('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
