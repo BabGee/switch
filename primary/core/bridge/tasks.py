@@ -467,7 +467,7 @@ def background_service_call(service_name, gateway_profile_id, payload):
 		lgr.info('Error on BackgroundService Call: %s' % e)
 
 
-@app.task(ignore_result=True, time_limit=150, soft_time_limit=120)
+@app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
 def process_background_service_call(background):
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
