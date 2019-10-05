@@ -2923,6 +2923,7 @@ class System(Wrappers):
 			#Check if LOGIN or SIGN UP
 			authorized_gateway_profile = None
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			authorized_by_pin = False
 			if ('email_msisdn' in payload.keys() or 'username' in payload.keys() or ('email' in payload.keys() and self.validateEmail(payload['email']))) and ('password' in payload.keys() or payload.get('oauth_token_verified',False)):
 				lgr.info("Returning User")
 				#CHECK CREDENTIALS and 
@@ -2990,6 +2991,7 @@ class System(Wrappers):
 						session_gateway_profile.pin_retries = 0
 						session_gateway_profile.save()
 						authorized_gateway_profile = session_gateway_profile
+						authorized_by_pin = True
 
 					else:
 						if session_gateway_profile.pin_retries >= gateway_profile.gateway.max_pin_retries:
@@ -3015,6 +3017,8 @@ class System(Wrappers):
 						details['api_key'] = authorized_gateway_profile.user.profile.api_key
 						details['status'] = authorized_gateway_profile.status.name
 						details['access_level'] = authorized_gateway_profile.access_level.name
+				elif authorized_by_pin:
+					payload['trigger'] = 'active_password%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
 				else:
 					payload['trigger'] = 'expired_password%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
