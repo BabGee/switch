@@ -3021,9 +3021,9 @@ class System(Wrappers):
 				elif authorized_by_pin:
 					payload['trigger'] = 'pin_authentication%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
 
-                                        details['api_key'] = authorized_gateway_profile.user.profile.api_key
-                                        details['status'] = authorized_gateway_profile.status.name
-                                        details['access_level'] = authorized_gateway_profile.access_level.name
+					details['api_key'] = authorized_gateway_profile.user.profile.api_key
+					details['status'] = authorized_gateway_profile.status.name
+					details['access_level'] = authorized_gateway_profile.access_level.name
 
 				else:
 					payload['trigger'] = 'expired_password%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')

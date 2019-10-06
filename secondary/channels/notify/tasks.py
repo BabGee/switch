@@ -1484,6 +1484,22 @@ class Trade(System):
 	pass
 
 
+@app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
+#@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def get_delivery_status():
+	try:
+		df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 90}, "max_duration": {"seconds": 30}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
+		if len(df):
+			#df['recipient'] = df['recipient'].apply(lambda x: '+%s' % x.strip() if x.strip()[:1] != '+' else x)
+			for status in df['delivery_status'].unique():
+				status_df = df[df['delivery_status']==status]
+				Outbound.objects.filter(ext_outbound_id__in=status_df['outbound_id'].tolist(),recipient__in=status_df['recipient'].tolist()).update(state=OutBoundState.objects.get(name=status))
+	except Exception as e:
+		lgr.info('Error on Get Delivery Status')
+	
+
 @app.task(ignore_result=True)
 def send_contact_subscription(payload, node):
 	#from celery.utils.log import get_task_logger
