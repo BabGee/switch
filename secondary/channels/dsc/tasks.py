@@ -2152,7 +2152,7 @@ class System(Wrappers):
 					original_filename = filename.replace(extension, '')
 				activity_status = FileUploadActivityStatus.objects.get(name='CREATED')
 				channel = Channel.objects.get(id=payload['chid'])
-				activity = FileUploadActivity(name=original_filename, file_upload=upload[0], status=activity_status, \
+				activity = FileUploadActivity(name=original_filename[:45], file_upload=upload[0], status=activity_status, \
 								  gateway_profile=gateway_profile,
 								  details=self.transaction_payload(payload), channel=channel)
 				if 'description' in payload.keys():
