@@ -516,7 +516,8 @@ def process_background_service_call(background):
 		#Set for failed retries in every 6 hours within 24 hours
 		if payload['response_status'] != '00':
 			if i.service.retry:
-				try: servicecutoff = i.service.servicecutoff
+				#Update Service Cut-off to service from BG service
+				try: servicecutoff = i.service.servicecutoff #Not working
 				except ServiceCutOff.DoesNotExist: servicecutoff = None
 				if servicecutoff and servicecutoff.cut_off_command and i.current_command and i.current_command.level > servicecutoff.cut_off_command.level:
 					pass

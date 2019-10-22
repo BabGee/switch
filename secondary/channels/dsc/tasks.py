@@ -180,6 +180,9 @@ class Wrappers:
 
 		#lgr.info('Payload on report: %s' % payload)
 		try:
+			if 'session_gateway_profile_id' in payload.keys():
+				gateway_profile = GatewayProfile.objects.get(gateway=gateway_profile.gateway, id=payload['session_gateway_profile_id'])
+
 			model_class = apps.get_model(data.query.module_name, data.query.model_name)
 			# model_class = globals()[data.query.model_name]
 
