@@ -2529,7 +2529,7 @@ def process_push_request():
 					lgr.info("%s PN: %s" % (key,value))
 					#for k,v in value.items():
 					#	pu(k,v)
-					result = map(lambda kv: pu(kv[0],kv[1]), value.iteritems())
+					result = map(lambda kv: pu(kv[0],kv[1]), value.items())
 
 		lgr.info('End Push Request')
 	except Exception as e: lgr.info('Error on process push request: %s' % e)
