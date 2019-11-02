@@ -2029,7 +2029,9 @@ def _send_outbound_sms_messages_list(is_bulk, limit_batch):
 					Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),contact__product__trading_box__close_time__gte=timezone.localtime().time())),\
 					~Q(recipient=None),~Q(recipient=''),~Q(contact__product__notification__endpoint__url=None),~Q(contact__product__notification__endpoint__url=''),\
 					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=96)),\
-					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related()
+					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related('contact')
+
+
 
 		lgr.info('Orig Outbound: %s' % orig_outbound)
 
@@ -2128,7 +2130,8 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
 					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=1),date_created__gte=timezone.now()-timezone.timedelta(hours=3))\
 					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=1),date_created__gte=timezone.now()-timezone.timedelta(hours=3)),\
-					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related()
+					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related('contact')
+
 
 		outbound = orig_outbound[:limit_batch].values_list('id','recipient','state__name','message','contact__product__id','contact__product__notification__endpoint__batch')
 		if len(outbound):
@@ -2209,7 +2212,7 @@ def send_outbound_email_messages():
 				|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 				|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=2),date_created__gte=timezone.now()-timezone.timedelta(hours=6)),\
 				Q(contact__status__name='ACTIVE')).\
-				select_related('contact').select_related()[:100]
+				select_related('contact')[:100]
 
 	if len(outbound):
 		for i in outbound:
