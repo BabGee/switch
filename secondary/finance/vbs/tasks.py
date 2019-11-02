@@ -511,7 +511,7 @@ class System(Wrappers):
 			session_account = Account.objects.get(id=payload['session_account_id'])
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			session_account_manager = AccountManager.objects.select_for_update(nowait=True).filter(dest_account = session_account,dest_account__account_type=session_account.account_type).order_by('-date_created')
+			session_account_manager = AccountManager.objects.select_for_update().filter(dest_account = session_account,dest_account__account_type=session_account.account_type).order_by('-id')
 
 
 			amount = Decimal(payload['amount']) if 'amount' in payload.keys() else Decimal(0)
@@ -648,8 +648,8 @@ class System(Wrappers):
 				payload['response'] = 'Account Debited'
 			else:
 				payload['response_status'] = '61' #Exceeds Withdrawal Limit
-		except DatabaseError as e:
-			transaction.set_rollback(True)
+			#except DatabaseError as e:
+			#transaction.set_rollback(True)
 
 
 		except Exception as e:
@@ -665,7 +665,7 @@ class System(Wrappers):
 
 			session_account = Account.objects.get(id=payload['session_account_id'])
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			session_account_manager = AccountManager.objects.select_for_update(nowait=True).filter(dest_account = session_account, dest_account__account_type=session_account.account_type).order_by('-date_created')
+			session_account_manager = AccountManager.objects.select_for_update().filter(dest_account = session_account, dest_account__account_type=session_account.account_type).order_by('-id')
 
 			amount = Decimal(payload['amount']) if 'amount' in payload.keys() else Decimal(0)
 			charge = Decimal(0)
@@ -763,8 +763,8 @@ class System(Wrappers):
 			else:
 				payload['response_status'] = '98' #Exceeds cash limit
 				payload['response'] = 'Max Deposit limit reached'
-		except DatabaseError as e:
-			transaction.set_rollback(True)
+			#except DatabaseError as e:
+			#transaction.set_rollback(True)
 
 		except Exception as e:
 			payload['response_status'] = '96'

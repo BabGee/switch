@@ -554,7 +554,7 @@ class System(Wrappers):
 
 
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = FloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = FloatManager.objects.select_for_update().filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-id')
 
 				if 'institution_id' in payload.keys():
 					float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
@@ -627,8 +627,8 @@ class System(Wrappers):
 				payload['response'] = 'No float amount to Credit'
 				payload['response_status'] = '00'
 
-		except DatabaseError as e:
-			transaction.set_rollback(True)
+			#except DatabaseError as e:
+			#transaction.set_rollback(True)
 
 		except Exception as e:
 			payload['response_status'] = '96'
@@ -667,7 +667,7 @@ class System(Wrappers):
 
 
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = AgentFloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = AgentFloatManager.objects.select_for_update().filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-id')
 
 				if 'agent_id' in payload.keys():
 					float_balance = float_balance.filter(Q(agent__id=payload['agent_id'])|Q(agent=None))
@@ -740,8 +740,8 @@ class System(Wrappers):
 				payload['response'] = 'No float amount to Credit'
 				payload['response_status'] = '00'
 
-		except DatabaseError as e:
-			transaction.set_rollback(True)
+			#except DatabaseError as e:
+			#transaction.set_rollback(True)
 
 		except Exception as e:
 			payload['response_status'] = '96'
@@ -781,7 +781,7 @@ class System(Wrappers):
 
 
 			if len(float_type) and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = FloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = FloatManager.objects.select_for_update().filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-id')
 
 
 				if 'institution_id' in payload.keys():
@@ -857,8 +857,8 @@ class System(Wrappers):
 			elif Decimal(payload['float_amount']) <= 0:
 				payload['response'] = 'No float amount to reverse debit'
 				payload['response_status'] = '00'
-		except DatabaseError as e:
-			transaction.set_rollback(True)
+			#except DatabaseError as e:
+			#transaction.set_rollback(True)
 
 		except Exception as e:
 			payload['response_status'] = '96'
@@ -898,11 +898,18 @@ class System(Wrappers):
 			#lgr.info('Float Type: %s' % float_type)
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
 				#float_balance = FloatManager.objects.select_for_update(of=('self',),nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				'''
 				float_balance = FloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
 				if 'institution_id' in payload.keys():
 					float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
 				else:
 					float_balance = float_balance.filter(institution=None)
+				'''
+
+				if 'institution_id' in payload.keys():
+					float_balance = FloatManager.objects.select_for_update().filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])|Q(institution=None)).order_by('-id')
+				else:
+					float_balance = FloatManager.objects.select_for_update().filter(float_type=float_type[0],gateway=gateway_profile.gateway, institution=None).order_by('-id')
 
 				#lgr.info('Float Balance: %s' % float_balance)
 				#check float exists
@@ -978,8 +985,8 @@ class System(Wrappers):
 				lgr.info("No Float")
 				payload['response_status'] = '51'
 
-		except DatabaseError as e:
-			transaction.set_rollback(True)
+			##except DatabaseError as e:
+			##transaction.set_rollback(True)
 		except Exception as e:
 			payload['response'] = 'Error %s' % e
 			payload['response_status'] = '96'
@@ -1019,7 +1026,7 @@ class System(Wrappers):
 
 
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = AgentFloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = AgentFloatManager.objects.select_for_update().filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-id')
 
 
 				if 'agent_id' in payload.keys():
@@ -1095,8 +1102,8 @@ class System(Wrappers):
 			elif Decimal(payload['float_amount']) <= 0:
 				payload['response'] = 'No float amount to reverse debit'
 				payload['response_status'] = '00'
-		except DatabaseError as e:
-			transaction.set_rollback(True)
+			#except DatabaseError as e:
+			#transaction.set_rollback(True)
 
 		except Exception as e:
 			payload['response_status'] = '96'
@@ -1135,7 +1142,7 @@ class System(Wrappers):
 				float_type = float_type.filter(product_type=None)
 			lgr.info('Float Type: %s' % float_type)
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = AgentFloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = AgentFloatManager.objects.select_for_update().filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-id')
 
 				if 'agent_id' in payload.keys():
 					float_balance = float_balance.filter(Q(agent__id=payload['agent_id'])|Q(agent=None))
@@ -1214,8 +1221,8 @@ class System(Wrappers):
 				lgr.info("No Float")
 				payload['response_status'] = '51'
 
-		except DatabaseError as e:
-			transaction.set_rollback(True)
+			#except DatabaseError as e:
+			#transaction.set_rollback(True)
 		except Exception as e:
 			payload['response'] = 'Error %s' % e
 			payload['response_status'] = '96'
@@ -1230,7 +1237,7 @@ class System(Wrappers):
 			def check(float_type, payload):
 				#Wherever tills match, currencies match
 				#Only Institutions can use float. A profile with institution rights can disburse float hence institution=gateway_profile.institution
-				float_balance = FloatManager.objects.filter(float_type=float_type,gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = FloatManager.objects.filter(float_type=float_type,gateway=gateway_profile.gateway).order_by('-id')
 
 				if 'institution_id' in payload.keys():
 					institution = Institution.objects.get(id=payload['institution_id'])
@@ -1355,7 +1362,7 @@ class System(Wrappers):
 			def check(float_type, payload):
 				#Wherever tills match, currencies match
 				#Only Institutions can use float. A profile with institution rights can disburse float hence institution=gateway_profile.institution
-				float_balance = FloatManager.objects.filter(float_type=float_type,gateway=gateway_profile.gateway).order_by('-date_created')
+				float_balance = FloatManager.objects.filter(float_type=float_type,gateway=gateway_profile.gateway).order_by('-id')
 
 				if 'institution_id' in payload.keys():
 					institution = Institution.objects.get(id=payload['institution_id'])

@@ -2207,7 +2207,7 @@ def send_outbound_email_messages():
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	#Check for created outbounds or processing and gte(last try) 4 hours ago within the last 3 days| Check for failed transactions within the last 10 minutes
-	outbound = Outbound.objects.select_for_update().filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='EMAIL'),\
+	outbound = Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='EMAIL'),\
 				Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 				|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=6),date_created__gte=timezone.now()-timezone.timedelta(hours=96))\
 				|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=2),date_created__gte=timezone.now()-timezone.timedelta(hours=6)),\
