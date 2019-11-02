@@ -945,6 +945,7 @@ class System(Wrappers):
 
 						#Last Balance Check
 						float_balance.filter(id=float_balance[:1][0].id).update(updated=True)
+						#float_balance.filter(updated=False).update(updated=True)
 
 						float_record = FloatManager(credit=False,\
 							float_amount=Decimal(payload['float_amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),

@@ -97,7 +97,7 @@ class OutboundAdmin(admin.ModelAdmin):
 			'template','scheduled_send','state','sends',\
 			'ext_outbound_id','inst_notified','inst_num_tries','attachment_list',\
 			'recipient','response','pn','pn_ack')
-		list_filter = ('contact__product','state','contact__subscribed','contact__status',)
+		list_filter = ('contact__product','state','contact__subscribed','contact__status','contact__product__notification__code__mno')
 		search_fields = ('id','recipient','contact__gateway_profile__msisdn__phone_number','contact__gateway_profile__user__email','contact__gateway_profile__user__username','message',)
 
 		def suit_row_attributes(self, obj, request):
