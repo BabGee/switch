@@ -865,6 +865,98 @@ class System(Wrappers):
 			lgr.info("Error on Crediting Float: %s" % e)
 		return payload
 
+	def check_float(self, payload, node_info):
+		#service to user verify_institution to avoid institutions using other institutions float
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			float_type = FloatType.objects.filter(Q(service__name=payload['SERVICE'])|Q(service=None),\
+						Q(gateway=gateway_profile.gateway)|Q(gateway=None))
+
+			if 'payment_method' in payload.keys():
+				float_type = float_type.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
+
+			#lgr.info('Float Type: %s' % float_type)
+			if 'institution_id' in payload.keys():
+				float_type = float_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+			else:
+				float_type = float_type.filter(institution=None)
+
+			#lgr.info('Float Type: %s' % float_type)
+			#lgr.info('Payload: %s' % payload)
+			if 'product_item_id' in payload.keys():
+				product_item = ProductItem.objects.get(id=payload['product_item_id'])
+				float_type = float_type.filter(product_type=product_item.product_type)
+			elif 'float_product_type_id' in payload.keys():
+				float_type = float_type.filter(product_type__id=payload['float_product_type_id'])
+			elif 'product_type_id' in payload.keys():
+				float_type = float_type.filter(product_type__id=payload['product_type_id'])
+			elif 'product_type' in payload.keys():
+				float_type = float_type.filter(product_type__name=payload['product_type'])
+			else:
+				float_type = float_type.filter(product_type=None)
+			#lgr.info('Float Type: %s' % float_type)
+			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
+				if 'institution_id' in payload.keys():
+					float_balance = FloatManager.objects.filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])|Q(institution=None)).order_by('-id')
+				else:
+					float_balance = FloatManager.objects.filter(float_type=float_type[0],gateway=gateway_profile.gateway, institution=None).order_by('-id')
+
+				#lgr.info('Float Balance: %s' % float_balance)
+				#check float exists
+				if float_balance.exists() and Decimal(float_balance[0].balance_bf) >= Decimal(payload['float_amount']):
+					#lgr.info('Float Exists')
+					charge = Decimal(0)
+					charge_list = FloatCharge.objects.filter(Q(float_type=float_type[0], min_amount__lte=Decimal(payload['float_amount']),\
+							max_amount__gt=Decimal(payload['float_amount']),credit=False),\
+							Q(Q(gateway=gateway_profile.gateway)|Q(gateway=None)))
+
+					if 'product_item_id' in payload.keys():
+						product_item = ProductItem.objects.get(id=payload['product_item_id'])
+						charge_list = charge_list.filter(product_type=product_item.product_type)
+					elif 'float_product_type_id' in payload.keys():
+						charge_list = charge_list.filter(product_type__id=payload['float_product_type_id'])
+
+					elif 'product_type_id' in payload.keys():
+						charge_list = charge_list.filter(product_type__id=payload['product_type_id'])
+					elif 'product_type' in payload.keys():
+						charge_list = charge_list.filter(product_type__name=payload['product_type'])
+					else:
+						charge_list = charge_list.filter(product_type=None)
+	
+					if 'institution_id' in payload.keys():
+						charge_list = charge_list.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+					else:
+						charge_list = charge_list.filter(institution=None)
+
+
+					for c in charge_list:
+						if c.is_percentage:
+							charge = charge + ((c.charge_value/100)*Decimal(payload['float_amount']))
+						else:
+							charge = charge+c.charge_value		
+
+					balance_bf = Decimal(float_balance[0].balance_bf) - (Decimal(payload['float_amount']) + charge)
+					if balance_bf >= Decimal(0):
+						payload['response'] = 'Float Balance: %s' % (balance_bf)
+						payload['response_status'] = '00'
+					else:
+						lgr.info("Not enough Float")
+						payload['response_status'] = '51'
+				else:
+					lgr.info("No Float")
+					payload['response_status'] = '51'
+			elif Decimal(payload['float_amount']) <= Decimal(0):
+				payload['response'] = 'No float amount to debit'
+				payload['response_status'] = '00'
+			else:
+				lgr.info("No Float")
+				payload['response_status'] = '51'
+		except Exception as e:
+			payload['response'] = 'Error %s' % e
+			payload['response_status'] = '96'
+			lgr.info("Error on Checking Float: %s" % e)
+		return payload
+
 	@transaction.atomic
 	def debit_float(self, payload, node_info):
 		#service to user verify_institution to avoid institutions using other institutions float
