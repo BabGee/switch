@@ -60,7 +60,7 @@ class Authorize:
 			if 'sec_hash' not in key and 'credentials' not in key:
 				try:value=json.loads(value, parse_float=Decimal);value=str(value) if isinstance(value,Decimal) else value #(BUG!!) JSON loads converts decimal places
 				except:pass
-				if isinstance(value, dict) is False: new_payload[key]=value
+				if isinstance(value, dict) is False and isinstance(value, list) is False: new_payload[key]=value
 		p = []
 		for n in sorted(new_payload.keys()):
 			k = '%s=%s' % (n,new_payload[n])

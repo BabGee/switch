@@ -693,6 +693,27 @@ class System(Wrappers):
 		payload['notification_delivery_channel'] = 'SMS'
 		return self.get_notification(payload, node_info)
 
+	def get_batch_notification(self, payload, node_info):
+
+		try:
+			lgr.info('Payload: %s' % payload)
+			recipients = json.loads(payload['recipients'])
+
+			lgr.info('Recipients: %s' % recipients)
+
+			for i in recipients:
+				params = payload.copy()
+				params['msisdn'] = i
+				params = self.get_notification(params, node_info)
+				lgr.info('Params : %s' % params)
+
+			payload['response'] = 'Notification Product Not found'
+			payload["response_status"] = "00"
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Get Batch Notification: %s" % e,exc_info=True)
+		return payload
+
 
 	def send_notification(self, payload, node_info):
 		try:
