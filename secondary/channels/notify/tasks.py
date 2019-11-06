@@ -640,7 +640,7 @@ class System(Wrappers):
 					else:
 						payload['message'] = ''
 				payload['notification_product_id'] = notification_product[0].id
-				lgr.info('Payload: %s' % payload)
+				#lgr.info('Payload: %s' % payload)
 				if 'product_item_id' in payload.keys(): del payload['product_item_id'] #Avoid deduction of float
 
 				if notification_product[0].notification.code.institution:
@@ -696,19 +696,70 @@ class System(Wrappers):
 	def get_batch_notification(self, payload, node_info):
 
 		try:
-			lgr.info('Payload: %s' % payload)
-			recipients = json.loads(payload['recipients'])
 
-			lgr.info('Recipients: %s' % recipients)
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			#lgr.info('Payload: %s' % payload)
+			recipient_list = json.loads(payload['recipients'])
 
-			for i in recipients:
-				params = payload.copy()
-				params['msisdn'] = i
-				params = self.get_notification(params, node_info)
-				lgr.info('Params : %s' % params)
+			recipient=np.asarray(recipient_list)
+			recipient = np.unique(recipient)
+			recipient_count = recipient.size
+			payload['recipient_count'] = recipient_count
 
-			payload['response'] = 'Notification Product Not found'
-			payload["response_status"] = "00"
+			#Message Len
+			message = payload['message'].strip()
+			message = unescape(message)
+			message = smart_text(message)
+			message = escape(message)
+			chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters
+			messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
+			message_len = len(messages)
+
+
+			if len(recipient) and len(recipient)<=100:
+				#lgr.info('Recipients: %s' % recipient)
+
+				payload["response_status"] = "00"
+				payload['response'] = 'Batch Response Captured'
+				notifications = dict()
+				for i in recipient:
+					params = payload.copy()
+					params['msisdn'] = i
+					params = self.get_notification(params, node_info)
+					#lgr.info('Params : %s' % params)
+					if params['response_status'] != '00':
+						payload['response_status'] = params['response_status']
+						payload['response'] = '%s %s' % (i,params['response'])
+						break
+					else:
+						product = NotificationProduct.objects.get(id=params['notification_product_id'])
+						contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
+						status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
+						if not len(contact):
+							new_contact = Contact(status=status,product=product,subscription_details=json.dumps({}),\
+									subscribed=True, gateway_profile=gateway_profile)
+							new_contact.save()
+						else:
+							new_contact = contact[0]
+							new_contact.status = status
+							new_contact.subscribed=True
+							new_contact.save()
+
+						if params['notification_product_id'] in notifications.keys():
+							notifications[params['notification_product_id']]['recipient'].append(i)
+						else:
+							notifications[params['notification_product_id']] = {'float_amount': recipient_count*message_len*product.unit_credit_charge, 'float_product_type_id': params['float_product_type_id'],'recipient': [i], 'contact_id': new_contact.id }
+
+
+				payload['recipient_count'] = recipient_count
+				payload['message_len'] = message_len
+				payload['response'] = 'Contact Group of %d Recipient(s) to receive %s message(s)' % (recipient_count, message_len)
+
+				payload['notifications'] = notifications
+			else:	
+				payload["response_status"] = "40"
+				payload['response'] = 'Check Recipients'
+
 		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Get Batch Notification: %s" % e,exc_info=True)
@@ -872,6 +923,36 @@ class System(Wrappers):
 			payload['response_status'] = '96'
 			lgr.info("Error on Send Notification: %s" % e)
 		return payload
+
+	def send_batch_notification(self, payload, node_info):
+
+		try:
+			#lgr.info('Payload: %s' % payload)
+			notifications = payload['notifications']
+			state = OutBoundState.objects.get(name='CREATED')
+
+			try:date_obj = datetime.strptime(payload["scheduled_send"], '%d/%m/%Y %I:%M %p')
+			except: date_obj = None
+			if date_obj is not None:		
+				profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
+				scheduled_send = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
+			else:
+				scheduled_send = timezone.now()
+
+			for key, value in notifications.items():
+				contact = Contact.objects.get(id=value['contact_id'])
+				objs = [Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r, sends=0) for r in value['recipient']]
+				outbound = Outbound.objects.bulk_create(objs)
+
+
+			payload["response_status"] = "00"
+			payload['response'] = 'Batch Notification Sent'
+
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Send Batch Notification: %s" % e,exc_info=True)
+		return payload
+
 
 
 	def process_delivery_status(self, payload, node_info):
