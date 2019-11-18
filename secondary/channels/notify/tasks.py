@@ -2230,8 +2230,8 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 					Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),contact__product__trading_box__close_time__gte=timezone.localtime().time())),\
 					~Q(recipient=None),~Q(recipient=''),\
 					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
-					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(hours=1),date_created__gte=timezone.now()-timezone.timedelta(hours=3))\
-					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(hours=1),date_created__gte=timezone.now()-timezone.timedelta(hours=3)),\
+					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60))\
+					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60)),\
 					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related('contact')
 
 
