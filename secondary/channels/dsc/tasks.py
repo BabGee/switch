@@ -234,7 +234,9 @@ class Wrappers:
 			lgr.info('\n\n\n')
 			lgr.info('Model Name: %s' % data.query.name)
 
+			report_list = model_class.objects.using('read').all()
 
+			#lgr.info('Report List Count: %s' % len(report_list))
 			#Gateway Filter is a default Filter
 			if gateway_filters not in ['', None]:
 				for f in gateway_filters.split("|"):
@@ -242,11 +244,9 @@ class Wrappers:
 				if len(gateway_filter_data):
 					gateway_query = reduce(operator.and_, (Q(k) for k in gateway_filter_data.items()))
 					#lgr.info('Gateway Query: %s' % gateway_query)
-					report_list = model_class.objects.using('read').filter(gateway_query)
-			else:
-				report_list = model_class.objects.using('read').all()
+					report_list = report_list.filter(gateway_query)
 
-			lgr.info('Report List Count: %s' % len(report_list))
+			#lgr.info('Report List Count: %s' % len(report_list))
 			if or_filters not in [None,'']:
 				for f in or_filters.split("|"):
 					of_list = f.split('%')
@@ -276,7 +276,7 @@ class Wrappers:
 				#lgr.info('Or Query: %s' % or_query)
 				report_list = report_list.filter(or_query)
 
-			lgr.info('Or Filters Report List Count: %s' % len(report_list))
+			#lgr.info('Or Filters Report List Count: %s' % len(report_list))
 			if and_filters not in [None,'']:
 				for f in and_filters.split("|"):
 					af_list = f.split('%')
@@ -307,7 +307,7 @@ class Wrappers:
 					#lgr.info('AndQuery: %s' % and_query)
 					report_list = report_list.filter(and_query)
 
-			lgr.info('And Filters Report List Count: %s' % len(report_list))
+			#lgr.info('And Filters Report List Count: %s' % len(report_list))
 			if not_filters not in ['',None]:
 				for f in not_filters.split("|"):
 					nf_list = f.split('%')
@@ -341,7 +341,7 @@ class Wrappers:
 					#lgr.info('Report List: %s' % len(report_list))
 
 
-			lgr.info('Not Filters Report List Count: %s' % len(report_list))
+			#lgr.info('Not Filters Report List Count: %s' % len(report_list))
 			if duration_days_filters not in ['',None]:
 				#lgr.info('Date Filters')
 				for i in duration_days_filters.split("|"):
@@ -358,7 +358,7 @@ class Wrappers:
 					report_list = report_list.filter(query)
 
 
-			lgr.info('Duration Days Filters Report List Count: %s' % len(report_list))
+			#lgr.info('Duration Days Filters Report List Count: %s' % len(report_list))
 			if duration_hours_filters not in ['',None]:
 				for i in duration_hours_filters.split("|"):
 					try:k,v = i.split('%')
@@ -374,7 +374,7 @@ class Wrappers:
 
 				#q_list = [Q(**{f:q}) for f in field_lookups]
 
-			lgr.info('Duration Hours Filters Report List Count: %s' % len(report_list))
+			#lgr.info('Duration Hours Filters Report List Count: %s' % len(report_list))
 			if date_filters not in ['',None]:
 				#lgr.info('Date Filters')
 				for i in date_filters.split("|"):
@@ -414,7 +414,7 @@ class Wrappers:
 						report_list = report_list.filter(query)
 
 
-			lgr.info('Date Filters Report List Count: %s' % len(report_list))
+			#lgr.info('Date Filters Report List Count: %s' % len(report_list))
 			if token_filters not in ['',None]:
 				for f in token_filters.split("|"):
 						if 'csrfmiddlewaretoken' in payload.keys() and payload['csrfmiddlewaretoken'] not in ['', None]:
@@ -430,7 +430,7 @@ class Wrappers:
 
 					report_list = report_list.filter(query)
 
-			lgr.info('Token Filters Report List Count: %s' % len(report_list))
+			#lgr.info('Token Filters Report List Count: %s' % len(report_list))
 			if list_filters not in [None,'']:
 				for f in list_filters.split("|"):
 					if getattr(model_class, f.split('__')[0], False):
@@ -441,7 +441,7 @@ class Wrappers:
 					and_query = reduce(operator.and_, (Q(k) for k in list_filter_data.items()))
 					report_list = report_list.filter(and_query)
 
-			lgr.info('Institution Filters Report List Count: %s' % len(report_list))
+			#lgr.info('Institution Filters Report List Count: %s' % len(report_list))
 			if institution_filters not in ['',None]:
 				for f in institution_filters.split("|"):
 					#if f not in ['',None]: institution_none_filter[f] = None
@@ -462,7 +462,7 @@ class Wrappers:
 					report_list = report_list.filter(institution_query)
 
 
-			lgr.info('Institution Filters Report List Count: %s' % len(report_list))
+			#lgr.info('Institution Filters Report List Count: %s' % len(report_list))
 			if institution_not_filters not in ['',None]:
 				for f in institution_not_filters.split("|"):
 					#if f not in ['',None]: institution_none_filter[f] = None
@@ -482,7 +482,7 @@ class Wrappers:
 					#lgr.info('Institution Query: %s' % institution_query)
 					report_list = report_list.filter(institution_query)
 
-			lgr.info('Gateway Profile Filters Report List Count: %s' % len(report_list))
+			#lgr.info('Gateway Profile Filters Report List Count: %s' % len(report_list))
 			if gateway_profile_filters not in ['', None]:
 				for f in gateway_profile_filters.split("|"):
 					#MQTT doesn't filter institution for push notifications
@@ -495,7 +495,7 @@ class Wrappers:
 					gateway_profile_query = reduce(operator.and_, (Q(k) for k in gateway_profile_filter_data.items()))
 					report_list = report_list.filter(gateway_profile_query)
 
-			lgr.info('Profile Filters Report List Count: %s' % len(report_list))
+			#lgr.info('Profile Filters Report List Count: %s' % len(report_list))
 			if profile_filters not in ['', None]:
 				for f in profile_filters.split("|"):
 					#MQTT doesn't filter institution for push notifications
@@ -508,7 +508,7 @@ class Wrappers:
 					profile_query = reduce(operator.and_, (Q(k) for k in profile_filter_data.items()))
 					report_list = report_list.filter(profile_query)
 
-			lgr.info('Role Filters Report List Count: %s' % len(report_list))
+			#lgr.info('Role Filters Report List Count: %s' % len(report_list))
 			if role_filters not in ['', None]:
 				for f in role_filters.split("|"):
 					#MQTT doesn't filter institution for push notifications
@@ -1161,11 +1161,11 @@ class Wrappers:
 
 			##########################################################################
 
-			lgr.info('Report List 1: %s' % len(report_list))
+			#lgr.info('Report List 1: %s' % len(report_list))
 
 			ct = len(report_list)
 			#ct = report_list.count()
-			lgr.info('Count: %s' % ct)
+			#lgr.info('Count: %s' % ct)
 			#if 'max_id' in payload.keys() and payload['max_id'] > 0:
 			#	report_list = report_list.filter(id__lt=payload['max_id'])
 			#if 'min_id' in payload.keys() and payload['min_id'] > 0:
@@ -1197,7 +1197,7 @@ class Wrappers:
 			# max_id = trans.get('max_id')
 			# min_id = trans.get('min_id')
 
-			lgr.info('Report List 2: %s' % len(report_list))
+			#lgr.info('Report List 2: %s' % len(report_list))
 
 
 			#Gateway Filter results are part of original report list

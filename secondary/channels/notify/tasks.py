@@ -1293,7 +1293,7 @@ class System(Wrappers):
 		try:
 			lgr.info('Log Outbound Message: %s' % payload)
 
-			date_string = payload['scheduled _date']+' '+payload['scheduled_time']
+			date_string = payload['scheduled_date']+' '+payload['scheduled_time']
 			date_obj = datetime.strptime(date_string, '%d/%m/%Y %I:%M %p')
 		
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
@@ -1392,7 +1392,7 @@ class System(Wrappers):
 			lgr.info('Log Outbound Message: %s' % payload)
 
 			try:
-				date_string = payload['scheduled _date']+' '+payload['scheduled_time']
+				date_string = payload['scheduled_date']+' '+payload['scheduled_time']
 				date_obj = datetime.strptime(date_string, '%d/%m/%Y %I:%M %p')
 		
 				gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
