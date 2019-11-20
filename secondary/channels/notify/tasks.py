@@ -665,7 +665,7 @@ class System(Wrappers):
 					float_amount = float_amount*len(messages)
 
 				#Finally
-
+				payload['alias'] = notification_product[0].notification.code.alias
 				payload['float_product_type_id'] = notification_product[0].notification.product_type.id
 				payload['float_amount'] = float_amount
 				payload['response'] = "Notification Captured : %s" % notification_product[0].id 
