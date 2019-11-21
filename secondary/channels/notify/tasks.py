@@ -939,9 +939,15 @@ class System(Wrappers):
 			else:
 				scheduled_send = timezone.now()
 
+			ext_outbound_id = None
+			if "ext_outbound_id" in payload.keys():
+				ext_outbound_id = payload['ext_outbound_id']
+			elif 'bridge__transaction_id' in payload.keys():
+				ext_outbound_id = payload['bridge__transaction_id']
+
 			for key, value in notifications.items():
 				contact = Contact.objects.get(id=value['contact_id'])
-				objs = [Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r, sends=0) for r in value['recipient']]
+				objs = [Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r, sends=0, ext_outbound_id=ext_outbound_id) for r in value['recipient']]
 				outbound = Outbound.objects.bulk_create(objs)
 
 
