@@ -234,8 +234,8 @@ class Wrappers:
 			lgr.info('\n\n\n')
 			lgr.info('Model Name: %s' % data.query.name)
 
-			report_list = model_class.objects.using('read').all()
 
+			lgr.info('Model Name: %s' % data.query.name)
 			#lgr.info('Report List Count: %s' % len(report_list))
 			#Gateway Filter is a default Filter
 			if gateway_filters not in ['', None]:
@@ -244,7 +244,9 @@ class Wrappers:
 				if len(gateway_filter_data):
 					gateway_query = reduce(operator.and_, (Q(k) for k in gateway_filter_data.items()))
 					#lgr.info('Gateway Query: %s' % gateway_query)
-					report_list = report_list.filter(gateway_query)
+					report_list = model_class.objects.using('read').filter(gateway_query)
+				else: report_list = model_class.objects.using('read').all()
+			else: report_list = model_class.objects.using('read').all()
 
 			#lgr.info('Report List Count: %s' % len(report_list))
 			if or_filters not in [None,'']:

@@ -473,6 +473,9 @@ class System(Wrappers):
 	def init_notification(self, payload, node_info):
 		try:
 
+			if 'alias' in payload.keys():
+				del payload['alias'] #
+
 			if 'notification_template_id' in payload.keys():
 				del payload['notification_template_id'] #
 
