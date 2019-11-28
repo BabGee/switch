@@ -228,11 +228,11 @@ class Wrappers:
 		all_gateway_profile = GatewayProfile.objects.using('read').filter(gateway=gateway_profile.gateway)
 		if 'session_gateway_profile_id' in payload.keys():
 			session_gateway_profile = all_gateway_profile.filter(id=payload['session_gateway_profile_id'])
-		elif ('email' in payload.keys() and self.validateEmail(payload["email"]) ) and \
+		elif ('email' in payload.keys() and self.validateEmail(payload["email"].strip()) ) and \
 		('msisdn' in payload.keys() and self.get_msisdn(payload)):
 			msisdn_session_gateway_profile = all_gateway_profile.filter(Q(msisdn__phone_number=self.get_msisdn(payload)),\
 								~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
-			email_session_gateway_profile = all_gateway_profile.filter(Q(user__email__iexact=payload["email"]),\
+			email_session_gateway_profile = all_gateway_profile.filter(Q(user__email__iexact=payload["email"].strip()),\
 								~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 
 			if len(msisdn_session_gateway_profile) and len(email_session_gateway_profile):
@@ -250,8 +250,8 @@ class Wrappers:
 			else:
 				session_gateway_profile = msisdn_session_gateway_profile
 
-		elif 'email' in payload.keys() and self.validateEmail(payload["email"]):
-			session_gateway_profile = all_gateway_profile.filter(Q(user__email__iexact=payload["email"]),\
+		elif 'email' in payload.keys() and self.validateEmail(payload["email"].strip()):
+			session_gateway_profile = all_gateway_profile.filter(Q(user__email__iexact=payload["email"].strip()),\
 					 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 		elif 'msisdn' in payload.keys() and self.get_msisdn(payload):
 			session_gateway_profile = all_gateway_profile.filter(Q(msisdn__phone_number=self.get_msisdn(payload)),\
