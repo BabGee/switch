@@ -313,9 +313,10 @@ class RemittanceManager(models.Model):
 class FloatAlertType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	min_amount = models.IntegerField()
-	max_amount = models.IntegerField()
+	alert_value = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	is_percentage = models.BooleanField(default=False)
 	service = models.ForeignKey(Service, on_delete=models.CASCADE)
 	float_type = models.ForeignKey(FloatType, on_delete=models.CASCADE)
 	credit = models.BooleanField(default=False) #Dr | Cr (add charge if Dr, sub charge if Cr)
