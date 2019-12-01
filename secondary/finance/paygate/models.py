@@ -310,7 +310,7 @@ class RemittanceManager(models.Model):
 		return u'%s %s' % (self.remittance_product, self.gateway_profile)
 
 
-class FloatAlertType(models.Model):
+class FloatAlert(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
@@ -338,7 +338,7 @@ class FloatAlertActivityStatus(models.Model):
 class FloatAlertActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	float_alert_type = models.ForeignKey(FloatAlertType, on_delete=models.CASCADE)
+	float_alert = models.ForeignKey(FloatAlert, on_delete=models.CASCADE)
 	status = models.ForeignKey(FloatAlertActivityStatus, on_delete=models.CASCADE)
 	request = models.CharField(max_length=3840)
 	amount = models.DecimalField(max_digits=19, decimal_places=2, blank=True, null=True)

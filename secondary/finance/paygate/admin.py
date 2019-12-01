@@ -88,10 +88,10 @@ class OutgoingAdmin(admin.ModelAdmin):
 	search_fields = ('reference','request','ext_outbound_id','message',)
 admin.site.register(Outgoing, OutgoingAdmin)
 
-class FloatAlertTypeAdmin(admin.ModelAdmin):
+class FloatAlertAdmin(admin.ModelAdmin):
 		list_display = ('name','description','alert_below_value','alert_above_value','is_percentage','service','float_type','credit',\
 				'institution','gateway',)
-admin.site.register(FloatAlertType, FloatAlertTypeAdmin)
+admin.site.register(FloatAlert, FloatAlertAdmin)
 
 class FloatAlertActivityAdmin(admin.ModelAdmin):
 		list_display = ('float_alert_type','status','request','amount','currency','scheduled_send','response_status',\
