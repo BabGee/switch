@@ -333,14 +333,19 @@ class FloatAlertActivityStatus(models.Model):
 	def __str__(self):
 		return u'%s' % (self.name)
 
-
 class FloatAlertActivity(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	float_manager = models.ForeignKey(FloatManager, on_delete=models.CASCADE)
 	float_alert_type = models.ForeignKey(FloatAlertType, on_delete=models.CASCADE)
 	status = models.ForeignKey(FloatAlertActivityStatus, on_delete=models.CASCADE)
+	request = models.CharField(max_length=3840)
+	amount = models.DecimalField(max_digits=19, decimal_places=2, blank=True, null=True)
+	currency = models.ForeignKey(Currency, blank=True, null=True, on_delete=models.CASCADE)
+	scheduled_send = models.DateTimeField(blank=True, null=True)
+	response_status = models.ForeignKey(ResponseStatus, on_delete=models.CASCADE)
+	message = models.CharField(max_length=3840, blank=True, null=True)
+	sends = models.IntegerField()
 	def __str__(self):
-		return u'%s %s' % (self.float_manager, self.float_alert_type)
+		return u'%s %s' % (self.float_alert_type, self.response_status)
 
 
