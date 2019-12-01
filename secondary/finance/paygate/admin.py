@@ -94,7 +94,7 @@ class FloatAlertAdmin(admin.ModelAdmin):
 admin.site.register(FloatAlert, FloatAlertAdmin)
 
 class FloatAlertActivityAdmin(admin.ModelAdmin):
-		list_display = ('float_alert_type','status','request','amount','currency','scheduled_send','response_status',\
+		list_display = ('float_alert','status','request','amount','currency','scheduled_send','response_status',\
 				'message','sends',)
 admin.site.register(FloatAlertActivity, FloatAlertActivityAdmin)
 

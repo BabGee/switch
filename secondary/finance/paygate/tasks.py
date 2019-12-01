@@ -1938,3 +1938,14 @@ def process_incoming_payments():
 					'''
 		except Exception as e:
 			lgr.info('Error processing paid order item: %s | %s' % (c,e))
+
+
+@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on daemons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def process_float_alerts():
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	alerts = FloatAlert.objects.select_for_update().filter(Q(processed=False))[:10]
+
+
