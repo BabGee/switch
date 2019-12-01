@@ -90,7 +90,7 @@ admin.site.register(Outgoing, OutgoingAdmin)
 
 class FloatAlertTypeAdmin(admin.ModelAdmin):
 		list_display = ('description','min_amount','max_amount','service','float_type','credit',\
-				'institution','gateway','profile_list',)
+				'institution','gateway',)
 admin.site.register(FloatAlertType, FloatAlertTypeAdmin)
 
 class FloatAlertActivityAdmin(admin.ModelAdmin):

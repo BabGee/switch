@@ -321,11 +321,17 @@ class FloatAlertType(models.Model):
 	credit = models.BooleanField(default=False) #Dr | Cr (add charge if Dr, sub charge if Cr)
 	institution = models.ForeignKey(Institution, blank=True, null=True, on_delete=models.CASCADE)
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
-	profile = models.ManyToManyField(Profile)
 	def __str__(self):
 		return u'%s %s' % (self.float_type, self.service)
-	def profile_list(self):
-		return "\n".join([a.user.username for a in self.profile.all()])
+
+
+class FloatAlertActivityStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __str__(self):
+		return u'%s' % (self.name)
 
 
 class FloatAlertActivity(models.Model):
@@ -333,6 +339,7 @@ class FloatAlertActivity(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	float_manager = models.ForeignKey(FloatManager, on_delete=models.CASCADE)
 	float_alert_type = models.ForeignKey(FloatAlertType, on_delete=models.CASCADE)
+	status = models.ForeignKey(FloatAlertActivityStatus, on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s %s' % (self.float_manager, self.float_alert_type)
 
