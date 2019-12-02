@@ -1957,7 +1957,7 @@ def process_float_alert(fai):
 
 
 		fa.status = FloatAlertStatus.objects.get(name='PROCESSED')
-		fa.next_run = timezone.now() + timezone.timedelta(seconds=ip.frequency.run_every)
+		fa.next_run = timezone.now() + timezone.timedelta(seconds=fa.frequency.run_every)
 		fa.save()
 	except Exception as e:
 		lgr.info('Error processing incoming_poller: %s ' % e)
