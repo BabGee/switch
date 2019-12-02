@@ -1946,6 +1946,24 @@ def process_incoming_payments():
 def process_float_alerts():
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
-	alerts = FloatAlert.objects.select_for_update().filter(Q(processed=False))[:10]
+	#Check for created outbounds or processing and gte(last try) 4 hours ago within the last 3 days| Check for failed transactions within the last 10 minutes
+	try:
+		lgr.info('Float Alert 1')
+
+		orig_float_alert = FloatAlert.objects.select_for_update().filter(Q(status__name='PROCESSED'),Q(next_run__lte=timezone.now()))[:100]
+
+		lgr.info('Float Alert 1.1: %s' % orig_float_alert)
+		alert = list(orig_float_alert.values_list('id',flat=True)[:100])
+
+		lgr.info('Float Alert 1.2: %s' % alert)
+		processing = orig_float_alert.filter(id__in=alert).update(status=FloatAlertStatus.objects.get(name='PROCESSING'), date_modified=timezone.now())
+		for fa in alert:
+			lgr.info('Float Alert 2: %s' % fa)
+			process_incoming_poller.delay(fa)
+			lgr.info('Float Alert 2.1: %s' % fa)
+	except Exception as e:
+		lgr.info('Error on Float Alert: %s' % e)
+
+
 
 

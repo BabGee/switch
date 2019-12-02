@@ -310,11 +310,23 @@ class RemittanceManager(models.Model):
 		return u'%s %s' % (self.remittance_product, self.gateway_profile)
 
 
+class FloatAlertStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __str__(self):
+		return u'%s' % (self.name)
+
 class FloatAlert(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
+	status = models.ForeignKey(FloatAlertStatus, on_delete=models.CASCADE)
+	request = models.CharField(max_length=1920)
+	frequency = models.ForeignKey(PollerFrequency, on_delete=models.CASCADE)
+	next_run = models.DateTimeField()
 	alert_below_value = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	alert_above_value = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	is_percentage = models.BooleanField(default=False)
@@ -325,29 +337,5 @@ class FloatAlert(models.Model):
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s %s' % (self.float_type, self.service)
-
-
-class FloatAlertActivityStatus(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	def __str__(self):
-		return u'%s' % (self.name)
-
-class FloatAlertActivity(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	float_alert = models.ForeignKey(FloatAlert, on_delete=models.CASCADE)
-	status = models.ForeignKey(FloatAlertActivityStatus, on_delete=models.CASCADE)
-	request = models.CharField(max_length=3840)
-	amount = models.DecimalField(max_digits=19, decimal_places=2, blank=True, null=True)
-	currency = models.ForeignKey(Currency, blank=True, null=True, on_delete=models.CASCADE)
-	scheduled_send = models.DateTimeField(blank=True, null=True)
-	response_status = models.ForeignKey(ResponseStatus, on_delete=models.CASCADE)
-	message = models.CharField(max_length=3840, blank=True, null=True)
-	sends = models.IntegerField()
-	def __str__(self):
-		return u'%s %s' % (self.float_alert_type, self.response_status)
 
 

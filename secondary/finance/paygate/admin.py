@@ -20,6 +20,13 @@ class FloatManagerAdmin(admin.ModelAdmin):
 	list_filter = ('float_type','gateway','institution','credit','updated',)
 	search_fields = ('ext_outbound_id','id',)
 admin.site.register(FloatManager, FloatManagerAdmin)
+        
+class AgentFloatManagerAdmin(admin.ModelAdmin):
+        list_display = ('id','date_modified','date_created','ext_outbound_id','credit','float_amount',\
+                        'charge','balance_bf','expiry','float_type','agent','gateway','updated',)
+        list_filter = ('float_type','gateway','agent','credit','updated',)
+        search_fields = ('ext_outbound_id','id',)
+admin.site.register(AgentFloatManager, AgentFloatManagerAdmin)
  
 class EndpointAdmin(admin.ModelAdmin):
 	list_display = ('id','name','description','request','url','account_id','username','password',)
@@ -88,21 +95,13 @@ class OutgoingAdmin(admin.ModelAdmin):
 	search_fields = ('reference','request','ext_outbound_id','message',)
 admin.site.register(Outgoing, OutgoingAdmin)
 
+class FloatAlertStatusAdmin(admin.ModelAdmin):
+		list_display = ('name','description',)
+admin.site.register(FloatAlertStatus, FloatAlertStatusAdmin)
+
 class FloatAlertAdmin(admin.ModelAdmin):
-		list_display = ('name','description','alert_below_value','alert_above_value','is_percentage','service','float_type','credit',\
+		list_display = ('name','description','request','frequency','next_run','alert_below_value',\
+				'alert_above_value','is_percentage','service','float_type','credit',\
 				'institution','gateway',)
 admin.site.register(FloatAlert, FloatAlertAdmin)
-
-class FloatAlertActivityAdmin(admin.ModelAdmin):
-		list_display = ('float_alert','status','request','amount','currency','scheduled_send','response_status',\
-				'message','sends',)
-admin.site.register(FloatAlertActivity, FloatAlertActivityAdmin)
-
-
-class AgentFloatManagerAdmin(admin.ModelAdmin):
-	list_display = ('id','date_modified','date_created','ext_outbound_id','credit','float_amount',\
-			'charge','balance_bf','expiry','float_type','agent','gateway','updated',)
-	list_filter = ('float_type','gateway','agent','credit','updated',)
-	search_fields = ('ext_outbound_id','id',)
-admin.site.register(AgentFloatManager, AgentFloatManagerAdmin)
  
