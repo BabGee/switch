@@ -100,7 +100,7 @@ class FloatAlertStatusAdmin(admin.ModelAdmin):
 admin.site.register(FloatAlertStatus, FloatAlertStatusAdmin)
 
 class FloatAlertAdmin(admin.ModelAdmin):
-		list_display = ('name','description','request','frequency','next_run','alert_below_value',\
+		list_display = ('name','description','status','request','frequency','next_run','alert_below_value',\
 				'alert_above_value','is_percentage','service','float_type','credit',\
 				'institution','gateway',)
 admin.site.register(FloatAlert, FloatAlertAdmin)
