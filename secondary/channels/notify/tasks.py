@@ -188,13 +188,13 @@ class System(Wrappers):
 		try:
 			# gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			status = ContactGroupStatus.objects.using('read').get(name='DELETED')
-			contact_group = ContactGroup.objects.using('read').get(pk=payload['contact_group_id'])
+			status = ContactGroupStatus.objects.get(name='DELETED')
+			contact_group = ContactGroup.objects.get(pk=payload['contact_group_id'])
 			contact_group.status = status
 			contact_group.save()
 
 			# Delete recipients
-			recipient_deleted_status = ContactStatus.objects.using('read').get(name='DELETED')
+			recipient_deleted_status = ContactStatus.objects.get(name='DELETED')
 			contact_group.recipient_set.update(status=recipient_deleted_status)
 
 			payload['response'] = 'Contact Group Deleted'
