@@ -184,6 +184,29 @@ class System(Wrappers):
 		return payload
 
 
+	def delete_contact_group(self, payload, node_info):
+		try:
+			# gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			status = ContactGroupStatus.objects.get(name='DELETED')
+			contact_group = ContactGroup.objects.get(pk=payload['contact_group_id'])
+			contact_group.status = status
+			contact_group.save()
+
+			# Delete recipients
+			recipient_deleted_status = ContactStatus.objects.get(name='DELETED')
+			contact_group.recipient_set.update(status=recipient_deleted_status)
+
+			payload['response'] = 'Contact Group Deleted'
+			payload['response_status'] = '00'
+
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Deleting Contact Group: %s" % e)
+
+		return payload
+
+
 	def create_notification_template(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
