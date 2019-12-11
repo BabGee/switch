@@ -207,6 +207,22 @@ class System(Wrappers):
 		return payload
 
 
+	def contact_group_details(self, payload, node_info):
+		try:
+			contact_group = ContactGroup.objects.get(pk=payload['contact_group_id'])
+			payload['contact_group_name'] = contact_group.name
+			payload['contact_group_description'] = contact_group.description
+
+			payload['response'] = 'Got Contact Group Details'
+			payload['response_status'] = '00'
+
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Getting Contact Group Details: %s" % e)
+
+		return payload
+
+
 	def create_notification_template(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
