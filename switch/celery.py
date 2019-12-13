@@ -75,8 +75,10 @@ app.conf.task_routes = {
 		'secondary.channels.notify.tasks.add_bulk_contact': {'queue': 'files','exchange': 'files','routing_key':'files','delivery_mode': 'transient'},
 		'secondary.channels.notify.tasks.add_gateway_bulk_contact': {'queue': 'files','exchange': 'files','routing_key':'files','delivery_mode': 'transient'},
 
+		'secondary.finance.paygate.tasks.process_float_alert': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
 		'secondary.finance.paygate.tasks.float_alert': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
 		'secondary.finance.vbs.tasks.process_overdue_credit': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
+		'secondary.finance.paygate.tasks.process_incoming_poller': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
 		'secondary.finance.paygate.tasks.incoming_poller': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
 		'secondary.erp.pos.tasks.process_settled_order': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
 		'secondary.erp.pos.tasks.process_paid_order': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},

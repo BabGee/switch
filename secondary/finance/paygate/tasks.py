@@ -122,7 +122,7 @@ class Wrappers:
 
 
 
-	def transaction_payload(self, payload):
+	def transaction_payload(self, payload, responseType='JSON'):
 		new_payload, transaction, count = {}, None, 1
 		for k, v in payload.items():
 			try:
@@ -150,9 +150,10 @@ class Wrappers:
 					break
 				count = count+1
 
-
-		return json.dumps(new_payload)
-
+		if responseType=='JSON':
+			return json.dumps(new_payload)
+		else:
+			return new_payload
 
 class System(Wrappers):
 	def payment_details(self, payload, node_info):
@@ -1046,7 +1047,7 @@ class System(Wrappers):
 						float_balance.filter(id=float_balance[:1][0].id).update(updated=True)
 						#float_balance.filter(updated=False).update(updated=True)
 
-						float_record = FloatManager(credit=False,\
+						float_record = FloatManager(credit=False, request=self.transaction_payload(payload, responseType='DICT'),\
 							float_amount=Decimal(payload['float_amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
 							charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
 							balance_bf=balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN),\
@@ -1951,10 +1952,38 @@ def process_float_alert(fai):
 		lgr.info('Float Alert 3')
 		fa = FloatAlert.objects.get(id=fai)
 
+		'''
+		float_manager = FloatManager(float_type=fa.float_type, gateway=fa.gateway)
+		if fa.insitution is not None:
+			float_manager = float_manager.filter(institution=fa.institution)
+
+		#Process_float_manager_alert
+		#float_manager_last_debit = 
+
 
 		lgr.info('\n\n\n\n\t-----------------Do Float Alert Work\n\n\n\n\n\n')
 
+		payload = json.loads(fa.request)	
 
+		service = fa.service
+
+		payload['institution_id'] = c.institution_incoming_service.product_item.institution.id
+		payload['currency'] = c.currency.code
+		payload['amount'] = c.amount
+		payload['reference'] = c.reference
+		payload['chid'] = c.channel.id
+		payload['ip_address'] = '127.0.0.1'
+		payload['gateway_host'] = c.institution_incoming_service.gateway.default_host.all()[0].host
+
+
+		lgr.info('Service: %s | Payload: %s' % (service, payload))
+		if service is None:
+			lgr.info('No Service to process for product: %s' % c.product_type)
+		else:
+			gateway_profile_list = GatewayProfile.objects.filter(gateway=c.institution_incoming_service.gateway,user__username='System@User', status__name__in=['ACTIVATED'])
+			if len(gateway_profile_list) > 0 and gateway_profile_list[0].user.is_active:
+				bridgetasks.background_service_call.delay(service.name, gateway_profile_list[0].id, payload)
+		'''
 
 		fa.status = FloatAlertStatus.objects.get(name='PROCESSED')
 		fa.next_run = timezone.now() + timezone.timedelta(seconds=fa.frequency.run_every)

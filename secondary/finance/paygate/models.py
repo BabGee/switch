@@ -54,12 +54,50 @@ class FloatCharge(models.Model):
 	def gateway_list(self):
 		return "\n".join([a.name for a in self.gateway.all()])
 
+class PollerFrequency(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	run_every = models.IntegerField(help_text='In Seconds')
+	def __str__(self):
+		return u'%s' % (self.name)
+
+class FloatAlertStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __str__(self):
+		return u'%s' % (self.name)
+
+class FloatAlert(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	status = models.ForeignKey(FloatAlertStatus, on_delete=models.CASCADE)
+	request = models.CharField(max_length=1920)
+	frequency = models.ForeignKey(PollerFrequency, on_delete=models.CASCADE)
+	next_run = models.DateTimeField()
+	alert_below_value = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	alert_above_value = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	is_percentage = models.BooleanField(default=False)
+	service = models.ForeignKey(Service, on_delete=models.CASCADE)
+	float_type = models.ForeignKey(FloatType, on_delete=models.CASCADE)
+	credit = models.BooleanField(default=False) #Dr | Cr (add charge if Dr, sub charge if Cr)
+	institution = models.ForeignKey(Institution, blank=True, null=True, on_delete=models.CASCADE)
+	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
+	def __str__(self):
+		return u'%s %s' % (self.float_type, self.service)
+
 
 class FloatManager(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	ext_outbound_id = models.CharField(max_length=200, blank=True, null=True)
 	credit = models.BooleanField(default=False) #Dr | Cr
+	request = JSONField(max_length=1920, null=True, blank=True)
 	float_amount = models.DecimalField(max_digits=19, decimal_places=2)
 	charge = models.DecimalField(max_digits=19, decimal_places=2)
 	balance_bf = models.DecimalField(max_digits=19, decimal_places=2)
@@ -68,6 +106,8 @@ class FloatManager(models.Model):
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	institution = models.ForeignKey(Institution, blank=True, null=True, on_delete=models.CASCADE)
 	updated = models.BooleanField(default=False, help_text="True for record that is not the last record")
+	float_alert = models.ForeignKey(FloatAlert, blank=True, null=True, on_delete=models.CASCADE)
+	processed = models.BooleanField(default=False, help_text="True for processed float alert")
 	def __str__(self):
 		return u'%s %s %s' % (self.id, self.float_type, self.balance_bf)
 
@@ -215,15 +255,6 @@ class Incoming(models.Model):
 	def __str__(self):
 		return u'%s %s %s %s' % (self.remittance_product, self.amount, self.currency, self.ext_inbound_id)
 
-class PollerFrequency(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	run_every = models.IntegerField(help_text='In Seconds')
-	def __str__(self):
-		return u'%s' % (self.name)
-
 class IncomingPollerStatus(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
@@ -308,34 +339,5 @@ class RemittanceManager(models.Model):
 	sends = models.IntegerField()
 	def __unicode__(self):
 		return u'%s %s' % (self.remittance_product, self.gateway_profile)
-
-
-class FloatAlertStatus(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	def __str__(self):
-		return u'%s' % (self.name)
-
-class FloatAlert(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	status = models.ForeignKey(FloatAlertStatus, on_delete=models.CASCADE)
-	request = models.CharField(max_length=1920)
-	frequency = models.ForeignKey(PollerFrequency, on_delete=models.CASCADE)
-	next_run = models.DateTimeField()
-	alert_below_value = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
-	alert_above_value = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
-	is_percentage = models.BooleanField(default=False)
-	service = models.ForeignKey(Service, on_delete=models.CASCADE)
-	float_type = models.ForeignKey(FloatType, on_delete=models.CASCADE)
-	credit = models.BooleanField(default=False) #Dr | Cr (add charge if Dr, sub charge if Cr)
-	institution = models.ForeignKey(Institution, blank=True, null=True, on_delete=models.CASCADE)
-	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
-	def __str__(self):
-		return u'%s %s' % (self.float_type, self.service)
 
 

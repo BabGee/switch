@@ -24,7 +24,11 @@ def default(request):
 	#status = NodeStatus.objects.first().name
 	status = ''
 	time.sleep(2)
-	return HttpResponse(json.dumps({'response': f'SUCCESS: {z} {status}', 'response_status': '00'}), content_type='application/json')
+
+	#ip_address = request.META.get('CF-Connecting-IP', request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR')))
+	ip_address = request.META.get('CF-Connecting-IP', request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('HTTP_X_REAL_IP', request.META.get('REMOTE_ADDR'))))
+
+	return HttpResponse(json.dumps({'response': f'SUCCESS: {z} {status} | ip: {ip_address}', 'response_status': '00'}), content_type='application/json')
 
 @csrf_protect
 def service_call(request):

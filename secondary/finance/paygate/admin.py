@@ -14,10 +14,24 @@ class FloatChargeAdmin(admin.ModelAdmin):
 				'payment_method_list','product_type_list','institution_list','gateway_list')
 admin.site.register(FloatCharge, FloatChargeAdmin)
 
+class PollerFrequencyAdmin(admin.ModelAdmin):
+	list_display = ('name','description','run_every',)
+admin.site.register(PollerFrequency, PollerFrequencyAdmin)
+
+class FloatAlertStatusAdmin(admin.ModelAdmin):
+		list_display = ('name','description',)
+admin.site.register(FloatAlertStatus, FloatAlertStatusAdmin)
+
+class FloatAlertAdmin(admin.ModelAdmin):
+		list_display = ('name','description','status','request','frequency','next_run','alert_below_value',\
+				'alert_above_value','is_percentage','service','float_type','credit',\
+				'institution','gateway')
+admin.site.register(FloatAlert, FloatAlertAdmin)
+ 
 class FloatManagerAdmin(admin.ModelAdmin):
-	list_display = ('id','date_modified','date_created','ext_outbound_id','credit','float_amount',\
-			'charge','balance_bf','expiry','float_type','gateway','institution','updated',)
-	list_filter = ('float_type','gateway','institution','credit','updated',)
+	list_display = ('id','date_modified','date_created','ext_outbound_id','credit','request','float_amount',\
+			'charge','balance_bf','expiry','float_type','gateway','institution','updated','float_alert','processed')
+	list_filter = ('float_type','gateway','institution','credit','updated')
 	search_fields = ('ext_outbound_id','id',)
 admin.site.register(FloatManager, FloatManagerAdmin)
         
@@ -70,10 +84,6 @@ class IncomingAdmin(admin.ModelAdmin):
 	search_fields = ('request','reference','message',)
 admin.site.register(Incoming, IncomingAdmin)
 
-class PollerFrequencyAdmin(admin.ModelAdmin):
-	list_display = ('name','description','run_every',)
-admin.site.register(PollerFrequency, PollerFrequencyAdmin)
-
 class IncomingPollerStatusAdmin(admin.ModelAdmin):
 		list_display = ('name','description','date_modified','date_created',)
 admin.site.register(IncomingPollerStatus, IncomingPollerStatusAdmin)
@@ -95,13 +105,3 @@ class OutgoingAdmin(admin.ModelAdmin):
 	search_fields = ('reference','request','ext_outbound_id','message',)
 admin.site.register(Outgoing, OutgoingAdmin)
 
-class FloatAlertStatusAdmin(admin.ModelAdmin):
-		list_display = ('name','description',)
-admin.site.register(FloatAlertStatus, FloatAlertStatusAdmin)
-
-class FloatAlertAdmin(admin.ModelAdmin):
-		list_display = ('name','description','status','request','frequency','next_run','alert_below_value',\
-				'alert_above_value','is_percentage','service','float_type','credit',\
-				'institution','gateway',)
-admin.site.register(FloatAlert, FloatAlertAdmin)
- 
