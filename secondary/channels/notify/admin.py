@@ -43,7 +43,7 @@ class ContactAdmin(admin.ModelAdmin):
 	list_display = ('id','status','product','subscription_details','subscribed',\
 			'linkid','gateway_profile')
 	list_filter = ('product','subscribed','status',)
-	search_fields = ('gateway_profile__msisdn__phone_number',)
+	search_fields = ('gateway_profile__msisdn__phone_number','gateway_profile__user__email',)
 admin.site.register(Contact, ContactAdmin)
 
 class ContactGroupStatusAdmin(admin.ModelAdmin):
