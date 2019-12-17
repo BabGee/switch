@@ -586,6 +586,9 @@ class System(Wrappers):
 				else: notification_product = notification_product.none()
 			elif 'session_gateway_profile_id' in payload.keys():
 				contact = Contact.objects.filter(product__in=[p for p in notification_product],gateway_profile__id=payload['session_gateway_profile_id'])
+				if 'notification_delivery_channel' in payload.keys():
+					contact = contact.filter(product__notification__code__channel__name=payload['notification_delivery_channel'])
+
 				if len(contact):
 					lgr.info(contact)
 					notification_product = notification_product.filter(id__in=[c.product.id for c in contact])
