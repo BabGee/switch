@@ -1047,7 +1047,7 @@ class System(Wrappers):
 						float_balance.filter(id=float_balance[:1][0].id).update(updated=True)
 						#float_balance.filter(updated=False).update(updated=True)
 
-						float_record = FloatManager(credit=False, request=self.transaction_payload(payload, responseType='DICT'),\
+						float_record = FloatManager(credit=False,\
 							float_amount=Decimal(payload['float_amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
 							charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
 							balance_bf=balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN),\
