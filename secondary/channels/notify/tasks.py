@@ -772,11 +772,12 @@ class System(Wrappers):
 					params['msisdn'] = i
 					params = self.get_notification(params, node_info)
 					#lgr.info('Params : %s' % params)
-					if params['response_status'] != '00':
-						payload['response_status'] = params['response_status']
-						payload['response'] = '%s %s' % (i,params['response'])
-						break
-					else:
+					#if params['response_status'] != '00':
+					#	#payload['response_status'] = params['response_status']
+					#	#payload['response'] = '%s %s' % (i,params['response'])
+					#	continue
+					#else:
+					if params['response_status'] == '00':
 						product = NotificationProduct.objects.get(id=params['notification_product_id'])
 						contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
 						status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
