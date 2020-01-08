@@ -111,7 +111,8 @@ class List:
 			df1=df[['DATE','MESSAGE','CODE','CONTACT']]
 			df2= df[['STATE','TOTAL']].pivot(columns='STATE',values='TOTAL').fillna(0)
 			df3=pd.concat([df1,df2], ignore_index=False, axis=1)
-			df = df3.groupby(['DATE','MESSAGE','CODE','CONTACT']).sum()
+			#df = df3.groupby(['DATE','MESSAGE','CODE','CONTACT']).sum()
+			df = df3.groupby(['DATE','MESSAGE','CODE']).sum()
 			for d in df2.columns:
 				df[d+'(%)'] = ((df[d]/df[df2.columns].sum(axis=1))*100).round(2)
 
