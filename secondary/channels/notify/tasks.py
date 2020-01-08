@@ -1273,7 +1273,7 @@ class System(Wrappers):
 			recipient = np.unique(recipient)
 			recipient_count = recipient.size
 			payload['recipient_count'] = recipient_count
-			payload['contact_group'] = list(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))
+			payload['contact_group'] = ','.join(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))
 
 			product = NotificationProduct.objects.get(id=payload['notification_product_id'])
 			contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
