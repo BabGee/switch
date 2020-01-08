@@ -100,18 +100,18 @@ class List:
 							.annotate(send_date=Cast(F('scheduled_send'), CharField(max_length=32)))\
 							.values('send_date')\
 							.annotate(total_count=Count('send_date')).filter(total_count__gte=5)\
-							.values_list('send_date','message','contact__product__notification__code__alias','state__name','total_count')\
+							.values_list('send_date','message','contact__product__notification__code__alias','contact_group','state__name','total_count')\
 							.order_by('-send_date')
 
 			outbound=np.asarray(outbound_list)
-			df = pd.DataFrame({'DATE': outbound[:,0], 'MESSAGE': outbound[:,1], 'CODE': outbound[:,2], 'STATE': outbound[:,3], 'TOTAL': outbound[:,4],})
+			df = pd.DataFrame({'DATE': outbound[:,0], 'MESSAGE': outbound[:,1], 'CODE': outbound[:,2], 'CONTACT': outbound[:,3], 'STATE': outbound[:,4], 'TOTAL': outbound[:,5],})
 
 			df['DATE'] = pd.to_datetime(df['DATE'])
 			df['TOTAL'] = pd.to_numeric(df['TOTAL'])
-			df1=df[['DATE','MESSAGE','CODE']]
+			df1=df[['DATE','MESSAGE','CODE','CONTACT']]
 			df2= df[['STATE','TOTAL']].pivot(columns='STATE',values='TOTAL').fillna(0)
 			df3=pd.concat([df1,df2], ignore_index=False, axis=1)
-			df = df3.groupby(['DATE','MESSAGE','CODE']).sum()
+			df = df3.groupby(['DATE','MESSAGE','CODE','CONTACT']).sum()
 			for d in df2.columns:
 				df[d+'(%)'] = ((df[d]/df[df2.columns].sum(axis=1))*100).round(2)
 

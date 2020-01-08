@@ -1273,7 +1273,7 @@ class System(Wrappers):
 			recipient = np.unique(recipient)
 			recipient_count = recipient.size
 			payload['recipient_count'] = recipient_count
-			payload['contact_group'] = ','.join(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))
+			payload['contact_group'] = '\n'.join(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))
 
 			product = NotificationProduct.objects.get(id=payload['notification_product_id'])
 			contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
@@ -1393,11 +1393,11 @@ class System(Wrappers):
 				df['date_modified'] = timezone.now()
 				df['date_created'] = timezone.now()
 				df['sends'] = 0
+				if 'contact_group' in payload.keys(): df['contact_group'] = payload['contact_group'] 
 				df['pn'] = False
 				df['pn_ack'] = False
 				df['ext_outbound_id'] = payload['bridge__transaction_id']
 				df['inst_notified'] = False
-
 				from django.core.files.base import ContentFile
 
 				f1 = ContentFile(df.to_csv(index=False))
