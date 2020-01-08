@@ -107,12 +107,13 @@ class List:
 			df = pd.DataFrame({'DATE': outbound[:,0], 'MESSAGE': outbound[:,1], 'CODE': outbound[:,2], 'CONTACT': outbound[:,3], 'STATE': outbound[:,4], 'TOTAL': outbound[:,5],})
 
 			df['DATE'] = pd.to_datetime(df['DATE'])
+			df['CONTACT'] = df['CONTACT'].fillna('')
 			df['TOTAL'] = pd.to_numeric(df['TOTAL'])
 			df1=df[['DATE','MESSAGE','CODE','CONTACT']]
 			df2= df[['STATE','TOTAL']].pivot(columns='STATE',values='TOTAL').fillna(0)
 			df3=pd.concat([df1,df2], ignore_index=False, axis=1)
-			#df = df3.groupby(['DATE','MESSAGE','CODE','CONTACT']).sum()
-			df = df3.groupby(['DATE','MESSAGE','CODE']).sum()
+			df = df3.groupby(['DATE','MESSAGE','CODE','CONTACT']).sum()
+
 			for d in df2.columns:
 				df[d+'(%)'] = ((df[d]/df[df2.columns].sum(axis=1))*100).round(2)
 
