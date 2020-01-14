@@ -270,7 +270,9 @@ class Wrappers:
 
 							or_filter_data[k] = v if v not in ['',None] else None
 					elif getattr(model_class, f.split('__')[0], False):
-						if f in payload.keys():
+						if  f in payload.keys() and f.split('__')[-1] in ['exact','iexact','contains','icontains','isnull','regex','iregex']:
+							if f not in ['',None]: or_filter_data[f] = payload[f]
+						elif f in payload.keys():
 							if f not in ['',None]: or_filter_data[f + '__icontains'] = payload[f]
 						elif 'q' in payload.keys() and payload['q'] not in ['', None]:
 							if f not in ['',None]: or_filter_data[f + '__icontains'] = payload['q']
@@ -300,7 +302,9 @@ class Wrappers:
 
 							and_filter_data[k] = v if v not in ['',None] else None
 					elif getattr(model_class, f.split('__')[0], False):
-						if f in payload.keys():
+						if  f in payload.keys() and f.split('__')[-1] in ['exact','iexact','contains','icontains','isnull','regex','iregex']:
+							if f not in ['',None]: or_filter_data[f] = payload[f]
+						elif f in payload.keys():
 							if f not in ['',None]: and_filter_data[f + '__icontains'] = payload[f]
 						elif 'q' in payload.keys() and payload['q'] not in ['', None]:
 							if f not in ['',None]: and_filter_data[f + '__icontains'] = payload['q']
