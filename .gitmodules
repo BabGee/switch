@@ -64,3 +64,6 @@
 [submodule "products/bulksms"]
 	path = products/bulksms
 	url = https://bitbucket.org/interintel/switch.products.bulksms.git
+[submodule "thirdparty/voltic"]
+	path = thirdparty/voltic
+	url = https://bitbucket.org/interintel/switch.thirdparty.voltic
