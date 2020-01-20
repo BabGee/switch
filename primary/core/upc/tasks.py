@@ -306,6 +306,43 @@ class Wrappers:
 		lgr.info('Simple KRA Pin: %s' % kra_pin)
 		return kra_pin
 
+	def passport_number_exists(self,payload):
+		"""
+		Return true if passport_number, passport_expiry_date exists and not empty
+		:return:
+		"""
+		if 'passport_number' in payload.keys() and 'passport_expiry_date' in payload.keys() and \
+				(payload['passport_number'] not in ["", None]) and (
+				payload['passport_expiry_date'] not in ["", None]):
+			return payload['passport_number']
+		return False
+
+	def valid_passport_number_exists(self,payload):
+		"""
+		Validate Passport Number, this assumes it exists and not empty
+		:return:
+		"""
+		if 'passport_number' in payload.keys() and re.search(r"([a-zA-Z]{1})(\d{7}$)", payload['passport_number']):
+			return True
+		return False
+
+	def id_number_exists(self, payload):
+		"""
+		Return true if id_number exists and not empty
+		:return:
+		"""
+		return 'national_id' in payload.keys() and payload['national_id'] not in ["", None]
+
+	def valid_id_number_exists(self, payload):
+		"""
+		Validate ID Number, this assumes it exists and not empty
+		:return:
+		"""
+		try:
+			id_passport = int(payload['national_id'])
+			return 6 <= len(str(id_passport)) <= 10
+		except ValueError:
+			return False
 
 	def simple_id_passport(self, id_passport):
 		id_passport = str(id_passport).replace(' ','').strip()
