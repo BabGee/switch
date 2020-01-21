@@ -257,6 +257,10 @@ class System(Wrappers):
 				remittance_product = remittance_product.filter(ext_product_id=payload['ext_product_id'])
 
 			if remittance_product.exists():
+				# Capture remittance product institution
+				if remittance_product[0].institution:
+					payload['institution_id'] = remittance_product[0].institution.id
+
 				#log paygate incoming
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
 				state = IncomingState.objects.get(name="CREATED")
