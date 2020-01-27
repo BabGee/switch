@@ -253,6 +253,7 @@ class Incoming(models.Model):
 	institution_incoming_service = models.ForeignKey(InstitutionIncomingService, blank=True, null=True, on_delete=models.CASCADE)
 	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
+	institution_notification = models.ForeignKey(InstitutionNotification, null=True, blank=True, on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s %s %s %s' % (self.remittance_product, self.amount, self.currency, self.ext_inbound_id)
 

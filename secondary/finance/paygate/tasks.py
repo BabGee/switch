@@ -204,7 +204,7 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			reference = payload['reference'].strip() if 'reference' in payload.keys() else ""
 
-			institution_incoming_service, institution = None, None
+			institution_incoming_service = None
 			lgr.info('Payment Notification')
 			keyword = reference[:4]
 			institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(keyword__iexact=keyword)\
@@ -258,8 +258,15 @@ class System(Wrappers):
 
 			if remittance_product.exists():
 				# Capture remittance product institution
-				if remittance_product[0].institution:
-					payload['institution_id'] = remittance_product[0].institution.id
+
+				institution = None
+				if 'institution_id' in payload.keys():
+					institution = Institution.objects.get(id=payload['institution_id'])
+				elif remittance_product[0].institution:
+					institution = remittance_product[0].institution
+					payload['institution_id'] = institution.id
+
+				institution_notification = InstitutionNotification.objects.filter(institution=institution, remittance_product=remittance_product[0])
 
 				#log paygate incoming
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
@@ -286,11 +293,15 @@ class System(Wrappers):
 						incoming.amount = Decimal(payload['amount'])
 					if 'charge' in payload.keys() and payload['charge'] not in ["",None]:
 						incoming.charge = Decimal(payload['charge'])
-					if institution is not None:
+
+					if institution is not None
 						incoming.institution = institution
+
 					if institution_incoming_service is not None:
 						incoming.institution_incoming_service = institution_incoming_service
 						incoming.institution = institution_incoming_service.product_item.institution
+					if institution_notification.exists():
+						incoming.institution_notification = institution_notification[0]
 
 					incoming.save()
 
