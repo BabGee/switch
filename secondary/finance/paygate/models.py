@@ -183,6 +183,7 @@ class RemittanceProduct(models.Model):
 	fail_continues = models.BooleanField(default=False)
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	currency = models.ManyToManyField(Currency, blank=True) #Allowed Currencies
+	institution = models.ForeignKey(Institution, null=True,blank=True,  on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s %s' % (self.name, self.remittance)
 	def product_type_list(self):
