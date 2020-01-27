@@ -59,7 +59,7 @@ admin.site.register(Remittance, RemittanceAdmin)
 class RemittanceProductAdmin(admin.ModelAdmin):
 	list_display = ('id','name','description','remittance','ext_product_id','endpoint',\
 			'product_type_list','service_list','realtime','show_message','fail_continues',\
-			'payment_method_list','currency_list',)
+			'payment_method_list','currency_list','institution',)
 	list_filter = ('remittance','service','payment_method',)
 admin.site.register(RemittanceProduct, RemittanceProductAdmin)
 
@@ -80,7 +80,7 @@ class IncomingAdmin(admin.ModelAdmin):
 			'response_status','message','ext_inbound_id','ext_first_name','ext_middle_name',\
 			'ext_last_name','inst_notified','inst_num_tries',\
 			'state','processed','institution_incoming_service',\
-			'channel','institution',)
+			'channel','institution','institution_notification',)
 	search_fields = ('request','reference','message',)
 admin.site.register(Incoming, IncomingAdmin)
 
