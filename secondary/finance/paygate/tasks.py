@@ -294,7 +294,7 @@ class System(Wrappers):
 					if 'charge' in payload.keys() and payload['charge'] not in ["",None]:
 						incoming.charge = Decimal(payload['charge'])
 
-					if institution is not None
+					if institution is not None:
 						incoming.institution = institution
 
 					if institution_incoming_service is not None:

@@ -1645,7 +1645,7 @@ class Trade(System):
 @single_instance_task(60*10)
 def get_delivery_status():
 	try:
-		df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 30}, "max_duration": {"seconds": 15}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
+		df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 120}, "max_duration": {"seconds": 90}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
 		if len(df):
 			#df['recipient'] = df['recipient'].apply(lambda x: '+%s' % x.strip() if x.strip()[:1] != '+' else x)
 			for status in df['delivery_status'].unique():
