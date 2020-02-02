@@ -1809,10 +1809,11 @@ def process_incoming_poller(ic):
 			else: lgr.info('Incoming Poller (No Data): %s' % params)
 
 		else: lgr.info('Incoming Poller Request failed: %s' % params)
-		if ip.frequency.run_every > 0:
-			ip.status = IncomingPollerStatus.objects.get(name='PROCESSED')
-			ip.next_run = timezone.now() + timezone.timedelta(seconds=ip.frequency.run_every)
-			ip.save()
+
+		ip.status = IncomingPollerStatus.objects.get(name='PROCESSED')
+		if ip.frequency.run_every > 0: ip.next_run = timezone.now() + timezone.timedelta(seconds=ip.frequency.run_every)
+		ip.save()
+
 	except Exception as e:
 		lgr.info('Error processing incoming_poller: %s ' % e)
 
