@@ -80,7 +80,7 @@ class IncomingAdmin(admin.ModelAdmin):
 			'response_status','message','ext_inbound_id','ext_first_name','ext_middle_name',\
 			'ext_last_name','inst_notified','inst_num_tries',\
 			'state','processed','institution_incoming_service',\
-			'channel','institution','institution_notification',)
+			'channel','institution','institution_notification','updated',)
 	search_fields = ('request','reference','message',)
 admin.site.register(Incoming, IncomingAdmin)
 

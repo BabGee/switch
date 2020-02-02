@@ -202,6 +202,8 @@ class System(Wrappers):
 			lgr.info("Error on Amount to Float: %s" % e)
 		return payload
 
+
+	@transaction.atomic
 	def payment_notification(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
@@ -277,13 +279,16 @@ class System(Wrappers):
 
 				ext_inbound_id = payload['ext_inbound_id'] if 'ext_inbound_id' in payload.keys() else payload['bridge__transaction_id']
 
-				f_incoming = Incoming.objects.filter(remittance_product=remittance_product[0],ext_inbound_id=ext_inbound_id)
+				last_incoming  = Incoming.objects.select_for_update().filter(remittance_product=remittance_product[0])
+				f_incoming = last_incoming.filter(ext_inbound_id=ext_inbound_id)
 
 				if len(f_incoming)>0:
 					payload['response_status'] = '94'
 					payload['response'] = 'External Inbound ID Exists'
 
 				else:
+					last_incoming.filter(id=last_incoming[:1][0].id).update(updated=True)
+
 					incoming = Incoming(remittance_product=remittance_product[0],reference=reference,\
 						request=self.transaction_payload(payload),channel=Channel.objects.get(id=payload['chid']),\
 						response_status=response_status, ext_inbound_id=ext_inbound_id,state=state)
