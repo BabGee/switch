@@ -631,7 +631,7 @@ class System(Wrappers):
 			if 'institution_id' in payload.keys():
 				#Filter to send an institution notification or otherwise a gateway if institution does not exist (gateway only has institution as None)
 				institution_notification_product = notification_product.filter(notification__code__institution__id=payload['institution_id'])
-				gateway_notification_product = notification_product.filter(notification__code__institution=None)
+				gateway_notification_product = notification_product.filter(notification__code__institution=None, institution_allowed=True)
 				notification_product =  institution_notification_product if len(institution_notification_product) else gateway_notification_product
 
 			#lgr.info('Notification Product: %s ' % notification_product)

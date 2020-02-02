@@ -69,6 +69,7 @@ class NotificationProduct(models.Model):
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	priority = models.SmallIntegerField(default=10)
 	is_bulk = models.BooleanField(default=True)
+	institution_allowed = models.BooleanField(default=False)
 	def __str__(self):
 		return u'%s %s %s %s' % (self.id, self.name, self.unit_credit_charge, self.notification)
 	def product_type_list(self):
