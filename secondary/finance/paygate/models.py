@@ -272,7 +272,6 @@ class IncomingPoller(models.Model):
 	description = models.CharField(max_length=100)
 	request = models.CharField(max_length=1920)
 	remittance_product = models.ForeignKey(RemittanceProduct, on_delete=models.CASCADE)
-	remittance = models.ForeignKey(Remittance, on_delete=models.CASCADE)
 	frequency = models.ForeignKey(PollerFrequency, on_delete=models.CASCADE)
 	service = models.ForeignKey(Service, on_delete=models.CASCADE)
 	next_run = models.DateTimeField()
