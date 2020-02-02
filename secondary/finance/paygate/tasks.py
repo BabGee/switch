@@ -1753,8 +1753,8 @@ def process_incoming_poller(ic):
 
 		lgr.info('Poller 3')
 		ip = IncomingPoller.objects.get(id=ic)
-		#API Request
 
+		#API Request
 		#params = json.loads(ip.remittance_product.endpoint.request)
 		params = ip.remittance_product.endpoint.request
 
