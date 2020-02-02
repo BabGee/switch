@@ -1801,17 +1801,22 @@ def process_incoming_poller(ic):
 
 					payload = dict(row)
 
-					lgr.info('Payload: %s' % payload)
-					if Incoming.objects.filter(remittance_product__remittance=ip.remittance_product.remittance, ext_inbound_id=payload['ext_inbound_id']).exists(): pass
-					else:
-						payload['chid'] = 2
-						payload['ip_address'] = '127.0.0.1'
-						payload['gateway_host'] = ip.gateway.default_host.all()[0].host
+					remittance_product = RemittanceProduct.objects.filter(remittance=ip.remittance_product.remittance, currency__code=payload['currency'],\
+									payment_method__name=payload['payment_method'],	remittance__ext_service_id=payload['ext_service_id'],\
+									ext_product_id=payload['ext_product_id'])
+					if remittance_product.exists():
+						lgr.info('Payload: %s|%s' % (payload,remittance_product[0]))
+						if Incoming.objects.filter(remittance_product=remittance_product[0], ext_inbound_id=payload['ext_inbound_id']).exists(): pass
+						else:
+							payload['chid'] = 2
+							payload['ip_address'] = '127.0.0.1'
+							payload['gateway_host'] = ip.gateway.default_host.all()[0].host
 
-						lgr.info('Service: %s | Payload: %s' % (service, payload))
-						gateway_profile = GatewayProfile.objects.get(gateway=ip.gateway,user__username='System@User', status__name='ACTIVATED',user__is_active=True)
+							lgr.info('Service: %s | Payload: %s' % (service, payload))
+							gateway_profile = GatewayProfile.objects.get(gateway=ip.gateway,user__username='System@User', status__name='ACTIVATED',user__is_active=True)
 
-						bridgetasks.background_service_call.delay(service.name, gateway_profile.id, payload)
+							bridgetasks.background_service_call.delay(service.name, gateway_profile.id, payload)
+					else: lgr.info('Remittance Product does not exist: %s' % payload)
 
 			else: lgr.info('Incoming Poller (No Data): %s' % params)
 
