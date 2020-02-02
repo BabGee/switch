@@ -1809,9 +1809,10 @@ def process_incoming_poller(ic):
 			else: lgr.info('Incoming Poller (No Data): %s' % params)
 
 		else: lgr.info('Incoming Poller Request failed: %s' % params)
-		ip.status = IncomingPollerStatus.objects.get(name='PROCESSED')
-		ip.next_run = timezone.now() + timezone.timedelta(seconds=ip.frequency.run_every)
-		ip.save()
+		if ip.frequency.run_every > 0:
+			ip.status = IncomingPollerStatus.objects.get(name='PROCESSED')
+			ip.next_run = timezone.now() + timezone.timedelta(seconds=ip.frequency.run_every)
+			ip.save()
 	except Exception as e:
 		lgr.info('Error processing incoming_poller: %s ' % e)
 
@@ -1825,7 +1826,7 @@ def incoming_poller():
 	try:
 		lgr.info('Poller 1')
 
-		orig_incoming_poller = IncomingPoller.objects.select_for_update().filter(Q(status__name='PROCESSED'),Q(next_run__lte=timezone.now()))
+		orig_incoming_poller = IncomingPoller.objects.select_for_update().filter(Q(status__name='PROCESSED'), Q(next_run__lte=timezone.now())|Q(frequency__run_every=0))
 
 		lgr.info('Poller 1.1: %s' % orig_incoming_poller)
 		incoming = list(orig_incoming_poller.values_list('id',flat=True)[:100])

@@ -59,7 +59,7 @@ class PollerFrequency(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	run_every = models.IntegerField(help_text='In Seconds')
+	run_every = models.IntegerField(help_text='In Seconds | 0 for every time')
 	def __str__(self):
 		return u'%s' % (self.name)
 
