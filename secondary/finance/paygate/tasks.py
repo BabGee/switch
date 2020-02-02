@@ -1794,18 +1794,25 @@ def process_incoming_poller(ic):
 
 						bridgetasks.background_service_call.delay(service.name, gateway_profile.id, payload)
 
-						#break # Break for test
-
 			elif 'data' in params['response'].keys() and params['response']['data']:
 				df = pd.DataFrame(params['response']['data'])
-				if len(df):
-					lgr.info('Poller DF: %s' % df)
-					'''
-					#df['recipient'] = df['recipient'].apply(lambda x: '+%s' % x.strip() if x.strip()[:1] != '+' else x)
-					for status in df['delivery_status'].unique():
-						status_df = df[df['delivery_status']==status]
-						Outbound.objects.filter(~Q(state__name=status),Q(ext_outbound_id__in=status_df['outbound_id'].tolist(),recipient__in=status_df['recipient'].tolist())).update(state=OutBoundState.objects.get(name=status))
-					'''
+				for index, row in df.iterrows():
+					lgr.info('Row: %s|%s' % (index,row))
+
+					payload = dict(row)
+
+					lgr.info('Payload: %s' % payload)
+					if Incoming.objects.filter(remittance_product__remittance=ip.remittance_product.remittance, ext_inbound_id=payload['ext_inbound_id']).exists(): pass
+					else:
+						payload['chid'] = 2
+						payload['ip_address'] = '127.0.0.1'
+						payload['gateway_host'] = ip.gateway.default_host.all()[0].host
+
+						lgr.info('Service: %s | Payload: %s' % (service, payload))
+						gateway_profile = GatewayProfile.objects.get(gateway=ip.gateway,user__username='System@User', status__name='ACTIVATED',user__is_active=True)
+
+						bridgetasks.background_service_call.delay(service.name, gateway_profile.id, payload)
+
 			else: lgr.info('Incoming Poller (No Data): %s' % params)
 
 		else: lgr.info('Incoming Poller Request failed: %s' % params)
