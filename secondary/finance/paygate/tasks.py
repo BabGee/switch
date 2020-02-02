@@ -1783,7 +1783,7 @@ def process_incoming_poller(ic):
 						payload[key] = params['response']['rows'][i][j]
 
 					lgr.info('Payload: %s' % payload)
-					if Incoming.objects.filter(remittance_product=ip.inbound_remittance_product,ext_inbound_id=payload['ext_inbound_id']).exists(): pass
+					if Incoming.objects.filter(remittance_product__remittance=ip.remittance,ext_inbound_id=payload['ext_inbound_id']).exists(): pass
 					else:
 						payload['chid'] = 2
 						payload['ip_address'] = '127.0.0.1'
