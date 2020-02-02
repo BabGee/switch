@@ -287,7 +287,7 @@ class System(Wrappers):
 					payload['response'] = 'External Inbound ID Exists'
 
 				else:
-					if last_incoming.exists():last_incoming.filter(id=last_incoming[:1][0].id).update(updated=True)
+					if len(last_incoming): last_incoming.filter(id=last_incoming[:1][0].id).update(updated=True)
 
 					incoming = Incoming(remittance_product=remittance_product[0],reference=reference,\
 						request=self.transaction_payload(payload),channel=Channel.objects.get(id=payload['chid']),\
