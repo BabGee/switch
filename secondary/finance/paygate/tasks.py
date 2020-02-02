@@ -313,6 +313,7 @@ class System(Wrappers):
 
 					incoming.save()
 
+					if remittance_product[0].credit_account: payload['trigger'] = 'credit_account%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 					payload['paygate_incoming_id'] = incoming.id
 					payload['response_status'] = '00'
 					payload['response'] = 'Payment Received'
