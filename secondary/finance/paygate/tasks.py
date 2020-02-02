@@ -279,7 +279,7 @@ class System(Wrappers):
 
 				ext_inbound_id = payload['ext_inbound_id'] if 'ext_inbound_id' in payload.keys() else payload['bridge__transaction_id']
 
-				last_incoming  = Incoming.objects.select_for_update().filter(remittance_product=remittance_product[0])
+				last_incoming  = Incoming.objects.select_for_update().filter(remittance_product=remittance_product[0]).order_by('-id')
 				f_incoming = last_incoming.filter(ext_inbound_id=ext_inbound_id)
 
 				if len(f_incoming)>0:
