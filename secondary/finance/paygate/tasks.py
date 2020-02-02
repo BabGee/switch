@@ -279,16 +279,15 @@ class System(Wrappers):
 
 				ext_inbound_id = payload['ext_inbound_id'] if 'ext_inbound_id' in payload.keys() else payload['bridge__transaction_id']
 
-				last_incoming  = Incoming.objects.select_for_update().filter(remittance_product=remittance_product[0]).order_by('-id')
-				f_incoming = last_incoming.filter(ext_inbound_id=ext_inbound_id)
 
-				if len(f_incoming)>0:
+				last_incoming  = Incoming.objects.select_for_update().filter(remittance_product=remittance_product[0]).order_by('-id')
+				if len(last_incoming): last_incoming.filter(id=last_incoming[:1][0].id).update(updated=True)
+
+				f_incoming = last_incoming.filter(ext_inbound_id=ext_inbound_id)
+				if len(f_incoming):
 					payload['response_status'] = '94'
 					payload['response'] = 'External Inbound ID Exists'
-
 				else:
-					if len(last_incoming): last_incoming.filter(id=last_incoming[:1][0].id).update(updated=True)
-
 					incoming = Incoming(remittance_product=remittance_product[0],reference=reference,\
 						request=self.transaction_payload(payload),channel=Channel.objects.get(id=payload['chid']),\
 						response_status=response_status, ext_inbound_id=ext_inbound_id,state=state)
