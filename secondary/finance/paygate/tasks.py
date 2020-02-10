@@ -310,6 +310,12 @@ class System(Wrappers):
 					if institution_notification.exists():
 						incoming.institution_notification = institution_notification[0]
 
+					msisdn = UPCWrappers().get_msisdn(payload)
+					if msisdn is not None:
+						try:msisdn = MSISDN.objects.get(phone_number=msisdn)
+						except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
+						incoming.msisdn = msisdn
+
 					incoming.save()
 
 					if remittance_product[0].credit_account: payload['trigger'] = 'credit_account%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
