@@ -1850,7 +1850,9 @@ def incoming_poller():
 	try:
 		lgr.info('Poller 1')
 
-		orig_incoming_poller = IncomingPoller.objects.select_for_update().filter(Q(status__name='PROCESSED'), Q(next_run__lte=timezone.now())|Q(frequency__run_every=0))
+		orig_incoming_poller = IncomingPoller.objects.select_for_update().filter(Q(status__name='PROCESSED')|Q(status__name='PROCESSING',\
+										 date_modified__gte=timezone.now()-timezone.timedelta(minutes=600)),\
+										 Q(next_run__lte=timezone.now())|Q(frequency__run_every=0))
 
 		lgr.info('Poller 1.1: %s' % orig_incoming_poller)
 		incoming = list(orig_incoming_poller.values_list('id',flat=True)[:100])
