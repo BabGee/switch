@@ -256,6 +256,7 @@ class Incoming(models.Model):
 	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
 	institution_notification = models.ForeignKey(InstitutionNotification, null=True, blank=True, on_delete=models.CASCADE)
 	updated = models.BooleanField(default=False, help_text="True for record that is not the last record")
+	msisdn = models.ForeignKey(MSISDN, null=True, blank=True, on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s %s %s %s' % (self.remittance_product, self.amount, self.currency, self.ext_inbound_id)
 
