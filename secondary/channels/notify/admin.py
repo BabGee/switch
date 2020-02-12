@@ -4,10 +4,14 @@ from django.forms.widgets import TextInput, Textarea
 from django import forms
 
 
+class CredentialAdmin(admin.ModelAdmin):
+	list_display = ('id','name','description','url','api_key','api_secret','api_token','access_token',\
+			'token_validity','token_expiration','updated',)
+admin.site.register(Credential, CredentialAdmin)
 
 class EndpointAdmin(admin.ModelAdmin):
 	list_display = ('name','description','url','account_id','username','password','api_key', 'batch',\
-			'token','refresh_token','token_validity','token_expiration',)
+			'credentials',)
 admin.site.register(Endpoint, EndpointAdmin)
 
 class NotificationStatusAdmin(admin.ModelAdmin):
