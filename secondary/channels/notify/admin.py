@@ -11,7 +11,7 @@ admin.site.register(Credential, CredentialAdmin)
 
 class EndpointAdmin(admin.ModelAdmin):
 	list_display = ('name','description','url','account_id','username','password','api_key', 'batch',\
-			'credentials',)
+			'credential',)
 admin.site.register(Endpoint, EndpointAdmin)
 
 class NotificationStatusAdmin(admin.ModelAdmin):
