@@ -235,11 +235,13 @@ class VAS:
 				self.access_point = self.navigator[0].code.code
 			elif 'input' in self.payload.keys() and len(self.navigator)>0 and self.channel.name == 'USSD':#All Succeeding USSD calls
 				ussd_string = self.payload['input'].split('*')
-				self.payload['input'] = ussd_string[len(ussd_string)-1]
+				#self.payload['input'] = ussd_string[len(ussd_string)-1]
+				self.payload['input'] = ussd_string[-1]
 				self.access_point = self.navigator[0].code.code
 			elif 'input' in self.payload.keys() and self.channel.name == 'USSD':#Default ussd call with input
 				ussd_string = self.payload['input'].split('*')
-				self.payload['input'] = ussd_string[len(ussd_string)-1]
+				#self.payload['input'] = ussd_string[len(ussd_string)-1]
+				self.payload['input'] = ussd_string[-1]
 				self.access_point = '*%s#' % self.access_point
 			elif self.channel.name == 'USSD':#Default ussd call
 				self.access_point = '*%s#' % self.access_point

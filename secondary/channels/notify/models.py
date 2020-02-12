@@ -15,6 +15,10 @@ class Endpoint(models.Model):
 	password = models.CharField(max_length=256)
 	api_key = models.CharField(max_length=256,blank=True, null=True)
 	batch = models.SmallIntegerField(default=1)
+	token= models.CharField(max_length=2048,blank=True, null=True)
+	refresh_token = models.CharField(max_length=2048,blank=True, null=True)
+	token_validity = models.IntegerField(blank=True, null=True, help_text='In Seconds')
+	token_expiration = models.DateTimeField(blank=True, null=True)
 	def __str__(self):
 		return u'%s' % (self.name)
 

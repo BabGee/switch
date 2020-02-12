@@ -6,7 +6,8 @@ from django import forms
 
 
 class EndpointAdmin(admin.ModelAdmin):
-	list_display = ('name','description','url','account_id','username','password','api_key', 'batch',)
+	list_display = ('name','description','url','account_id','username','password','api_key', 'batch',\
+			'token','refresh_token','token_validity','token_expiration',)
 admin.site.register(Endpoint, EndpointAdmin)
 
 class NotificationStatusAdmin(admin.ModelAdmin):
