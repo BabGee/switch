@@ -1733,6 +1733,8 @@ def update_credentials():
 
 			########If response status not a success, the contact will remain processing
 			if 'response_status' in payload.keys() and payload['response_status'] == '00':
+				i.api_token = payload['response']['api_token']
+				i.access_token = payload['response']['access_token']
 				i.updated = True
 				i.token_expiration = timezone.now() + timezone.timedelta(seconds=i.token_validity)
 			else:
