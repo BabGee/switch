@@ -6,7 +6,7 @@ from django import forms
 
 class CredentialAdmin(admin.ModelAdmin):
 	list_display = ('id','name','description','url','api_key','api_secret','api_token','access_token',\
-			'token_validity','token_expiration','updated',)
+			'token_validity','token_expiration','updated','next_run',)
 admin.site.register(Credential, CredentialAdmin)
 
 class EndpointAdmin(admin.ModelAdmin):

@@ -15,7 +15,7 @@ class Credential(models.Model):
 	api_token = models.CharField(max_length=1024, null=True, blank=True)
 	access_token = models.CharField(max_length=1024, null=True, blank=True)
 	token_validity = models.IntegerField(blank=True, null=True, help_text='In Seconds')
-	token_expiration = models.DateTimeField(blank=True, null=True)
+	token_expiration = models.DateTimeField()
 	updated = models.BooleanField(default=False)
 	def __str__(self):
 		return u'%s' % (self.name)

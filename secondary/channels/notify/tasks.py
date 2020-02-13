@@ -1257,6 +1257,69 @@ class System(Wrappers):
 		return payload
 
 
+
+	def contact_group_send_details(self, payload, node_info):
+		try:
+			lgr.info('Get Product Outbound Notification: %s' % payload)
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			contact_id_list = []
+			product_list = NotificationProduct.objects.get(notification__code__institution=gateway_profile.institution, notification__code__alias__iexact=payload['alias'])
+			for product in product_list:
+				contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
+				status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
+				if not len(contact):
+					new_contact = Contact(status=status,product=product,subscription_details=json.dumps({}),\
+							subscribed=True, gateway_profile=gateway_profile)
+					new_contact.save()
+				else:
+					new_contact = contact[0]
+					new_contact.status = status
+					new_contact.subscribed=True
+					new_contact.save()
+				contact_id_list.append(new_contact.id)
+
+
+			prefixes='|'.join(MNOPrefix.objects.filter(mno__in=[p.notification.code.mno for p in product_list]).values_list('prefix', flat=True)).replace('+','')
+
+			recipient_list = Recipient.objects.filter(subscribed=True,status__name='ACTIVE',\
+							contact_group__id__in=[a for a in payload['contact_group_id'].split(',') if a],\
+							contact_group__institution=gateway_profile.institution,\
+							contact_group__gateway=gateway_profile.gateway).values_list('recipient', flat=True)
+
+			#recipient_count = recipient.count()
+
+			recipient=np.asarray(recipient_list)
+			recipient = np.unique(recipient)
+
+			df = pd.DataFrame({'recipient': recipient})
+			df=df['recipient'].str.extract(r'(?P<msisdn>^\+(?:('+prefixes+')[\d]*)$|^(?:('+prefixes+')([\d]*)$))')
+			recipient = df[~df['msisdn'].isnull()]['msisdn'].values
+
+			recipient_count = recipient.size
+			payload['recipient_count'] = recipient_count
+			payload['contact_group'] = '\n'.join(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))
+
+			#Message Len
+			message = payload['message'].strip()
+			message = unescape(message)
+			message = smart_text(message)
+			message = escape(message)
+			chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters
+			messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
+			message_len = len(messages)
+
+			payload['contact_id_list'] = contact_id_list
+			payload['recipient_count'] = recipient_count
+			payload['message_len'] = message_len
+			payload['response'] = 'Contact Group of %d Recipient(s) to receive %s message(s)' % (recipient_count, message_len)
+			payload['response_status']= '00'
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Contact Group List Details: %s" % e)
+		return payload
+
+
 	def contact_group_list_details(self, payload, node_info):
 		try:
 			lgr.info('Get Product Outbound Notification: %s' % payload)
@@ -1637,6 +1700,48 @@ class Payments(System):
 
 class Trade(System):
 	pass
+
+@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def update_credentials():
+	#from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	#Check for inactive contacts that are still subscribed and have an unsubscription_endpoint
+	credential = Credential.objects.select_for_update().filter(updated=True, token_expiration__lte=timezone.now())
+
+	for i in credential:
+		try:
+			i.updated = False
+			i.save()
+
+			payload = {}
+			payload['name'] = i.name
+			payload['description'] = i.description
+			payload['api_key'] = i.api_key
+			payload['api_secret'] = i.api_secret
+			payload['api_token'] = i.api_token
+			payload['access_token'] = i.access_token
+
+			lgr.info('Request: %s' % payload)
+			#Send SMS
+			node = i.url
+			lgr.info('Endpoint: %s' % node)
+
+			payload = WebService().post_request(payload, node)
+			lgr.info('Response: %s' % payload)
+
+			########If response status not a success, the contact will remain processing
+			if 'response_status' in payload.keys() and payload['response_status'] == '00':
+				i.updated = True
+				i.token_expiration = timezone.now() + timezone.timedelta(seconds=i.token_validity)
+			else:
+				i.updated = True
+
+			i.save()
+
+		except Exception as e:
+			lgr.info('Error update credentials: %s | %s' % (i,e))
 
 
 @app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)

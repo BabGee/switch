@@ -50,6 +50,7 @@ from kombu.common import Broadcast
 
 
 app.conf.task_routes = {
+		'secondary.channels.notify.tasks.update_credentials': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.get_delivery_status': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.send_bulk_notification': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
 
