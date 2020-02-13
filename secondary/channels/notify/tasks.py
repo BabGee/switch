@@ -1709,7 +1709,7 @@ def update_credentials():
 	lgr = get_task_logger(__name__)
 	#Check for inactive contacts that are still subscribed and have an unsubscription_endpoint
 	credential = Credential.objects.select_for_update().filter(updated=True, token_expiration__lte=timezone.now())
-
+	lgr.info('Credentials: %s' % credential)
 	for i in credential:
 		try:
 			i.updated = False
