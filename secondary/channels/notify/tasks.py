@@ -2099,6 +2099,11 @@ def _send_outbound_batch(message_list):
 			payload['node_username'] = i.first().contact.product.notification.endpoint.username
 			payload['node_password'] = i.first().contact.product.notification.endpoint.password
 			payload['node_api_key'] = i.first().contact.product.notification.endpoint.api_key
+			if i.first().contact.product.notification.endpoint.credential:
+				payload['api_key'] = i.first().contact.product.notification.endpoint.credential.api_key
+				payload['api_secret'] = i.first().contact.product.notification.endpoint.credential.api_secret
+				payload['api_token'] = i.first().contact.product.notification.endpoint.credential.api_token
+				payload['access_token'] = i.first().contact.product.notification.endpoint.credential.access_token
 
 			payload['contact_info'] = json.loads(i.first().contact.subscription_details)
 
@@ -2162,6 +2167,11 @@ def _send_outbound(message):
 			payload['node_username'] = i.contact.product.notification.endpoint.username
 			payload['node_password'] = i.contact.product.notification.endpoint.password
 			payload['node_api_key'] = i.contact.product.notification.endpoint.api_key
+			if i.contact.product.notification.endpoint.credential:
+				payload['api_key'] = i.contact.product.notification.endpoint.credential.api_key
+				payload['api_secret'] = i.contact.product.notification.endpoint.credential.api_secret
+				payload['api_token'] = i.contact.product.notification.endpoint.credential.api_token
+				payload['access_token'] = i.contact.product.notification.endpoint.credential.access_token
 
 			payload['contact_info'] = json.loads(i.contact.subscription_details)
 
