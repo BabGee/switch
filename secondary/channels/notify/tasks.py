@@ -2411,7 +2411,7 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 			messages=np.asarray(outbound)
 
 			#if messages.size > 0 and outbound.exists():
-			#lgr.info('Here 3: %s' % messages.size)
+			lgr.info('Here 3: %s' % messages.size)
 			#if messages.size > 0:
 
 			#Update State
@@ -2431,7 +2431,7 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 				lgr.info('MULTI: %s \n %s' % (df.loc[(x),:].shape,df.loc[(x),:].head()))
 				if batch_size>1 and len(df.loc[(x),:].shape)>1 and df.loc[(x),:].shape[0]>1:
 					objs = ID.values
-					#lgr.info('Got Here (multi): %s' % x[0])
+					lgr.info('Got Here (multi): %s' % x[0])
 					start = 0
 					while True:
 						batch = list(islice(objs, start, start+batch_size))
@@ -2440,16 +2440,16 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 						if is_bulk: tasks.append(bulk_send_outbound_batch.s(batch))
 						else: tasks.append(send_outbound_batch.s(batch))
 				elif len(df.loc[(x),:].shape)>1 :
-					#lgr.info('Got Here (list of singles): %s' % x[0])
+					lgr.info('Got Here (list of singles): %s' % x[0])
 					for d in ID: 
 						if is_bulk: tasks.append(bulk_send_outbound.s(d))
 						else: tasks.append(send_outbound.s(d))
 				else:
-					#lgr.info('Got Here (single): %s' % x[0])
+					lgr.info('Got Here (single): %s' % x[0])
 					if is_bulk: tasks.append(bulk_send_outbound.s(ID))
 					else: tasks.append(send_outbound.s(ID))
 
-			#lgr.info('Got Here 10: %s' % tasks)
+			lgr.info('Got Here 10: %s' % tasks)
 
 			chunks, chunk_size = len(tasks), 100
 			sms_tasks= [ group(*tasks[i:i+chunk_size])() for i in range(0, chunks, chunk_size) ]
