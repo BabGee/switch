@@ -1759,7 +1759,8 @@ def get_delivery_status():
 			#df['recipient'] = df['recipient'].apply(lambda x: '+%s' % x.strip() if x.strip()[:1] != '+' else x)
 			for status in df['delivery_status'].unique():
 				status_df = df[df['delivery_status']==status]
-				Outbound.objects.filter(~Q(state__name=status),Q(ext_outbound_id__in=status_df['outbound_id'].tolist(),recipient__in=status_df['recipient'].tolist())).update(state=OutBoundState.objects.get(name=status))
+				Outbound.objects.filter(~Q(state__name=status),Q(ext_outbound_id__in=status_df['outbound_id'].tolist())).update(state=OutBoundState.objects.get(name=status))
+				#Outbound.objects.filter(~Q(state__name=status),Q(ext_outbound_id__in=status_df['outbound_id'].tolist(),recipient__in=status_df['recipient'].tolist())).update(state=OutBoundState.objects.get(name=status))
 	except Exception as e:
 		lgr.info('Error on Get Delivery Status')
 	
