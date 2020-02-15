@@ -1263,25 +1263,6 @@ class System(Wrappers):
 			lgr.info('Get Product Outbound Notification: %s' % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			contact_id_list = []
-			product_list = NotificationProduct.objects.get(notification__code__institution=gateway_profile.institution, notification__code__alias__iexact=payload['alias'])
-			for product in product_list:
-				contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
-				status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
-				if not len(contact):
-					new_contact = Contact(status=status,product=product,subscription_details=json.dumps({}),\
-							subscribed=True, gateway_profile=gateway_profile)
-					new_contact.save()
-				else:
-					new_contact = contact[0]
-					new_contact.status = status
-					new_contact.subscribed=True
-					new_contact.save()
-				contact_id_list.append(new_contact.id)
-
-
-			prefixes='|'.join(MNOPrefix.objects.filter(mno__in=[p.notification.code.mno for p in product_list]).values_list('prefix', flat=True)).replace('+','')
-
 			recipient_list = Recipient.objects.filter(subscribed=True,status__name='ACTIVE',\
 							contact_group__id__in=[a for a in payload['contact_group_id'].split(',') if a],\
 							contact_group__institution=gateway_profile.institution,\
@@ -1293,30 +1274,73 @@ class System(Wrappers):
 			recipient = np.unique(recipient)
 
 			df = pd.DataFrame({'recipient': recipient})
-			df=df['recipient'].str.extract(r'(?P<msisdn>^\+(?:('+prefixes+')[\d]*)$|^(?:('+prefixes+')([\d]*)$))')
-			recipient = df[~df['msisdn'].isnull()]['msisdn'].values
 
-			recipient_count = recipient.size
-			payload['recipient_count'] = recipient_count
+			notifications = dict()
+			product_list = NotificationProduct.objects.filter(Q(notification__code__institution=gateway_profile.institution),\
+									Q(notification__code__alias__iexact=payload['alias']),
+									Q(notification__status__name='ACTIVE'), \
+									Q(notification__channel__id=payload['chid'])|Q(notification__channel=None),
+									 Q(service__name=payload['SERVICE'])).distinct('notification__code__mno__id')
+
+			for product in product_list:
+
+				#Message Len
+				message = payload['message'].strip()
+				message = unescape(message)
+				message = smart_text(message)
+				message = escape(message)
+				chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters (NB: IN FUTURE!!, pick message_len from DB - notification_product)
+				messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
+				message_len = len(messages)
+
+				contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
+				status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
+				if not len(contact):
+					new_contact = Contact(status=status,product=product,subscription_details=json.dumps({}),\
+							subscribed=True, gateway_profile=gateway_profile)
+					new_contact.save()
+				else:
+					new_contact = contact[0]
+					new_contact.status = status
+					new_contact.subscribed=True
+					new_contact.save()
+
+				mno_prefix = MNOPrefix.objects.filter(mno=product.notification.code.mno).values_list('prefix', flat=True)
+				code=product.notification.code.mno.country.code
+				p_code = [re.findall(r'^\+'+code+'([\d]*)$', p) for p in mno_prefix]
+				prefix = '|'.join(p_code)
+				fprefix = '|'.join(mno_prefix).replace('+','')
+
+				lgr.info('Full Prefix: %s' % fprefix)
+				lgr.info('Prefix: %s' % prefix)
+
+				df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$))')
+				df_fprefix=df['recipient'].str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
+
+				df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
+				df_prefix['msisdn']=code+df_prefix['msisdn'].astype(str)
+
+				df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
+
+				recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
+				recipient = np.unique(recipient)
+				recipient_count = recipient.size
+
+				unit_charge = (product.unit_credit_charge) #Pick the notification product cost
+				product_charge = (unit_charge*Decimal(recipient_count)*message_len)
+				float_amount = float_amount + product_charge
+
+				notifications[product.id] = {'float_amount': float_amount, 'float_product_type_id': product.notification.product_type.id, 'contact_id': new_contact.id }
+
+
+			payload['notifications'] = notifications
 			payload['contact_group'] = '\n'.join(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))
-
-			#Message Len
-			message = payload['message'].strip()
-			message = unescape(message)
-			message = smart_text(message)
-			message = escape(message)
-			chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters
-			messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
-			message_len = len(messages)
-
-			payload['contact_id_list'] = contact_id_list
-			payload['recipient_count'] = recipient_count
-			payload['message_len'] = message_len
-			payload['response'] = 'Contact Group of %d Recipient(s) to receive %s message(s)' % (recipient_count, message_len)
+			payload['response'] = 'Contact Group Send Details Captured'
 			payload['response_status']= '00'
+
 		except Exception as e:
 			payload['response_status'] = '96'
-			lgr.info("Error on Contact Group List Details: %s" % e)
+			lgr.info("Error on Contact Group Send Details: %s" % e)
 		return payload
 
 
