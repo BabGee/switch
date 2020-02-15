@@ -3,7 +3,6 @@ from django.db.models import Manager as GeoManager
 
 from primary.core.administration.models import *
 from primary.core.api.models import *
-from django.core.validators import RegexValidator
 
 from django.utils import timezone
 

@@ -1262,7 +1262,6 @@ class System(Wrappers):
 		try:
 			lgr.info('Get Product Outbound Notification: %s' % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-
 			recipient_list = Recipient.objects.filter(subscribed=True,status__name='ACTIVE',\
 							contact_group__id__in=[a for a in payload['contact_group_id'].split(',') if a],\
 							contact_group__institution=gateway_profile.institution,\
@@ -1281,6 +1280,8 @@ class System(Wrappers):
 									Q(notification__status__name='ACTIVE'), \
 									Q(notification__channel__id=payload['chid'])|Q(notification__channel=None),
 									 Q(service__name=payload['SERVICE'])).distinct('notification__code__mno__id')
+
+			#Service is meant to send to unique MNOs with same alias, hence returns one product per MNO (distinct MNO)
 
 			for product in product_list:
 
@@ -1306,19 +1307,25 @@ class System(Wrappers):
 					new_contact.save()
 
 				mno_prefix = MNOPrefix.objects.filter(mno=product.notification.code.mno).values_list('prefix', flat=True)
-				code=product.notification.code.mno.country.code
-				p_code = [re.findall(r'^\+'+code+'([\d]*)$', p) for p in mno_prefix]
-				prefix = '|'.join(p_code)
+
+				ccode=product.notification.code.mno.country.ccode
+
+				code = [re.findall(r'^\+'+ccode+'([\d]*)$', p)[0] for p in mno_prefix]
+
+				prefix = '|'.join(code)
+
 				fprefix = '|'.join(mno_prefix).replace('+','')
 
 				lgr.info('Full Prefix: %s' % fprefix)
 				lgr.info('Prefix: %s' % prefix)
 
-				df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$))')
+				#df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$))')
+				df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
 				df_fprefix=df['recipient'].str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
 
 				df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
-				df_prefix['msisdn']=code+df_prefix['msisdn'].astype(str)
+				df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
+				df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
 
 				df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
 
@@ -1328,10 +1335,8 @@ class System(Wrappers):
 
 				unit_charge = (product.unit_credit_charge) #Pick the notification product cost
 				product_charge = (unit_charge*Decimal(recipient_count)*message_len)
-				float_amount = float_amount + product_charge
 
-				notifications[product.id] = {'float_amount': float_amount, 'float_product_type_id': product.notification.product_type.id, 'contact_id': new_contact.id }
-
+				notifications[product.id] = {'float_amount': product_charge, 'float_product_type_id': product.notification.product_type.id, 'contact_id': new_contact.id }
 
 			payload['notifications'] = notifications
 			payload['contact_group'] = '\n'.join(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))
@@ -1426,6 +1431,114 @@ class System(Wrappers):
 		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Notification Charges: %s" % e)
+		return payload
+
+
+
+	def log_contact_group_send(self, payload, node_info):
+		try:
+			lgr.info('Log Outbound Contact Group Send: %s' % payload)
+
+			date_string = payload['scheduled_date']+' '+payload['scheduled_time']
+			date_obj = datetime.strptime(date_string, '%d/%m/%Y %I:%M %p')
+		
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
+			scheduled_send = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
+
+			#lgr.info('Payload: %s' % payload)
+			notifications = payload['notifications']
+			state = OutBoundState.objects.get(name='CREATED')
+
+			ext_outbound_id = None
+			if "ext_outbound_id" in payload.keys():
+				ext_outbound_id = payload['ext_outbound_id']
+			elif 'bridge__transaction_id' in payload.keys():
+				ext_outbound_id = payload['bridge__transaction_id']
+
+			recipient_list = Recipient.objects.filter(subscribed=True,status__name='ACTIVE',\
+							contact_group__id__in=[a for a in payload['contact_group_id'].split(',') if a],\
+							contact_group__institution=gateway_profile.institution,\
+							contact_group__gateway=gateway_profile.gateway).values_list('recipient', flat=True)
+
+			#recipient_count = recipient.count()
+
+			recipient=np.asarray(recipient_list)
+			recipient = np.unique(recipient)
+
+			df_data = pd.DataFrame({'recipient': recipient})
+
+
+			df_list = []
+			if 'message' in payload.keys() and recipient.size and len(notifications):
+				for key, value in notifications.items():
+					contact = Contact.objects.get(id=value['contact_id'])
+					mno_prefix = MNOPrefix.objects.filter(mno=contact.product.notification.code.mno).values_list('prefix', flat=True)
+					ccode=contact.product.notification.code.mno.country.ccode
+					code = [re.findall(r'^\+'+ccode+'([\d]*)$', p)[0] for p in mno_prefix]
+					prefix = '|'.join(code)
+					fprefix = '|'.join(mno_prefix).replace('+','')
+
+					df_prefix=df_data['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
+					df_fprefix=df_data['recipient'].str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
+
+					df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
+					df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
+					df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
+
+					df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
+
+					recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
+					recipient = np.unique(recipient)
+					recipient_count = recipient.size
+
+					lgr.info('Message and Contact Captured')
+					#Bulk Create Outbound
+					recipient=np.asarray(recipient_list)
+					recipient = np.unique(recipient)
+					#recipient_outbound_bulk_logger.delay(payload, recipient, scheduled_send)
+
+					#recipient_outbound_bulk_logger(payload, recipient, scheduled_send)
+
+					lgr.info('Recipient Outbound Bulk Logger Started')
+
+					df = pd.DataFrame({'recipient': recipient})
+					df['message'] = payload['message']
+					df['scheduled_send'] = scheduled_send
+					df['contact'] = value['contact_id']
+					df['state'] = OutBoundState.objects.get(name='CREATED').id
+					df['date_modified'] = timezone.now()
+					df['date_created'] = timezone.now()
+					df['sends'] = 0
+					if 'contact_group' in payload.keys(): df['contact_group'] = payload['contact_group'] 
+					df['pn'] = False
+					df['pn_ack'] = False
+					df['ext_outbound_id'] = ext_outbound_id
+					df['inst_notified'] = False
+
+					df_list.append(df)
+
+				from django.core.files.base import ContentFile
+
+				_df = pd.concat(df_list)
+				f1 = ContentFile(_df.to_csv(index=False))
+
+				outbound_log = Outbound.objects.from_csv(f1)
+
+				lgr.info('Recipient Outbound Bulk Logger Completed Task')
+
+				payload['response'] = 'Outbound Message Processed'
+				payload['response_status']= '00'
+			elif 'message' not in payload.keys() and len(recipient_list):
+				payload['response'] = 'No Message to Send'
+				payload['response_status']= '00'
+			else:
+				payload['response'] = 'No Contact/Message to Send'
+				payload['response_status']= '00'
+
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Contact Group Send Details: %s" % e)
 		return payload
 
 

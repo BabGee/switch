@@ -4,6 +4,9 @@ from django.contrib.auth.models import User
 from datetime import date
 from django.utils import timezone
 
+from django.core.validators import RegexValidator
+
+
 #User._meta.get_field('email')._unique = False
 User._meta.get_field("username").max_length = 100
 User._meta.get_field("first_name").max_length = 100
@@ -280,7 +283,8 @@ class MNO(models.Model):
 
 class MNOPrefix(models.Model):
 	mno = models.ForeignKey(MNO, on_delete=models.CASCADE)
-	prefix = models.CharField(max_length=8)
+	prefix_regex = RegexValidator(regex=r'^\+\d{4,6}$', message="Prefix must be entered in the format: '+99999'. Up to 7 (Max 3 for country code)(3 digits for area code) digits allowed.")
+	prefix = models.CharField(validators=[prefix_regex], max_length=8, unique=True) # validators should be a list
 	description = models.CharField(max_length=100)
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
