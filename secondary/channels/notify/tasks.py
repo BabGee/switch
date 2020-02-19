@@ -13,8 +13,9 @@ from django.utils.timezone import utc
 from django.contrib.gis.geos import Point
 from django.contrib.gis.geoip2 import GeoIP2
 
+import simplejson as json
 from django.db import IntegrityError, DatabaseError
-import pytz, time, json, pycurl
+import pytz, time, pycurl
 from django.utils.timezone import localtime
 from datetime import datetime
 from decimal import Decimal, ROUND_DOWN
@@ -1336,9 +1337,9 @@ class System(Wrappers):
 				unit_charge = (product.unit_credit_charge) #Pick the notification product cost
 				product_charge = (unit_charge*Decimal(recipient_count)*message_len)
 
-				notifications[product.id] = {'float_amount': product_charge, 'float_product_type_id': product.notification.product_type.id, 'contact_id': new_contact.id }
+				notifications[product.id] = {'float_amount': float(product_charge), 'float_product_type_id': product.notification.product_type.id, 'contact_id': new_contact.id }
 
-			payload['notifications'] = notifications
+			payload['notifications_object'] = json.dumps(notifications)
 			payload['contact_group'] = '\n'.join(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))
 			payload['response'] = 'Contact Group Send Details Captured'
 			payload['response_status']= '00'
@@ -1446,8 +1447,12 @@ class System(Wrappers):
 			profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
 			scheduled_send = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
 
-			#lgr.info('Payload: %s' % payload)
-			notifications = payload['notifications']
+			lgr.info('Payload: %s' % payload)
+
+			notifications = json.loads(payload['notifications_object'])
+
+			lgr.info('Notifications: %s' % notifications)
+
 			state = OutBoundState.objects.get(name='CREATED')
 
 			ext_outbound_id = None
@@ -1538,7 +1543,7 @@ class System(Wrappers):
 
 		except Exception as e:
 			payload['response_status'] = '96'
-			lgr.info("Error on Contact Group Send Details: %s" % e)
+			lgr.info("Error on Log Contact Group Send: %s" % e)
 		return payload
 
 

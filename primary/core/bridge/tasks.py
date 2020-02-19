@@ -97,7 +97,7 @@ class Wrappers:
 		for k, v in payload.items():
 			try:
 				value = json.loads(v, parse_float=Decimal)
-				if isinstance(value, list) or isinstance(value, dict):continue
+				if (isinstance(value, list) or isinstance(value, dict)) and '_object' not in k:continue
 			except: pass
 			key = k.lower()
 			if key not in exempt_keys:
