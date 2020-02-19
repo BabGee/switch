@@ -14,6 +14,7 @@ from django.contrib.gis.geos import Point
 from django.contrib.gis.geoip2 import GeoIP2
 
 import simplejson as json
+from functools import reduce
 from django.db import IntegrityError, DatabaseError
 import pytz, time, pycurl
 from django.utils.timezone import localtime
@@ -1905,8 +1906,12 @@ def get_delivery_status():
 			#df['recipient'] = df['recipient'].apply(lambda x: '+%s' % x.strip() if x.strip()[:1] != '+' else x)
 			for status in df['delivery_status'].unique():
 				status_df = df[df['delivery_status']==status]
-				Outbound.objects.filter(~Q(state__name=status),Q(ext_outbound_id__in=status_df['outbound_id'].tolist())).update(state=OutBoundState.objects.get(name=status))
+				#Outbound.objects.filter(~Q(state__name=status),Q(ext_outbound_id__in=status_df['outbound_id'].tolist())).update(state=OutBoundState.objects.get(name=status))
 				#Outbound.objects.filter(~Q(state__name=status),Q(ext_outbound_id__in=status_df['outbound_id'].tolist(),recipient__in=status_df['recipient'].tolist())).update(state=OutBoundState.objects.get(name=status))
+				q_list = map(lambda n: Q(recipient__contains=n[1]['recipient'],ext_outbound_id=n[1]['outbound_id']), status_df.iterrows())
+				q_list = reduce(lambda a, b: a | b, q_list)
+				Outbound.objects.filter(q_list).update(state=OutBoundState.objects.get(name=status))
+
 	except Exception as e:
 		lgr.info('Error on Get Delivery Status')
 	
