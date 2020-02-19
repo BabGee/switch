@@ -1284,15 +1284,15 @@ class System(Wrappers):
 
 			#Service is meant to send to unique MNOs with same alias, hence returns one product per MNO (distinct MNO)
 
-			for product in product_list:
+			# Message Len
+			message = payload['message'].strip()
+			message = unescape(message)
+			message = smart_text(message)
+			message = escape(message)
 
-				#Message Len
-				message = payload['message'].strip()
-				message = unescape(message)
-				message = smart_text(message)
-				message = escape(message)
-				chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters (NB: IN FUTURE!!, pick message_len from DB - notification_product)
-				messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
+			for product in product_list:
+				chunks, chunk_size = len(message), 160  # SMS Unit is 160 characters (NB: IN FUTURE!!, pick message_len from DB - notification_product)
+				messages = [message[i:i + chunk_size] for i in range(0, chunks, chunk_size)]
 				message_len = len(messages)
 
 				contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
