@@ -802,7 +802,7 @@ class System(Wrappers):
 				payload['message_len'] = message_len
 				payload['response'] = 'Contact Group of %d Recipient(s) to receive %s message(s)' % (recipient_count, message_len)
 
-				payload['notifications'] = notifications
+				payload['notifications_object'] = notifications
 			else:	
 				payload["response_status"] = "40"
 				payload['response'] = 'Check Recipients'
@@ -975,7 +975,7 @@ class System(Wrappers):
 
 		try:
 			#lgr.info('Payload: %s' % payload)
-			notifications = payload['notifications']
+			notifications = json.loads(payload['notifications_object'])
 			state = OutBoundState.objects.get(name='CREATED')
 
 			try:date_obj = datetime.strptime(payload["scheduled_send"], '%d/%m/%Y %I:%M %p')

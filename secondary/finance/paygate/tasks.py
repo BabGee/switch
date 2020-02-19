@@ -1589,7 +1589,7 @@ class System(Wrappers):
 	def debit_batch_float(self, payload, node_info):
 		try:
 			#lgr.info('Payload: %s' % payload)
-			notifications = payload['notifications']
+			notifications = json.loads(payload['notifications_object'])
 			if notifications:
 				for key, value in notifications.items():
 					params = payload.copy()
@@ -1606,6 +1606,29 @@ class System(Wrappers):
 		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Debit Batch Float: %s" % e)
+		return payload
+
+
+	def check_batch_float(self, payload, node_info):
+		try:
+			#lgr.info('Payload: %s' % payload)
+			notifications = json.loads(payload['notifications_object'])
+			if notifications:
+				for key, value in notifications.items():
+					params = payload.copy()
+					params['float_product_type_id'] = value['float_product_type_id']
+					params['float_amount'] = value['float_amount']
+					params = self.check_float(params, node_info)
+					payload['response_status'] = params['response_status']
+					if payload['response_status'] == '00':
+						payload['response'] = params['response']
+					else: break
+			else:
+				payload['response_status'] = '25'
+				payload['response'] = 'No Batch Float to debit'
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Check Batch Float: %s" % e)
 		return payload
 
 
