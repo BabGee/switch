@@ -1910,7 +1910,7 @@ def get_delivery_status():
 				#Outbound.objects.filter(~Q(state__name=status),Q(ext_outbound_id__in=status_df['outbound_id'].tolist(),recipient__in=status_df['recipient'].tolist())).update(state=OutBoundState.objects.get(name=status))
 				q_list = map(lambda n: Q(recipient__contains=n[1]['recipient'],ext_outbound_id=n[1]['outbound_id']), status_df.iterrows())
 				q_list = reduce(lambda a, b: a | b, q_list)
-				Outbound.objects.filter(q_list).update(state=OutBoundState.objects.get(name=status))
+				Outbound.objects.filter(~Q(state__name=status), q_list).update(state=OutBoundState.objects.get(name=status))
 
 	except Exception as e:
 		lgr.info('Error on Get Delivery Status')
