@@ -238,7 +238,7 @@ class BackgroundServiceActivity(models.Model):
 	service = models.ForeignKey(Service, on_delete=models.CASCADE)
 	status = models.ForeignKey(TransactionStatus, on_delete=models.CASCADE)
 	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
-	request = models.CharField(max_length=10240)
+	request = JSONField()
 	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 	response_status = models.ForeignKey(ResponseStatus, on_delete=models.CASCADE)
 	transaction_reference = models.CharField(max_length=256, null=True, blank=True) #Transaction ID

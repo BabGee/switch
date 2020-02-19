@@ -138,7 +138,7 @@ class Wrappers:
 
 			lgr.info('Request: %s' % request)
 			activity = BackgroundServiceActivity(service=service, status=status,\
-					gateway_profile=gateway_profile,request=json.dumps(request),\
+					gateway_profile=gateway_profile,request=request,\
 					channel=channel, response_status=response_status, currency = currency,\
 					amount = amount, charges = charges, gateway=gateway_profile.gateway,\
 					sends=0)
@@ -265,7 +265,7 @@ class System(Wrappers):
 				activity.approver_gateway_profile = gateway_profile
 
 				activity.save()
-				payload.update(json.loads(activity.request))
+				payload.update(activity.request)
 
 				payload = self.background_service_call(activity.approval.service, activity.affected_gateway_profile, payload)
 			else:
@@ -357,7 +357,7 @@ class System(Wrappers):
 				activity.status=status
 				activity.requestor_gateway_profile = gateway_profile
 				activity.affected_gateway_profile = session_gateway_profile
-				activity.request=json.dumps(request)
+				activity.request=request
 				activity.channel=channel
 				activity.gateway=gateway_profile.gateway
 				activity.approval=approval
@@ -474,7 +474,7 @@ def process_background_service_call(background):
 	from primary.core.api.views import ServiceCall
 	try:
 		i = BackgroundServiceActivity.objects.get(id=background)
-		try:payload = json.loads(i.request)
+		try:payload = i.request
 		except:pass
 
 		lgr.info('\n\n\n\n\t########\Pre-Request: %s\n\n' % payload)
