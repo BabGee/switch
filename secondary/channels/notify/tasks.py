@@ -1276,6 +1276,7 @@ class System(Wrappers):
 			df = pd.DataFrame({'recipient': recipient})
 
 			notifications = dict()
+			notifications_preview = dict()
 			product_list = NotificationProduct.objects.filter(Q(notification__code__institution=gateway_profile.institution),\
 									Q(notification__code__alias__iexact=payload['alias']),
 									Q(notification__status__name='ACTIVE'), \
@@ -1284,15 +1285,16 @@ class System(Wrappers):
 
 			#Service is meant to send to unique MNOs with same alias, hence returns one product per MNO (distinct MNO)
 
-			for product in product_list:
+			# Message Len
+			message = payload['message'].strip()
+			message = unescape(message)
+			message = smart_text(message)
+			message = escape(message)
+			notifications_preview['message'] = {'text':message,'schedule_date':payload['schedule_date'],'scheduled_time':payload['scheduled_time']}
 
-				#Message Len
-				message = payload['message'].strip()
-				message = unescape(message)
-				message = smart_text(message)
-				message = escape(message)
-				chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters (NB: IN FUTURE!!, pick message_len from DB - notification_product)
-				messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
+			for product in product_list:
+				chunks, chunk_size = len(message), 160  # SMS Unit is 160 characters (NB: IN FUTURE!!, pick message_len from DB - notification_product)
+				messages = [message[i:i + chunk_size] for i in range(0, chunks, chunk_size)]
 				message_len = len(messages)
 
 				contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
@@ -1338,8 +1340,10 @@ class System(Wrappers):
 				product_charge = (unit_charge*Decimal(recipient_count)*message_len)
 
 				notifications[product.id] = {'float_amount': float(product_charge), 'float_product_type_id': product.notification.product_type.id, 'contact_id': new_contact.id }
+				notifications_preview[product.notification.code.mno.name] = {'float_amount': float(product_charge),'recipient_count':recipient_count,'message_len':message_len,'code':product.notification.code.code}
 
 			payload['notifications_object'] = json.dumps(notifications)
+			payload['notifications_preview'] = json.dumps(notifications_preview)
 			payload['contact_group'] = '\n'.join(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))
 			payload['response'] = 'Contact Group Send Details Captured'
 			payload['response_status']= '00'
