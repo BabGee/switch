@@ -90,14 +90,14 @@ class BackgroundServiceAdmin(admin.ModelAdmin):
 admin.site.register(BackgroundService, BackgroundServiceAdmin)
 
 class BackgroundServiceActivityAdmin(admin.ModelAdmin):
-	list_display = ('id','service','status','gateway_profile','request','channel',\
+	list_display = ('id','service','status','gateway_profile','request_old','request','channel',\
 			'response_status','transaction_reference','currency','amount','charges',\
 			'gateway','institution','current_command',\
 			'scheduled_send','message','sends','ext_outbound_id',\
 			'date_modified','date_created',)
 	list_filter = ('service', 'status', 'gateway_profile__gateway', 'response_status',)
 	search_fields = ('gateway_profile__user__username','gateway_profile__msisdn__phone_number',\
-			'gateway_profile__user__last_name','gateway_profile__user__first_name','request',)
+			'gateway_profile__user__last_name','gateway_profile__user__first_name','request_old','request',)
 admin.site.register(BackgroundServiceActivity, BackgroundServiceActivityAdmin)
 
 

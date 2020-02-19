@@ -6,6 +6,7 @@ from switch.celery import app
 from celery.utils.log import get_task_logger
 from switch.celery import single_instance_task
 
+import simplejson as json
 from django.shortcuts import render
 from django.contrib.auth.models import User
 #from upc.backend.wrappers import *
@@ -13,7 +14,8 @@ from django.db.models import Q, F
 from django.db import transaction
 from django.utils import timezone
 from datetime import datetime, timedelta
-import time, os, random, string, json
+import time, os, random, string
+from decimal import Decimal, ROUND_DOWN
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate
@@ -33,7 +35,7 @@ class Wrappers:
 
 		lgr.info('Response Payload: %s' % payload)
 		try:
-			payload = payload if isinstance(payload, dict)  else json.loads(payload)
+			payload = payload if isinstance(payload, dict)  else json.loads(payload, parse_float=Decimal)
 			new_payload, transaction, count = {}, None, 1
 			for k, v in dict(payload).items():
 				key = k.lower()
@@ -67,7 +69,7 @@ class Wrappers:
 
 		for k, v in payload.items():
 			try:
-				value = json.loads(v)
+				value = json.loads(v, parse_float=Decimal)
 				if isinstance(value, list) or isinstance(value, dict):continue
 			except: pass
 			key = k.lower()
@@ -94,7 +96,7 @@ class Wrappers:
 
 		for k, v in payload.items():
 			try:
-				value = json.loads(v)
+				value = json.loads(v, parse_float=Decimal)
 				if isinstance(value, list) or isinstance(value, dict):continue
 			except: pass
 			key = k.lower()
@@ -474,8 +476,8 @@ def process_background_service_call(background):
 	from primary.core.api.views import ServiceCall
 	try:
 		i = BackgroundServiceActivity.objects.get(id=background)
-		try:payload = i.request
-		except:pass
+		#Always copy json field as it updates back on save if you don't e.g. float/Decimal type on amount below
+		payload = i.request.copy()
 
 		lgr.info('\n\n\n\n\t########\Pre-Request: %s\n\n' % payload)
 		payload['chid'] = i.channel.id
@@ -486,6 +488,7 @@ def process_background_service_call(background):
 		if i.currency:
 			payload['currency'] = i.currency.code
 		if i.amount:
+			#payload['amount'] = float(i.amount)
 			payload['amount'] = i.amount
 
 		service = i.service
@@ -504,7 +507,9 @@ def process_background_service_call(background):
 		i.transaction_reference = '%s,%s' % (i.transaction_reference, payload['transaction_reference']) if 'transaction_reference' in payload.keys() else i.transaction_reference
 		i.current_command = ServiceCommand.objects.get(id=payload['action_id']) if 'action_id' in payload.keys() else None
 
-		if 'last_response' in payload.keys():i.message = Wrappers().response_payload(payload['last_response'])[:3839]
+		#if 'last_response' in payload.keys():i.message = Wrappers().response_payload(payload['last_response'])[:3839]
+		if 'last_response' in payload.keys():i.message = str(payload['last_response'])[:3839]
+
 		if 'response_status' in payload.keys():
 			i.status = TransactionStatus.objects.get(name='PROCESSED')
 			i.response_status = ResponseStatus.objects.get(response=payload['response_status'])

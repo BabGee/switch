@@ -238,6 +238,7 @@ class BackgroundServiceActivity(models.Model):
 	service = models.ForeignKey(Service, on_delete=models.CASCADE)
 	status = models.ForeignKey(TransactionStatus, on_delete=models.CASCADE)
 	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
+	request_old = models.CharField(max_length=10240, null=True, blank=True)
 	request = JSONField()
 	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 	response_status = models.ForeignKey(ResponseStatus, on_delete=models.CASCADE)
