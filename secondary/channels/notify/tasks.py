@@ -1341,6 +1341,10 @@ class System(Wrappers):
 				product_charge = (unit_charge*Decimal(recipient_count)*message_len)
 
 				notifications[product.id] = {'float_amount': float(product_charge), 'float_product_type_id': product.notification.product_type.id, 'contact_id': new_contact.id }
+				if product.notification.code.institution:
+					notifications[product.id]['institution_id'] = product.notification.code.institution.id
+
+
 				notifications_preview[product.notification.code.mno.name] = {'float_amount': float(product_charge),'recipient_count':recipient_count,'message_len':message_len,'alias':product.notification.code.alias}
 
 			payload['notifications_object'] = json.dumps(notifications)

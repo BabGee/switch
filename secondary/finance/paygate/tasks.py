@@ -587,7 +587,8 @@ class System(Wrappers):
 				float_balance = FloatManager.objects.select_for_update().filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-id')
 
 				if 'institution_id' in payload.keys():
-					float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+					#float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+					float_balance = float_balance.filter(Q(institution__id=payload['institution_id']))
 				else:
 					float_balance = float_balance.filter(institution=None)
 
@@ -815,7 +816,8 @@ class System(Wrappers):
 
 
 				if 'institution_id' in payload.keys():
-					float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+					#float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+					float_balance = float_balance.filter(Q(institution__id=payload['institution_id']))
 				else:
 					float_balance = float_balance.filter(institution=None)
 
@@ -905,14 +907,14 @@ class System(Wrappers):
 			if 'payment_method' in payload.keys():
 				float_type = float_type.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
 
-			#lgr.info('Float Type: %s' % float_type)
+			lgr.info('Float Type: %s' % float_type)
 			if 'institution_id' in payload.keys():
 				float_type = float_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
 			else:
 				float_type = float_type.filter(institution=None)
 
-			#lgr.info('Float Type: %s' % float_type)
-			#lgr.info('Payload: %s' % payload)
+			lgr.info('Float Type: %s' % float_type)
+			lgr.info('Payload: %s' % payload)
 			if 'product_item_id' in payload.keys():
 				product_item = ProductItem.objects.get(id=payload['product_item_id'])
 				float_type = float_type.filter(product_type=product_item.product_type)
@@ -924,17 +926,18 @@ class System(Wrappers):
 				float_type = float_type.filter(product_type__name=payload['product_type'])
 			else:
 				float_type = float_type.filter(product_type=None)
-			#lgr.info('Float Type: %s' % float_type)
+			lgr.info('Float Type: %s' % float_type)
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
 				if 'institution_id' in payload.keys():
-					float_balance = FloatManager.objects.filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])|Q(institution=None)).order_by('-id')
+					#float_balance = FloatManager.objects.filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])|Q(institution=None)).order_by('-id')
+					float_balance = FloatManager.objects.filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])).order_by('-id')
 				else:
 					float_balance = FloatManager.objects.filter(float_type=float_type[0],gateway=gateway_profile.gateway, institution=None).order_by('-id')
 
-				#lgr.info('Float Balance: %s' % float_balance)
+				lgr.info('Float Balance: %s' % float_balance)
 				#check float exists
 				if float_balance.exists() and Decimal(float_balance[0].balance_bf) >= Decimal(payload['float_amount']):
-					#lgr.info('Float Exists')
+					lgr.info('Float Exists')
 					charge = Decimal(0)
 					charge_list = FloatCharge.objects.filter(Q(float_type=float_type[0], min_amount__lte=Decimal(payload['float_amount']),\
 							max_amount__gt=Decimal(payload['float_amount']),credit=False),\
@@ -1029,7 +1032,8 @@ class System(Wrappers):
 				'''
 
 				if 'institution_id' in payload.keys():
-					float_balance = FloatManager.objects.select_for_update().filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])|Q(institution=None)).order_by('-id')
+					#float_balance = FloatManager.objects.select_for_update().filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])|Q(institution=None)).order_by('-id')
+					float_balance = FloatManager.objects.select_for_update().filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])).order_by('-id')
 				else:
 					float_balance = FloatManager.objects.select_for_update().filter(float_type=float_type[0],gateway=gateway_profile.gateway, institution=None).order_by('-id')
 
@@ -1595,6 +1599,7 @@ class System(Wrappers):
 					params = payload.copy()
 					params['float_product_type_id'] = value['float_product_type_id']
 					params['float_amount'] = value['float_amount']
+					if 'institution_id' in value.keys(): params['institution_id'] = value['institution_id']
 					params = self.debit_float(params, node_info)
 					payload['response_status'] = params['response_status']
 					if payload['response_status'] == '00':
@@ -1618,6 +1623,7 @@ class System(Wrappers):
 					params = payload.copy()
 					params['float_product_type_id'] = value['float_product_type_id']
 					params['float_amount'] = value['float_amount']
+					if 'institution_id' in value.keys(): params['institution_id'] = value['institution_id']
 					params = self.check_float(params, node_info)
 					payload['response_status'] = params['response_status']
 					if payload['response_status'] == '00':
