@@ -1291,7 +1291,7 @@ class System(Wrappers):
 			message = unescape(message)
 			message = smart_text(message)
 			message = escape(message)
-			notifications_preview['message'] = {'text':message,'schedule_date':payload['schedule_date'],'scheduled_time':payload['scheduled_time']}
+			notifications_preview['message'] = {'text':message,'scheduled_date':payload['scheduled_date'],'scheduled_time':payload['scheduled_time']}
 
 			for product in product_list:
 				chunks, chunk_size = len(message), 160  # SMS Unit is 160 characters (NB: IN FUTURE!!, pick message_len from DB - notification_product)
