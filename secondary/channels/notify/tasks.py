@@ -568,7 +568,7 @@ class System(Wrappers):
 						Q(notification__channel__id=payload['chid'])|Q(notification__channel=None),
 						 Q(service__name=payload['SERVICE'])).\
 						prefetch_related('notification__code','product_type')
-			#lgr.info(notification_product)
+			lgr.info(notification_product)
 			msisdn = UPCWrappers().get_msisdn(payload)
 			if msisdn is not None:
 				#Get/Filter MNO
@@ -595,52 +595,52 @@ class System(Wrappers):
 					lgr.info(contact)
 					notification_product = notification_product.filter(id__in=[c.product.id for c in contact])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 
 			if 'notification_delivery_channel' in payload.keys():
 				notification_product = notification_product.filter(notification__code__channel__name=payload['notification_delivery_channel'])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if 'notification_product_id' in payload.keys():
 				notification_product = notification_product.filter(id=payload['notification_product_id'])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if 'product_item_id' in payload.keys():
 				product_type = ProductItem.objects.get(id=payload['product_item_id']).product_type
 				notification_product = notification_product.filter(product_type=product_type)
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if 'product_type_id' in payload.keys():
 				notification_product = notification_product.filter(product_type__id=payload['product_type_id'])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if 'product_type' in payload.keys():
 				notification_product = notification_product.filter(product_type__name=payload['product_type'])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if 'payment_method' in payload.keys():
 				notification_product = notification_product.filter(payment_method__name=payload['payment_method'])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if 'code' in payload.keys():
 				notification_product = notification_product.filter(notification__code__code=payload['code'])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if 'alias' in payload.keys():
 				notification_product = notification_product.filter(notification__code__alias=payload['alias'])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if 'institution_id' in payload.keys():
 				#Filter to send an institution notification or otherwise a gateway if institution does not exist (gateway only has institution as None)
 				institution_notification_product = notification_product.filter(notification__code__institution__id=payload['institution_id'])
 				gateway_notification_product = notification_product.filter(notification__code__institution=None, institution_allowed=True)
 				notification_product =  institution_notification_product if len(institution_notification_product) else gateway_notification_product
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if "keyword" in payload.keys():
 				notification_product=notification_product.filter(keyword__iexact=payload['keyword'])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 
 
 			if 'notification_template_id' in payload.keys():
@@ -655,7 +655,7 @@ class System(Wrappers):
 
 
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 
 			if len(notification_product):
 				#Construct Message to send
@@ -1259,7 +1259,6 @@ class System(Wrappers):
 		return payload
 
 
-
 	def contact_group_send_details(self, payload, node_info):
 		try:
 			lgr.info('Get Product Outbound Notification: %s' % payload)
@@ -1285,7 +1284,7 @@ class System(Wrappers):
 									 Q(service__name=payload['SERVICE'])).distinct('notification__code__mno__id')
 
 			#Service is meant to send to unique MNOs with same alias, hence returns one product per MNO (distinct MNO)
-
+			#lgr.info('Product List: %s' % product_list)
 			# Message Len
 			message = payload['message'].strip()
 			message = unescape(message)
@@ -1293,65 +1292,69 @@ class System(Wrappers):
 			message = escape(message)
 			notifications_preview['message'] = {'text':message,'scheduled_date':payload['scheduled_date'],'scheduled_time':payload['scheduled_time']}
 
-			for product in product_list:
-				chunks, chunk_size = len(message), 160  # SMS Unit is 160 characters (NB: IN FUTURE!!, pick message_len from DB - notification_product)
-				messages = [message[i:i + chunk_size] for i in range(0, chunks, chunk_size)]
-				message_len = len(messages)
+			if len(product_list):
+				for product in product_list:
+					lgr.info('Product: %s' % product)
+					chunks, chunk_size = len(message), 160  # SMS Unit is 160 characters (NB: IN FUTURE!!, pick message_len from DB - notification_product)
+					messages = [message[i:i + chunk_size] for i in range(0, chunks, chunk_size)]
+					message_len = len(messages)
 
-				contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
-				status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
-				if not len(contact):
-					new_contact = Contact(status=status,product=product,subscription_details=json.dumps({}),\
-							subscribed=True, gateway_profile=gateway_profile)
-					new_contact.save()
-				else:
-					new_contact = contact[0]
-					new_contact.status = status
-					new_contact.subscribed=True
-					new_contact.save()
+					contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
+					status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
+					if not len(contact):
+						new_contact = Contact(status=status,product=product,subscription_details=json.dumps({}),\
+								subscribed=True, gateway_profile=gateway_profile)
+						new_contact.save()
+					else:
+						new_contact = contact[0]
+						new_contact.status = status
+						new_contact.subscribed=True
+						new_contact.save()
 
-				mno_prefix = MNOPrefix.objects.filter(mno=product.notification.code.mno).values_list('prefix', flat=True)
+					mno_prefix = MNOPrefix.objects.filter(mno=product.notification.code.mno).values_list('prefix', flat=True)
 
-				ccode=product.notification.code.mno.country.ccode
+					ccode=product.notification.code.mno.country.ccode
 
-				code = [re.findall(r'^\+'+ccode+'([\d]*)$', p)[0] for p in mno_prefix]
+					code = [re.findall(r'^\+'+ccode+'([\d]*)$', p)[0] for p in mno_prefix]
 
-				prefix = '|'.join(code)
+					prefix = '|'.join(code)
 
-				fprefix = '|'.join(mno_prefix).replace('+','')
+					fprefix = '|'.join(mno_prefix).replace('+','')
 
-				lgr.info('Full Prefix: %s' % fprefix)
-				lgr.info('Prefix: %s' % prefix)
+					lgr.info('Full Prefix: %s' % fprefix)
+					lgr.info('Prefix: %s' % prefix)
 
-				#df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$))')
-				df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
-				df_fprefix=df['recipient'].str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
+					#df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$))')
+					df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
+					df_fprefix=df['recipient'].str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
 
-				df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
-				df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
-				df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
+					df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
+					df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
+					df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
 
-				df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
+					df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
 
-				recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
-				recipient = np.unique(recipient)
-				recipient_count = recipient.size
+					recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
+					recipient = np.unique(recipient)
+					recipient_count = recipient.size
 
-				unit_charge = (product.unit_credit_charge) #Pick the notification product cost
-				product_charge = (unit_charge*Decimal(recipient_count)*message_len)
+					unit_charge = (product.unit_credit_charge) #Pick the notification product cost
+					product_charge = (unit_charge*Decimal(recipient_count)*message_len)
 
-				notifications[product.id] = {'float_amount': float(product_charge), 'float_product_type_id': product.notification.product_type.id, 'contact_id': new_contact.id }
-				if product.notification.code.institution:
-					notifications[product.id]['institution_id'] = product.notification.code.institution.id
+					notifications[product.id] = {'float_amount': float(product_charge), 'float_product_type_id': product.notification.product_type.id, 'contact_id': new_contact.id }
+					if product.notification.code.institution:
+						notifications[product.id]['institution_id'] = product.notification.code.institution.id
 
+					notifications_preview[product.notification.code.mno.name] = {'float_amount': float(product_charge),'recipient_count':recipient_count,'message_len':message_len,'alias':product.notification.code.alias}
 
-				notifications_preview[product.notification.code.mno.name] = {'float_amount': float(product_charge),'recipient_count':recipient_count,'message_len':message_len,'alias':product.notification.code.alias}
-
-			payload['notifications_object'] = json.dumps(notifications)
-			payload['notifications_preview'] = json.dumps(notifications_preview)
-			payload['contact_group'] = '\n'.join(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))
-			payload['response'] = 'Contact Group Send Details Captured'
-			payload['response_status']= '00'
+				payload['notifications_object'] = json.dumps(notifications)
+				payload['notifications_preview'] = json.dumps(notifications_preview)
+				payload['contact_group'] = '\n'.join(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))
+				payload['response'] = 'Contact Group Send Details Captured'
+				payload['response_status']= '00'
+			else:
+				payload['response'] = 'Notification Product not Found'
+				payload['response_status']= '25'
 
 		except Exception as e:
 			payload['response_status'] = '96'
@@ -1905,7 +1908,7 @@ def update_credentials():
 def get_delivery_status():
 	try:
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 60}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
-		df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 60}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
+		df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 10}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
 		if len(df):
 			#df['recipient'] = df['recipient'].apply(lambda x: '+%s' % x.strip() if x.strip()[:1] != '+' else x)
 			for status in df['delivery_status'].unique():
