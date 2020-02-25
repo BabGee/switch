@@ -1334,18 +1334,18 @@ class System(Wrappers):
 
 					df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
 
-					recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
-					recipient = np.unique(recipient)
-					recipient_count = recipient.size
+					_recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
+					_recipient = np.unique(_recipient)
+					_recipient_count = _recipient.size
 
 					unit_charge = (product.unit_credit_charge) #Pick the notification product cost
-					product_charge = (unit_charge*Decimal(recipient_count)*message_len)
+					product_charge = (unit_charge*Decimal(_recipient_count)*message_len)
 
 					notifications[product.id] = {'float_amount': float(product_charge), 'float_product_type_id': product.notification.product_type.id, 'contact_id': new_contact.id }
 					if product.notification.code.institution:
 						notifications[product.id]['institution_id'] = product.notification.code.institution.id
 
-					notifications_preview[product.notification.code.mno.name] = {'float_amount': float(product_charge),'recipient_count':recipient_count,'message_len':message_len,'alias':product.notification.code.alias}
+					notifications_preview[product.notification.code.mno.name] = {'float_amount': float(product_charge),'recipient_count':_recipient_count,'message_len':message_len,'alias':product.notification.code.alias}
 
 				payload['notifications_object'] = json.dumps(notifications)
 				payload['notifications_preview'] = json.dumps(notifications_preview)
@@ -1505,21 +1505,14 @@ class System(Wrappers):
 
 					df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
 
-					recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
-					recipient = np.unique(recipient)
-					recipient_count = recipient.size
-
 					lgr.info('Message and Contact Captured')
-					#Bulk Create Outbound
-					recipient=np.asarray(recipient_list)
-					recipient = np.unique(recipient)
-					#recipient_outbound_bulk_logger.delay(payload, recipient, scheduled_send)
-
-					#recipient_outbound_bulk_logger(payload, recipient, scheduled_send)
+					_recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
+					_recipient = np.unique(_recipient)
+					_recipient_count = _recipient.size
 
 					lgr.info('Recipient Outbound Bulk Logger Started')
 
-					df = pd.DataFrame({'recipient': recipient})
+					df = pd.DataFrame({'recipient': _recipient})
 					df['message'] = payload['message']
 					df['scheduled_send'] = scheduled_send
 					df['contact'] = value['contact_id']
