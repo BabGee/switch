@@ -1490,7 +1490,8 @@ class System(Wrappers):
 			if 'message' in payload.keys() and recipient.size and len(notifications):
 				for key, value in notifications.items():
 					contact = Contact.objects.get(id=value['contact_id'])
-					mno_prefix = MNOPrefix.objects.filter(mno=contact.product.notification.code.mno).values_list('prefix', flat=True)
+					mno = contact.product.notification.code.mno
+					mno_prefix = MNOPrefix.objects.filter(mno=mno).values_list('prefix', flat=True)
 					ccode=contact.product.notification.code.mno.country.ccode
 					code = [re.findall(r'^\+'+ccode+'([\d]*)$', p)[0] for p in mno_prefix]
 					prefix = '|'.join(code)
@@ -1505,12 +1506,11 @@ class System(Wrappers):
 
 					df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
 
-					lgr.info('Message and Contact Captured')
 					_recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
 					_recipient = np.unique(_recipient)
 					_recipient_count = _recipient.size
 
-					lgr.info('Recipient Outbound Bulk Logger Started')
+					#lgr.info('Message and Contact Captured: %s | %s | %s' % (mno.name, prefix, _recipient_count) )
 
 					df = pd.DataFrame({'recipient': _recipient})
 					df['message'] = payload['message']
@@ -1528,9 +1528,13 @@ class System(Wrappers):
 
 					df_list.append(df)
 
+
 				from django.core.files.base import ContentFile
 
+				#lgr.info('DataFrame List: %s' % df_list)
 				_df = pd.concat(df_list)
+
+				#lgr.info('Recipient Outbound Bulk Logger Started: %s' % _df)
 				f1 = ContentFile(_df.to_csv(index=False))
 
 				outbound_log = Outbound.objects.from_csv(f1)
@@ -1901,7 +1905,7 @@ def update_credentials():
 def get_delivery_status():
 	try:
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 60}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
-		df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 10}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
+		df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 75}, "max_duration": {"seconds": 60}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
 		if len(df):
 			#df['recipient'] = df['recipient'].apply(lambda x: '+%s' % x.strip() if x.strip()[:1] != '+' else x)
 			for status in df['delivery_status'].unique():
