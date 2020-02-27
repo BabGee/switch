@@ -1902,19 +1902,40 @@ def update_credentials():
 #@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
+def update_delivery_status(data):
+	try:
+		df = pd.DataFrame(data)
+		#df['recipient'] = df['recipient'].apply(lambda x: '+%s' % x.strip() if x.strip()[:1] != '+' else x)
+		for status in df['delivery_status'].unique():
+			status_df = df[df['delivery_status']==status]
+			state = OutBoundState.objects.get(name=status)
+			q_list = map(lambda n: Q(recipient__endswith=n[1]['recipient'],ext_outbound_id=n[1]['outbound_id']), status_df.iterrows())
+			q_list = reduce(lambda a, b: a | b, q_list)
+			Outbound.objects.filter(~Q(state__name=status), q_list).update(state=state)
+
+	except Exception as e:
+		lgr.info('Error on Update Delivery Status')
+	
+
+
+@app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
+#@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
 def get_delivery_status():
 	try:
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 60}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
-		df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc", "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
-		if len(df):
-			#df['recipient'] = df['recipient'].apply(lambda x: '+%s' % x.strip() if x.strip()[:1] != '+' else x)
-			for status in df['delivery_status'].unique():
-				status_df = df[df['delivery_status']==status]
-				state = OutBoundState.objects.get(name=status)
-				q_list = map(lambda n: Q(recipient__contains=n[1]['recipient'],ext_outbound_id=n[1]['outbound_id']), status_df.iterrows())
-				q_list = reduce(lambda a, b: a | b, q_list)
-				Outbound.objects.filter(~Q(state__name=status), q_list).update(state=state)
+		data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":50000, "min_duration": {"seconds": 150}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data']
+
+		if data:
+			tasks = []
+			dchunks, dchunk_size = len(data), 250
+			tasks = [update_delivery_status.s(data[i:i+dchunk_size]) for i in range(0, dchunks, dchunk_size)]
+			#lgr.info('Tasks: %s' % tasks)
+
+			chunks, chunk_size = len(tasks), 100
+			status_tasks = [ group(*tasks[i:i+chunk_size])() for i in range(0, chunks, chunk_size) ]
 
 	except Exception as e:
 		lgr.info('Error on Get Delivery Status')

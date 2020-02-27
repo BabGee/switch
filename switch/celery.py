@@ -63,6 +63,7 @@ app.conf.task_routes = {
 		'secondary.channels.notify.tasks.send_outbound_sms_messages': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.bulk_send_outbound_sms_messages': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
 
+		'secondary.channels.notify.tasks.update_delivery_status': {'queue': 'bulk_spawned_outbound_notification','exchange': 'bulk_spawned_outbound_notification','routing_key':'bulk_spawned_outbound_notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.bulk_send_outbound_batch': {'queue': 'bulk_spawned_outbound_notification','exchange': 'bulk_spawned_outbound_notification','routing_key':'bulk_spawned_outbound_notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.bulk_send_outbound': {'queue': 'bulk_spawned_outbound_notification','exchange': 'bulk_spawned_outbound_notification','routing_key':'bulk_spawned_outbound_notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.send_outbound_batch': {'queue': 'spawned_outbound_notification','exchange': 'spawned_outbound_notification','routing_key':'spawned_outbound_notification','delivery_mode': 'transient'}, 
