@@ -1923,11 +1923,11 @@ def update_delivery_status(data):
 #@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
-def get_delivery_status_test():
+def get_delivery_status():
 	try:
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 60}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
-		data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":50000, "min_duration": {"seconds": 150}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data']
+		data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":25000, "min_duration": {"seconds": 135}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data']
 
 		if data:
 			tasks = []
@@ -1946,7 +1946,7 @@ def get_delivery_status_test():
 #@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
-def get_delivery_status():
+def get_delivery_status_test():
 	try:
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 60}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
