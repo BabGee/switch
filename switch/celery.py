@@ -52,7 +52,7 @@ from kombu.common import Broadcast
 app.conf.task_routes = {
 		'secondary.channels.notify.tasks.update_credentials': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.get_delivery_status': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
-		'secondary.channels.notify.tasks.send_bulk_notification': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.send_bulk_notification': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, #Unknown
 
 		'secondary.channels.notify.tasks.contact_outbound_bulk_logger': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'},
 		'secondary.channels.notify.tasks.recipient_outbound_bulk_logger': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'},
@@ -63,7 +63,6 @@ app.conf.task_routes = {
 		'secondary.channels.notify.tasks.send_outbound_sms_messages': {'queue': 'notification','exchange': 'notification','routing_key':'notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.bulk_send_outbound_sms_messages': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
 
-		'secondary.channels.notify.tasks.update_delivery_status': {'queue': 'bulk_spawned_outbound_notification','exchange': 'bulk_spawned_outbound_notification','routing_key':'bulk_spawned_outbound_notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.bulk_send_outbound_batch': {'queue': 'bulk_spawned_outbound_notification','exchange': 'bulk_spawned_outbound_notification','routing_key':'bulk_spawned_outbound_notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.bulk_send_outbound': {'queue': 'bulk_spawned_outbound_notification','exchange': 'bulk_spawned_outbound_notification','routing_key':'bulk_spawned_outbound_notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.send_outbound_batch': {'queue': 'spawned_outbound_notification','exchange': 'spawned_outbound_notification','routing_key':'spawned_outbound_notification','delivery_mode': 'transient'}, 
@@ -95,7 +94,7 @@ app.conf.task_routes = {
 
 		'secondary.channels.dsc.tasks.process_push_request': {'queue': 'push_request','exchange': 'push_request','routing_key':'push_request','delivery_mode': 'transient'},
 
-
+		'secondary.channels.notify.tasks.update_delivery_status': {'queue': 'thirdparty','exchange': 'thirdparty','routing_key':'thirdparty','delivery_mode': 'transient'}, 
 		'thirdparty.bidfather.tasks.closed_bids_invoicing': {'queue': 'thirdparty','exchange': 'thirdparty','routing_key':'thirdparty','delivery_mode': 'transient'},
 		'thirdparty.wahi.tasks.process_approved_loan': {'queue': 'thirdparty','exchange': 'thirdparty','routing_key':'thirdparty','delivery_mode': 'transient'},
 		'products.crb.tasks.reference_activity_service_call': {'queue': 'products','exchange': 'products','routing_key':'products','delivery_mode': 'transient'},
