@@ -1909,7 +1909,8 @@ def update_delivery_status(data):
 		for status in df['delivery_status'].unique():
 			status_df = df[df['delivery_status']==status]
 			state = OutBoundState.objects.get(name=status)
-			q_list = map(lambda n: Q(recipient__endswith=n[1]['recipient'],ext_outbound_id=n[1]['outbound_id']), status_df.iterrows())
+			#q_list = map(lambda n: Q(recipient__endswith=n[1]['recipient'],ext_outbound_id=n[1]['outbound_id']), status_df.iterrows())
+			q_list = map(lambda n: Q(recipient__contains=n[1]['recipient'],ext_outbound_id=n[1]['outbound_id']), status_df.iterrows())
 			q_list = reduce(lambda a, b: a | b, q_list)
 			Outbound.objects.filter(~Q(state__name=status), q_list).update(state=state)
 
