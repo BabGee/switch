@@ -1905,16 +1905,16 @@ def update_credentials():
 def get_delivery_status():
 	try:
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 60}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
-		df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 75}, "max_duration": {"seconds": 60}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
+		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
+		df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc", "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
 		if len(df):
 			#df['recipient'] = df['recipient'].apply(lambda x: '+%s' % x.strip() if x.strip()[:1] != '+' else x)
 			for status in df['delivery_status'].unique():
 				status_df = df[df['delivery_status']==status]
-				#Outbound.objects.filter(~Q(state__name=status),Q(ext_outbound_id__in=status_df['outbound_id'].tolist())).update(state=OutBoundState.objects.get(name=status))
-				#Outbound.objects.filter(~Q(state__name=status),Q(ext_outbound_id__in=status_df['outbound_id'].tolist(),recipient__in=status_df['recipient'].tolist())).update(state=OutBoundState.objects.get(name=status))
+				state = OutBoundState.objects.get(name=status)
 				q_list = map(lambda n: Q(recipient__contains=n[1]['recipient'],ext_outbound_id=n[1]['outbound_id']), status_df.iterrows())
 				q_list = reduce(lambda a, b: a | b, q_list)
-				Outbound.objects.filter(~Q(state__name=status), q_list).update(state=OutBoundState.objects.get(name=status))
+				Outbound.objects.filter(~Q(state__name=status), q_list).update(state=state)
 
 	except Exception as e:
 		lgr.info('Error on Get Delivery Status')
