@@ -1931,7 +1931,7 @@ def get_delivery_status():
 
 		if data:
 			tasks = []
-			dchunks, dchunk_size = len(data), 250
+			dchunks, dchunk_size = len(data), 125
 			tasks = [update_delivery_status.s(data[i:i+dchunk_size]) for i in range(0, dchunks, dchunk_size)]
 			#lgr.info('Tasks: %s' % tasks)
 
