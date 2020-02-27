@@ -1923,7 +1923,7 @@ def update_delivery_status(data):
 #@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
-def get_delivery_status():
+def get_delivery_status_test():
 	try:
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 60}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
@@ -1946,11 +1946,11 @@ def get_delivery_status():
 #@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
-def get_delivery_status_test():
+def get_delivery_status():
 	try:
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 60}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
-		data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 130}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data']
+		data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":20000, "min_duration": {"seconds": 130}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data']
 
 		if data:
 			df = pd.DataFrame(data)
@@ -1958,7 +1958,8 @@ def get_delivery_status_test():
 			for status in df['delivery_status'].unique():
 				status_df = df[df['delivery_status']==status]
 				state = OutBoundState.objects.get(name=status)
-				q_list = map(lambda n: Q(recipient__contains=n[1]['recipient'],ext_outbound_id=n[1]['outbound_id']), status_df.iterrows())
+				#q_list = map(lambda n: Q(recipient__contains=n[1]['recipient'],ext_outbound_id=n[1]['outbound_id']), status_df.iterrows())
+				q_list = map(lambda n: Q(recipient__endswith=n[1]['recipient'],ext_outbound_id=n[1]['outbound_id']), status_df.iterrows())
 				q_list = reduce(lambda a, b: a | b, q_list)
 				Outbound.objects.filter(~Q(state__name=status), q_list).update(state=state)
 
