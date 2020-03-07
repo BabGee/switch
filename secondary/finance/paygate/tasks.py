@@ -264,14 +264,10 @@ class System(Wrappers):
 			if remittance_product.exists():
 				# Capture remittance product institution
 
-				institution = None
-				if 'institution_id' in payload.keys():
-					institution = Institution.objects.get(id=payload['institution_id'])
-				elif remittance_product[0].institution:
-					institution = remittance_product[0].institution
-					payload['institution_id'] = institution.id
+				if 'institution_id' not in payload.keys() and remittance_product[0].institution:
+					payload['institution_id'] = remittance_product[0].institution.id
 
-				institution_notification = InstitutionNotification.objects.filter(institution=institution, remittance_product=remittance_product[0])
+				institution_notification = InstitutionNotification.objects.filter(remittance_product=remittance_product[0])
 
 				#log paygate incoming
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
@@ -300,9 +296,6 @@ class System(Wrappers):
 						incoming.amount = Decimal(payload['amount'])
 					if 'charge' in payload.keys() and payload['charge'] not in ["",None]:
 						incoming.charge = Decimal(payload['charge'])
-
-					if institution is not None:
-						incoming.institution = institution
 
 					if institution_incoming_service is not None:
 						incoming.institution_incoming_service = institution_incoming_service
@@ -428,12 +421,10 @@ class System(Wrappers):
 					state = OutgoingState.objects.get(name="CREATED")
 
 
-					if 'institution_id' in payload.keys():
-						institution = Institution.objects.get(id=payload['institution_id'])
-					else:
-						institution = None
+					if 'institution_id' not in payload.keys() and remittance_product[0].institution:
+						payload['institution_id'] = remittance_product[0].institution.id
 
-					institution_notification = InstitutionNotification.objects.filter(institution=institution,remittance_product=remittance_product[0])
+					institution_notification = InstitutionNotification.objects.filter(remittance_product=remittance_product[0])
 
 					reference = payload['bridge__transaction_id'] if 'reference' not in payload.keys() else payload['reference']
 					
@@ -443,8 +434,6 @@ class System(Wrappers):
 
 					if institution_notification.exists():
 						outgoing.institution_notification = institution_notification[0]
-					if institution is not None:
-						outgoing.institution = institution
 
 					if 'scheduled_send' in payload.keys() and payload['scheduled_send'] not in ["",None]:
 						try:date_obj = datetime.strptime(payload["scheduled_send"], '%d/%m/%Y %I:%M %p')

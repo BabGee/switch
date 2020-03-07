@@ -199,8 +199,7 @@ class RemittanceProduct(models.Model):
 class InstitutionNotification(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	institution = models.ForeignKey(Institution, on_delete=models.CASCADE)
-	remittance_product = models.ForeignKey(RemittanceProduct, on_delete=models.CASCADE)
+	remittance_product = models.OneToOneField(RemittanceProduct, on_delete=models.CASCADE)
 	description = models.CharField(max_length=100)
 	request = models.CharField(max_length=1920, null=True, blank=True)
 	url = models.CharField(max_length=640)
@@ -253,7 +252,6 @@ class Incoming(models.Model):
 	processed = models.NullBooleanField(default=False) #If service is none, then Null, else, false/true
 	institution_incoming_service = models.ForeignKey(InstitutionIncomingService, blank=True, null=True, on_delete=models.CASCADE)
 	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
-	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
 	institution_notification = models.ForeignKey(InstitutionNotification, null=True, blank=True, on_delete=models.CASCADE)
 	updated = models.BooleanField(default=False, help_text="True for record that is not the last record")
 	msisdn = models.ForeignKey(MSISDN, null=True, blank=True, on_delete=models.CASCADE)
@@ -309,7 +307,6 @@ class Outgoing(models.Model):
 	inst_num_tries = models.IntegerField(null=True,blank=True)
 	state = models.ForeignKey(OutgoingState, null=True, blank=True, on_delete=models.CASCADE)
 	institution_notification = models.ForeignKey(InstitutionNotification, null=True, blank=True, on_delete=models.CASCADE)
-	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s %s %s' % (self.remittance_product, self.amount, self.currency)
 

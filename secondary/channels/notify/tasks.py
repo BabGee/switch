@@ -635,6 +635,8 @@ class System(Wrappers):
 				institution_notification_product = notification_product.filter(notification__code__institution__id=payload['institution_id'])
 				gateway_notification_product = notification_product.filter(notification__code__institution=None, institution_allowed=True)
 				notification_product =  institution_notification_product if len(institution_notification_product) else gateway_notification_product
+			else:
+				notification_product = notification_product.filter(notification__code__institution=None)
 
 			lgr.info('Notification Product: %s ' % notification_product)
 			if "keyword" in payload.keys():

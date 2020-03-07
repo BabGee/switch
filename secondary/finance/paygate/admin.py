@@ -80,7 +80,7 @@ class IncomingAdmin(admin.ModelAdmin):
 			'response_status','message','ext_inbound_id','ext_first_name','ext_middle_name',\
 			'ext_last_name','inst_notified','inst_num_tries',\
 			'state','processed','institution_incoming_service',\
-			'channel','institution','institution_notification','updated','msisdn',)
+			'channel','institution_notification','updated','msisdn',)
 	search_fields = ('request','reference','message',)
 admin.site.register(Incoming, IncomingAdmin)
 
@@ -99,7 +99,7 @@ admin.site.register(OutgoingState, OutgoingStateAdmin)
 class OutgoingAdmin(admin.ModelAdmin):
 	list_display = ('id','remittance_product','reference','request','amount','charge','currency',\
 			'scheduled_send','response_status','message','sends','ext_outbound_id',\
-			'inst_notified','inst_num_tries','state','institution_notification','institution',)
+			'inst_notified','inst_num_tries','state','institution_notification',)
 
 	list_filter = ('remittance_product','currency','response_status','state',)
 	search_fields = ('reference','request','ext_outbound_id','message',)
