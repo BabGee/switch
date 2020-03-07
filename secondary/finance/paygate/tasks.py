@@ -1702,9 +1702,9 @@ def process_institution_notification(incoming):
 
 
 		params = {}
-		if i.institution_notification.allowed_notification_keys not in [None,""]:
-			allowed_notification_keys = i.institution_notification.allowed_notification_key.split(',')
-			for a in allowed_notification_keys:
+		if i.institution_notification.allowed_notification_key not in [None,""]:
+			allowed_notification_key = i.institution_notification.allowed_notification_key.split(',')
+			for a in allowed_notification_key:
 				if a in payload.keys(): params[a] = payload[a]
 
 
