@@ -1730,7 +1730,7 @@ def institution_notification():
 
 		orig_incoming = Incoming.objects.select_for_update().filter(Q(state__name='CREATED'),Q(inst_notified=False),~Q(institution_notification=None))
 
-		lgr.info('Notification 1.1: %s' % orig_incoming_poller)
+		lgr.info('Notification 1.1: %s' % orig_incoming)
 		incoming = list(orig_incoming.values_list('id',flat=True)[:100])
 
 		lgr.info('Notification 1.2: %s' % incoming)
