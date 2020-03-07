@@ -64,7 +64,7 @@ class RemittanceProductAdmin(admin.ModelAdmin):
 admin.site.register(RemittanceProduct, RemittanceProductAdmin)
 
 class InstitutionNotificationAdmin(admin.ModelAdmin):
-	list_display = ('id','remittance_product','description','request','url','account_id','username','password',)
+	list_display = ('id','remittance_product','description','request','url','account_id','username','password','max_retry','allowed_notification_key')
 admin.site.register(InstitutionNotification, InstitutionNotificationAdmin)
 
 class InstitutionIncomingServiceAdmin(admin.ModelAdmin):

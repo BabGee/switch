@@ -206,6 +206,8 @@ class InstitutionNotification(models.Model):
 	account_id = models.CharField(max_length=512, null=True, blank=True)
 	username = models.CharField(max_length=128, null=True, blank=True)
 	password = models.CharField(max_length=1024, null=True, blank=True)
+	max_retry = models.IntegerField(null=True, blank=True)
+	allowed_notification_key = models.CharField(max_length=1024, null=True, blank=True, help_text='Comma Delimitted')
 	def __str__(self):
 		return u'%s %s' % (self.url, self.remittance_product)
 
