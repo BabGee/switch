@@ -1700,7 +1700,15 @@ def process_institution_notification(incoming):
 			try:payload.update(i.institution_notification.request)
 			except:pass
 
-		payload = WebService().post_request(payload, node)
+
+		params = {}
+		if service.allowed_response_key not in [None,""]:
+			allowed_notification_keys = i.institution_notification.allowed_notification_key.split(',')
+			for a in allowed_notification_keys:
+				if a in payload.keys(): params[a] = payload[a]
+
+
+		payload = WebService().post_request(params, node)
 
 		i.inst_notified = True
 		if 'response' in payload.keys(): i.message = str(Wrappers().response_payload(payload['response']))[:128]; payload['response'] = payload['response']
