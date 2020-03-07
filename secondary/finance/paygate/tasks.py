@@ -1660,6 +1660,89 @@ class Payments(System):
 class Trade(System):
 	pass
 
+
+
+
+
+@app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def process_institution_notification(incoming):
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+		i = Incoming.objects.get(id=incoming)
+		payload = {}
+		lgr.info("Non-realtime Remit")
+		if i.request not in [None, ""]:
+			try:payload.update(json.loads(i.request))
+			except Exception as e: lgr.info('Failed to update Request: %s' % e)
+
+		node = i.institution_notification.url
+
+		payload['amount'] = str(i.amount)
+		payload['reference'] = i.reference
+		if i.currency is not None:
+			payload['currency'] = i.currency.code
+
+		payload['account_id'] = i.institution_notification.account_id
+		payload['username'] = i.institution_notification.username
+		payload['password'] = i.institution_notification.password
+		payload['paygate_outgoing_id'] = i.id
+		payload['sends'] = i.sends
+
+		if i.institution_notification.request not in [None, ""]:
+			try:payload.update(i.institution_notification.request)
+			except:pass
+
+		payload = WebService().post_request(payload, node)
+
+		i.inst_notified = True
+		if 'response' in payload.keys(): i.message = str(Wrappers().response_payload(payload['response']))[:128]; payload['response'] = payload['response']
+		else: payload['response'] = 'Remit Submitted'
+		if 'response_status' in payload.keys() and payload['response_status'] not in [None,""]:
+			try:i.response_status = ResponseStatus.objects.get(response=str(payload['response_status']))
+			except:payload['response_status'] = '06'; i.response_status = ResponseStatus.objects.get(response='06')
+			if payload['response_status'] == '00':
+				i.state = IncomingState.objects.get(name='PROCESSED')
+				payload['response_status'] = '00'
+			else:
+				i.state = IncomingState.objects.get(name='PROCESSED')
+				payload['response_status'] = payload['response_status']
+		else:
+			i.state = IncomingState.objects.get(name='FAILED')
+			i.response_status = ResponseStatus.objects.get(response='06')
+			payload['response_status'] = '06'
+		i.save()
+
+	except Exception as e:
+		lgr.info('Error on Process Institution Notification: %s' % e)
+
+
+@app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def institution_notification():
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+		lgr.info('Notification 1')
+
+		orig_incoming = Incoming.objects.select_for_update().filter(Q(state__name='CREATED'),Q(inst_notified=False),~Q(institution_notification=None))
+
+		lgr.info('Notification 1.1: %s' % orig_incoming_poller)
+		incoming = list(orig_incoming.values_list('id',flat=True)[:100])
+
+		lgr.info('Notification 1.2: %s' % incoming)
+		processing = orig_incoming.filter(id__in=incoming).update(status=IncomingState.objects.get(name='PROCESSING'), sends=F('sends')+1)
+		for ic in incoming:
+			lgr.info('Notification 2: %s' % ic)
+			process_institution_notification.delay(ic)
+			lgr.info('Notification 2.1: %s' % ic)
+	except Exception as e:
+		lgr.info('Error on Institution Notification: %s' % e)
+
+
 @app.task(ignore_result=True)
 @transaction.atomic
 def send_payment(outgoing):

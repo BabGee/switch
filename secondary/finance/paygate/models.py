@@ -207,7 +207,7 @@ class InstitutionNotification(models.Model):
 	username = models.CharField(max_length=128, null=True, blank=True)
 	password = models.CharField(max_length=1024, null=True, blank=True)
 	def __str__(self):
-		return u'%s %s' % (self.institution, self.remittance_product)
+		return u'%s %s' % (self.url, self.remittance_product)
 
 
 class InstitutionIncomingService(models.Model):
