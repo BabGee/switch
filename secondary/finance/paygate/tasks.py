@@ -1689,7 +1689,12 @@ def process_institution_notification(incoming):
 		payload['username'] = i.institution_notification.username
 		payload['password'] = i.institution_notification.password
 		payload['paygate_outgoing_id'] = i.id
-		payload['sends'] = i.sends
+		if i.inst_num_tries:
+			payload['sends'] = i.inst_num_tries+1
+			i.inst_num_tries=i.inst_num_tries+1
+		else:
+			i.inst_num_tries=1
+			payload['sends'] = 1
 
 		if i.institution_notification.request not in [None, ""]:
 			try:payload.update(i.institution_notification.request)
@@ -1734,7 +1739,7 @@ def institution_notification():
 		incoming = list(orig_incoming.values_list('id',flat=True)[:100])
 
 		lgr.info('Notification 1.2: %s' % incoming)
-		processing = orig_incoming.filter(id__in=incoming).update(status=IncomingState.objects.get(name='PROCESSING'), sends=F('sends')+1)
+		processing = orig_incoming.filter(id__in=incoming).update(state=IncomingState.objects.get(name='PROCESSING'))
 		for ic in incoming:
 			lgr.info('Notification 2: %s' % ic)
 			process_institution_notification.delay(ic)

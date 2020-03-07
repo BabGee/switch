@@ -95,8 +95,10 @@ app.conf.task_routes = {
 
 		'secondary.channels.dsc.tasks.process_push_request': {'queue': 'push_request','exchange': 'push_request','routing_key':'push_request','delivery_mode': 'transient'},
 
-		'secondary.finance.paygate.tasks.process_institution_notification': {'queue': 'thirdparty','exchange': 'thirdparty','routing_key':'thirdparty','delivery_mode': 'transient'}, #To be updated to a payments notifications queue in the future 
 		'secondary.channels.notify.tasks.update_delivery_status': {'queue': 'thirdparty','exchange': 'thirdparty','routing_key':'thirdparty','delivery_mode': 'transient'}, #To be updated to a delivery notifications queue in the future 
+
+		'secondary.finance.paygate.tasks.process_institution_notification': {'queue': 'products','exchange': 'products','routing_key':'products','delivery_mode': 'transient'}, #To be updated to a payments notifications queue in the future 
+
 		'thirdparty.bidfather.tasks.closed_bids_invoicing': {'queue': 'thirdparty','exchange': 'thirdparty','routing_key':'thirdparty','delivery_mode': 'transient'},
 		'thirdparty.wahi.tasks.process_approved_loan': {'queue': 'thirdparty','exchange': 'thirdparty','routing_key':'thirdparty','delivery_mode': 'transient'},
 		'products.crb.tasks.reference_activity_service_call': {'queue': 'products','exchange': 'products','routing_key':'products','delivery_mode': 'transient'},
