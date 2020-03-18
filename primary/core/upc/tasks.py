@@ -344,6 +344,30 @@ class Wrappers:
 		except ValueError:
 			return False
 
+	def simple_id_number(self, id_number):
+		id_number = str(id_number).replace(' ','').strip()
+		try: id_number = int(id_number)
+		except: pass
+
+		if isinstance(id_number, int) and len(str(id_number)) >=6 and len(str(id_number))<=10:
+			id_number = str(id_number)
+		else:
+			id_number = None
+		lgr.info('Simple ID Number: %s' % id_number)
+		return id_number
+
+
+	def simple_passport_number(self, passport_number):
+		passport_number = str(passport_number).replace(' ','').strip()
+
+		if re.search(r"([a-zA-Z]{1})(\d{7}$)", passport_number):
+			passport_number = passport_number.upper()
+		else:
+			passport_number = None
+		lgr.info('Simple Passport Number: %s' % passport_number)
+		return passport_number
+
+
 	def simple_id_passport(self, id_passport):
 		id_passport = str(id_passport).replace(' ','').strip()
 		try: id_passport = int(id_passport)
@@ -352,7 +376,7 @@ class Wrappers:
 		if isinstance(id_passport, int) and len(str(id_passport)) >=6 and len(str(id_passport))<=10:
 			id_passport = str(id_passport)
 		elif re.search(r"([a-zA-Z]{1})(\d{7}$)", str(id_passport)):
-			id_passport = str(id_passport)
+			id_passport = id_passport.upper()
 		else:
 			id_passport = None
 		lgr.info('Simple ID/Passport: %s' % id_passport)
