@@ -1499,6 +1499,24 @@ class System(Wrappers):
 		return payload
 
 
+	def validate_pin_entry(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			new_pin = payload['new_pin'] if 'new_pin' in payload.keys() else payload['pin']
+			if new_pin == payload['confirm_pin']:
+				payload['response'] = 'Valid Pin Entered'
+				payload['response_status'] = '00'
+			else:
+				payload['response_status'] = '95'
+				payload['response'] = 'Confirm PIN did not match New PIN'
+
+		except Exception as e:
+			lgr.info('Error on Validate Pin Entry: %s' % e)
+			payload['response_status'] = '96'
+		return payload
+
+
 	def set_profile_pin(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
