@@ -232,8 +232,10 @@ class System(Wrappers):
 			service = Service.objects.get(name='TEMPLATE NOTIFICATION')
 			status = TemplateStatus.objects.get(name='ACTIVE')
 
-			n_p_ids = [np for np in payload['notification_products'].split(',') if np ]
-			notification_products = NotificationProduct.objects.filter(id__in=n_p_ids)
+			product_list = NotificationProduct.objects.filter(Q(notification__code__institution=gateway_profile.institution),\
+									Q(notification__code__alias__iexact=payload['alias']),
+									Q(notification__status__name='ACTIVE'), \
+									Q(notification__channel__id=payload['chid'])|Q(notification__channel=None))
 
 			notification_template = NotificationTemplate()
 			notification_template.template_heading = payload['template_heading']
@@ -264,10 +266,9 @@ class System(Wrappers):
 				#######################
 				notification_template.template_file = template_file
 
-
 			notification_template.save()
 
-			notification_template.product.add(*notification_products)
+			notification_template.product.add(*product_list)
 
 			payload['response'] = 'Template Saved'
 			payload['response_status'] = '00'
