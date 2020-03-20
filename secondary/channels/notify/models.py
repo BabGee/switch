@@ -25,6 +25,7 @@ class Endpoint(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
+	request = JSONField(max_length=1920, null=True, blank=True)
 	url = models.CharField(max_length=640)
 	account_id = models.CharField(max_length=128)
 	username = models.CharField(max_length=128)

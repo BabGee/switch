@@ -2299,6 +2299,10 @@ def _send_outbound_batch(message_list):
 		payload['kmp_recipients'] = np.unique(np.asarray(i.values_list('recipient', flat=True))).tolist()
 
 		if i.first().contact.product.notification.endpoint:
+			if i.first().contact.product.notification.endpoint.request not in [None, ""]:
+				try:params.update(i.first().contact.product.notification.endpoint.request)
+				except:pass
+
 			payload['kmp_spid'] = i.first().contact.product.notification.endpoint.account_id
 			payload['kmp_password'] = i.first().contact.product.notification.endpoint.password
 
@@ -2367,6 +2371,10 @@ def _send_outbound(message):
 		payload['kmp_recipients'] = [str(i.recipient)]
 
 		if i.contact.product.notification.endpoint:
+			if i.contact.product.notification.endpoint.request not in [None, ""]:
+				try:params.update(i.contact.product.notification.endpoint.request)
+				except:pass
+
 			payload['kmp_spid'] = i.contact.product.notification.endpoint.account_id
 			payload['kmp_password'] = i.contact.product.notification.endpoint.password
 
