@@ -2300,7 +2300,7 @@ def _send_outbound_batch(message_list):
 
 		if i.first().contact.product.notification.endpoint:
 			if i.first().contact.product.notification.endpoint.request not in [None, ""]:
-				try:params.update(i.first().contact.product.notification.endpoint.request)
+				try:payload.update(i.first().contact.product.notification.endpoint.request)
 				except:pass
 
 			payload['kmp_spid'] = i.first().contact.product.notification.endpoint.account_id
@@ -2372,7 +2372,7 @@ def _send_outbound(message):
 
 		if i.contact.product.notification.endpoint:
 			if i.contact.product.notification.endpoint.request not in [None, ""]:
-				try:params.update(i.contact.product.notification.endpoint.request)
+				try:payload.update(i.contact.product.notification.endpoint.request)
 				except:pass
 
 			payload['kmp_spid'] = i.contact.product.notification.endpoint.account_id
