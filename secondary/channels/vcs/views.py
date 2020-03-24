@@ -287,8 +287,9 @@ class VAS:
 		if self.nav and self.payload['input'] not in ['0','00']:#Validate input but dont filter Back 0 and Main 00
 			try:
 				allowed_input_list = self.nav.menu.input_variable.allowed_input_list
-				if len(self.payload['input'])>=int(self.nav.menu.input_variable.validate_min) and \
-				len(self.payload['input'])<=int(self.nav.menu.input_variable.validate_max) and \
+				if ((len(self.payload['input'])>=int(self.nav.menu.input_variable.validate_min) and \
+				len(self.payload['input'])<=int(self.nav.menu.input_variable.validate_max)) or \
+				(allowed_input_list and self.payload['input'] in allowed_input_list.split(','))) and \
 				((self.nav.menu.input_variable.variable_type.variable == 'email' and self.validateEmail(self.payload['input'])) or \
 				(self.nav.menu.input_variable.variable_type.variable == 'msisdn' and UPCWrappers().simple_get_msisdn(self.payload['input'],self.payload)) or \
 				(self.nav.menu.input_variable.variable_type.variable == 'id_number' and UPCWrappers().simple_id_number(self.payload['input'])) or \
@@ -297,8 +298,7 @@ class VAS:
 				(self.nav.menu.input_variable.variable_type.variable == 'kra_pin' and UPCWrappers().simple_kra_pin(self.payload['input'])) or \
 				(self.nav.menu.input_variable.variable_type.variable not in ['msisdn','email','id_passport','kra_pin'] and \
 				isinstance(globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable](self.payload['input']), \
-				globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable])) or \
-				(allowed_input_list and self.payload['input'] in allowed_input_list.split(','))):
+				globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable]))):
 					lgr.info('Validated')
 					override_group_select = self.nav.menu.input_variable.override_group_select
 					error_group_select = self.nav.menu.input_variable.error_group_select
