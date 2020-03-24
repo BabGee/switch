@@ -307,7 +307,8 @@ class VAS:
 					override_service = self.nav.menu.input_variable.override_service
 					init_nav_step= self.nav.menu.input_variable.init_nav_step
 
-					if ('Non-Existing ID Number' in self.nav.menu.input_variable.name and \
+					if (allowed_input_list and self.payload['input'] in allowed_input_list.split(',')): pass
+					elif ('Non-Existing ID Number' in self.nav.menu.input_variable.name and \
 					GatewayProfile.objects.filter(Q(gateway=self.code[0].gateway),~Q(status__name__in=['DEACTIVATED','DELETED']),\
 					Q(user__profile__national_id__iexact=self.payload['input'].strip())).exists()) or \
 					('Non-Existing Mobile Number' in self.nav.menu.input_variable.name and \
