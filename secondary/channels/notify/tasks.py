@@ -51,6 +51,124 @@ lgr = logging.getLogger('secondary.channels.notify')
 
 
 class Wrappers:
+	def batch_product_send(self, df_data, date_obj, notifications, ext_outbound_id, gateway_profile):
+
+		profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
+		scheduled_send = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
+		state = OutBoundState.objects.get(name='CREATED')
+
+		df_list = []
+		for key, value in notifications.items():
+			contact = Contact.objects.get(id=value['contact_id'])
+			mno = contact.product.notification.code.mno
+			mno_prefix = MNOPrefix.objects.filter(mno=mno).values_list('prefix', flat=True)
+			ccode=contact.product.notification.code.mno.country.ccode
+			code = [re.findall(r'^\+'+ccode+'([\d]*)$', p)[0] for p in mno_prefix]
+			prefix = '|'.join(code)
+			fprefix = '|'.join(mno_prefix).replace('+','')
+
+			df_prefix=df_data['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
+			df_fprefix=df_data['recipient'].str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
+
+			df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
+			df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
+			df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
+
+			df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
+
+			_recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
+			_recipient = np.unique(_recipient)
+			_recipient_count = _recipient.size
+
+			#lgr.info('Message and Contact Captured: %s | %s | %s' % (mno.name, prefix, _recipient_count) )
+
+			df = pd.DataFrame({'recipient': _recipient})
+			df['message'] = payload['message']
+			df['scheduled_send'] = scheduled_send
+			df['contact'] = value['contact_id']
+			df['state'] = state.id
+			df['date_modified'] = timezone.now()
+			df['date_created'] = timezone.now()
+			df['sends'] = 0
+			if 'contact_group' in payload.keys(): df['contact_group'] = payload['contact_group'] 
+			df['pn'] = False
+			df['pn_ack'] = False
+			df['ext_outbound_id'] = ext_outbound_id
+			df['inst_notified'] = False
+
+			df_list.append(df)
+
+
+		from django.core.files.base import ContentFile
+
+		#lgr.info('DataFrame List: %s' % df_list)
+		_df = pd.concat(df_list)
+
+		#lgr.info('Recipient Outbound Bulk Logger Started: %s' % _df)
+		f1 = ContentFile(_df.to_csv(index=False))
+
+		outbound_log = Outbound.objects.from_csv(f1)
+
+		return outbound_log
+
+	def batch_product_notifications(self, df, product, message, gateway_profile):
+		notifications = {}
+		notifications_preview = {}
+		lgr.info('Product: %s' % product)
+		chunks, chunk_size = len(message), 160  # SMS Unit is 160 characters (NB: IN FUTURE!!, pick message_len from DB - notification_product)
+		messages = [message[i:i + chunk_size] for i in range(0, chunks, chunk_size)]
+		message_len = len(messages)
+
+		contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
+		status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
+		if not len(contact):
+			new_contact = Contact(status=status,product=product,subscription_details=json.dumps({}),\
+					subscribed=True, gateway_profile=gateway_profile)
+			new_contact.save()
+		else:
+			new_contact = contact[0]
+			new_contact.status = status
+			new_contact.subscribed=True
+			new_contact.save()
+
+		mno_prefix = MNOPrefix.objects.filter(mno=product.notification.code.mno).values_list('prefix', flat=True)
+
+		ccode=product.notification.code.mno.country.ccode
+
+		code = [re.findall(r'^\+'+ccode+'([\d]*)$', p)[0] for p in mno_prefix]
+
+		prefix = '|'.join(code)
+
+		fprefix = '|'.join(mno_prefix).replace('+','')
+
+		lgr.info('Full Prefix: %s' % fprefix)
+		lgr.info('Prefix: %s' % prefix)
+
+		#df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$))')
+		df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
+		df_fprefix=df['recipient'].str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
+
+		df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
+		df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
+		df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
+
+		df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
+
+		_recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
+		_recipient = np.unique(_recipient)
+		_recipient_count = _recipient.size
+
+		unit_charge = (product.unit_credit_charge) #Pick the notification product cost
+		product_charge = (unit_charge*Decimal(_recipient_count)*message_len)
+
+		notifications[product.id] = {'float_amount': float(product_charge), 'float_product_type_id': product.notification.product_type.id, 'contact_id': new_contact.id }
+		if product.notification.code.institution:
+			notifications[product.id]['institution_id'] = product.notification.code.institution.id
+
+		notifications_preview[product.notification.code.mno.name] = {'float_amount': float(product_charge),'recipient_count':_recipient_count,'message_len':message_len,'alias':product.notification.code.alias}
+
+		return notifications, notifications_preview
+
 	def recipient_payload(self, payload):
 		new_payload, transaction, count = {}, None, 1
 
@@ -753,60 +871,40 @@ class System(Wrappers):
 
 			recipient=np.asarray(recipient_list)
 			recipient = np.unique(recipient)
-			recipient_count = recipient.size
-			payload['recipient_count'] = recipient_count
 
-			#Message Len
+			df = pd.DataFrame({'recipient': recipient})
+
+			notifications = dict()
+			notifications_preview = dict()
+			product_list = NotificationProduct.objects.filter(Q(notification__code__institution=gateway_profile.institution),\
+									Q(notification__code__alias__iexact=payload['alias']),
+									Q(notification__status__name='ACTIVE'), \
+									Q(notification__channel__id=payload['chid'])|Q(notification__channel=None),
+									 Q(service__name=payload['SERVICE'])).distinct('notification__code__mno__id')
+
+			#Service is meant to send to unique MNOs with same alias, hence returns one product per MNO (distinct MNO)
+			#lgr.info('Product List: %s' % product_list)
+			# Message Len
 			message = payload['message'].strip()
 			message = unescape(message)
 			message = smart_text(message)
 			message = escape(message)
-			chunks, chunk_size = len(message), 160 #SMS Unit is 160 characters
-			messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
-			message_len = len(messages)
+			notifications_preview['message'] = {
+								'text':message,
+								'scheduled_date':payload['scheduled_date'] if 'scheduled_date' in payload.keys() else None,
+								'scheduled_time':payload['scheduled_time'] if 'scheduled_time' in payload.keys() else None
+								}
 
-
-			if len(recipient) and len(recipient)<=100:
+			if len(product_list) and len(recipient)<=100:
 				#lgr.info('Recipients: %s' % recipient)
-
-				payload["response_status"] = "00"
-				payload['response'] = 'Batch Response Captured'
-				notifications = dict()
-				for i in recipient:
-					params = payload.copy()
-					params['msisdn'] = i
-					params = self.get_notification(params, node_info)
-					#lgr.info('Params : %s' % params)
-					#if params['response_status'] != '00':
-					#	#payload['response_status'] = params['response_status']
-					#	#payload['response'] = '%s %s' % (i,params['response'])
-					#	continue
-					#else:
-					if params['response_status'] == '00':
-						product = NotificationProduct.objects.get(id=params['notification_product_id'])
-						contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
-						status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
-						if not len(contact):
-							new_contact = Contact(status=status,product=product,subscription_details=json.dumps({}),\
-									subscribed=True, gateway_profile=gateway_profile)
-							new_contact.save()
-						else:
-							new_contact = contact[0]
-							new_contact.status = status
-							new_contact.subscribed=True
-							new_contact.save()
-
-						if params['notification_product_id'] in notifications.keys():
-							notifications[params['notification_product_id']]['recipient'].append(i)
-						else:
-							notifications[params['notification_product_id']] = {'float_amount': recipient_count*message_len*product.unit_credit_charge, 'float_product_type_id': params['float_product_type_id'],'recipient': [i], 'contact_id': new_contact.id }
-
-
-				payload['recipient_count'] = recipient_count
-				payload['message_len'] = message_len
-				payload['response'] = 'Contact Group of %d Recipient(s) to receive %s message(s)' % (recipient_count, message_len)
-
-				payload['notifications_object'] = notifications
+				for product in product_list:
+					bpn = self.batch_product_notifications(df, product, message, gateway_profile)
+					notifications.update(bpn[0])
+					notifications_preview.update(bpn[1])
+				payload['notifications_object'] = json.dumps(notifications)
+				payload['notifications_preview'] = json.dumps(notifications_preview)
+				payload['response'] = 'Batch Request Captured %d Recipient(s) to receive %s message(s)' % (recipient_count, message_len)
+				payload['response_status']= '00'
 			else:	
 				payload["response_status"] = "40"
 				payload['response'] = 'Check Recipients'
@@ -978,17 +1076,13 @@ class System(Wrappers):
 	def send_batch_notification(self, payload, node_info):
 
 		try:
-			#lgr.info('Payload: %s' % payload)
-			notifications = json.loads(payload['notifications_object'])
-			state = OutBoundState.objects.get(name='CREATED')
 
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			lgr.info('Payload: %s' % payload)
+			notifications = json.loads(payload['notifications_object'])
+			lgr.info('Notifications: %s' % notifications)
 			try:date_obj = datetime.strptime(payload["scheduled_send"], '%d/%m/%Y %I:%M %p')
-			except: date_obj = None
-			if date_obj is not None:		
-				profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
-				scheduled_send = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
-			else:
-				scheduled_send = timezone.now()
+			except: date_obj = timezone.now()
 
 			ext_outbound_id = None
 			if "ext_outbound_id" in payload.keys():
@@ -996,14 +1090,25 @@ class System(Wrappers):
 			elif 'bridge__transaction_id' in payload.keys():
 				ext_outbound_id = payload['bridge__transaction_id']
 
-			for key, value in notifications.items():
-				contact = Contact.objects.get(id=value['contact_id'])
-				objs = [Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r, sends=0, ext_outbound_id=ext_outbound_id) for r in value['recipient']]
-				outbound = Outbound.objects.bulk_create(objs)
+			recipient_list = json.loads(payload['recipients'])
 
+			recipient=np.asarray(recipient_list)
+			recipient = np.unique(recipient)
 
-			payload["response_status"] = "00"
-			payload['response'] = 'Batch Notification Sent'
+			df_data = pd.DataFrame({'recipient': recipient})
+
+			if 'message' in payload.keys() and recipient.size and len(notifications):
+				outbound_log = self.batch_product_send(df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
+				lgr.info('Recipient Outbound Bulk Logger Completed Task')
+				payload['response'] = 'Batch Notification Sent'
+				payload['response_status']= '00'
+			elif 'message' not in payload.keys() and len(recipient_list):
+				payload['response'] = 'No Message to Send'
+				payload['response_status']= '00'
+			else:
+				payload['response'] = 'No Recipient/Message to Send'
+				payload['response_status']= '00'
+
 
 		except Exception as e:
 			payload['response_status'] = '96'
@@ -1296,60 +1401,11 @@ class System(Wrappers):
 			notifications_preview['message'] = {'text':message,'scheduled_date':payload['scheduled_date'],'scheduled_time':payload['scheduled_time']}
 
 			if len(product_list):
+
 				for product in product_list:
-					lgr.info('Product: %s' % product)
-					chunks, chunk_size = len(message), 160  # SMS Unit is 160 characters (NB: IN FUTURE!!, pick message_len from DB - notification_product)
-					messages = [message[i:i + chunk_size] for i in range(0, chunks, chunk_size)]
-					message_len = len(messages)
-
-					contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
-					status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
-					if not len(contact):
-						new_contact = Contact(status=status,product=product,subscription_details=json.dumps({}),\
-								subscribed=True, gateway_profile=gateway_profile)
-						new_contact.save()
-					else:
-						new_contact = contact[0]
-						new_contact.status = status
-						new_contact.subscribed=True
-						new_contact.save()
-
-					mno_prefix = MNOPrefix.objects.filter(mno=product.notification.code.mno).values_list('prefix', flat=True)
-
-					ccode=product.notification.code.mno.country.ccode
-
-					code = [re.findall(r'^\+'+ccode+'([\d]*)$', p)[0] for p in mno_prefix]
-
-					prefix = '|'.join(code)
-
-					fprefix = '|'.join(mno_prefix).replace('+','')
-
-					lgr.info('Full Prefix: %s' % fprefix)
-					lgr.info('Prefix: %s' % prefix)
-
-					#df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$))')
-					df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
-					df_fprefix=df['recipient'].str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
-
-					df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
-					df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
-					df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
-
-					df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
-
-					_recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
-					_recipient = np.unique(_recipient)
-					_recipient_count = _recipient.size
-
-					unit_charge = (product.unit_credit_charge) #Pick the notification product cost
-					product_charge = (unit_charge*Decimal(_recipient_count)*message_len)
-
-					notifications[product.id] = {'float_amount': float(product_charge), 'float_product_type_id': product.notification.product_type.id, 'contact_id': new_contact.id }
-					if product.notification.code.institution:
-						notifications[product.id]['institution_id'] = product.notification.code.institution.id
-
-					notifications_preview[product.notification.code.mno.name] = {'float_amount': float(product_charge),'recipient_count':_recipient_count,'message_len':message_len,'alias':product.notification.code.alias}
-
+					bpn = self.batch_product_notifications(df, product, message, gateway_profile)
+					notifications.update(bpn[0])
+					notifications_preview.update(bpn[1])
 				payload['notifications_object'] = json.dumps(notifications)
 				payload['notifications_preview'] = json.dumps(notifications_preview)
 				payload['contact_group'] = '\n'.join(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))
@@ -1455,20 +1511,16 @@ class System(Wrappers):
 		try:
 			lgr.info('Log Outbound Contact Group Send: %s' % payload)
 
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
 			date_string = payload['scheduled_date']+' '+payload['scheduled_time']
 			date_obj = datetime.strptime(date_string, '%d/%m/%Y %I:%M %p')
 		
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
-			scheduled_send = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
-
 			lgr.info('Payload: %s' % payload)
 
 			notifications = json.loads(payload['notifications_object'])
 
 			lgr.info('Notifications: %s' % notifications)
-
-			state = OutBoundState.objects.get(name='CREATED')
 
 			ext_outbound_id = None
 			if "ext_outbound_id" in payload.keys():
@@ -1489,59 +1541,8 @@ class System(Wrappers):
 			df_data = pd.DataFrame({'recipient': recipient})
 
 
-			df_list = []
 			if 'message' in payload.keys() and recipient.size and len(notifications):
-				for key, value in notifications.items():
-					contact = Contact.objects.get(id=value['contact_id'])
-					mno = contact.product.notification.code.mno
-					mno_prefix = MNOPrefix.objects.filter(mno=mno).values_list('prefix', flat=True)
-					ccode=contact.product.notification.code.mno.country.ccode
-					code = [re.findall(r'^\+'+ccode+'([\d]*)$', p)[0] for p in mno_prefix]
-					prefix = '|'.join(code)
-					fprefix = '|'.join(mno_prefix).replace('+','')
-
-					df_prefix=df_data['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
-					df_fprefix=df_data['recipient'].str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
-
-					df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
-					df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
-					df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
-
-					df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
-
-					_recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
-					_recipient = np.unique(_recipient)
-					_recipient_count = _recipient.size
-
-					#lgr.info('Message and Contact Captured: %s | %s | %s' % (mno.name, prefix, _recipient_count) )
-
-					df = pd.DataFrame({'recipient': _recipient})
-					df['message'] = payload['message']
-					df['scheduled_send'] = scheduled_send
-					df['contact'] = value['contact_id']
-					df['state'] = OutBoundState.objects.get(name='CREATED').id
-					df['date_modified'] = timezone.now()
-					df['date_created'] = timezone.now()
-					df['sends'] = 0
-					if 'contact_group' in payload.keys(): df['contact_group'] = payload['contact_group'] 
-					df['pn'] = False
-					df['pn_ack'] = False
-					df['ext_outbound_id'] = ext_outbound_id
-					df['inst_notified'] = False
-
-					df_list.append(df)
-
-
-				from django.core.files.base import ContentFile
-
-				#lgr.info('DataFrame List: %s' % df_list)
-				_df = pd.concat(df_list)
-
-				#lgr.info('Recipient Outbound Bulk Logger Started: %s' % _df)
-				f1 = ContentFile(_df.to_csv(index=False))
-
-				outbound_log = Outbound.objects.from_csv(f1)
-
+				outbound_log = self.batch_product_send(df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
 				lgr.info('Recipient Outbound Bulk Logger Completed Task')
 
 				payload['response'] = 'Outbound Message Processed'
