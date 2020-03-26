@@ -67,8 +67,8 @@ class Wrappers:
 			prefix = '|'.join(code)
 			fprefix = '|'.join(mno_prefix).replace('+','')
 
-			df_prefix=df_data['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
-			df_fprefix=df_data['recipient'].str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
+			df_prefix=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
+			df_fprefix=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
 
 			df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
 			df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
@@ -145,8 +145,8 @@ class Wrappers:
 		lgr.info('Prefix: %s' % prefix)
 
 		#df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$))')
-		df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
-		df_fprefix=df['recipient'].str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
+		df_prefix=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
+		df_fprefix=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
 
 		df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
 		df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
