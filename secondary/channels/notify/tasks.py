@@ -51,13 +51,15 @@ lgr = logging.getLogger('secondary.channels.notify')
 
 
 class Wrappers:
-	def batch_product_send(self, df_data, date_obj, notifications, ext_outbound_id, gateway_profile):
+	def batch_product_send(self, payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile):
 
 		profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
 		scheduled_send = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
 		state = OutBoundState.objects.get(name='CREATED')
 
 		df_list = []
+		obj_list = []
+		r, c = df_data.shape
 		for key, value in notifications.items():
 			contact = Contact.objects.get(id=value['contact_id'])
 			mno = contact.product.notification.code.mno
@@ -81,37 +83,46 @@ class Wrappers:
 			_recipient_count = _recipient.size
 
 			#lgr.info('Message and Contact Captured: %s | %s | %s' % (mno.name, prefix, _recipient_count) )
+			if r >= 100:
+				df = pd.DataFrame({'recipient': _recipient})
+				df['message'] = payload['message']
+				df['scheduled_send'] = scheduled_send
+				df['contact'] = value['contact_id']
+				df['state'] = state.id
+				df['date_modified'] = timezone.now()
+				df['date_created'] = timezone.now()
+				df['sends'] = 0
+				if 'contact_group' in payload.keys(): df['contact_group'] = payload['contact_group'] 
+				df['pn'] = False
+				df['pn_ack'] = False
+				df['ext_outbound_id'] = ext_outbound_id
+				df['inst_notified'] = False
 
-			df = pd.DataFrame({'recipient': _recipient})
-			df['message'] = payload['message']
-			df['scheduled_send'] = scheduled_send
-			df['contact'] = value['contact_id']
-			df['state'] = state.id
-			df['date_modified'] = timezone.now()
-			df['date_created'] = timezone.now()
-			df['sends'] = 0
-			if 'contact_group' in payload.keys(): df['contact_group'] = payload['contact_group'] 
-			df['pn'] = False
-			df['pn_ack'] = False
-			df['ext_outbound_id'] = ext_outbound_id
-			df['inst_notified'] = False
+				df_list.append(df)
+			else:
+				contact = Contact.objects.get(id=value['contact_id'])
+				contact_group = payload['contact_group'] if 'contact_group' in payload.keys() else None
+				#objs = [Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r, sends=0, ext_outbound_id=ext_outbound_id) for r in value['recipient']]
+				obj_list = [Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r, sends=0, ext_outbound_id=ext_outbound_id, contact_group=contact_group) for r in _recipient]
+				#outbound = Outbound.objects.bulk_create(objs)
 
-			df_list.append(df)
+		if df_list:
+			from django.core.files.base import ContentFile
 
+			#lgr.info('DataFrame List: %s' % df_list)
+			_df = pd.concat(df_list)
 
-		from django.core.files.base import ContentFile
+			#lgr.info('Recipient Outbound Bulk Logger Started: %s' % _df)
+			f1 = ContentFile(_df.to_csv(index=False))
 
-		#lgr.info('DataFrame List: %s' % df_list)
-		_df = pd.concat(df_list)
+			outbound_log = Outbound.objects.from_csv(f1)
 
-		#lgr.info('Recipient Outbound Bulk Logger Started: %s' % _df)
-		f1 = ContentFile(_df.to_csv(index=False))
-
-		outbound_log = Outbound.objects.from_csv(f1)
+		if obj_list:
+			outbound_log = Outbound.objects.bulk_create(obj_list)
 
 		return outbound_log
 
-	def batch_product_notifications(self, df, product, message, gateway_profile):
+	def batch_product_notifications(self, payload, df, product, message, gateway_profile):
 		notifications = {}
 		notifications_preview = {}
 		lgr.info('Product: %s' % product)
@@ -898,12 +909,12 @@ class System(Wrappers):
 			if len(product_list) and len(recipient)<=100:
 				#lgr.info('Recipients: %s' % recipient)
 				for product in product_list:
-					bpn = self.batch_product_notifications(df, product, message, gateway_profile)
+					bpn = self.batch_product_notifications(payload, df, product, message, gateway_profile)
 					notifications.update(bpn[0])
 					notifications_preview.update(bpn[1])
 				payload['notifications_object'] = json.dumps(notifications)
 				payload['notifications_preview'] = json.dumps(notifications_preview)
-				payload['response'] = 'Batch Request Captured %d Recipient(s) to receive %s message(s)' % (recipient_count, message_len)
+				payload['response'] = 'Batch Request Captured'
 				payload['response_status']= '00'
 			else:	
 				payload["response_status"] = "40"
@@ -1082,7 +1093,7 @@ class System(Wrappers):
 			notifications = json.loads(payload['notifications_object'])
 			lgr.info('Notifications: %s' % notifications)
 			try:date_obj = datetime.strptime(payload["scheduled_send"], '%d/%m/%Y %I:%M %p')
-			except: date_obj = timezone.now()
+			except: date_obj = datetime.now()
 
 			ext_outbound_id = None
 			if "ext_outbound_id" in payload.keys():
@@ -1098,7 +1109,7 @@ class System(Wrappers):
 			df_data = pd.DataFrame({'recipient': recipient})
 
 			if 'message' in payload.keys() and recipient.size and len(notifications):
-				outbound_log = self.batch_product_send(df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
+				outbound_log = self.batch_product_send(payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
 				lgr.info('Recipient Outbound Bulk Logger Completed Task')
 				payload['response'] = 'Batch Notification Sent'
 				payload['response_status']= '00'
@@ -1403,7 +1414,7 @@ class System(Wrappers):
 			if len(product_list):
 
 				for product in product_list:
-					bpn = self.batch_product_notifications(df, product, message, gateway_profile)
+					bpn = self.batch_product_notifications(payload, df, product, message, gateway_profile)
 					notifications.update(bpn[0])
 					notifications_preview.update(bpn[1])
 				payload['notifications_object'] = json.dumps(notifications)
@@ -1542,7 +1553,7 @@ class System(Wrappers):
 
 
 			if 'message' in payload.keys() and recipient.size and len(notifications):
-				outbound_log = self.batch_product_send(df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
+				outbound_log = self.batch_product_send(payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
 				lgr.info('Recipient Outbound Bulk Logger Completed Task')
 
 				payload['response'] = 'Outbound Message Processed'
