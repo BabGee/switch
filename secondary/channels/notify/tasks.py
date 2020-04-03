@@ -106,6 +106,8 @@ class Wrappers:
 				obj_list = [Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r, sends=0, ext_outbound_id=ext_outbound_id, contact_group=contact_group) for r in _recipient]
 				#outbound = Outbound.objects.bulk_create(objs)
 
+		outbound_log = None
+
 		if df_list:
 			from django.core.files.base import ContentFile
 
@@ -169,14 +171,15 @@ class Wrappers:
 		_recipient = np.unique(_recipient)
 		_recipient_count = _recipient.size
 
-		unit_charge = (product.unit_credit_charge) #Pick the notification product cost
-		product_charge = (unit_charge*Decimal(_recipient_count)*message_len)
+		if _recipient_count:
+			unit_charge = (product.unit_credit_charge) #Pick the notification product cost
+			product_charge = (unit_charge*Decimal(_recipient_count)*message_len)
 
-		notifications[product.id] = {'float_amount': float(product_charge), 'float_product_type_id': product.notification.product_type.id, 'contact_id': new_contact.id }
-		if product.notification.code.institution:
-			notifications[product.id]['institution_id'] = product.notification.code.institution.id
+			notifications[product.id] = {'float_amount': float(product_charge), 'float_product_type_id': product.notification.product_type.id, 'contact_id': new_contact.id }
+			if product.notification.code.institution:
+				notifications[product.id]['institution_id'] = product.notification.code.institution.id
 
-		notifications_preview[product.notification.code.mno.name] = {'float_amount': float(product_charge),'recipient_count':_recipient_count,'message_len':message_len,'alias':product.notification.code.alias}
+			notifications_preview[product.notification.code.mno.name] = {'float_amount': float(product_charge),'recipient_count':_recipient_count,'message_len':message_len,'alias':product.notification.code.alias}
 
 		return notifications, notifications_preview
 
@@ -909,16 +912,19 @@ class System(Wrappers):
 			if len(product_list) and len(recipient)<=100:
 				#lgr.info('Recipients: %s' % recipient)
 				for product in product_list:
-					bpn = self.batch_product_notifications(payload, df, product, message, gateway_profile)
-					notifications.update(bpn[0])
-					notifications_preview.update(bpn[1])
+					ns,nsp = self.batch_product_notifications(payload, df, product, message, gateway_profile)
+					if ns: notifications.update(ns)
+					if nsp: notifications_preview.update(nsp)
 				payload['notifications_object'] = json.dumps(notifications)
 				payload['notifications_preview'] = json.dumps(notifications_preview)
 				payload['response'] = 'Batch Request Captured'
 				payload['response_status']= '00'
+			elif not product.exists():
+				payload["response_status"] = "25"
+				payload['response'] = 'Notification Product not Found'
 			else:	
-				payload["response_status"] = "40"
-				payload['response'] = 'Check Recipients'
+				payload["response_status"] = "25"
+				payload['response'] = 'No Recipients Found'
 
 		except Exception as e:
 			payload['response_status'] = '96'
@@ -1414,9 +1420,10 @@ class System(Wrappers):
 			if len(product_list):
 
 				for product in product_list:
-					bpn = self.batch_product_notifications(payload, df, product, message, gateway_profile)
-					notifications.update(bpn[0])
-					notifications_preview.update(bpn[1])
+					ns,nsp = self.batch_product_notifications(payload, df, product, message, gateway_profile)
+					if ns: notifications.update(ns)
+					if nsp: notifications_preview.update(nsp)
+
 				payload['notifications_object'] = json.dumps(notifications)
 				payload['notifications_preview'] = json.dumps(notifications_preview)
 				payload['contact_group'] = '\n'.join(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))

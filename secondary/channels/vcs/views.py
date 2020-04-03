@@ -278,7 +278,8 @@ class VAS:
 			except:pass
 
 		#Filter Group
-		if self.payload['accesspoint'] == self.payload['input']:
+		#if self.payload['accesspoint'] == self.payload['input']:
+		if self.payload['accesspoint'] == self.payload['input'] and not len(self.navigator):
 			self.group_select=0
 		elif 'group_select' in kwargs.keys():
 			self.group_select=kwargs['group_select']

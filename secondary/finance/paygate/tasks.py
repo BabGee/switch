@@ -959,12 +959,14 @@ class System(Wrappers):
 
 					balance_bf = Decimal(float_balance[0].balance_bf) - (Decimal(payload['float_amount']) + charge)
 					if balance_bf >= Decimal(0):
-						payload['response'] = 'Float Balance: %s' % (balance_bf)
+						payload['response'] = '%s Float Balance: %s' % (float_type[0].name, balance_bf)
 						payload['response_status'] = '00'
 					else:
+						payload['response'] = '%s Float Balance: %s' % (float_type[0].name, balance_bf)
 						lgr.info("Not enough Float")
 						payload['response_status'] = '51'
 				else:
+					payload['response'] = '%s Float Balance: No Float' % (float_type[0].name)
 					lgr.info("No Float")
 					payload['response_status'] = '51'
 			elif Decimal(payload['float_amount']) <= Decimal(0):
@@ -1608,6 +1610,7 @@ class System(Wrappers):
 			#lgr.info('Payload: %s' % payload)
 			notifications = json.loads(payload['notifications_object'])
 			if notifications:
+				response = None
 				for key, value in notifications.items():
 					params = payload.copy()
 					params['float_product_type_id'] = value['float_product_type_id']
@@ -1615,9 +1618,11 @@ class System(Wrappers):
 					if 'institution_id' in value.keys(): params['institution_id'] = value['institution_id']
 					params = self.check_float(params, node_info)
 					payload['response_status'] = params['response_status']
-					if payload['response_status'] == '00':
-						payload['response'] = params['response']
-					else: break
+					if 'response' in params.keys():
+						response = '%s | %s' % (params['response'], response if response else '')
+						payload['response'] = response
+
+					if not payload['response_status'] == '00': break #Stop service when no float
 			else:
 				payload['response_status'] = '25'
 				payload['response'] = 'No Batch Float to debit'
