@@ -279,10 +279,11 @@ class VAS:
 
 		#Filter Group
 		#if self.payload['accesspoint'] == self.payload['input']:
-		if self.payload['accesspoint'] == self.payload['input'] and not len(self.navigator):
-			self.group_select=0
-		elif 'group_select' in kwargs.keys():
-			self.group_select=kwargs['group_select']
+		#if self.payload['accesspoint'] == self.payload['input'] and not len(self.navigator):
+		#	self.group_select=0
+		#elif 'group_select' in kwargs.keys():
+		#	self.group_select=kwargs['group_select']
+		if 'group_select' in kwargs.keys(): self.group_select = kwargs['group_select']
 
 		#Filter & Validate Input
 		if self.nav and self.payload['input'] not in ['0','00']:#Validate input but dont filter Back 0 and Main 00
