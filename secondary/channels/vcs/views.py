@@ -310,11 +310,7 @@ class VAS:
 					override_service = self.nav.menu.input_variable.override_service
 					init_nav_step= self.nav.menu.input_variable.init_nav_step
 
-					if (allowed_input_list not in [None,''] and self.payload['input'] in allowed_input_list.split(',')):
-						if override_group_select not in [None,'']: self.group_select = override_group_select
-						if override_level not in [None,'']: self.level = str(override_level)
-						if override_service not in [None,'']: self.service = override_service
-						if init_nav_step: self.nav_step = (self.navigator[0].nav_step + 1) if self.navigator.exists() else 0
+					if (allowed_input_list not in [None,''] and self.payload['input'] in allowed_input_list.split(',')): pass
 					elif ('Non-Existing ID Number' in self.nav.menu.input_variable.name and \
 					GatewayProfile.objects.filter(Q(gateway=self.code[0].gateway),~Q(status__name__in=['DEACTIVATED','DELETED']),\
 					Q(user__profile__national_id__iexact=self.payload['input'].strip())).exists()) or \
