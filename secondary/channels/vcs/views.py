@@ -310,7 +310,7 @@ class VAS:
 					override_service = self.nav.menu.input_variable.override_service
 					init_nav_step= self.nav.menu.input_variable.init_nav_step
 
-					if (allowed_input_list and self.payload['input'] in allowed_input_list.split(',')):
+					if (allowed_input_list not in [None,''] and self.payload['input'] in allowed_input_list.split(',')):
 						if override_group_select not in [None,'']: self.group_select = override_group_select
 						if override_level not in [None,'']: self.level = str(override_level)
 						if override_service not in [None,'']: self.service = override_service
@@ -382,11 +382,8 @@ class VAS:
 							self.group_select = self.payload['input']
 
 						if override_group_select not in [None,'']: self.group_select = override_group_select
-
 						if override_level not in [None,'']: self.level = str(override_level)
-
 						if override_service not in [None,'']: self.service = override_service
-
 						if init_nav_step: self.nav_step = (self.navigator[0].nav_step + 1) if self.navigator.exists() else 0
 
 						#Comes after overrides
@@ -422,11 +419,8 @@ class VAS:
 					elif 'Validated Pin' in self.nav.menu.input_variable.name:
 
 						if override_group_select not in [None,'']: self.group_select = override_group_select
-
 						if override_level not in [None,'']: self.level = str(override_level)
-
 						if override_service not in [None,'']: self.service = override_service
-
 						if init_nav_step: self.nav_step = (self.navigator[0].nav_step + 1) if self.navigator.exists() else 0
 
 						if self.gateway_profile.exists():
@@ -452,11 +446,8 @@ class VAS:
 
 					else:
 						if override_group_select not in [None,'']: self.group_select = override_group_select
-
 						if override_level not in [None,'']: self.level = str(override_level)
-
 						if override_service not in [None,'']: self.service = override_service
-
 						if init_nav_step: self.nav_step = (self.navigator[0].nav_step + 1) if self.navigator.exists() else 0
 
 				else:
