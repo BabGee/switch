@@ -266,7 +266,7 @@ class VAS:
 		self.gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=self.payload['msisdn'],gateway =self.code[0].gateway)
 
 		#Filter Level
-		#Levels should be String
+		#Levels should be String (if override has to check for None or '' as 0 values may validate for false and not show)
 		if 'level' in kwargs.keys():
 			self.level=str(kwargs['level'])
 
@@ -332,9 +332,9 @@ class VAS:
 					GatewayProfile.objects.filter(Q(gateway=self.code[0].gateway),~Q(status__name__in=['DEACTIVATED','DELETED']),\
 					Q(user__email__iexact=self.payload['input'].strip())).exists()):
 						#Variables with an error page
-						if error_group_select: self.group_select = error_group_select
+						if error_group_select not in [None,'']: self.group_select = error_group_select
 						else: self.group_select = 96 #Fail menu as list not matching
-						if error_level: self.level = str(error_level)
+						if error_level not in [None,'']: self.level = str(error_level)
 						else: pass
 
 					elif 'Amount' in self.nav.menu.input_variable.name and (self.nav.menu.input_variable.min_amount or self.nav.menu.input_variable.max_amount):
@@ -343,16 +343,16 @@ class VAS:
 
 						if val and self.nav.menu.input_variable.min_amount and val >= self.nav.menu.input_variable.min_amount: pass
 						else:
-							if error_group_select: self.group_select = error_group_select
+							if error_group_select not in [None,'']: self.group_select = error_group_select
 							else: self.group_select = 97 #Fail menu as list not matching
-							if error_level: self.level = str(error_level)
+							if error_level not in [None,'']: self.level = str(error_level)
 							else: pass
 
 						if val and self.nav.menu.input_variable.max_amount and val <= self.nav.menu.input_variable.max_amount: pass
 						else:
-							if error_group_select: self.group_select = error_group_select
+							if error_group_select not in [None,'']: self.group_select = error_group_select
 							else: self.group_select = 98 #Fail menu as list not matching
-							if error_level: self.level = str(error_level)
+							if error_level not in [None,'']: self.level = str(error_level)
 							else: pass
 
 					elif self.nav.menu.input_variable.name == 'Business Number':
@@ -377,11 +377,11 @@ class VAS:
 						if self.nav.menu.input_variable.name in ['Select','Strict Select'] or 'Select for' in self.nav.menu.input_variable.name:
 							self.group_select = self.payload['input']
 
-						if override_group_select: self.group_select = override_group_select
+						if override_group_select not in [None,'']: self.group_select = override_group_select
 
-						if override_level: self.level = str(override_level)
+						if override_level not in [None,'']: self.level = str(override_level)
 
-						if override_service: self.service = override_service
+						if override_service not in [None,'']: self.service = override_service
 
 						if init_nav_step: self.nav_step = (self.navigator[0].nav_step + 1) if self.navigator.exists() else 0
 
@@ -399,16 +399,16 @@ class VAS:
 							else: nolist= True
 						#if len(item_list)<1 or nolist:
 						if nolist:
-							if error_group_select: self.group_select = error_group_select
+							if error_group_select not in [None,'']: self.group_select = error_group_select
 							else: self.group_select = 96  #Fail menu as list not matching
 
-							if error_level: self.level = str(error_level)
+							if error_level not in [None,'']: self.level = str(error_level)
 							else: pass
 						else:
 							if self.nav.menu.input_variable.name == 'None Select':
-								if error_group_select: self.group_select = error_group_select
+								if error_group_select not in [None,'']: self.group_select = error_group_select
 								else: self.group_select = None
-								if error_level: self.level = str(error_level)
+								if error_level not in [None,'']: self.level = str(error_level)
 								else: pass
 
 					elif self.nav.menu.input_variable.name == 'Initialize':
@@ -417,11 +417,11 @@ class VAS:
 
 					elif 'Validated Pin' in self.nav.menu.input_variable.name:
 
-						if override_group_select: self.group_select = override_group_select
+						if override_group_select not in [None,'']: self.group_select = override_group_select
 
-						if override_level: self.level = str(override_level)
+						if override_level not in [None,'']: self.level = str(override_level)
 
-						if override_service: self.service = override_service
+						if override_service not in [None,'']: self.service = override_service
 
 						if init_nav_step: self.nav_step = (self.navigator[0].nav_step + 1) if self.navigator.exists() else 0
 
@@ -447,11 +447,11 @@ class VAS:
 								session_gateway_profile.save()
 
 					else:
-						if override_group_select: self.group_select = override_group_select
+						if override_group_select not in [None,'']: self.group_select = override_group_select
 
-						if override_level: self.level = str(override_level)
+						if override_level not in [None,'']: self.level = str(override_level)
 
-						if override_service: self.service = override_service
+						if override_service not in [None,'']: self.service = override_service
 
 						if init_nav_step: self.nav_step = (self.navigator[0].nav_step + 1) if self.navigator.exists() else 0
 
