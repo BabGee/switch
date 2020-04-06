@@ -101,7 +101,7 @@ class Wrappers:
 			except: pass
 			key = k.lower()
 			if key not in exempt_keys:
-				if count <= 100:
+				if count <= 200:
 					new_payload[str(k)[:30] ] = str(v)[:500]
 				else:
 					break
