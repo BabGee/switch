@@ -187,8 +187,9 @@ class PageString(ServiceCall, Wrappers):
 						else: new_page_string= ERROR
 
 					page_string = page_string.replace('['+v+']', new_page_string)
-
+			#Double <<word>> are replaced by [word] to allow variable replacement as usuall. This is after [RESPONSE_SUMMARY=SUCCESS<<word>>|ERROR<<word>>]
 			page_string = page_string.replace('<<','[').replace('>>',']')
+			
 		variables = re.findall("\[(.*?)\]", page_string)
 		for v in variables:
 			variable_key, variable_val = None, None

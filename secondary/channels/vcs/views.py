@@ -51,7 +51,7 @@ class VAS:
 				if self.gateway_profile.exists():
 					self.navigator = self.navigator.filter(session__gateway_profile=self.gateway_profile[0])
 				self.nav = self.navigator[0]
-				self.level=int(self.nav.menu.level)+1; self.group_select=self.nav.menu.group_select
+				self.level=str(int(self.nav.menu.level)+1); self.group_select=self.nav.menu.group_select
 				#self.level=int(self.nav.level)+1; self.group_select=self.nav.group_select
 				self.nav_step = self.nav.nav_step; self.service = self.nav.menu.service;
 				#Initiate Session
@@ -65,7 +65,7 @@ class VAS:
 			elif self.payload['input'] == '00' or len(self.navigator)<1:#Main Menu Request|First call
 				self.group_select=0
 				self.nav_step = (self.navigator[0].nav_step + 1) if self.payload['input'] == '00' and len(self.navigator)>0 else 0
-				self.level = 0;self.nav = None; self.service = None
+				self.level = '0';self.nav = None; self.service = None
 				#Initiate Session
 				self.session = Session(session_id=self.payload['sessionid'], channel=self.channel, reference=self.payload['msisdn'],status=SessionStatus.objects.get(name='CREATED'))
 				if self.gateway_profile.exists():
@@ -266,13 +266,14 @@ class VAS:
 		self.gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=self.payload['msisdn'],gateway =self.code[0].gateway)
 
 		#Filter Level
+		#Levels should be String
 		if 'level' in kwargs.keys():
-			self.level=kwargs['level']
+			self.level=str(kwargs['level'])
 
 		#Create Menu
 		self.initialize('create_menu')
 		if self.payload['input'] == '0' and len(self.navigator)>0:#Go back to Previous Menu
-			self.level = int(self.navigator[0].menu.level) -1
+			self.level = str(int(self.navigator[0].menu.level) -1)
 			self.nav_step = self.navigator[0].nav_step
 			try: nav= self.navigator.filter(menu__level=self.level,nav_step=self.nav_step); self.service=nav[0].menu.service; self.group_select=nav[0].menu.group_select
 			except:pass
@@ -333,7 +334,7 @@ class VAS:
 						#Variables with an error page
 						if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
 						else: self.group_select = 96 #Fail menu as list not matching
-						if error_level and isinstance(error_level, int): self.level = error_level
+						if error_level and isinstance(error_level, int): self.level = str(error_level)
 						else: pass
 
 					elif 'Amount' in self.nav.menu.input_variable.name and (self.nav.menu.input_variable.min_amount or self.nav.menu.input_variable.max_amount):
@@ -344,14 +345,14 @@ class VAS:
 						else:
 							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
 							else: self.group_select = 97 #Fail menu as list not matching
-							if error_level and isinstance(error_level, int): self.level = error_level
+							if error_level and isinstance(error_level, int): self.level = str(error_level)
 							else: pass
 
 						if val and self.nav.menu.input_variable.max_amount and val <= self.nav.menu.input_variable.max_amount: pass
 						else:
 							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
 							else: self.group_select = 98 #Fail menu as list not matching
-							if error_level and isinstance(error_level, int): self.level = error_level
+							if error_level and isinstance(error_level, int): self.level = str(error_level)
 							else: pass
 
 					elif self.nav.menu.input_variable.name == 'Business Number':
@@ -378,7 +379,7 @@ class VAS:
 
 						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
 
-						if override_level and isinstance(override_level, int): self.level = override_level
+						if override_level and isinstance(override_level, int): self.level = str(override_level)
 
 						if override_service: self.service = override_service
 
@@ -402,13 +403,13 @@ class VAS:
 							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
 							else: self.group_select = 96  #Fail menu as list not matching
 
-							if error_level and isinstance(error_level, int): self.level = error_level
+							if error_level and isinstance(error_level, int): self.level = str(error_level)
 							else: pass
 						else:
 							if self.nav.menu.input_variable.name == 'None Select':
 								if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
 								else: self.group_select = None
-								if error_level and isinstance(error_level, int): self.level = error_level
+								if error_level and isinstance(error_level, int): self.level = str(error_level)
 								else: pass
 
 					elif self.nav.menu.input_variable.name == 'Initialize':
@@ -419,7 +420,7 @@ class VAS:
 
 						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
 
-						if override_level and isinstance(override_level, int): self.level = override_level
+						if override_level and isinstance(override_level, int): self.level = str(override_level)
 
 						if override_service: self.service = override_service
 
@@ -449,7 +450,7 @@ class VAS:
 					else:
 						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
 
-						if override_level and isinstance(override_level, int): self.level = override_level
+						if override_level and isinstance(override_level, int): self.level = str(override_level)
 
 						if override_service: self.service = override_service
 
