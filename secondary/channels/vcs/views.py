@@ -332,9 +332,9 @@ class VAS:
 					GatewayProfile.objects.filter(Q(gateway=self.code[0].gateway),~Q(status__name__in=['DEACTIVATED','DELETED']),\
 					Q(user__email__iexact=self.payload['input'].strip())).exists()):
 						#Variables with an error page
-						if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
+						if error_group_select: self.group_select = error_group_select
 						else: self.group_select = 96 #Fail menu as list not matching
-						if error_level and isinstance(error_level, int): self.level = str(error_level)
+						if error_level: self.level = str(error_level)
 						else: pass
 
 					elif 'Amount' in self.nav.menu.input_variable.name and (self.nav.menu.input_variable.min_amount or self.nav.menu.input_variable.max_amount):
@@ -343,16 +343,16 @@ class VAS:
 
 						if val and self.nav.menu.input_variable.min_amount and val >= self.nav.menu.input_variable.min_amount: pass
 						else:
-							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
+							if error_group_select: self.group_select = error_group_select
 							else: self.group_select = 97 #Fail menu as list not matching
-							if error_level and isinstance(error_level, int): self.level = str(error_level)
+							if error_level: self.level = str(error_level)
 							else: pass
 
 						if val and self.nav.menu.input_variable.max_amount and val <= self.nav.menu.input_variable.max_amount: pass
 						else:
-							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
+							if error_group_select: self.group_select = error_group_select
 							else: self.group_select = 98 #Fail menu as list not matching
-							if error_level and isinstance(error_level, int): self.level = str(error_level)
+							if error_level: self.level = str(error_level)
 							else: pass
 
 					elif self.nav.menu.input_variable.name == 'Business Number':
@@ -377,9 +377,9 @@ class VAS:
 						if self.nav.menu.input_variable.name in ['Select','Strict Select'] or 'Select for' in self.nav.menu.input_variable.name:
 							self.group_select = self.payload['input']
 
-						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
+						if override_group_select: self.group_select = override_group_select
 
-						if override_level and isinstance(override_level, int): self.level = str(override_level)
+						if override_level: self.level = str(override_level)
 
 						if override_service: self.service = override_service
 
@@ -387,8 +387,7 @@ class VAS:
 
 						#Comes after overrides
 						if 'Product of Select' in self.nav.menu.input_variable.name:
-							self.group_select = str(int(self.payload['input'])*int(override_group_select)) if override_group_select and \
-										isinstance(override_group_select, int) else self.payload['input']
+							self.group_select = str(int(self.payload['input'])*int(override_group_select)) if override_group_select  else self.payload['input']
 
 						#Matches Saved List to Input
 						try:item_list = json.loads(self.nav.item_list)
@@ -400,16 +399,16 @@ class VAS:
 							else: nolist= True
 						#if len(item_list)<1 or nolist:
 						if nolist:
-							if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
+							if error_group_select: self.group_select = error_group_select
 							else: self.group_select = 96  #Fail menu as list not matching
 
-							if error_level and isinstance(error_level, int): self.level = str(error_level)
+							if error_level: self.level = str(error_level)
 							else: pass
 						else:
 							if self.nav.menu.input_variable.name == 'None Select':
-								if error_group_select and isinstance(error_group_select, int): self.group_select = error_group_select
+								if error_group_select: self.group_select = error_group_select
 								else: self.group_select = None
-								if error_level and isinstance(error_level, int): self.level = str(error_level)
+								if error_level: self.level = str(error_level)
 								else: pass
 
 					elif self.nav.menu.input_variable.name == 'Initialize':
@@ -418,9 +417,9 @@ class VAS:
 
 					elif 'Validated Pin' in self.nav.menu.input_variable.name:
 
-						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
+						if override_group_select: self.group_select = override_group_select
 
-						if override_level and isinstance(override_level, int): self.level = str(override_level)
+						if override_level: self.level = str(override_level)
 
 						if override_service: self.service = override_service
 
@@ -448,9 +447,9 @@ class VAS:
 								session_gateway_profile.save()
 
 					else:
-						if override_group_select and isinstance(override_group_select, int): self.group_select = override_group_select
+						if override_group_select: self.group_select = override_group_select
 
-						if override_level and isinstance(override_level, int): self.level = str(override_level)
+						if override_level: self.level = str(override_level)
 
 						if override_service: self.service = override_service
 
