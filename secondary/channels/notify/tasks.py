@@ -52,7 +52,6 @@ lgr = logging.getLogger('secondary.channels.notify')
 
 class Wrappers:
 	def batch_product_send(self, payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile):
-
 		profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
 		scheduled_send = pytz.timezone(gateway_profile.user.profile.timezone).localize(date_obj)
 		state = OutBoundState.objects.get(name='CREATED')
@@ -102,9 +101,8 @@ class Wrappers:
 			else:
 				contact = Contact.objects.get(id=value['contact_id'])
 				contact_group = payload['contact_group'] if 'contact_group' in payload.keys() else None
-				#objs = [Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r, sends=0, ext_outbound_id=ext_outbound_id) for r in value['recipient']]
-				obj_list = [Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r, sends=0, ext_outbound_id=ext_outbound_id, contact_group=contact_group) for r in _recipient]
-				#outbound = Outbound.objects.bulk_create(objs)
+				#Append by adding
+				obj_list = obj_list+[Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r, sends=0, ext_outbound_id=ext_outbound_id, contact_group=contact_group) for r in _recipient]
 
 		outbound_log = None
 
