@@ -23,7 +23,7 @@ def default(request):
 	#z  = ''
 	#status = NodeStatus.objects.first().name
 	status = ''
-	time.sleep(2)
+	#time.sleep(2)
 
 	#ip_address = request.META.get('CF-Connecting-IP', request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR')))
 	ip_address = request.META.get('CF-Connecting-IP', request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('HTTP_X_REAL_IP', request.META.get('REMOTE_ADDR'))))
