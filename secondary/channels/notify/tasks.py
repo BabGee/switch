@@ -699,7 +699,7 @@ class System(Wrappers):
 						Q(notification__channel__id=payload['chid'])|Q(notification__channel=None),
 						 Q(service__name=payload['SERVICE'])).\
 						prefetch_related('notification__code','product_type')
-			lgr.info(notification_product)
+			lgr.info('Notification Product: %s' % notification_product)
 			msisdn = UPCWrappers().get_msisdn(payload)
 			if msisdn is not None:
 				#Get/Filter MNO
