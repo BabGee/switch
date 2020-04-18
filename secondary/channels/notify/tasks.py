@@ -1901,7 +1901,7 @@ def update_credentials():
 			node = i.url
 			lgr.info('Endpoint: %s' % node)
 
-			payload = WebService().post_request(payload, node)
+			payload = WebService().post_request(payload, node, timeout=5)
 			lgr.info('Response: %s' % payload)
 
 			########If response status not a success, the contact will remain processing
@@ -1949,7 +1949,7 @@ def get_delivery_status():
 	try:
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 60}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
-		data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 125}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:7321/data/request/')['response']['data']
+		data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 125}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:7321/data/request/', timeout=5)['response']['data']
 
 		if data:
 			dchunks, dchunk_size = len(data), 125
@@ -1971,7 +1971,7 @@ def get_delivery_status_test():
 	try:
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 60}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
-		data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":20000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data']
+		data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":20000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/', timeout=5)['response']['data']
 
 		if data:
 			df = pd.DataFrame(data)
@@ -2001,7 +2001,7 @@ def send_contact_subscription(payload, node):
 			i.status = ContactStatus.objects.get(name='PROCESSING')
 			i.save()
 
-		payload = WebService().post_request(payload, node)
+		payload = WebService().post_request(payload, node, timeout=5)
 		lgr.info('Response: %s' % payload)
 
 		########
@@ -2039,7 +2039,7 @@ def send_contact_unsubscription(payload, node):
 			i.save()
 
 
-		payload = WebService().post_request(payload, node)
+		payload = WebService().post_request(payload, node, timeout=5)
 		lgr.info('Response: %s' % payload)
 
 		########If response status not a success, the contact will remain processing
@@ -2066,7 +2066,7 @@ def notify_institution(payload, node):
 		if 'institution_url' in node.keys():
 			endpoint = node['institution_url']
 			lgr.info('Endpoint: %s' % endpoint)
-			payload = WebService().post_request(payload, endpoint)
+			payload = WebService().post_request(payload, endpoint, timeout=5)
 		lgr.info("Response||Payload: %s| Node Info: %s" % (payload, node) )
 
 		payload['response'] = 'Institution Notified'
@@ -2340,7 +2340,7 @@ def _send_outbound_batch(message_list):
 			#Send SMS
 			node = i.first().contact.product.notification.endpoint.url
 			lgr.info("Payload: %s| Node: %s" % (payload, node) )
-			payload = WebService().post_request(payload, node)
+			payload = WebService().post_request(payload, node, timeout=5)
 			lgr.info('Batch Response: %s' % payload)
 
 			if 'response_status' in payload.keys() and payload['response_status'] == '00':
@@ -2415,7 +2415,7 @@ def _send_outbound(message):
 			#Send SMS
 			node = i.contact.product.notification.endpoint.url
 			#lgr.info("Payload: %s| Node: %s" % (payload, node) )
-			payload = WebService().post_request(payload, node)
+			payload = WebService().post_request(payload, node, timeout=5)
 			#lgr.info('Response: %s' % payload)
 
 
@@ -2456,7 +2456,7 @@ def _send_outbound_list(payload):
 		#Send SMS
 		node = payload['node_url']
 		lgr.info("Payload: %s| Node: %s" % (payload, node) )
-		payload = WebService().post_request(payload, node)
+		payload = WebService().post_request(payload, node, timeout=5)
 		lgr.info('Response: %s' % payload)
 
 	except Exception as e:
@@ -2507,7 +2507,7 @@ def send_outbound2(payload, node):
 	try:
 		payload = json.loads(payload)
 		lgr.info("Payload: %s| Node: %s" % (payload, node) )
-		payload = WebService().post_request(payload, node)
+		payload = WebService().post_request(payload, node, timeout=5)
 		lgr.info('Response: %s' % payload)
 
 		outbound = Outbound.objects.get(id=payload['outbound_id'])
