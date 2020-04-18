@@ -692,6 +692,8 @@ class System(Wrappers):
 
 	def get_notification(self, payload, node_info):
 		try:
+
+			lgr.info("Payload: %s" % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			notification_product = NotificationProduct.objects.filter(Q(notification__status__name='ACTIVE'), \
