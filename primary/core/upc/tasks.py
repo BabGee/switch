@@ -2450,7 +2450,8 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			gateway = gateway_profile.gateway
-			details = {}
+			#Initializes with gateway. Replaces keys on institution level if exists
+			details = gateway.details
 
 			if gateway_profile.access_level.name != 'SYSTEM':
 				details['profile'] = {}
@@ -2502,7 +2503,6 @@ class System(Wrappers):
 				details['accent_color'] = gateway.accent_color
 				details['theme'] = gateway.design.name
 				details['design'] = gateway.design.name
-				if gateway.details: details.update(gateway.details)
 
 			payload.update(details)
 			payload['response'] = details
