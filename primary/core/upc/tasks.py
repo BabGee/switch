@@ -2481,6 +2481,7 @@ class System(Wrappers):
 				details['primary_color'] = institution.primary_color if institution.primary_color else gateway.primary_color
 				details['secondary_color'] = institution.secondary_color if institution.secondary_color else gateway.secondary_color
 				details['accent_color'] = institution.accent_color if institution.accent_color else gateway.accent_color
+				if institution.details: details.update(institution.details)
 
 				if gateway_profile.access_level.name == 'SYSTEM':
 					details['theme'] = institution.design.name
@@ -2501,6 +2502,7 @@ class System(Wrappers):
 				details['accent_color'] = gateway.accent_color
 				details['theme'] = gateway.design.name
 				details['design'] = gateway.design.name
+				if gateway.details: details.update(gateway.details)
 
 			payload.update(details)
 			payload['response'] = details
