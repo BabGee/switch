@@ -18,7 +18,7 @@ admin.site.register(MSISDN, MSISDNAdmin)
 class InstitutionAdmin(admin.OSMGeoAdmin):
 		list_display = ('id','name','business_number',\
 		'background_image','description',\
-		'status','tagline','logo','icon_image',\
+		'status','tagline','logo','icon_image','documents','details',\
 		'default_color','website','physical_address',\
 		'gateway_list','currency_list','country','geometry','design',\
 		'primary_color','secondary_color','accent_color','registration_number','template',)

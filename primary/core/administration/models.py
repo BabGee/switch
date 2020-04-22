@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from datetime import date
 from django.utils import timezone
 
+from django.contrib.postgres.fields import JSONField
 from django.core.validators import RegexValidator
 
 
@@ -158,6 +159,7 @@ class Gateway(models.Model):
 	max_pin_retries = models.SmallIntegerField(default=3)
 	session_expiry = models.IntegerField(blank=True, null=True, help_text='In Minutes')
 	structure = models.ForeignKey(Structure, blank=True, null=True, on_delete=models.CASCADE)
+	details = JSONField(max_length=1920, null=True, blank=True)
 	def __str__(self):
 		return u'%s' % (self.name)
 	def default_host_list(self):
