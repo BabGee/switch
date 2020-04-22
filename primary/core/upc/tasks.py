@@ -2413,7 +2413,6 @@ class System(Wrappers):
 			#qr_code, if exist
 			#city = from geometry
 			#Details({}) - [address,till_phone_number,till_business_number]
-			details = json.dumps({})
 			lgr.info("Starting Generating Till Number")
 			all_tills = InstitutionTill.objects.filter(institution=gateway_profile.institution).order_by("-till_number")
 			if len(all_tills)>0:
@@ -2428,7 +2427,7 @@ class System(Wrappers):
 
 			till = InstitutionTill(name=payload["till_name"],institution=gateway_profile.institution,till_type=till_type, till_number=till_number,\
 						till_currency=till_currency,description=description,physical_address=payload["till_location"],\
-						is_default=is_default,geometry=trans_point,details=details)
+						is_default=is_default,geometry=trans_point)
  
 			till.save()
 			#save image if exist
