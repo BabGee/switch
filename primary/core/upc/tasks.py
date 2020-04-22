@@ -2450,7 +2450,7 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			gateway = gateway_profile.gateway
 			#Initializes with gateway. Replaces keys on institution level if exists
-			details = gateway.details
+			details = gateway.details if gateway.details else {}
 
 			if gateway_profile.access_level.name != 'SYSTEM':
 				details['profile'] = {}
