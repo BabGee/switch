@@ -96,13 +96,13 @@ class Wrappers:
 				df['pn_ack'] = False
 				df['ext_outbound_id'] = ext_outbound_id
 				df['inst_notified'] = False
-				if 'message_len' in payload.keys(): df['message_len'] = payload['message_len'] 
+				if 'message_len' in value.keys(): df['message_len'] = value['message_len'] 
 
 				df_list.append(df)
 			else:
 				contact = Contact.objects.get(id=value['contact_id'])
 				contact_group = payload['contact_group'] if 'contact_group' in payload.keys() else None
-				message_len =  payload['message_len'] if 'message_len' in payload.keys() else 1
+				message_len =  value['message_len'] if 'message_len' in value.keys() else 1
 				#Append by adding
 				obj_list = obj_list+[Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,\
 								state=state, recipient=r, sends=0, ext_outbound_id=ext_outbound_id,\
