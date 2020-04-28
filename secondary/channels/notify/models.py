@@ -263,8 +263,8 @@ class Outbound(models.Model):
 	response =  models.CharField(max_length=200, blank=True, null=True)
 	contact_group = models.TextField(blank=True, null=True)
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
-	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False,
-								 help_text="Push Notification Acknowledged")
+	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
+	message_len = models.IntegerField(default=1)
 	objects = CopyManager()
 	def __str__(self):
 		return u'%s %s %s' % (self.contact, self.heading, self.message)

@@ -96,13 +96,17 @@ class Wrappers:
 				df['pn_ack'] = False
 				df['ext_outbound_id'] = ext_outbound_id
 				df['inst_notified'] = False
+				if 'message_len' in payload.keys(): df['message_len'] = payload['message_len'] 
 
 				df_list.append(df)
 			else:
 				contact = Contact.objects.get(id=value['contact_id'])
 				contact_group = payload['contact_group'] if 'contact_group' in payload.keys() else None
+				message_len =  payload['message_len'] if 'message_len' in payload.keys() else 1
 				#Append by adding
-				obj_list = obj_list+[Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, recipient=r, sends=0, ext_outbound_id=ext_outbound_id, contact_group=contact_group) for r in _recipient]
+				obj_list = obj_list+[Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,\
+								state=state, recipient=r, sends=0, ext_outbound_id=ext_outbound_id,\
+								 contact_group=contact_group, message_len=message_len) for r in _recipient]
 
 		outbound_log = None
 
@@ -1050,6 +1054,8 @@ class System(Wrappers):
 					elif 'subject' in payload.keys():
 						outbound.heading = payload['subject'].strip()[:512]
 
+					if 'message_len' in payload.keys(): outbound.message_len = payload['message_len'] 
+
 					outbound.save()
 
 					#Ensure there's a unique value for ext_outbound_id
@@ -1327,6 +1333,8 @@ class System(Wrappers):
 					outbound.heading = notification_template.template_heading
 				elif 'subject' in payload.keys():
 					outbound.heading = payload['subject'].strip()[:512]
+
+				if 'message_len' in payload.keys(): outbound.message_len = payload['message_len'] 
 
 				outbound.save()
 
@@ -2211,7 +2219,8 @@ def contact_outbound_bulk_logger(payload, contact_list, scheduled_send):
 		outbound_list = []
 		for c in contact_list:
 			contact = Contact.objects.get(id=c[0])
-			outbound = Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, sends=0)
+			message_len =  payload['message_len'] if 'message_len' in payload.keys() else 1
+			outbound = Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, sends=0, message_len=message_len)
 			#Notification for bulk uses contact records only for recipient
 			if contact.product.notification.code.channel.name == 'SMS' and contact.gateway_profile.msisdn:
 				outbound.recipient = contact.gateway_profile.msisdn.phone_number
