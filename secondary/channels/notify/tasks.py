@@ -96,7 +96,7 @@ class Wrappers:
 				df['pn_ack'] = False
 				df['ext_outbound_id'] = ext_outbound_id
 				df['inst_notified'] = False
-				if 'message_len' in value.keys(): df['message_len'] = value['message_len'] 
+				df['message_len'] = value['message_len'] if 'message_len' in value.keys() else 1
 
 				df_list.append(df)
 			else:
