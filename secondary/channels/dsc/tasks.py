@@ -906,6 +906,7 @@ class Wrappers:
 					except: continue
 					args.append(k.strip())
 					params['cols'].append({"label": k.strip(), "type": "number", "value": k.strip()})
+					#Name of annotated column cannot be same as an existing column, hence k!=v
 					if k != v:kwargs[k.strip()] = Count(v.strip())
 				#lgr.info('Count: %s' % len(report_list))
 				report_list = report_list.annotate(**kwargs)
@@ -918,7 +919,12 @@ class Wrappers:
 					except: continue
 					args.append(k.strip())
 					params['cols'].append({"label": k.strip(), "type": "number", "value": k.strip()})
-					if k != v:kwargs[k.strip()] = Sum(v.strip())
+					#Name of annotated column cannot be same as an existing column, hence k!=v
+					if k != v:
+						#Sum of the product of two or more fields is allowed with an * in the fields.
+						v_list = v.split('*')
+						if len(v_list)>1: kwargs[k.strip()] = Sum(reduce((lambda x, y: x * y), [F(v) for v in v_list]))
+						else: kwargs[k.strip()] = Sum(v.strip())
 
 				#lgr.info('Count Applied: %s' % kwargs)
 
@@ -932,6 +938,7 @@ class Wrappers:
 					except: continue
 					args.append(k.strip())
 					params['cols'].append({"label": k.strip(), "type": "number", "value": k.strip()})
+					#Name of annotated column cannot be same as an existing column, hence k!=v
 					if k != v:kwargs[k.strip()] = Avg(v.strip())
 
 				#lgr.info('Sum Applied: %s' % kwargs)
