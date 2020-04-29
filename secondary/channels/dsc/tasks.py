@@ -926,6 +926,7 @@ class Wrappers:
 						if len(v_list)>1: kwargs[k.strip()] = Sum(reduce((lambda x, y: x * y), [F(v) for v in v_list]))
 						else: kwargs[k.strip()] = Sum(v.strip())
 
+
 				#lgr.info('Count Applied: %s' % kwargs)
 
 				report_list = report_list.annotate(**kwargs)
