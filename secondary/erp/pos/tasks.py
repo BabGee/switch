@@ -890,6 +890,12 @@ class System(Wrappers):
 					else:
 						return trial
 
+				if 'reference' in payload.keys():
+					reference_order = PurchaseOrder.objects.filter(status__name='UNPAID', reference__iexact=payload['reference'],
+								cart_item__product_item__institution__id__in=[i['product_item__institution__id'] \
+								for i in cart_items.values('product_item__institution__id').distinct('product_item__institution__id')])
+					if reference_order.exists(): reference_order.update(status=OrderStatus.objects.get(name='CANCELLED'))			
+					reference = payload['reference']
 				if 'institution_id' in payload.keys():
 					institution = Institution.objects.get(id=payload['institution_id'])
 					reference = reference(institution.business_number)
