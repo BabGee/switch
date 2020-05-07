@@ -896,7 +896,7 @@ class System(Wrappers):
 								for i in cart_items.values('product_item__institution__id').distinct('product_item__institution__id')])
 					if reference_order.exists(): reference_order.update(status=OrderStatus.objects.get(name='CANCELLED'))			
 					reference = payload['reference']
-				if 'institution_id' in payload.keys():
+				elif 'institution_id' in payload.keys():
 					institution = Institution.objects.get(id=payload['institution_id'])
 					reference = reference(institution.business_number)
 				else:
