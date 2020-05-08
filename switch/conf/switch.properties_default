@@ -13,6 +13,8 @@ hosts=127.0.0.1,localhost
 [SMTP]
 default_host=localhost
 default_port=587
+default_user=
+default_password=
 tls=True
 [LOG]
 root=

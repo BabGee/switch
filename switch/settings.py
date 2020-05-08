@@ -49,13 +49,15 @@ read_dbuser =  os.getenv("DATABASES_read_dbuser", cf.get('DATABASES','read_dbuse
 read_dbpassword =  os.getenv("DATABASES_read_dbpassword", cf.get('DATABASES','read_dbpassword'))
 read_dbhost =  os.getenv("DATABASES_read_dbhost", cf.get('DATABASES','read_dbhost'))
 read_dbport =  os.getenv("DATABASES_read_dbport", cf.get('DATABASES','read_dbport'))
-                                  
+
 smtphost =  os.getenv("SMTP_default_host", cf.get('SMTP','default_host'))
-smtpport =  os.getenv("SMTP_default_port", cf.get('SMTP','default_port'))
+smtpport =  os.getenv("SMTP_default_port", cf.get('SMTP','default_port'))                                                                  
+smtpuser =  os.getenv("SMTP_user", cf.get('SMTP','default_user'))
+smtppassword =  os.getenv("SMTP_password", cf.get('SMTP','default_password'))
 smtptls_default =  os.getenv("SMTP_tls", cf.get('SMTP','tls'))
 tls_default = {'True': True, 'False': False}
 smtptls = tls_default[smtptls_default]
-                                     
+
 conf_hosts =  os.getenv("ALLOWED_HOSTS_hosts", cf.get('ALLOWED_HOSTS','hosts'))
 hosts = conf_hosts.split(",")        
     
@@ -100,11 +102,11 @@ GEOIP_PATH = '/usr/share/GeoIP'
 #EMAIL_USE_TLS = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = smtphost
+EMAIL_HOST = smtphost                                                                                                                      
 #EMAIL_PORT = 25
 EMAIL_PORT = smtpport
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
+EMAIL_HOST_USER = smtpuser
+EMAIL_HOST_PASSWORD = smtppassword
 EMAIL_USE_TLS = smtptls
 #EMAIL_USE_SSL = True
 DEFAULT_FROM_EMAIL = 'InterIntel <noreply@interintel.co.ke>'
