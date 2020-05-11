@@ -211,31 +211,6 @@ class System(Wrappers):
 
 			institution_incoming_service = None
 			lgr.info('Payment Notification')
-			keyword = reference[:4]
-			institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(keyword__iexact=keyword)\
-										|Q(keyword__in=[''])|Q(keyword__iexact=reference)\
-										|Q(keyword__isnull=True))
-			purchase_order = PurchaseOrder.objects.filter(reference__iexact=reference, status__name='UNPAID')
-			lgr.info('Order: %s' % purchase_order)
-			if institution_incoming_service_list.exists() and institution_incoming_service_list.count() == 1:
-				lgr.info('Keyword Found')
-				institution_incoming_service = institution_incoming_service_list[0]
-			elif institution_incoming_service_list.exists() and institution_incoming_service_list.count() > 1:
-				lgr.info('Multi Keyword Found')
-				institution_incoming_service_list = institution_incoming_service_list.filter(Q(keyword__in=[''])|Q(keyword__isnull=True))
-				institution_incoming_service = institution_incoming_service_list[0] if institution_incoming_service_list.exists() else None
-
-			#Execute Order Options
-			lgr.info('Institution Service: %s' % institution_incoming_service)
-			if institution_incoming_service and institution_incoming_service.process_order == True:
-				lgr.info('Process Order True')
-				if purchase_order.exists():pass #process_order=True - Only Process where order exists
-				else: institution_incoming_service = None
-			elif institution_incoming_service and institution_incoming_service.process_order == False:
-				lgr.info('Process Order False')
-				if purchase_order.exists(): institution_incoming_service = None
-				else: pass #process_order=False - Only Process where order DOES NOT exist
-			else: pass #process all
 
 			#capture remittance
 			remittance_product = RemittanceProduct.objects.filter(Q(service__name=payload['SERVICE']),\
@@ -262,12 +237,49 @@ class System(Wrappers):
 				remittance_product = remittance_product.filter(ext_product_id=payload['ext_product_id'])
 
 			if remittance_product.exists():
+				product = remittance_product[0]
+				######### Institution Incoming Service ###############
+				keyword = reference[:4] #Add Regex to Keyword in future
+				lgr.info('Keyword: %s' % keyword)
+				institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(remittance_product=product)|Q(remittance_product=None),\
+									Q(keyword__iexact=keyword)|Q(keyword__in=[''])|Q(keyword__iexact=reference)|Q(keyword__isnull=True))
+
+				if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
+					amount = Decimal(payload['amount'])
+					institution_incoming_service_list = institution_incoming_service_list.filter(Q(min_amount__gte=amount)|Q(min_amount__isnull=True),\
+															Q(max_amount__lte=amount)|Q(max_amount__isnull=True))
+
+				purchase_order = PurchaseOrder.objects.filter(reference__iexact=reference, status__name='UNPAID')
+				lgr.info('Order: %s' % purchase_order)
+				if institution_incoming_service_list.exists() and institution_incoming_service_list.count() == 1:
+					lgr.info('Keyword Found')
+					institution_incoming_service = institution_incoming_service_list[0]
+				elif institution_incoming_service_list.exists() and institution_incoming_service_list.count() > 1:
+					lgr.info('Multi Keyword Found') #Take the one with an empty keyword
+					institution_incoming_service_list = institution_incoming_service_list.filter(Q(keyword__in=[''])|Q(keyword__isnull=True))
+					institution_incoming_service = institution_incoming_service_list[0] if institution_incoming_service_list.exists() else None
+
+				#Execute Order Options
+				lgr.info('Institution Service: %s' % institution_incoming_service)
+				if institution_incoming_service and institution_incoming_service.process_order == True:
+					lgr.info('Process Order True')
+					if purchase_order.exists():pass #process_order=True - Only Process where order exists
+					else: institution_incoming_service = None
+				elif institution_incoming_service and institution_incoming_service.process_order == False:
+					lgr.info('Process Order False') #DO NOT PROCESS with incoming service if order exists in POS
+					if purchase_order.exists(): institution_incoming_service = None
+					else: pass #process_order=False - Only Process where order DOES NOT exist
+				else: pass #process all
+
+				######### Institution Incoming Service ###############
+
+
 				# Capture remittance product institution
 
-				if 'institution_id' not in payload.keys() and remittance_product[0].institution:
-					payload['institution_id'] = remittance_product[0].institution.id
+				if 'institution_id' not in payload.keys() and product.institution:
+					payload['institution_id'] = product.institution.id
 
-				institution_notification = InstitutionNotification.objects.filter(remittance_product=remittance_product[0])
+				institution_notification = InstitutionNotification.objects.filter(remittance_product=product)
 
 				#log paygate incoming
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
@@ -276,7 +288,7 @@ class System(Wrappers):
 				ext_inbound_id = payload['ext_inbound_id'] if 'ext_inbound_id' in payload.keys() else payload['bridge__transaction_id']
 
 
-				last_incoming  = Incoming.objects.select_for_update().filter(remittance_product=remittance_product[0]).order_by('-id')
+				last_incoming  = Incoming.objects.select_for_update().filter(remittance_product=product).order_by('-id')
 				if len(last_incoming): last_incoming.filter(id=last_incoming[:1][0].id).update(updated=True)
 
 				f_incoming = last_incoming.filter(ext_inbound_id=ext_inbound_id)
@@ -284,7 +296,7 @@ class System(Wrappers):
 					payload['response_status'] = '94'
 					payload['response'] = 'External Inbound ID Exists'
 				else:
-					incoming = Incoming(remittance_product=remittance_product[0],reference=reference,\
+					incoming = Incoming(remittance_product=product,reference=reference,\
 						request=self.transaction_payload(payload),channel=Channel.objects.get(id=payload['chid']),\
 						response_status=response_status, ext_inbound_id=ext_inbound_id,state=state)
 					if 'ext_first_name' in payload.keys() and payload['ext_first_name'] not in ["",None]: incoming.ext_first_name = payload['ext_first_name']
@@ -311,7 +323,7 @@ class System(Wrappers):
 
 					incoming.save()
 
-					if remittance_product[0].credit_account: payload['trigger'] = 'credit_account%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					if product.credit_account: payload['trigger'] = 'credit_account%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 					payload['paygate_incoming_id'] = incoming.id
 					payload['response_status'] = '00'
 					payload['response'] = 'Payment Received'
@@ -2091,8 +2103,13 @@ def process_incoming_payments():
 
 			payload['paygate_incoming_id'] = c.id
 			#payload['service_id'] = service.id
-			payload['product_item_id'] = c.institution_incoming_service.product_item.id
-			payload['institution_id'] = c.institution_incoming_service.product_item.institution.id
+
+			#Product Item not on all Incoming Services
+			if c.institution_incoming_service.product_item:
+				payload['product_item_id'] = c.institution_incoming_service.product_item.id
+				payload['institution_id'] = c.institution_incoming_service.product_item.institution.id
+
+			#Back to Incoming Log
 			payload['currency'] = c.currency.code
 			payload['amount'] = c.amount
 			payload['reference'] = c.reference
