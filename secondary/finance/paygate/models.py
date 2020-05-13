@@ -222,11 +222,11 @@ class InstitutionIncomingService(models.Model):
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	details = models.CharField(max_length=512, default=json.dumps({}))
 	process_order = models.NullBooleanField(help_text='Null=Both Order & None-Order, True=Only Order, False=Only Non-Orders')
-	remittance_product = models.OneToOneField(RemittanceProduct, blank=True, null=True, on_delete=models.CASCADE)
+	remittance_product = models.ForeignKey(RemittanceProduct, blank=True, null=True, on_delete=models.CASCADE)
 	min_amount = models.IntegerField(blank=True, null=True)
 	max_amount = models.IntegerField(blank=True, null=True)
 	def __str__(self):
-		return u'%s %s' % (self.product_item.institution, self.service)
+		return u'%s %s' % (self.description, self.service)
 
 class IncomingState(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
