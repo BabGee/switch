@@ -218,7 +218,7 @@ class InstitutionIncomingService(models.Model):
 	service = models.ForeignKey(Service, on_delete=models.CASCADE)
 	description = models.CharField(max_length=100)
 	keyword = models.CharField(max_length=50, unique=True, blank=True, null=True)
-	product_item = models.ForeignKey(ProductItem, blank=True, null=True, on_delete=models.CASCADE)
+	product_item = models.ForeignKey(ProductItem, on_delete=models.CASCADE)
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	details = models.CharField(max_length=512, default=json.dumps({}))
 	process_order = models.NullBooleanField(help_text='Null=Both Order & None-Order, True=Only Order, False=Only Non-Orders')
