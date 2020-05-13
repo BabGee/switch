@@ -249,7 +249,7 @@ class System(Wrappers):
 					institution_incoming_service_list = institution_incoming_service_list.filter(Q(min_amount__gte=amount)|Q(min_amount__isnull=True),\
 															Q(max_amount__lte=amount)|Q(max_amount__isnull=True))
 
-				purchase_order = PurchaseOrder.objects.filter(reference__iexact=reference, status__name='UNPAID')
+				purchase_order = PurchaseOrder.objects.filter(reference__iexact=reference, status__name='UNPAID', expiry__gte=timezone.now())
 				lgr.info('Order: %s' % purchase_order)
 				if institution_incoming_service_list.exists() and institution_incoming_service_list.count() == 1:
 					lgr.info('Keyword Found')
