@@ -309,9 +309,10 @@ class System(Wrappers):
 					if 'charge' in payload.keys() and payload['charge'] not in ["",None]:
 						incoming.charge = Decimal(payload['charge'])
 
+					if product.institution:
+						incoming.institution = product.institution
 					if institution_incoming_service is not None:
 						incoming.institution_incoming_service = institution_incoming_service
-						incoming.institution = institution_incoming_service.product_item.institution
 					if institution_notification.exists():
 						incoming.institution_notification = institution_notification[0]
 
