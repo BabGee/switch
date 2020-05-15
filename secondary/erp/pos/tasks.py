@@ -1504,7 +1504,7 @@ def order_background_service_call(order, status):
 			if bill.incoming_payment:
 				payload['paygate_incoming_id'] = bill.incoming_payment.id
 				payload['ext_inbound_id'] = bill.incoming_payment.ext_inbound_id
-
+				payload.update(bill.incoming_payment.request)
 
 			payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
 
