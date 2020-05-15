@@ -299,7 +299,7 @@ class Outgoing(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	remittance_product = models.ForeignKey(RemittanceProduct, on_delete=models.CASCADE)
 	reference = models.CharField(max_length=200, blank=True, null=True) #Transaction ID
-	request = models.CharField(max_length=3840)
+	request = JSONField()
 	amount = models.DecimalField(max_digits=19, decimal_places=2, blank=True, null=True)
 	charge = models.DecimalField(max_digits=19, decimal_places=2, blank=True, null=True)
 	currency = models.ForeignKey(Currency, blank=True, null=True, on_delete=models.CASCADE)
