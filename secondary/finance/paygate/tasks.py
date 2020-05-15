@@ -125,7 +125,7 @@ class Wrappers:
 
 
 
-	def transaction_payload(self, payload, responseType='JSON'):
+	def transaction_payload(self, payload, responseType='pickle'):
 		new_payload, transaction, count = {}, None, 1
 		for k, v in payload.items():
 			try:
@@ -153,7 +153,7 @@ class Wrappers:
 					break
 				count = count+1
 
-		if responseType=='JSON':
+		if responseType=='json':
 			return json.dumps(new_payload)
 		else:
 			return new_payload
@@ -353,7 +353,7 @@ class System(Wrappers):
 				params=payload.copy()
 				try:params.update(json.loads(o.message))
 				except:pass
-				o.message = self.transaction_payload(params)
+				o.message = self.transaction_payload(params,'json')
 				if 'request_status' in payload.keys():
 					o.response_status = ResponseStatus.objects.get(response=payload['request_status'])
 				else:
@@ -486,7 +486,7 @@ class System(Wrappers):
 						params['username'] = remittance_product[0].endpoint.username
 						params['password'] = remittance_product[0].endpoint.password
 
-						if remittance_product[0].endpoint.request not in [None, ""]:
+						if remittance_product[0].endpoint.request:
 							#try:params.update(json.loads(remittance_product[0].endpoint.request))
 							try:params.update(remittance_product[0].endpoint.request)
 							except:pass
@@ -1693,7 +1693,7 @@ def process_institution_notification(incoming):
 		payload = {}
 		lgr.info("Non-realtime Remit")
 		if i.request not in [None, ""]:
-			try:payload.update(json.loads(i.request))
+			try:payload.update(i.request)
 			except Exception as e: lgr.info('Failed to update Request: %s' % e)
 
 		node = i.institution_notification.url
@@ -1714,7 +1714,7 @@ def process_institution_notification(incoming):
 			i.inst_num_tries=1
 			payload['sends'] = 1
 
-		if i.institution_notification.request not in [None, ""]:
+		if i.institution_notification.request:
 			try:payload.update(i.institution_notification.request)
 			except:pass
 
@@ -1783,8 +1783,8 @@ def send_payment(outgoing):
 		i = Outgoing.objects.get(id=outgoing)
 		payload = {}
 		lgr.info("Non-realtime Remit")
-		if i.request not in [None, ""]:
-			try:payload.update(json.loads(i.request))
+		if i.request:
+			try:payload.update(i.request)
 			except Exception as e: lgr.info('Failed to update Request: %s' % e)
 
 		node = i.remittance_product.endpoint.url
@@ -1804,7 +1804,7 @@ def send_payment(outgoing):
 
 		payload['transaction_timestamp'] = profile_tz.normalize(i.date_modified.astimezone(profile_tz)).isoformat()
 
-		if i.remittance_product.endpoint.request not in [None, ""]:
+		if i.remittance_product.endpoint.request:
 			#try:payload.update(json.loads(i.remittance_product.endpoint.request))
 			try:payload.update(i.remittance_product.endpoint.request)
 			except:pass
@@ -1901,7 +1901,7 @@ def process_incoming_poller(ic):
 		#params = json.loads(ip.remittance_product.endpoint.request)
 		params = ip.remittance_product.endpoint.request
 
-		try:params.update(json.loads(ip.request))
+		try:params.update(ip.request)
 		except Exception as e: lgr.info('Failed to update Request: %s' % e)
 
 		params['account_id'] = ip.remittance_product.endpoint.account_id
@@ -2042,8 +2042,8 @@ def send_paygate_outgoing_deprecated():
 
 			payload = {}
 			lgr.info("Non-realtime Remit")
-			if i.request not in [None, ""]:
-				try:payload.update(json.loads(i.request))
+			if i.request:
+				try:payload.update(i.request)
 				except Exception as e: lgr.info('Failed to update Request: %s' % e)
 
 			params = payload.copy()
@@ -2064,7 +2064,7 @@ def send_paygate_outgoing_deprecated():
 
 			params['transaction_timestamp'] = profile_tz.normalize(i.date_modified.astimezone(profile_tz)).isoformat()
 
-			if i.remittance_product.endpoint.request not in [None, ""]:
+			if i.remittance_product.endpoint.request:
 				#try:params.update(json.loads(i.remittance_product.endpoint.request))
 				try:params.update(i.remittance_product.endpoint.request)
 				except:pass
@@ -2095,7 +2095,7 @@ def process_incoming_payments():
 			c.processed = True
 			c.save()
 			lgr.info('Captured Incoming: %s' % c)
-			payload = json.loads(c.request)	
+			payload = c.request
 
 			try:params.update(json.loads(c.institution_incoming_service.details))
 			except:pass
