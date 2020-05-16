@@ -59,7 +59,7 @@ admin.site.register(Remittance, RemittanceAdmin)
 class RemittanceProductAdmin(admin.ModelAdmin):
 	list_display = ('id','name','description','remittance','ext_product_id','endpoint',\
 			'product_type_list','service_list','realtime','show_message','fail_continues',\
-			'payment_method_list','currency_list','institution','credit_account',)
+			'payment_method_list','currency_list','institution','credit_account','notification',)
 	list_filter = ('remittance','service','payment_method',)
 admin.site.register(RemittanceProduct, RemittanceProductAdmin)
 

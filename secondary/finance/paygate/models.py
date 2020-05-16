@@ -185,6 +185,7 @@ class RemittanceProduct(models.Model):
 	currency = models.ManyToManyField(Currency, blank=True) #Allowed Currencies
 	institution = models.ForeignKey(Institution, null=True,blank=True,  on_delete=models.CASCADE)
 	credit_account =  models.BooleanField(default=False, help_text='Credit a Deposit A/c or Alert only')
+	notification =  models.BooleanField(default=False, help_text='Allow Sending Notification')
 	def __str__(self):
 		return u'%s %s' % (self.name, self.remittance)
 	def product_type_list(self):
