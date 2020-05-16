@@ -325,6 +325,8 @@ class System(Wrappers):
 					incoming.save()
 
 					if product.credit_account: payload['trigger'] = 'credit_account%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					if product.notification: payload['trigger'] = 'notification%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
 					payload['paygate_incoming_id'] = incoming.id
 					payload['response_status'] = '00'
 					payload['response'] = 'Payment Received'
