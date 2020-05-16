@@ -2100,7 +2100,7 @@ def process_incoming_payments():
 			payload = c.request
 
 			try:payload.update(json.loads(c.institution_incoming_service.details))
-			except:pass
+			except Exception as e: lgr.info('Error on Details: %s' % e)
 
 			service = c.institution_incoming_service.service
 
