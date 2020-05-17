@@ -1495,7 +1495,7 @@ def order_background_service_call(order, status):
 			payload['currency'] = c.currency.code
 			payload['amount'] = c.total
 			payload['reference'] = o.reference
-			#payload['institution_id'] = c.product_item.institution.id
+			payload['institution_id'] = c.product_item.institution.id
 			payload['chid'] = c.channel.id
 			payload['ip_address'] = '127.0.0.1'
 			payload['gateway_host'] = '127.0.0.1'
