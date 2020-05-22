@@ -7,10 +7,7 @@ import psycopg2
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-#import ConfigParser
 import configparser
-
-#cf = ConfigParser.ConfigParser()
 
 cf = configparser.ConfigParser()
 cf.read(os.path.join(BASE_DIR, 'switch/conf/switch.properties'))
