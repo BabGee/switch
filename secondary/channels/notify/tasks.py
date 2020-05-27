@@ -1917,16 +1917,15 @@ def update_credentials():
 				i.api_token = payload['response']['api_token']
 				if 'access_token' in payload['response'].keys():
 					i.access_token = payload['response']['access_token']
-				i.updated = True
-				i.token_expiration = timezone.now() + timezone.timedelta(seconds=i.token_validity)
-			else:
-				i.updated = True
-
-			i.save()
+			else: lgr.info('Credentials Response not a success')
 
 		except Exception as e:
 			lgr.info('Error update credentials: %s | %s' % (i,e))
 
+		#Reset to retry in validity period whether succesful or not
+		i.token_expiration = timezone.now() + timezone.timedelta(seconds=i.token_validity)
+		i.updated = True
+		i.save()
 
 @app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
 #@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
