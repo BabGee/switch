@@ -133,7 +133,8 @@ class PageString(ServiceCall, Wrappers):
 					gateway_profile = gateway_profile_list[0]
 
 			payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
-			payload = self.api_service_call(navigator.menu.service, gateway_profile, payload)
+			service = navigator.menu.service if navigator.menu.service else navigator.menu.silent_service
+			payload = self.api_service_call(service, gateway_profile, payload)
 
 			#Page String Response
 			if navigator.menu.page_string_response not in [None,'']:

@@ -105,6 +105,7 @@ class Menu(models.Model):
 	selection = models.CharField(max_length=64, null=True, blank=True)
 	enrollment_type_included = models.ManyToManyField(EnrollmentType, blank=True)
 	enrollment_type_excluded = models.ManyToManyField(EnrollmentType, blank=True, related_name='menu_enrollment_type_excluded')
+	silent_service = models.ForeignKey(Service, null=True, blank=True, on_delete=models.CASCADE, related_name='silent_service')
 	def __str__(self):
 		return u'%s %s %s' % (self.id, self.code_list(), self.page_string)
 	def access_level_list(self):
