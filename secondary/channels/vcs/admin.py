@@ -51,7 +51,7 @@ class MenuAdmin(admin.ModelAdmin):
 			'failed_session_state','code_list','profile_status_list','service',\
 			'submit', 'level', 'group_select', 'input_variable', 'selection_preview','menu_description',\
 			'menu_status','protected','details','invalid','selection','enrollment_type_included_list',\
-			'enrollment_type_excluded_list',)
+			'enrollment_type_excluded_list','silent_service',)
 	list_filter = ('code', 'access_level', 'service', 'menu_status', 'code__institution',\
 			'profile_status__name','code__gateway','protected',)
 	search_fields = ('page_string','menu_description',)
