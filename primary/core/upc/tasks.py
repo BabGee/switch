@@ -2452,7 +2452,7 @@ class System(Wrappers):
 			#Initializes with gateway. Replaces keys on institution level if exists
 			details = gateway.details if gateway.details else {}
 
-			if gateway_profile.access_level.name != 'SYSTEM':
+			if gateway_profile.access_level.name != 'SYSTEM' and gateway_profile.gateway.allow_institution_details:
 				details['profile'] = {}
 				details['profile']['profile_photo'] = gateway_profile.user.profile.photo.name
 				details['profile']['first_name'] = gateway_profile.user.first_name
