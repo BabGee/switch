@@ -71,7 +71,8 @@ admin.site.register(DesignSystem, DesignSystemAdmin)
 class GatewayAdmin(admin.ModelAdmin):
 	list_display = ('id','name', 'logo', 'description','background_image','default_color',\
 			'default_host_list','design','primary_color','secondary_color',\
-			'accent_color','max_pin_retries','session_expiry','structure','details',)
+			'accent_color','max_pin_retries','session_expiry','structure','details',\
+			'allow_institution_details',)
 admin.site.register(Gateway, GatewayAdmin)
 
 class PasswordComplexityAdmin(admin.ModelAdmin):

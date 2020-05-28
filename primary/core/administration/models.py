@@ -160,6 +160,7 @@ class Gateway(models.Model):
 	session_expiry = models.IntegerField(blank=True, null=True, help_text='In Minutes')
 	structure = models.ForeignKey(Structure, blank=True, null=True, on_delete=models.CASCADE)
 	details = JSONField(max_length=1920, null=True, blank=True)
+	allow_institution_details = models.BooleanField(default=False) 
 	def __str__(self):
 		return u'%s' % (self.name)
 	def default_host_list(self):
