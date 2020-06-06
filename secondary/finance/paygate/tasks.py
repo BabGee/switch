@@ -284,6 +284,9 @@ class System(Wrappers):
 				try: institution_notification = product.institutionnotification
 				except: institution_notification = None
 
+				try: gateway_institution_notification = product.gatewayinstitutionnotification
+				except: gateway_institution_notification = None
+
 				#log paygate incoming
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
 				state = IncomingState.objects.get(name="CREATED")
@@ -319,6 +322,7 @@ class System(Wrappers):
 					if institution_notification:
 						incoming.institution_notification = institution_notification
 
+
 					msisdn = UPCWrappers().get_msisdn(payload)
 					if msisdn is not None:
 						try:msisdn = MSISDN.objects.get(phone_number=msisdn)
@@ -326,6 +330,9 @@ class System(Wrappers):
 						incoming.msisdn = msisdn
 
 					incoming.save()
+
+					if gateway_institution_notification:
+						process_gateway_institution_notification.delay(gateway_institution_notification, payload)
 
 					if product.credit_account: payload['trigger'] = 'credit_account%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 					if product.notification: payload['trigger'] = 'notification%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
@@ -1688,6 +1695,32 @@ class Trade(System):
 	pass
 
 
+
+
+@app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
+@transaction.atomic
+@single_instance_task(60*10)
+def process_gateway_institution_notification(gateway_institution_notification, payload):
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+		lgr.info('Started Processing Gateway Institution Notification: %s | %s' % (gateway_institution_notification, payload))
+		notification_key_list = gateway_institution_notification.notification_service.notification_key.all().values_list('key', flat=True)
+		entry_keys = list(set(payload.keys()).intersection(set(list(notification_key_list))))
+
+		params = gateway_institution_notification.notification_service.request if isinstance(gateway_institution_notification.notification_service.request, dict) else {}
+
+		for entry in entry_keys:
+			params[entry] = payload[entry]
+
+
+		bridgetasks.background_service_call.delay(gateway_institution_notification.notification_service.service.name,
+							gateway_institution_notification.gateway_profile.id, 
+							params)
+
+		lgr.info('Logged Gateway Institution Notification: %s | %s' % (gateway_institution_notification, params))
+	except Exception as e:
+		lgr.info('Error on Process Gateway Institution Notification: %s' % e)
 
 
 

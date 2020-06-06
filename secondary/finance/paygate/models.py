@@ -230,7 +230,7 @@ class GatewayInstitutionNotification(models.Model):
 	notification_service = models.ForeignKey(NotificationService, on_delete=models.CASCADE)
 	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
 	def __str__(self):
-		return u'%s %s' % (self.url, self.remittance_product)
+		return u'%s %s %s' % (self.gateway_profile, self.notification_service, self.remittance_product)
 
 
 class InstitutionNotification(models.Model):

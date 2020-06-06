@@ -97,6 +97,7 @@ app.conf.task_routes = {
 
 		'secondary.channels.notify.tasks.update_delivery_status': {'queue': 'thirdparty','exchange': 'thirdparty','routing_key':'thirdparty','delivery_mode': 'transient'}, #To be updated to a delivery notifications queue in the future 
 
+		'secondary.finance.paygate.tasks.process_gateway_institution_notification': {'queue': 'products','exchange': 'products','routing_key':'products','delivery_mode': 'transient'}, #To be updated to a payments notifications queue in the future 
 		'secondary.finance.paygate.tasks.process_institution_notification': {'queue': 'products','exchange': 'products','routing_key':'products','delivery_mode': 'transient'}, #To be updated to a payments notifications queue in the future 
 
 		'thirdparty.bidfather.tasks.closed_bids_invoicing': {'queue': 'thirdparty','exchange': 'thirdparty','routing_key':'thirdparty','delivery_mode': 'transient'},
