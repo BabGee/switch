@@ -197,6 +197,43 @@ class RemittanceProduct(models.Model):
 	def currency_list(self):
 		return "\n".join([a.code for a in self.currency.all()])
 
+
+class NotificationKey(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	key = models.CharField(max_length=100, unique=True)
+	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
+	def __str__(self):
+		return u'%s' % (self.name)
+
+
+class NotificationService(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	request = JSONField()
+	notification_key = models.ManyToManyField(NotificationKey)
+	service = models.ForeignKey(Service, on_delete=models.CASCADE)
+	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
+	def __str__(self):
+		return u'%s' % (self.name)
+	def notification_key_list(self):
+		return "\n".join([a.name for a in self.notification_key.all()])
+
+
+class GatewayInstitutionNotification(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	remittance_product = models.OneToOneField(RemittanceProduct, on_delete=models.CASCADE)
+	notification_service = models.ForeignKey(NotificationService, on_delete=models.CASCADE)
+	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
+	def __str__(self):
+		return u'%s %s' % (self.url, self.remittance_product)
+
+
 class InstitutionNotification(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)

@@ -3084,7 +3084,7 @@ class System(Wrappers):
 			if authorized_gateway_profile is not None and authorized_gateway_profile.status.name not in ['DELETED']:
 
 				password_policy = PasswordPolicy.objects.get(gateway=gateway_profile.gateway)
-
+				#User Password History Exists for users created with a function that introduces it. Manual Creations would lack this hence can't log into portal
 				password_history = UserPasswordHistory.objects.filter(user=authorized_gateway_profile.user).order_by('-date_created')[:1]
 				if len(password_history):
 					password_history = password_history[0]

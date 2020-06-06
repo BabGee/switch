@@ -63,6 +63,18 @@ class RemittanceProductAdmin(admin.ModelAdmin):
 	list_filter = ('remittance','service','payment_method',)
 admin.site.register(RemittanceProduct, RemittanceProductAdmin)
 
+class NotificationKeyAdmin(admin.ModelAdmin):
+	list_display = ('name','description','key','gateway',)
+admin.site.register(NotificationKey, NotificationKeyAdmin)
+
+class NotificationServiceAdmin(admin.ModelAdmin):
+	list_display = ('name','description','request','notification_key_list','service','gateway',)
+admin.site.register(NotificationService, NotificationServiceAdmin)
+
+class GatewayInstitutionNotification(admin.ModelAdmin):
+	list_display = ('remittance_product','notification_service','gateway_profile',)
+admin.site.register(NotificationService, NotificationServiceAdmin)
+
 class InstitutionNotificationAdmin(admin.ModelAdmin):
 	list_display = ('id','remittance_product','description','request','url','account_id','username','password','max_retry','allowed_notification_key')
 admin.site.register(InstitutionNotification, InstitutionNotificationAdmin)

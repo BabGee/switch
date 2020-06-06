@@ -237,7 +237,7 @@ class System(Wrappers):
 				remittance_product = remittance_product.filter(ext_product_id=payload['ext_product_id'])
 
 			if remittance_product.exists():
-				product = remittance_product[0]
+				product = remittance_product.first()
 				######### Institution Incoming Service ###############
 				keyword = reference[:4] #Add Regex to Keyword in future
 				lgr.info('Keyword: %s' % keyword)
@@ -279,7 +279,10 @@ class System(Wrappers):
 				if 'institution_id' not in payload.keys() and product.institution:
 					payload['institution_id'] = product.institution.id
 
-				institution_notification = InstitutionNotification.objects.filter(remittance_product=product)
+				#institution_notification = InstitutionNotification.objects.filter(remittance_product=product)
+				
+				try: institution_notification = product.institutionnotification
+				except: institution_notification = None
 
 				#log paygate incoming
 				response_status = ResponseStatus.objects.get(response='DEFAULT')
@@ -313,8 +316,8 @@ class System(Wrappers):
 						incoming.institution = product.institution
 					if institution_incoming_service is not None:
 						incoming.institution_incoming_service = institution_incoming_service
-					if institution_notification.exists():
-						incoming.institution_notification = institution_notification[0]
+					if institution_notification:
+						incoming.institution_notification = institution_notification
 
 					msisdn = UPCWrappers().get_msisdn(payload)
 					if msisdn is not None:
@@ -413,6 +416,8 @@ class System(Wrappers):
 					remittance_product = remittance_product.filter(ext_product_id=payload['ext_product_id'])
 
 				if remittance_product.exists():
+
+					product = remittance_product.first()
 					#Forex Currency
 					'''
 					if 'currency' in payload.keys() and payload['currency'] not in ["",None]:
@@ -436,19 +441,21 @@ class System(Wrappers):
 					state = OutgoingState.objects.get(name="CREATED")
 
 
-					if 'institution_id' not in payload.keys() and remittance_product[0].institution:
-						payload['institution_id'] = remittance_product[0].institution.id
+					if 'institution_id' not in payload.keys() and product.institution:
+						payload['institution_id'] = product.institution.id
 
-					institution_notification = InstitutionNotification.objects.filter(remittance_product=remittance_product[0])
+					
+					try: institution_notification = product.institutionnotification
+					except: institution_notification = None
 
 					reference = payload['bridge__transaction_id'] if 'reference' not in payload.keys() else payload['reference']
 					
-					outgoing = Outgoing(remittance_product=remittance_product[0],reference=reference,\
+					outgoing = Outgoing(remittance_product=product,reference=reference,\
 							request=self.transaction_payload(payload),\
 							response_status=response_status, sends=0, state=state)
 
-					if institution_notification.exists():
-						outgoing.institution_notification = institution_notification[0]
+					if institution_notification:
+						outgoing.institution_notification = institution_notification
 
 					if 'scheduled_send' in payload.keys() and payload['scheduled_send'] not in ["",None]:
 						try:date_obj = datetime.strptime(payload["scheduled_send"], '%d/%m/%Y %I:%M %p')
@@ -480,17 +487,17 @@ class System(Wrappers):
 					payload['paygate_outgoing_id'] = outgoing.id
 					payload['sends'] = outgoing.sends
 
-					if remittance_product[0].realtime and remittance_product[0].remittance.status.name == 'ACTIVE': #Process realtime & Active remittance 
+					if product.realtime and product.remittance.status.name == 'ACTIVE': #Process realtime & Active remittance 
 						lgr.info("Active Realtime Remit")
 						params = payload.copy()
-						node = remittance_product[0].endpoint.url
-						params['account_id'] = remittance_product[0].endpoint.account_id
-						params['username'] = remittance_product[0].endpoint.username
-						params['password'] = remittance_product[0].endpoint.password
+						node = product.endpoint.url
+						params['account_id'] = product.endpoint.account_id
+						params['username'] = product.endpoint.username
+						params['password'] = product.endpoint.password
 
-						if remittance_product[0].endpoint.request:
+						if product.endpoint.request:
 							#try:params.update(json.loads(remittance_product[0].endpoint.request))
-							try:params.update(remittance_product[0].endpoint.request)
+							try:params.update(product.endpoint.request)
 							except:pass
 
 						params = self.endpoint_payload(params)
@@ -511,19 +518,19 @@ class System(Wrappers):
 							except:params['response_status']='06';outgoing.response_status = ResponseStatus.objects.get(response='06')
 							if params['response_status'] == '00':
 								outgoing.state = OutgoingState.objects.get(name='DELIVERED')	
-								if remittance_product[0].show_message:
+								if product.show_message:
 									payload['response'] = params['response']
 								else:
 									payload['response'] = 'Remittance Submitted'
 
 								payload['remit_response'] = params['response']
 							else:
-								if remittance_product[0].fail_continues:
+								if product.fail_continues:
 									payload['trigger'] = 'fail_continues%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 									params['response_status'] = '00'
 								else:
 									outgoing.state = OutgoingState.objects.get(name='SENT')
-									if 'response' in params.keys() and remittance_product[0].show_message:
+									if 'response' in params.keys() and product.show_message:
 										payload['response'] = params['response']
 									else:
 										payload['response'] = 'Remittance Failed'
@@ -531,7 +538,7 @@ class System(Wrappers):
 							payload['response_status'] = params['response_status']
 						else:
 							outgoing.state = OutgoingState.objects.get(name='FAILED')
-							if remittance_product[0].fail_continues:
+							if product.fail_continues:
 								payload['trigger'] = 'fail_continues%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 								outgoing.response_status = ResponseStatus.objects.get(response='00')
 								payload['response_status'] = '00'
