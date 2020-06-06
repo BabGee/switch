@@ -204,7 +204,6 @@ class NotificationKey(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
 	key = models.CharField(max_length=100, unique=True)
-	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s' % (self.name)
 

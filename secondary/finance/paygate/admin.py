@@ -64,7 +64,7 @@ class RemittanceProductAdmin(admin.ModelAdmin):
 admin.site.register(RemittanceProduct, RemittanceProductAdmin)
 
 class NotificationKeyAdmin(admin.ModelAdmin):
-	list_display = ('name','description','key','gateway',)
+	list_display = ('name','description','key',)
 admin.site.register(NotificationKey, NotificationKeyAdmin)
 
 class NotificationServiceAdmin(admin.ModelAdmin):
