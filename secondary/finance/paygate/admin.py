@@ -71,9 +71,9 @@ class NotificationServiceAdmin(admin.ModelAdmin):
 	list_display = ('name','description','request','notification_key_list','service','gateway',)
 admin.site.register(NotificationService, NotificationServiceAdmin)
 
-class GatewayInstitutionNotification(admin.ModelAdmin):
+class GatewayInstitutionNotificationAdmin(admin.ModelAdmin):
 	list_display = ('remittance_product','notification_service','gateway_profile',)
-admin.site.register(NotificationService, NotificationServiceAdmin)
+admin.site.register(GatewayInstitutionNotification, GatewayInstitutionNotificationAdmin)
 
 class InstitutionNotificationAdmin(admin.ModelAdmin):
 	list_display = ('id','remittance_product','description','request','url','account_id','username','password','max_retry','allowed_notification_key')
