@@ -332,7 +332,7 @@ class System(Wrappers):
 					incoming.save()
 
 					if gateway_institution_notification:
-						process_gateway_institution_notification.delay(gateway_institution_notification, payload)
+						process_gateway_institution_notification.delay(gateway_institution_notification.id, payload)
 
 					if product.credit_account: payload['trigger'] = 'credit_account%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 					if product.notification: payload['trigger'] = 'notification%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
@@ -1700,10 +1700,11 @@ class Trade(System):
 @app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
-def process_gateway_institution_notification(gateway_institution_notification, payload):
+def process_gateway_institution_notification(notification, payload):
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
+		gateway_institution_notification = GatewayInstitutionNotification.objects.get(id=notification)
 		lgr.info('Started Processing Gateway Institution Notification: %s | %s' % (gateway_institution_notification, payload))
 		notification_key_list = gateway_institution_notification.notification_service.notification_key.all().values_list('key', flat=True)
 		entry_keys = list(set(payload.keys()).intersection(set(list(notification_key_list))))
