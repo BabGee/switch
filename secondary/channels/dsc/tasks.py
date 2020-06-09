@@ -1393,25 +1393,34 @@ class Wrappers:
 				if limit not in [None,""]:
 					lgr.info('Limit: %s' % limit)
 					report_list = report_list[:int(limit)] #Query Limit to limit Data
-				ct = report_list.count()
+
+				lgr.info('Past Limit')
+				#ct = report_list.count()
+				#ct = len(report_list)
 				#lgr.info('Count: %s' % ct)
 
-				#lgr.info('Query Str 13: %s' % report_list.query.__str__())
+				lgr.info('Query Str 13: %s' % report_list.query.__str__())
 				paginator = Paginator(report_list, payload.get('limit',50)) #Payload Limit to limit records per page
+
+				lgr.info('Past Limit')
+				ct = paginator.count
+				lgr.info('Count: %s' % ct)
 
 				try:
 					page = int(payload.get('page', '1'))
 				except ValueError:
 					page = 1
-
+				lgr.info('Past Page, Paginator')
 				try:
 					results = paginator.page(page)
 				except (EmptyPage, InvalidPage):
 					results = paginator.page(paginator.num_pages)
 
+				lgr.info('Past Results, Paginator')
 
 				report_list = results.object_list
 
+				lgr.info('Past Object List, Paginator')
 
 
 				if data.data_response_type.name == 'DATA':
@@ -1438,6 +1447,7 @@ class Wrappers:
 					#Set Data
 					params['rows'] = report_list
 
+				lgr.info('Past Formatted Response')
 		except Exception as e:
 			#import traceback
 			lgr.info('Error on report: %s' % e)
@@ -2031,7 +2041,10 @@ class Wrappers:
 									collection[d.group.name] = [item]
 								else:
 									collection[d.group.name].append(item)
+
+								#lgr.info('rowParams | collection: %s' % item)
 							else:
+								#lgr.info('rowParams: %s' % item)
 								rows.append(item)
 
 						for item in dataParams:
