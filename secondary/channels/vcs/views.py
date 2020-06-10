@@ -263,7 +263,8 @@ class VAS:
 		self.navigator = self.navigator.filter(menu__code=self.code[0])
 
 		#Get User
-		self.gateway_profile = GatewayProfile.objects.filter(msisdn__phone_number=self.payload['msisdn'],gateway =self.code[0].gateway)
+		self.gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.payload['msisdn']),Q(gateway =self.code[0].gateway),\
+									 ~Q(status__name__in=['DEACTIVATED','DELETED']))
 
 		#Filter Level
 		#Levels should be String (if override has to check for None or '' as 0 values may validate for false and not show)
