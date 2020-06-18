@@ -7,7 +7,7 @@
 #   for each in CELERYD_OPTS
 #CELERYD_NODES="worker1 worker2 worker3"
 #   alternatively, you can specify the number of nodes to start:
-CELERYD_NODES=42
+CELERYD_NODES=50
 
 # Absolute or relative path to the 'celery' command:
 CELERY_BIN="/usr/local/bin/celery"
@@ -61,9 +61,10 @@ CELERYD_OPTS="--time-limit=300  --without-mingle -Ofair
 -Q:17-20 files -c:17-20 3
 -Q:21-24 payments -c:21-24 3
 -Q:25-30 bulk_spawned_outbound_notification -c:25-30 3
--Q:31-34 bulk_notification -c:31-34 3
--Q:35-38 products -c:35-38 3
--Q:39-42 thirdparty -c:39-42 3"
+-Q:31-38 spawned_outbound_notification -c:31-38 3
+-Q:39-42 bulk_notification -c:39-42 3
+-Q:43-46 products -c:43-46 3
+-Q:47-50 thirdparty -c:47-50 3"
 
 # Configure node-specific settings by appending node name to arguments:
 #CELERYD_OPTS="--time-limit=300 -c 8 -c:worker2 4 -c:worker3 2 -Ofair:worker1"
