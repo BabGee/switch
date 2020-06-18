@@ -60,11 +60,10 @@ CELERYD_OPTS="--time-limit=300  --without-mingle -Ofair
 -Q:13-16 notification -c:13-16 3
 -Q:17-20 files -c:17-20 3
 -Q:21-24 payments -c:21-24 3
--Q:25-28 bulk_spawned_outbound_notification -c:25-28 3
--Q:28-31 spawned_outbound_notification -c:28-31 3
--Q:32-35 bulk_notification -c:32-35 3
--Q:36-39 products -c:36-39 3
--Q:40-43 thirdparty -c:40-43 3"
+-Q:25-30 bulk_spawned_outbound_notification -c:25-30 3
+-Q:31-34 bulk_notification -c:31-34 3
+-Q:35-38 products -c:35-38 3
+-Q:39-42 thirdparty -c:39-42 3"
 
 # Configure node-specific settings by appending node name to arguments:
 #CELERYD_OPTS="--time-limit=300 -c 8 -c:worker2 4 -c:worker3 2 -Ofair:worker1"
