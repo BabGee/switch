@@ -120,7 +120,7 @@ class VAS:
 
 		if self.menu.exists():
 
-			new_navigator = Navigator(session=self.session, menu=self.menu[0], pin_auth=self.pin_auth, level=self.level, group_select=self.group_select,invalid=self.menu[0].invalid)
+			new_navigator = Navigator(session=self.session, menu=self.menu[0], pin_auth=self.pin_auth, level=self.level, group_select=self.group_select, invalid=self.menu[0].invalid)
 			new_navigator.input_select = self.payload['input']
 
 			new_navigator.nav_step = self.nav_step
@@ -150,7 +150,7 @@ class VAS:
 			else:
 				error_prefix = self.nav.menu.error_prefix if self.nav.menu.error_prefix not in ['',None] else 'Invalid input!' 
 
-			new_navigator = Navigator(session=self.session, menu=self.nav.menu, pin_auth=self.pin_auth, level=self.level, group_select=self.group_select,invalid=True)
+			new_navigator = Navigator(session=self.session, menu=self.nav.menu, pin_auth=self.pin_auth, level=self.level, group_select=self.group_select, invalid=True)
 			new_navigator.input_select = self.nav.input_select
 
 			new_navigator.nav_step = self.nav_step
@@ -424,7 +424,7 @@ class VAS:
 							session_gateway_profile = self.gateway_profile[0]
 							hash_pin = crypt.crypt(str(self.payload['input']), str(session_gateway_profile.id))
 
-							if hash_pin == session_gateway_profile.pin:
+							if hash_pin == session_gateway_profile.pin and session_gateway_profile.status.name != 'LOCKED':
 								session_gateway_profile.pin_retries = 0
 								session_gateway_profile.save()
 								self.pin_auth = True
