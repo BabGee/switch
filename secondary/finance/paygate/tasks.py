@@ -520,6 +520,7 @@ class System(Wrappers):
 							outgoing.save()
 						if 'ext_inbound_id' in params.keys(): payload['ext_inbound_id'] = params['ext_inbound_id']
 
+						if 'response' in params.keys(): payload['remit_response'] = params['response']
 						if 'response_status' in params.keys() and params['response_status'] not in [None,""]:
 							try:outgoing.response_status = ResponseStatus.objects.get(response=str(params['response_status']))
 							except:params['response_status']='06';outgoing.response_status = ResponseStatus.objects.get(response='06')
@@ -529,29 +530,27 @@ class System(Wrappers):
 									payload['response'] = params['response']
 								else:
 									payload['response'] = 'Remittance Submitted'
-
-								payload['remit_response'] = params['response']
 							else:
-								if product.fail_continues:
-									payload['trigger'] = 'fail_continues%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-									params['response_status'] = '00'
+								#if product.fail_continues:
+								#	payload['trigger'] = 'fail_continues%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+								#	params['response_status'] = '00'
+								#else:
+								outgoing.state = OutgoingState.objects.get(name='SENT')
+								if 'response' in params.keys() and product.show_message:
+									payload['response'] = params['response']
 								else:
-									outgoing.state = OutgoingState.objects.get(name='SENT')
-									if 'response' in params.keys() and product.show_message:
-										payload['response'] = params['response']
-									else:
-										payload['response'] = 'Remittance Failed'
+									payload['response'] = 'Remittance Failed'
 
 							payload['response_status'] = params['response_status']
 						else:
 							outgoing.state = OutgoingState.objects.get(name='FAILED')
-							if product.fail_continues:
-								payload['trigger'] = 'fail_continues%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-								outgoing.response_status = ResponseStatus.objects.get(response='00')
-								payload['response_status'] = '00'
-							else:
-								outgoing.response_status = ResponseStatus.objects.get(response='06')
-								payload['response_status'] = '06'
+							#if product.fail_continues:
+							#	payload['trigger'] = 'fail_continues%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+							#	outgoing.response_status = ResponseStatus.objects.get(response='00')
+							#	payload['response_status'] = '00'
+							#else:
+							outgoing.response_status = ResponseStatus.objects.get(response='06')
+							payload['response_status'] = '06'
 
 						outgoing.save()	
 					else:
