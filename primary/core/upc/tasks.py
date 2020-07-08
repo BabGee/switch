@@ -123,7 +123,8 @@ class Wrappers:
 			if 'last_name' in payload.keys() and user.last_name in [None,""]: user.last_name = payload['last_name']
 			user.save()
 
-			profile = user.profile #User is a OneToOne field
+
+			profile = Profile.objects.get(id=user.profile.id) #User is a OneToOne field
 			if 'middle_name' in payload.keys() and profile.middle_name in [None,""]: profile.middle_name = payload['middle_name']
 			if 'national_id' in payload.keys() and profile.national_id in [None,""]: profile.national_id = payload['national_id'].replace(' ','').strip()
 			if 'passport_number' in payload.keys() and profile.passport_number in [None,""]: 
@@ -174,7 +175,7 @@ class Wrappers:
 		if 'last_name' in payload.keys(): user.last_name = payload['last_name']
 		user.save()
 
-		profile = user.profile #User is a OneToOne field
+		profile = Profile.objects.get(id=user.profile.id) #User is a OneToOne field
 		if 'middle_name' in payload.keys(): profile.middle_name = payload['middle_name']
 		if 'national_id' in payload.keys(): profile.national_id = payload['national_id'].replace(' ','').strip()
 		if 'passport_number' in payload.keys(): 
