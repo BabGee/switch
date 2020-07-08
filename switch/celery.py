@@ -88,13 +88,13 @@ app.conf.task_routes = {
 		'secondary.finance.paygate.tasks.process_incoming_payments': {'queue': 'payments','exchange': 'payments','routing_key':'payments','delivery_mode': 'transient'},
 
 		'secondary.channels.notify.tasks.service_call': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
-		'primary.core.bridge.tasks.service_call': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
 		'primary.core.bridge.tasks.background_service_call': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
 		'primary.core.bridge.tasks.process_background_service_call': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
 		'primary.core.bridge.tasks.process_background_service': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
 
 		'secondary.channels.dsc.tasks.process_push_request': {'queue': 'push_request','exchange': 'push_request','routing_key':'push_request','delivery_mode': 'transient'},
 
+		'primary.core.bridge.tasks.service_call': {'queue': 'thirdparty','exchange': 'thirdparty','routing_key':'thirdparty','delivery_mode': 'transient'}, #To be updated to a new servicesnotifications queue in the future 
 		'secondary.channels.notify.tasks.update_delivery_status': {'queue': 'thirdparty','exchange': 'thirdparty','routing_key':'thirdparty','delivery_mode': 'transient'}, #To be updated to a delivery notifications queue in the future 
 
 		'secondary.finance.paygate.tasks.process_gateway_institution_notification': {'queue': 'products','exchange': 'products','routing_key':'products','delivery_mode': 'transient'}, #To be updated to a payments notifications queue in the future 
