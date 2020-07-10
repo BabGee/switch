@@ -2618,8 +2618,8 @@ class System(Wrappers):
 				profile = Profile(api_key=base64.urlsafe_b64encode(api_key.encode()).decode('utf-8'),timezone=gateway_profile.user.profile.timezone,\
 					language=gateway_profile.user.profile.language,geometry=trans_point,
 					user=user)
-				profile.status = profile_status
-
+				#profile.status = profile_status
+				profile.save()
 				user, payload = self.profile_update(user, payload)
 
 				create_gateway_profile = GatewayProfile(user=user, gateway=gateway_profile.gateway, status=profile_status)
