@@ -1034,12 +1034,12 @@ class Wrappers:
 				args.append(link_name.strip())
 				params['cols'].append({"label": link_name.strip(), "type": "href", "value": link_name.strip()})
 
-				href = { "url":"/"+link_service+"/", "service": link_service, "icon": link_icon}
+				href = { "url":"/"+link_service+"/", "service": link_service, "icon": link_icon, "params": {}}
 
 				for i in link_params.split('|'):
 					try:k,v = i.split('%')
 					except: continue
-					href['params'] = {k:v}
+					href['params'][k.strip()] = v.strip()
 					
 				link_value = json.dumps(href)
 
