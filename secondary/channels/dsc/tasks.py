@@ -394,9 +394,8 @@ class Wrappers:
 							except Exception as e: lgr.info('Error on date filter 1: %s' % e)
 						elif getattr(model_class, df_list[0].split('__')[0], False):
 							k,v = df_list
-							v_list = v.split(',')
-							if len(v_list)>1:
-								v = v_list
+							if v.strip().lower() == 'timezone.now':
+								v = timezone.now().date().isoformat()
 							try:date_filter_data[k] = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(v, '%Y-%m-%d')) if v not in ['',None] else None
 							except Exception as e: lgr.info('Error on date filter 2: %s' % e)
 
