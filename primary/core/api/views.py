@@ -190,7 +190,9 @@ class Interface(Authorize, ServiceCall):
 							lgr.info('Session Exists')
 							user_session = session[0]
 							lgr.info('User Session: %s' % user_session)
-							session_expiry = user_session.gateway_profile.role.session_expiry if user_session.gateway_profile.role else user_session.gateway_profile.gateway.session_expiry
+							session_expiry = user_session.gateway_profile.role.session_expiry if user_session.gateway_profile.role and \
+									user_session.gateway_profile.role.session_expiry else \
+									user_session.gateway_profile.gateway.session_expiry
 							lgr.info('Session Expiry: %s' % session_expiry)
 							#if True:#Check date_created/modified for expiry time
 							if session_expiry: lgr.info('Last Access: %s | Expiration time: %s' % (user_session.last_access, user_session.last_access + timezone.timedelta(minutes=session_expiry)))
