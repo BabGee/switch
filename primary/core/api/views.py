@@ -179,7 +179,6 @@ class Interface(Authorize, ServiceCall):
 						session_id = base64.urlsafe_b64decode(str(payload['session_id']).encode()).decode('utf-8')
 						session = Session.objects.using('read').filter(Q(session_id=session_id),\
 							Q(channel__id=payload['chid']),\
-							Q(status__name='CREATED'),\
 							Q(gateway_profile__allowed_host__host=payload['gateway_host'],\
 							gateway_profile__allowed_host__status__name='ENABLED')|\
 							Q(gateway_profile__gateway__default_host__host=payload['gateway_host'],\
@@ -188,27 +187,36 @@ class Interface(Authorize, ServiceCall):
 
 						if session.exists():
 							lgr.info('Session Exists')
-							user_session = session[0]
-							lgr.info('User Session: %s' % user_session)
-							session_expiry = user_session.gateway_profile.role.session_expiry if user_session.gateway_profile.role and \
-									user_session.gateway_profile.role.session_expiry else \
-									user_session.gateway_profile.gateway.session_expiry
-							lgr.info('Session Expiry: %s' % session_expiry)
-							#if True:#Check date_created/modified for expiry time
-							if session_expiry: lgr.info('Last Access: %s | Expiration time: %s' % (user_session.last_access, user_session.last_access + timezone.timedelta(minutes=session_expiry)))
-							if session_expiry and timezone.now() > user_session.last_access + timezone.timedelta(minutes=session_expiry):
+							
+							user_session_list = Session.objects.filter(id=session.last().id, status__name='CREATED')
+							if user_session_list.exists():
+								user_session = user_session_list.last()
+								lgr.info('User Session: %s' % user_session)
+								session_expiry = user_session.gateway_profile.role.session_expiry if user_session.gateway_profile.role and \
+										user_session.gateway_profile.role.session_expiry else \
+										user_session.gateway_profile.gateway.session_expiry
+								lgr.info('Session Expiry: %s' % session_expiry)
+								#if True:#Check date_created/modified for expiry time
+								if session_expiry: lgr.info('Last Access: %s | Expiration time: %s' % (user_session.last_access, user_session.last_access + timezone.timedelta(minutes=session_expiry)))
+								if session_expiry and timezone.now() > user_session.last_access + timezone.timedelta(minutes=session_expiry):
+									lgr.info('Expiring Session')
+									session_active = False
+									user_session.status = SessionStatus.objects.get(name='EXPIRED')
+									user_session.save()
+								else:
+									user_session.last_access = timezone.now()
+									user_session.save()
+
+								if (session_expiry == None) or (session_expiry and session_active):
+									try: gateway_profile_list = GatewayProfile.objects.using('read').filter(id=user_session.gateway_profile.id).select_related()
+									except: pass
+							else:
 								lgr.info('Expired Session')
 								session_active = False
-								user_session.status = SessionStatus.objects.using('read').get(name='EXPIRED')
-								user_session.save(using='default')
-							else:
-								user_session.last_access = timezone.now()
-								user_session.save(using='default')
+						else:
+							lgr.info('Non-existent Session')
+							session_active = False
 
-
-							if (session_expiry == None) or (session_expiry and session_active):
-								try: gateway_profile_list = GatewayProfile.objects.using('read').filter(id=user_session.gateway_profile.id).select_related()
-								except: pass
 					except Exception as e:
 						lgr.info('Error: %s' % e)
 					#session should be encrypted and salted in base64
@@ -243,7 +251,9 @@ class Interface(Authorize, ServiceCall):
 									#Call Services as 
 									payload = self.api_service_call(service.first(), gateway_profile, payload)
 								else:
-									payload['response'] = {'overall_status': 'Hash Check Failed'}	
+									payload['response'] = {'overall_status': 'Hash Check Failed'}
+
+
 								#Remove sensitive data
 								#try: del payload["session_id"]
 								#except: pass
@@ -258,7 +268,7 @@ class Interface(Authorize, ServiceCall):
 					else: 
 						payload['response'] = {'overall_status': 'Service Does not Exist' }
 						payload['response_status'] = '96'
-				elif session_active == False:
+				elif not session_active:
 					lgr.info('Session Has expired')
 					payload['response'] = {'overall_status': 'Session Has Expired', 'redirect': '/logout'}
 					payload['response_status'] = '58'
