@@ -1323,7 +1323,8 @@ class Wrappers:
 								params['data'] = report_list
 							elif data.data_response_type.name == 'LIST':
 								#lgr.info("#IF values_list is used")
-								report_list = np.asarray(report_list).tolist()
+								#report_list = np.asarray(report_list).tolist()
+								report_list = list(report_list)
 								#Set Data
 								params['rows']= report_list
 							elif data.data_response_type.name == 'STRING':
@@ -1429,7 +1430,8 @@ class Wrappers:
 					params['data'] = report_list
 				elif data.data_response_type.name == 'LIST':
 					#IF values_list is used
-					report_list = np.asarray(report_list).tolist()
+					#report_list = np.asarray(report_list).tolist()
+					report_list = list(report_list)
 					#Set Data
 					params['rows'] = report_list
 				elif data.data_response_type.name == 'STRING':
