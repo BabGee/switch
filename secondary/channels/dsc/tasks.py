@@ -1399,7 +1399,9 @@ class Wrappers:
 				#lgr.info('Count: %s' % ct)
 
 				lgr.info('Query Str 13: %s' % report_list.query.__str__())
-				paginator = Paginator(report_list, payload.get('limit',50)) #Payload Limit to limit records per page
+
+				#paginator = Paginator(report_list, payload.get('limit',50)) #Payload Limit to limit records per page
+				paginator = TimeLimitedPaginator(report_list, payload.get('limit',50)) #Payload Limit to limit records per page
 
 				lgr.info('Past Limit')
 				ct = paginator.count

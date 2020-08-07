@@ -98,6 +98,7 @@ class OutBoundStateAdmin(admin.ModelAdmin):
 admin.site.register(OutBoundState, OutBoundStateAdmin)
 
 class OutboundAdmin(admin.ModelAdmin):
+		paginator = TimeLimitedPaginator
 		list_display = ('id','contact','heading','message',\
 			'template','scheduled_send','state','sends',\
 			'ext_outbound_id','inst_notified','inst_num_tries','attachment_list',\
@@ -117,4 +118,6 @@ class OutboundAdmin(admin.ModelAdmin):
 				return {'class': css_class}
 
 admin.site.register(Outbound, OutboundAdmin)
+
+
 

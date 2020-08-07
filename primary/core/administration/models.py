@@ -6,11 +6,32 @@ from django.utils import timezone
 
 from django.contrib.postgres.fields import JSONField
 from django.core.validators import RegexValidator
+from django.core.paginator import Paginator
+from django.db import connection, transaction, OperationalError
+from django.utils.functional import cached_property
+
+class TimeLimitedPaginator(Paginator):
+   """
+   Paginator that enforces a timeout on the count operation.
+   If the operations times out, a fake bogus value is 
+   returned instead.
+   """
+   @cached_property
+   def count(self):
+       # We set the timeout in a db transaction to prevent it from
+       # affecting other transactions.
+       with transaction.atomic(), connection.cursor() as cursor:
+           cursor.execute('SET LOCAL statement_timeout TO 1000;')
+           try:
+               return super().count
+           except OperationalError:
+               return 9999999999
 
 
 #User._meta.get_field('email')._unique = False
 User._meta.get_field("username").max_length = 100
 User._meta.get_field("first_name").max_length = 100
+
 
 class UserPasswordHistory(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
