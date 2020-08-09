@@ -1411,8 +1411,13 @@ class Wrappers:
 				if limit not in [None,""]:
 					lgr.info('Limit: %s' % limit)
 					report_list = report_list[:int(limit)] #Query Limit to limit Data
+					ct = int(limit)
+				else:
+					lgr.info('No Limit - Using Paginator Count')
+					ct = paginator.count
 
-				lgr.info('Past Limit')
+				lgr.info('Count: %s' % ct)
+
 				#ct = report_list.count()
 				#ct = len(report_list)
 				#lgr.info('Count: %s' % ct)
@@ -1423,8 +1428,6 @@ class Wrappers:
 				paginator = TimeLimitedPaginator(report_list, payload.get('limit',50)) #Payload Limit to limit records per page
 
 				lgr.info('Past Limit')
-				ct = paginator.count
-				lgr.info('Count: %s' % ct)
 
 				try:
 					page = int(payload.get('page', '1'))
@@ -1441,7 +1444,6 @@ class Wrappers:
 				report_list = results.object_list
 
 				lgr.info('Past Object List, Paginator')
-
 
 				if data.data_response_type.name == 'DATA':
 					#Set Data
