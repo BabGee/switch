@@ -303,7 +303,7 @@ class Wrappers:
 							and_filter_data[k] = v if v not in ['',None] else None
 					elif getattr(model_class, f.split('__')[0], False):
 						if  f in payload.keys() and f.split('__')[-1] in ['exact','iexact','contains','icontains','isnull','regex','iregex']:
-							if f not in ['',None]: or_filter_data[f] = payload[f]
+							if f not in ['',None]: and_filter_data[f] = payload[f]
 						elif f in payload.keys():
 							if f not in ['',None]: and_filter_data[f + '__icontains'] = payload[f]
 						elif 'q' in payload.keys() and payload['q'] not in ['', None]:
@@ -1026,8 +1026,7 @@ class Wrappers:
 				link_name = link.link_name
 				link_service = link.link_service.name
 				link_icon = link.link_icon.icon
-				link_case_field = link.link_case_field
-				link_case_value = link.link_case_value
+				link_case_filter = link.link_case_filter
 				link_params = link.link_params
 				case_when = []
 
@@ -1044,17 +1043,37 @@ class Wrappers:
 				link_value = json.dumps(href)
 
 				#Final Case
-				if link_case_value and link_case_field:
-					case_field = link_case_field
-					case_value = link_case_value
+				if link_case_filter:
+					case_filter_data = {}
+					for f in link_case_filter.split("|"):
+						cf_list = f.split('%')
+						if len(cf_list)==2:
+							if cf_list[0] in payload.keys() and getattr(model_class, cf_list[1].split('__')[0], False):
+								case_filter_data[cf_list[1]] = payload[cf_list[0]]
+							elif getattr(model_class, cf_list[0].split('__')[0], False):
+								k,v = cf_list
+								v_list = v.split(',')
 
-					case_data = {}
-					case_value = payload[case_value.strip()] if case_value.strip() in payload.keys() else case_value.strip()
+								if len(v_list)>1:
+									v = [l.strip() for l in v_list if l]
+								elif v.strip().lower() == 'false':
+									v = False
+								elif v.strip().lower() == 'true':
+									v = True
 
-					case_data[case_field.strip()] =  case_value
-					case_data['then'] = Value(link_value)
+								case_filter_data[k] = v if v not in ['',None] else None
+						elif getattr(model_class, f.split('__')[0], False):
+							if  f in payload.keys() and f.split('__')[-1] in ['exact','iexact','contains','icontains','isnull','regex','iregex']:
+								if f not in ['',None]: case_filter_data[f] = payload[f]
+							elif f in payload.keys():
+								if f not in ['',None]: case_filter_data[f + '__icontains'] = payload[f]
+							elif 'q' in payload.keys() and payload['q'] not in ['', None]:
+								if f not in ['',None]: case_filter_data[f + '__icontains'] = payload['q']
 
-					case_when.append(When(**case_data))
+
+					case_filter_data['then'] = Value(link_value)
+
+					case_when.append(When(**case_filter_data))
 
 					link_values_data[link_name.strip()] = Case(*case_when, default=Value(''), output_field=CharField())
 				else:
