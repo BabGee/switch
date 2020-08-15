@@ -63,7 +63,7 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			if payload.get('role_name') and payload.get('role_access_level'):
+			if payload.get('role_name') and (payload.get('role_access_level') or payload.get('role_access_level_id') ):
 				role_name = payload.get('role_name').strip()
 				role_status = AccessLevelStatus.objects.get(name='ACTIVE')
 				role_access_level = None
