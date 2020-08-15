@@ -65,18 +65,25 @@ class System(Wrappers):
 
 			if payload.get('role_name') and payload.get('role_access_level'):
 				role_name = payload.get('role_name').strip()
-				role_access_level = payload.get('role_access_level').strip()
+				role_status = AccessLevelStatus.objects.get(name='ACTIVE')
+				role_access_level = AccessLevel.objects.get(name=payload.get('role_access_level').strip())
+				role_description = payload.get('role_description')
+				role_session_expiry = payload.get('role_session_expiry')
 
-				_role = Role.objects.get(name=role_name, gateway=gateway_profile.gateway)
+				_role = Role.objects.filter(name=role_name, gateway=gateway_profile.gateway)
 				if _role.exists():
 					payload['response'] = 'Role with name already exists'
 					payload['response_status'] = '26'
 				else:
-					role = Role(name=role_name, access_level=role_access_level)
-					if payload.get('role_description'):
-						role.description = payload.get('role_description')
+					role = Role(name=role_name, status=role_status, access_level=role_access_level, gateway=gateway_profile.gateway)
+					if role_description:
+						role.description = role_description
 					else:
 						role.description = role_name
+
+					if role_session_expiry and role_session_expiry.isdigit():
+						role.session_expiry = role_session_expiry
+
 					role.save()
 
 					payload['role_id'] = role.id
