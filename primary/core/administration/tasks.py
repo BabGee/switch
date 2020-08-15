@@ -70,7 +70,7 @@ class System(Wrappers):
 				if payload.get('role_access_level'):
 					role_access_level = AccessLevel.objects.get(name=payload.get('role_access_level').strip())
 				elif payload.get('role_access_level_id'):
-					role_access_level = AccessLevel.objects.get(name=payload.get('role_access_level_id').strip())
+					role_access_level = AccessLevel.objects.get(id=payload.get('role_access_level_id').strip())
 
 				role_description = payload.get('role_description')
 				role_session_expiry = payload.get('role_session_expiry')
