@@ -1612,6 +1612,22 @@ class System(Wrappers):
 			payload['response_status'] = '96'
 		return payload
 
+	def set_profile_locked(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+
+			session_gateway_profile.status = ProfileStatus.objects.get(name='LOCKED')
+			session_gateway_profile.save()
+			payload['response'] = 'Profile is Locked'
+			payload['response_status'] = '00'
+
+		except Exception as e:
+			lgr.info('Error on set profile Locked: %s' % e)
+			payload['response_status'] = '96'
+		return payload
+
+
 	def set_profile_expired_passport(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
