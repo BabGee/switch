@@ -59,6 +59,42 @@ class Wrappers: pass
 
 
 class System(Wrappers):
+	def edit_role(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			edit_err = []
+			if payload.get('role_id'):
+				role = Role.objects.get(id=payload.get('role_id'))
+				if payload.get('role_name'):
+					role_name = payload.get('role_name')
+					_role = Role.objects.filter(Q(name=role_name, gateway=gateway_profile.gateway), ~Q(id=role.id))
+					if _role.exists():
+						edit_err.append('Role with name already exists')
+					elif not payload.get('role_description'): role.description = payload.get('role_name')
+
+				if payload.get('role_description'): role.description = payload.get('role_description') 
+				if payload.get('role_access_level'):
+					role.access_level = AccessLevel.objects.get(name=payload.get('role_access_level').strip())
+				if payload.get('role_session_expiry'): role.session_expiry = payload.get('role_session_expiry') 
+				role.save()
+				if edit_err:
+					payload['response'] = 'Role with name already exists'
+					payload['response_status'] = '26'
+				else:
+					payload['response'] = 'Role Edited'
+					payload['response_status'] = '00'
+
+			else:
+				payload['response'] = 'Role does not exist'
+				payload['response_status'] = '25'
+
+		except Exception as e:
+			lgr.info('Error on edit role: %s' % e)
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+		return payload
+
+
 	def add_role(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])

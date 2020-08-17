@@ -2262,6 +2262,27 @@ class System(Wrappers):
 		return payload
 
 
+	def deactivate_role(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			role = Role.objects.get(pk=payload['role_id'])
+
+			_gateway_profile = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,
+								role=role)
+			if _gateway_profile.exists():
+				payload['response'] = 'Profiles with the role exist'
+				payload['response_status'] = '21'
+			else:
+				role.status = AccessLevelStatus.objects.get(name='INACTIVE')
+				role.save()
+				payload['response'] = 'Role Deactivated'
+				payload['response_status'] = '00'
+
+		except Exception as e:
+			lgr.info('Error on Deactivated Role: %s' % e)
+			payload['response_status'] = '96'
+
+		return payload
 
 	def edit_role(self, payload, node_info):
 		try:
@@ -2284,23 +2305,28 @@ class System(Wrappers):
 		return payload
 
 
-
 	def delete_role(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			role = Role.objects.get(pk=payload['role_id'])
-			role.status = AccessLevelStatus.objects.get(name='DELETED')
-			role.save()
 
-			payload['response'] = 'Role Deleted'
-			payload['response_status'] = '00'
+			_gateway_profile = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,
+								role=role)
+			if _gateway_profile.exists():
+				payload['response'] = 'Profiles with the role exist'
+				payload['response_status'] = '21'
+			else:
+				role.status = AccessLevelStatus.objects.get(name='DELETED')
+				role.save()
+
+				payload['response'] = 'Role Deleted'
+				payload['response_status'] = '00'
+
 		except Exception as e:
 			lgr.info('Error on Deleting Role: %s' % e)
 			payload['response_status'] = '96'
 
 		return payload
-
-
 
 	def get_role_details(self, payload, node_info):
 		try:
