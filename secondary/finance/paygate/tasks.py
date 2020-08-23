@@ -159,6 +159,63 @@ class Wrappers:
 			return new_payload
 
 class System(Wrappers):
+	def float_balance(self, payload, node_info):
+		#service to user verify_institution to avoid institutions using other institutions float
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			float_type = FloatType.objects.filter(Q(service__name=payload['SERVICE'])|Q(service=None),\
+						Q(gateway=gateway_profile.gateway)|Q(gateway=None))
+
+			if 'payment_method' in payload.keys():
+				float_type = float_type.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
+
+			lgr.info('Float Type: %s' % float_type)
+			if 'institution_id' in payload.keys():
+				float_type = float_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+			else:
+				float_type = float_type.filter(institution=None)
+
+			lgr.info('Float Type: %s' % float_type)
+			lgr.info('Payload: %s' % payload)
+			if 'product_item_id' in payload.keys():
+				product_item = ProductItem.objects.get(id=payload['product_item_id'])
+				float_type = float_type.filter(product_type=product_item.product_type)
+			elif 'float_product_type_id' in payload.keys():
+				float_type = float_type.filter(product_type__id=payload['float_product_type_id'])
+			elif 'product_type_id' in payload.keys():
+				float_type = float_type.filter(product_type__id=payload['product_type_id'])
+			elif 'product_type' in payload.keys():
+				float_type = float_type.filter(product_type__name=payload['product_type'])
+			else:
+				float_type = float_type.filter(product_type=None)
+			lgr.info('Float Type: %s' % float_type)
+			if float_type.exists():
+				if 'institution_id' in payload.keys():
+					#float_balance = FloatManager.objects.filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])|Q(institution=None)).order_by('-id')
+					float_balance = FloatManager.objects.filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])).order_by('-id')
+				else:
+					float_balance = FloatManager.objects.filter(float_type=float_type[0],gateway=gateway_profile.gateway, institution=None).order_by('-id')
+
+				lgr.info('Float Balance: %s' % float_balance)
+				#check float exists
+				if float_balance.exists():
+					lgr.info('Float Exists')
+					payload['response'] = 'Float Balance: %s' % float_balance[0].balance_bf
+					payload['response_status'] = '00'
+				else:
+					payload['response'] = '%s Float Balance: No Float' % (float_type[0].name)
+					lgr.info("No Float")
+					payload['response_status'] = '51'
+			else:
+				lgr.info("No Float")
+				payload['response_status'] = '51'
+		except Exception as e:
+			payload['response'] = 'Error %s' % e
+			payload['response_status'] = '96'
+			lgr.info("Error on Checking Float: %s" % e)
+		return payload
+
+
 	def payment_details(self, payload, node_info):
 		try:
 			if 'ext_first_name' in payload.keys(): payload['first_name'] = payload['ext_first_name']
