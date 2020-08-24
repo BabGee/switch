@@ -200,7 +200,7 @@ class System(Wrappers):
 				#check float exists
 				if float_balance.exists():
 					lgr.info('Float Exists')
-					payload['response'] = 'Float Balance: %s' % float_balance[0].balance_bf
+					payload['response'] = '%s Float Balance: %s' % (float_type[0].name,float_balance[0].balance_bf)
 					payload['response_status'] = '00'
 				else:
 					payload['response'] = '%s Float Balance: No Float' % (float_type[0].name)
