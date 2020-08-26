@@ -726,6 +726,7 @@ class System(Wrappers):
 				float_record.save()
 
 				payload['response'] = 'Float Credited with: %s balance: %s' % (payload['float_amount'], balance_bf)
+				payload['float_balance_bf'] = balance_bf
 				payload['response_status'] = '00'
 			
 			elif Decimal(payload['float_amount']) <= 0:
@@ -955,6 +956,7 @@ class System(Wrappers):
 					#check last entry balance_bf
 					#Create a debit entry with float_amount entry and deducted balance_bf
 					payload['response'] = 'Float Credited with: %s balance: %s' % (payload['float_amount'], balance_bf)
+					payload['float_balance_bf'] = balance_bf
 					payload['response_status'] = '00'
 				else:
 					payload['response'] = 'No float amount to Reverse'
@@ -1173,6 +1175,7 @@ class System(Wrappers):
 						#check last entry balance_bf
 						#Create a debit entry with float amount entry and deducted balance_bf
 						payload['response'] = 'Float Debited with: %s balance: %s' % (payload['float_amount'], balance_bf)
+						payload['float_balance_bf'] = balance_bf
 						payload['response_status'] = '00'
 					else:
 						lgr.info("Not enough Float")
