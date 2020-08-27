@@ -286,6 +286,8 @@ class System(Generator):
 					query = reduce(operator.or_, ( Q(Q(page=k),Q(Q(role_action=None)|Q(role_action__in=v))) for k,v in pages.items() ))
 					#lgr.info('Query: %s' % query)
 					this_page_inputs = this_page_inputs.filter(query)
+				else:
+					this_page_inputs = this_page_inputs.none()
 
 			#lgr.info('This Page Inputs 2L %s' % this_page_inputs)
 			gui['this_page_inputs'] = self.section_generator(payload, this_page_inputs, node_info)
