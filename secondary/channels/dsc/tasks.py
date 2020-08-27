@@ -1043,8 +1043,9 @@ class Wrappers:
 				link_value = json.dumps(href)
 
 				#Final Case
+
+				case_filter_data = {}
 				if link_case_filter:
-					case_filter_data = {}
 					for f in link_case_filter.split("|"):
 						cf_list = f.split('%')
 						if len(cf_list)==2:
@@ -1070,7 +1071,7 @@ class Wrappers:
 							elif 'q' in payload.keys() and payload['q'] not in ['', None]:
 								if f not in ['',None]: case_filter_data[f + '__icontains'] = payload['q']
 
-
+				if case_filter_data:
 					case_filter_data['then'] = Value(link_value)
 
 					case_when.append(When(**case_filter_data))
