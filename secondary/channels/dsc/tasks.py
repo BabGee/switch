@@ -553,11 +553,11 @@ class Wrappers:
 					join_institution_not_filters = join.join_institution_not_filters
 					join_duration_days_filters = join.join_duration_days_filters
 
-
-
 					join_manytomany_fields = join.join_manytomany_fields
 					join_not_fields = join.join_not_fields
 					join_manytomany_not_fields = join.join_manytomany_not_fields
+
+					join_case_fields = join.join_case_fields
 
 					join_not_filter_data = {}
 					join_or_filter_data = {}
@@ -739,27 +739,6 @@ class Wrappers:
 								join_report_list = join_report_list.filter(query)
 
 
-					'''
-					if join_case_fields not in ['',None]:
-						join_case_when = []
-						case_values_data = {}
-						for i in join_case_fields.split('|'):
-							try:case_field, k, v = i.split('%')
-							except: continue
-							record_data = {}
-
-							record_data[k.strip()+'__in'] =  join_report_list.values_list(v.strip(),flat=True).distinct()
-							record_data['then'] = True
-
-							join_case_when.append(When(**record_data))
-
-						#Final Case
-						if join_case_when:
-							join_case_fields_data[case_field.strip()] = Case(*case_when, default=False, output_field=BooleanField())
-
-							if join_case_fields_data:
-								report_list = report_list.annotate(**join_case_fields_data)
-					'''
 					if join_fields not in ['',None]:
 						for i in join_fields.split("|"):
 							try:k,v = i.split('%')
@@ -810,6 +789,27 @@ class Wrappers:
 							#lgr.info('%s Join Many Not Fields Applied: %s' % (data.query.name,query))
 							report_list = report_list.filter(query)
 
+					
+					if join_case_fields not in ['',None]:
+						join_case_when = []
+						case_values_data = {}
+						for i in join_case_fields.split('|'):
+							try:case_field, k, v = i.split('%')
+							except: continue
+							record_data = {}
+
+							record_data[k.strip()+'__in'] =  join_report_list.values_list(v.strip(),flat=True).distinct()
+							record_data['then'] = True
+
+							join_case_when.append(When(**record_data))
+
+						#Final Case
+						if join_case_when:
+							join_case_fields_data[case_field.strip()] = Case(*case_when, default=False, output_field=BooleanField())
+
+							if join_case_fields_data:
+								report_list = report_list.annotate(**join_case_fields_data)
+					
 			#lgr.info('Query Str 5: %s' % report_list.query.__str__())
 			#lgr.info('Report List Count: %s' % len(report_list))
 			#lgr.info('Report End Date')
