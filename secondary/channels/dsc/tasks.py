@@ -531,7 +531,7 @@ class Wrappers:
 					report_list = report_list.filter(role_query)
 
 
-			#lgr.info('Query Str 4: %s' % report_list.query.__str__())
+			lgr.info('Query Str 4: %s' % report_list.query.__str__())
 
 			join_query = DataListJoinQuery.objects.using('read').filter(query=data.query,join_inactive=False)
 
@@ -831,15 +831,16 @@ class Wrappers:
 							record_data['then'] = True
 
 							join_case_when.append(When(**record_data))
-
+						lgr.info('Join Case When: %s' % join_case_when)
 						#Final Case
 						if join_case_when:
 							join_case_fields_data[case_field.strip()] = Case(*case_when, default=False, output_field=BooleanField())
 
+							lgr.info('Join Case Fields Data: %s' % join_case_fields_data)
 							if join_case_fields_data:
 								report_list = report_list.annotate(**join_case_fields_data)
 					
-			#lgr.info('Query Str 5: %s' % report_list.query.__str__())
+			lgr.info('Query Str 5: %s' % report_list.query.__str__())
 			#lgr.info('Report List Count: %s' % len(report_list))
 			#lgr.info('Report End Date')
 			############################################VALUES BLOCK
