@@ -535,6 +535,7 @@ class Wrappers:
 
 			join_query = DataListJoinQuery.objects.using('read').filter(query=data.query,join_inactive=False)
 
+			lgr.info('Join Query: %s' % join_query)
 			for join in join_query:
 				if join.join_fields or join.join_manytomany_fields or join.join_not_fields or join.join_manytomany_not_fields:
 
