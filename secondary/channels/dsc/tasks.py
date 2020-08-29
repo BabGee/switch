@@ -831,7 +831,9 @@ class Wrappers:
 							except: continue
 							record_data = {}
 
-							record_data[k.strip()+'__in'] =  join_report_list.values_list(v.strip(),flat=True).distinct()
+							record  =  join_report_list.values_list(v.strip(),flat=True).distinct()
+							record_data[k.strip()+'__in'] =  list(record)
+
 							record_data['then'] = True
 
 							join_case_when.append(When(**record_data))
