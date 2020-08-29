@@ -939,7 +939,7 @@ class Wrappers:
 					#lgr.info('Month Year Data: %s' % month_year_data)
 					report_list = report_list.annotate(**month_year_data)
 
-			#lgr.info('Query Str 6: %s' % report_list.query.__str__())
+			lgr.info('Query Str 6: %s' % report_list.query.__str__())
 
 			if data.data_response_type.name == 'DATA':
 				#Values
@@ -1142,7 +1142,7 @@ class Wrappers:
 
 			#lgr.info('Link Values')
 
-			#lgr.info('Query Str 7: %s' % report_list.query.__str__())
+			lgr.info('Query Str 7: %s' % report_list.query.__str__())
 			if or_filters not in [None,'']:
 				# for a in filters.split("&"):
 				for f in or_filters.split("|"):
@@ -1153,7 +1153,7 @@ class Wrappers:
 						params['cols'][count] = i
 						count += 1
 
-			#lgr.info('Query Str 7.1: %s' % report_list.query.__str__())
+			lgr.info('Query Str 7.1: %s' % report_list.query.__str__())
 			if and_filters not in [None,'']:
 				for f in and_filters.split("|"):
 					count = 0
@@ -1163,7 +1163,7 @@ class Wrappers:
 						params['cols'][count] = i
 						count += 1
 
-			#lgr.info('Query Str 7.2: %s' % report_list.query.__str__())
+			lgr.info('Query Str 7.2: %s' % report_list.query.__str__())
 			if list_filters not in [None,'']:
 				for list_data in list_filters.split('|'):
 					count = 0
@@ -1223,7 +1223,7 @@ class Wrappers:
 			###########################################################################
 
 
-			#lgr.info('Query Str 8: %s' % report_list.query.__str__())
+			lgr.info('Query Str 8: %s' % report_list.query.__str__())
 
 			cols = params['cols']
 			new_cols = []
@@ -1276,7 +1276,7 @@ class Wrappers:
 				distinct_list = distinct.split('|')
 				report_list = report_list.distinct(*distinct_list)
 
-			#lgr.info('Query Str 11: %s' % report_list.query.__str__())
+			lgr.info('Query Str 11: %s' % report_list.query.__str__())
 
 			if 'order_by' in payload.keys():
 				order_by = payload['order_by'].split(',')
@@ -1463,7 +1463,7 @@ class Wrappers:
 
 			else:
 
-				#lgr.info('Query Str 12: %s' % report_list.query.__str__())
+				lgr.info('Query Str 12: %s' % report_list.query.__str__())
 				lgr.info('Limit: %s' % limit)
 
 				if limit not in [None,""]:
