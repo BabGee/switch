@@ -838,7 +838,7 @@ class Wrappers:
 						lgr.info('Join Case When: %s' % join_case_when)
 						#Final Case
 						if join_case_when:
-							join_case_fields_data[case_field.strip()] = Case(*case_when, default=False, output_field=BooleanField())
+							join_case_fields_data[case_field.strip()] = Case(*join_case_when, default=False, output_field=BooleanField())
 
 							lgr.info('Join Case Fields Data: %s' % join_case_fields_data)
 							if join_case_fields_data:
