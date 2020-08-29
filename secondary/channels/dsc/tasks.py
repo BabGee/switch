@@ -538,7 +538,7 @@ class Wrappers:
 			lgr.info('Join Query: %s' % join_query)
 			for join in join_query:
 				lgr.info('Join: %s' % join)
-				if join.join_fields or join.join_manytomany_fields or join.join_not_fields or join.join_manytomany_not_fields:
+				if join.join_fields or join.join_manytomany_fields or join.join_not_fields or join.join_manytomany_not_fields or join.join_case_fields:
 
 					join_model_class = apps.get_model(join.join_module_name, join.join_model_name)
 					join_gateway_filters = join.join_gateway_filters
