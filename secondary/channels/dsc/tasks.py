@@ -845,7 +845,7 @@ class Wrappers:
 			#lgr.info('Report List Count: %s' % len(report_list))
 			#lgr.info('Report End Date')
 			############################################VALUES BLOCK
-			args = []
+			args = values_date.keys()
 			if values not in [None,'']:
 				for i in values.split('|'):
 					try:k,v = i.split('%')
