@@ -954,6 +954,7 @@ class Wrappers:
 
 			#args = []
 
+			lgr.info('Query Str 6.1: %s' % report_list.query.__str__())
 			#Count Sum MUST come after values in order to group
 			if count_values not in [None,'']:
 				kwargs = {}
@@ -967,6 +968,7 @@ class Wrappers:
 				#lgr.info('Count: %s' % len(report_list))
 				report_list = report_list.annotate(**kwargs)
 
+			lgr.info('Query Str 6.2: %s' % report_list.query.__str__())
 			#lgr.info('Report Count Values: %s' % report_list)
 			if sum_values not in [None,'']:
 				kwargs = {}
@@ -987,6 +989,7 @@ class Wrappers:
 
 				report_list = report_list.annotate(**kwargs)
 
+			lgr.info('Query Str 6.3: %s' % report_list.query.__str__())
 			#lgr.info('Report Sum Values')
 			if avg_values not in [None,'']:
 				kwargs = {}
@@ -1003,6 +1006,7 @@ class Wrappers:
 
 
 
+			lgr.info('Query Str 6.4: %s' % report_list.query.__str__())
 			#lgr.info('Report Sum Values')
 			if custom_values not in [None,'']:
 				kwargs = {}
@@ -1017,8 +1021,8 @@ class Wrappers:
 				report_list = report_list.annotate(**kwargs)
 
 
-			#lgr.info('Report AVG Values')
-			
+			lgr.info('Query Str 6.5: %s' % report_list.query.__str__())
+			#lgr.info('Report AVG Values')	
 			if last_balance not in [None,'']:
 				kwargs = {}
 				for i in last_balance.split('|'):
@@ -1037,7 +1041,8 @@ class Wrappers:
 				report_list = report_list.annotate(**kwargs)
 
 
-			
+
+			lgr.info('Query Str 6.6: %s' % report_list.query.__str__())
 			#lgr.info('Last Balance')
 			case_query = DataListCaseQuery.objects.using('read').filter(query=data.query,case_inactive=False)
 
@@ -1070,6 +1075,7 @@ class Wrappers:
 				if len(case_values_data.keys()):
 					report_list = report_list.annotate(**case_values_data)
 
+			lgr.info('Query Str 6.7: %s' % report_list.query.__str__())
 			#lgr.info('Case Values')
 			link_query = DataListLinkQuery.objects.using('read').filter(Q(query=data.query), Q(link_inactive=False),\
 							   Q(Q(gateway=gateway_profile.gateway) | Q(gateway=None)),\
