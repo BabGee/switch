@@ -537,6 +537,7 @@ class Wrappers:
 
 			lgr.info('Join Query: %s' % join_query)
 			for join in join_query:
+				lgr.info('Join: %s' % join)
 				if join.join_fields or join.join_manytomany_fields or join.join_not_fields or join.join_manytomany_not_fields:
 
 					join_model_class = apps.get_model(join.join_module_name, join.join_model_name)
@@ -819,8 +820,10 @@ class Wrappers:
 							#lgr.info('%s Join Many Not Fields Applied: %s' % (data.query.name,query))
 							report_list = report_list.filter(query)
 
-					
+
+					lgr.info('Join Case Fields: %s' % join_case_fields)
 					if join_case_fields not in ['',None]:
+						lgr.info('Join Case Fields: %s' % join_case_fields)
 						join_case_when = []
 						case_values_data = {}
 						for i in join_case_fields.split('|'):
