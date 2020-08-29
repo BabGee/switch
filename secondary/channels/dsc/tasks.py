@@ -839,7 +839,7 @@ class Wrappers:
 						#Final Case
 						if join_case_when:
 							values_data[case_field.strip()] = Case(*join_case_when, default=False, output_field=BooleanField())
-							params['cols'].append({"label": k.strip(), "type": "boolean", "value": k.strip()})
+							params['cols'].append({"label": case_field.strip(), "type": "boolean", "value": case_field.strip()})
 
 			lgr.info('Query Str 5: %s' % report_list.query.__str__())
 			#lgr.info('Report List Count: %s' % len(report_list))
