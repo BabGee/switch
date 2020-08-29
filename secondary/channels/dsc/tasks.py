@@ -589,18 +589,29 @@ class Wrappers:
 					if join_or_filters not in [None,'']:
 						for f in join_or_filters.split("|"):
 							of_list = f.split('%')
-							if len(of_list)==2 and getattr(join_model_class, of_list[0].split('__')[0], False):
-								k,v = of_list
-							v_list = v.split(',')
+							if len(of_list)==2:
+								if of_list[0] in payload.keys() and getattr(join_model_class, of_list[1].split('__')[0], False):
+									join_or_filter_data[of_list[1]] = payload[of_list[0]]
+								elif getattr(join_model_class, of_list[0].split('__')[0], False):
+									k,v = of_list
+									v_list = v.split(',')
 
-							if len(v_list)>1:
-								v = [l.strip() for l in v_list if l]
-							elif v.strip().lower() == 'false':
-								v = False
-							elif v.strip().lower() == 'true':
-								v = True
+									if len(v_list)>1:
+										v = [l.strip() for l in v_list if l]
+									elif v.strip().lower() == 'false':
+										v = False
+									elif v.strip().lower() == 'true':
+										v = True
 
-							join_or_filter_data[k] = v if v not in ['',None] else None
+									join_or_filter_data[k] = v if v not in ['',None] else None
+							elif getattr(join_model_class, f.split('__')[0], False):
+								if  f in payload.keys() and f.split('__')[-1] in ['exact','iexact','contains','icontains','isnull','regex','iregex']:
+									if f not in ['',None]: join_or_filter_data[f] = payload[f]
+								elif f in payload.keys():
+									if f not in ['',None]: join_or_filter_data[f + '__icontains'] = payload[f]
+								elif 'q' in payload.keys() and payload['q'] not in ['', None]:
+									if f not in ['',None]: join_or_filter_data[f + '__icontains'] = payload['q']
+
 
 						if len(join_or_filter_data):
 							or_query = reduce(operator.or_, (Q(k) for k in join_or_filter_data.items()))
@@ -610,18 +621,28 @@ class Wrappers:
 					if join_and_filters not in [None,'']:
 						for f in join_and_filters.split("|"):
 							af_list = f.split('%')
-							if len(af_list)==2 and getattr(join_model_class, af_list[0].split('__')[0], False):
-								k,v = af_list
-							v_list = v.split(',')
+							if len(af_list)==2:
+								if af_list[0] in payload.keys() and getattr(join_model_class, af_list[1].split('__')[0], False):
+									join_and_filter_data[af_list[1]] = payload[af_list[0]]
+								elif getattr(join_model_class, af_list[0].split('__')[0], False):
+									k,v = af_list
+									v_list = v.split(',')
 
-							if len(v_list)>1:
-								v = [l.strip() for l in v_list if l]
-							elif v.strip().lower() == 'false':
-								v = False
-							elif v.strip().lower() == 'true':
-								v = True
+									if len(v_list)>1:
+										v = [l.strip() for l in v_list if l]
+									elif v.strip().lower() == 'false':
+										v = False
+									elif v.strip().lower() == 'true':
+										v = True
 
-							join_and_filter_data[k] = v if v not in ['',None] else None
+									join_and_filter_data[k] = v if v not in ['',None] else None
+							elif getattr(join_model_class, f.split('__')[0], False):
+								if  f in payload.keys() and f.split('__')[-1] in ['exact','iexact','contains','icontains','isnull','regex','iregex']:
+									if f not in ['',None]: join_and_filter_data[f] = payload[f]
+								elif f in payload.keys():
+									if f not in ['',None]: join_and_filter_data[f + '__icontains'] = payload[f]
+								elif 'q' in payload.keys() and payload['q'] not in ['', None]:
+									if f not in ['',None]: join_and_filter_data[f + '__icontains'] = payload['q']
 
 						if len(join_and_filter_data):
 							and_query = reduce(operator.and_, (Q(k) for k in join_and_filter_data.items()))
@@ -633,18 +654,26 @@ class Wrappers:
 					if join_not_filters not in ['',None]:
 						for f in join_not_filters.split("|"):
 							nf_list = f.split('%')
-							if len(nf_list)==2 and getattr(join_model_class, nf_list[0].split('__')[0], False):
-								k,v = nf_list
-							v_list = v.split(',')
+							if len(nf_list)==2:
+								if nf_list[0] in payload.keys() and getattr(join_model_class, nf_list[1].split('__')[0], False):
+									join_not_filter_data[nf_list[1] + '__icontains'] = payload[nf_list[0]]
+								elif getattr(join_model_class, nf_list[0].split('__')[0], False):
+									k,v = nf_list
+									v_list = v.split(',')
 
-							if len(v_list)>1:
-								v = [l.strip() for l in v_list if l]
-							elif v.strip().lower() == 'false':
-								v = False
-							elif v.strip().lower() == 'true':
-								v = True
+									if len(v_list)>1:
+										v = [l.strip() for l in v_list if l]
+									elif v.strip().lower() == 'false':
+										v = False
+									elif v.strip().lower() == 'true':
+										v = True
 
-							join_not_filter_data[k] = v if v not in ['',None] else None
+									join_not_filter_data[k] = v if v not in ['',None] else None
+							elif getattr(join_model_class, f.split('__')[0], False):
+								if f in payload.keys():
+									if f not in ['',None]: join_not_filter_data[f + '__icontains'] = payload[f]
+								elif 'q' in payload.keys() and payload['q'] not in ['', None]:
+									if f not in ['',None]: join_not_filter_data[f + '__icontains'] = payload['q']
 
 						if len(join_not_filter_data):
 							query = reduce(operator.and_, (~Q(k) for k in join_not_filter_data.items()))
