@@ -531,13 +531,13 @@ class Wrappers:
 					report_list = report_list.filter(role_query)
 
 
-			lgr.info('Query Str 4: %s' % report_list.query.__str__())
+			#lgr.info('Query Str 4: %s' % report_list.query.__str__())
 
 			join_query = DataListJoinQuery.objects.using('read').filter(query=data.query,join_inactive=False)
 
-			lgr.info('Join Query: %s' % join_query)
+			#lgr.info('Join Query: %s' % join_query)
 			for join in join_query:
-				lgr.info('Join: %s' % join)
+				#lgr.info('Join: %s' % join)
 				if join.join_fields or join.join_manytomany_fields or join.join_not_fields or join.join_manytomany_not_fields or join.join_case_fields:
 
 					join_model_class = apps.get_model(join.join_module_name, join.join_model_name)
@@ -820,9 +820,7 @@ class Wrappers:
 							report_list = report_list.filter(query)
 
 
-					lgr.info('Join Case Fields: %s' % join_case_fields)
 					if join_case_fields not in ['',None]:
-						lgr.info('Join Case Fields: %s' % join_case_fields)
 						join_case_when = []
 						for i in join_case_fields.split('|'):
 							try:case_field, k, v = i.split('%')
@@ -835,13 +833,12 @@ class Wrappers:
 							record_data['then'] = True
 
 							join_case_when.append(When(**record_data))
-						lgr.info('Join Case When: %s' % join_case_when)
 						#Final Case
 						if join_case_when:
 							values_data[case_field.strip()] = Case(*join_case_when, default=False, output_field=BooleanField())
 							params['cols'].append({"label": case_field.strip(), "type": "boolean", "value": case_field.strip()})
 
-			lgr.info('Query Str 5: %s' % report_list.query.__str__())
+			#lgr.info('Query Str 5: %s' % report_list.query.__str__())
 			#lgr.info('Report List Count: %s' % len(report_list))
 			#lgr.info('Report End Date')
 			############################################VALUES BLOCK
@@ -934,7 +931,7 @@ class Wrappers:
 					#lgr.info('Month Year Data: %s' % month_year_data)
 					report_list = report_list.annotate(**month_year_data)
 
-			lgr.info('Query Str 6: %s' % report_list.query.__str__())
+			#lgr.info('Query Str 6: %s' % report_list.query.__str__())
 
 			if data.data_response_type.name == 'DATA':
 				#Values
@@ -949,7 +946,7 @@ class Wrappers:
 
 			#args = []
 
-			lgr.info('Query Str 6.1: %s' % report_list.query.__str__())
+			#lgr.info('Query Str 6.1: %s' % report_list.query.__str__())
 			#Count Sum MUST come after values in order to group
 			if count_values not in [None,'']:
 				kwargs = {}
@@ -963,7 +960,7 @@ class Wrappers:
 				#lgr.info('Count: %s' % len(report_list))
 				report_list = report_list.annotate(**kwargs)
 
-			lgr.info('Query Str 6.2: %s' % report_list.query.__str__())
+			#lgr.info('Query Str 6.2: %s' % report_list.query.__str__())
 			#lgr.info('Report Count Values: %s' % report_list)
 			if sum_values not in [None,'']:
 				kwargs = {}
@@ -984,7 +981,7 @@ class Wrappers:
 
 				report_list = report_list.annotate(**kwargs)
 
-			lgr.info('Query Str 6.3: %s' % report_list.query.__str__())
+			#lgr.info('Query Str 6.3: %s' % report_list.query.__str__())
 			#lgr.info('Report Sum Values')
 			if avg_values not in [None,'']:
 				kwargs = {}
@@ -1001,7 +998,7 @@ class Wrappers:
 
 
 
-			lgr.info('Query Str 6.4: %s' % report_list.query.__str__())
+			#lgr.info('Query Str 6.4: %s' % report_list.query.__str__())
 			#lgr.info('Report Sum Values')
 			if custom_values not in [None,'']:
 				kwargs = {}
@@ -1016,7 +1013,7 @@ class Wrappers:
 				report_list = report_list.annotate(**kwargs)
 
 
-			lgr.info('Query Str 6.5: %s' % report_list.query.__str__())
+			#lgr.info('Query Str 6.5: %s' % report_list.query.__str__())
 			#lgr.info('Report AVG Values')	
 			if last_balance not in [None,'']:
 				kwargs = {}
@@ -1037,7 +1034,7 @@ class Wrappers:
 
 
 
-			lgr.info('Query Str 6.6: %s' % report_list.query.__str__())
+			#lgr.info('Query Str 6.6: %s' % report_list.query.__str__())
 			#lgr.info('Last Balance')
 			case_query = DataListCaseQuery.objects.using('read').filter(query=data.query,case_inactive=False)
 
@@ -1070,7 +1067,7 @@ class Wrappers:
 				if len(case_values_data.keys()):
 					report_list = report_list.annotate(**case_values_data)
 
-			lgr.info('Query Str 6.7: %s' % report_list.query.__str__())
+			#lgr.info('Query Str 6.7: %s' % report_list.query.__str__())
 			#lgr.info('Case Values')
 			link_query = DataListLinkQuery.objects.using('read').filter(Q(query=data.query), Q(link_inactive=False),\
 							   Q(Q(gateway=gateway_profile.gateway) | Q(gateway=None)),\
@@ -1143,7 +1140,7 @@ class Wrappers:
 
 			#lgr.info('Link Values')
 
-			lgr.info('Query Str 7: %s' % report_list.query.__str__())
+			#lgr.info('Query Str 7: %s' % report_list.query.__str__())
 			if or_filters not in [None,'']:
 				# for a in filters.split("&"):
 				for f in or_filters.split("|"):
@@ -1154,7 +1151,7 @@ class Wrappers:
 						params['cols'][count] = i
 						count += 1
 
-			lgr.info('Query Str 7.1: %s' % report_list.query.__str__())
+			#lgr.info('Query Str 7.1: %s' % report_list.query.__str__())
 			if and_filters not in [None,'']:
 				for f in and_filters.split("|"):
 					count = 0
@@ -1164,7 +1161,7 @@ class Wrappers:
 						params['cols'][count] = i
 						count += 1
 
-			lgr.info('Query Str 7.2: %s' % report_list.query.__str__())
+			#lgr.info('Query Str 7.2: %s' % report_list.query.__str__())
 			if list_filters not in [None,'']:
 				for list_data in list_filters.split('|'):
 					count = 0
@@ -1224,7 +1221,7 @@ class Wrappers:
 			###########################################################################
 
 
-			lgr.info('Query Str 8: %s' % report_list.query.__str__())
+			#lgr.info('Query Str 8: %s' % report_list.query.__str__())
 
 			cols = params['cols']
 			new_cols = []
@@ -1277,7 +1274,7 @@ class Wrappers:
 				distinct_list = distinct.split('|')
 				report_list = report_list.distinct(*distinct_list)
 
-			lgr.info('Query Str 11: %s' % report_list.query.__str__())
+			#lgr.info('Query Str 11: %s' % report_list.query.__str__())
 
 			if 'order_by' in payload.keys():
 				order_by = payload['order_by'].split(',')
@@ -1464,7 +1461,7 @@ class Wrappers:
 
 			else:
 
-				lgr.info('Query Str 12: %s' % report_list.query.__str__())
+				#lgr.info('Query Str 12: %s' % report_list.query.__str__())
 				lgr.info('Limit: %s' % limit)
 
 				if limit not in [None,""]:
