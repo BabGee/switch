@@ -569,7 +569,6 @@ class Wrappers:
 					join_gateway_profile_filters_data  = {}
 					join_profile_filter_data = {}
 					join_role_filter_data = {}
-					join_case_fields_data = {}
 					join_fields_data = {}
 					join_institution_filter_data = {}
 					join_institution_not_filter_data = {}
@@ -825,7 +824,6 @@ class Wrappers:
 					if join_case_fields not in ['',None]:
 						lgr.info('Join Case Fields: %s' % join_case_fields)
 						join_case_when = []
-						case_values_data = {}
 						for i in join_case_fields.split('|'):
 							try:case_field, k, v = i.split('%')
 							except: continue
@@ -840,12 +838,8 @@ class Wrappers:
 						lgr.info('Join Case When: %s' % join_case_when)
 						#Final Case
 						if join_case_when:
-							join_case_fields_data[case_field.strip()] = Case(*join_case_when, default=False, output_field=BooleanField())
+							values_data[case_field.strip()] = Case(*join_case_when, default=False, output_field=BooleanField())
 
-							lgr.info('Join Case Fields Data: %s' % join_case_fields_data)
-							if join_case_fields_data:
-								report_list = report_list.annotate(**join_case_fields_data)
-					
 			lgr.info('Query Str 5: %s' % report_list.query.__str__())
 			#lgr.info('Report List Count: %s' % len(report_list))
 			#lgr.info('Report End Date')
