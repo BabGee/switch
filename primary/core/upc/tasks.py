@@ -953,6 +953,32 @@ class System(Wrappers):
 		return payload
 
 
+	def profile_document(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			if session_gateway_profile.user.profile.national_id and session_gateway_profile.user.profile.passport_number:
+				payload['trigger'] = 'national_id,passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'Profile Document'
+				payload['response_status'] = '00'
+			elif session_gateway_profile.user.profile.national_id:
+				payload['trigger'] = 'national_id%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'Profile Document'
+				payload['response_status'] = '00'
+			elif session_gateway_profile.user.profile.passport_number:
+				payload['trigger'] = 'passport_number%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'Profile Document'
+				payload['response_status'] = '00'
+			else:
+				payload['response'] = 'No Profile Document Exists'
+				payload['response_status'] = '25'
+		except Exception as e:
+			lgr.info('Error on get profile details: %s' % e)
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+		return payload
+
+
 	def profile_is_registered(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
