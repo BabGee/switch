@@ -436,7 +436,7 @@ class System(Wrappers):
 					o.ext_outbound_id = payload['bridge__transaction_id']
 
 				o.save()
-				payload['response_status'] = '00'
+				payload['response_status'] = o.response
 				payload['response'] = 'Remit Confirmed'
 
 			else:
