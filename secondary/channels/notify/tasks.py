@@ -2422,9 +2422,9 @@ def _send_outbound(message):
 
 			#Send SMS
 			node = i.contact.product.notification.endpoint.url
-			#lgr.info("Payload: %s| Node: %s" % (payload, node) )
+			lgr.info("Payload: %s| Node: %s" % (payload, node) )
 			payload = WebService().post_request(payload, node, timeout=5)
-			#lgr.info('Response: %s' % payload)
+			lgr.info('Response: %s' % payload)
 
 
 			if 'response_status' in payload.keys() and payload['response_status'] == '00':
