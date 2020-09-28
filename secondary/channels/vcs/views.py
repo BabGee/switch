@@ -253,8 +253,10 @@ class VAS:
 			elif self.channel.name == 'USSD':#Default ussd call
 				lgr.info('\n\n\tCreate Code:  5\n\n\n')
 				self.access_point = '*%s#' % self.access_point
+			else:
+				lgr.info('\n\n\tCreate Code:  6\n\n\n')
 			self.payload['access_point'] = self.access_point
-
+			lgr.info('Payload: %s' % self.payload)
 		#Inject input if still missing (for all channels)
 		if 'input' not in self.payload.keys():
 			#Injecting Zero ensures that the menu does not progress in case of bad input, but remains on the same page as back entry is initiated
