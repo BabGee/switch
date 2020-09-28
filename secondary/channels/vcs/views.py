@@ -432,7 +432,8 @@ class VAS:
 								#Validated Pin last as initialize create menu with input 00 changes self.nave to None
 								if self.nav.menu.input_variable.name == 'Validated Pin':
 									self.group_select = 0
-									self.level = '0'; self.nav = None; self.service = None
+									self.level = '0'
+									self.service = None
 							else:
 								if session_gateway_profile.pin_retries >= self.code[0].gateway.max_pin_retries:
 									session_gateway_profile.status = ProfileStatus.objects.get(name='LOCKED')
