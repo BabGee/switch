@@ -228,6 +228,7 @@ class VAS:
 			#create code for USSD to allow for Shortcuts
 			if 'input' in self.payload.keys() and len(self.navigator)<1 and self.channel.name == 'USSD':#the ussd string is available on first request meaning is shortcut
 				extension = self.payload['input']
+				self.payload['input'] = 'BEG'
 				self.access_point = '*%s*%s#' % (self.access_point,extension)
 			elif len(self.navigator)==1 and self.navigator[0].input_select != 'BEG' and \
 			self.navigator[0].code.mno.name=='Safaricom':#A shortcut first call
