@@ -227,30 +227,30 @@ class VAS:
 			self.access_point = self.payload['accesspoint']
 			#create code for USSD to allow for Shortcuts
 			if 'input' in self.payload.keys() and len(self.navigator)<1 and self.channel.name == 'USSD':#the ussd string is available on first request meaning is shortcut
-				lgr.info('1')
+				lgr.info('\n\n\tCreate Code:  1\n\n\n')
 				extension = self.payload['input']
 				self.payload['input'] = 'BEG'
 				self.access_point = '*%s*%s#' % (self.access_point,extension)
 			elif len(self.navigator)==1 and self.navigator[0].input_select != 'BEG' and \
 			self.navigator[0].code.mno.name=='Safaricom':#A shortcut first call
-				lgr.info('2')
+				lgr.info('\n\n\tCreate Code:  2\n\n\n')
 				self.payload['input'] = 'BEG'
 				#self.payload['input'] = '00'
 				self.access_point = self.navigator[0].code.code
 			elif 'input' in self.payload.keys() and len(self.navigator)>0 and self.channel.name == 'USSD':#All Succeeding USSD calls
-				lgr.info('3')
+				lgr.info('\n\n\tCreate Code:  3\n\n\n')
 				ussd_string = self.payload['input'].split('*')
 				#self.payload['input'] = ussd_string[len(ussd_string)-1]
 				self.payload['input'] = ussd_string[-1]
 				self.access_point = self.navigator[0].code.code
 			elif 'input' in self.payload.keys() and self.channel.name == 'USSD':#Default ussd call with input
-				lgr.info('4')
+				lgr.info('\n\n\tCreate Code:  4\n\n\n')
 				ussd_string = self.payload['input'].split('*')
 				#self.payload['input'] = ussd_string[len(ussd_string)-1]
 				self.payload['input'] = ussd_string[-1]
 				self.access_point = '*%s#' % self.access_point
 			elif self.channel.name == 'USSD':#Default ussd call
-				lgr.info('5')
+				lgr.info('\n\n\tCreate Code:  5\n\n\n')
 				self.access_point = '*%s#' % self.access_point
 			self.payload['access_point'] = self.access_point
 
