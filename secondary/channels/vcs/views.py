@@ -251,8 +251,8 @@ class VAS:
 		#Inject input if still missing (for all channels)
 		if 'input' not in self.payload.keys():
 			#Injecting Zero ensures that the menu does not progress in case of bad input, but remains on the same page as back entry is initiated
-			#self.payload['input'] = 'BEG' 
-			self.payload['input'] = '00' 
+			self.payload['input'] = 'BEG' 
+			#self.payload['input'] = '00' 
 
 		#Filter Code
 		self.code = Code.objects.filter(code=self.access_point,channel=self.channel)
