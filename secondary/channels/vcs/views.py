@@ -255,6 +255,8 @@ class VAS:
 				self.access_point = '*%s#' % self.access_point
 			else:
 				lgr.info('\n\n\tCreate Code:  6\n\n\n')
+
+                        #Capture access_point created from shortcut or such
 			self.payload['access_point'] = self.access_point
 			lgr.info('Payload: %s' % self.payload)
 		#Inject input if still missing (for all channels)
