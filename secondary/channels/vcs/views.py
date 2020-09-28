@@ -290,7 +290,7 @@ class VAS:
 		if 'group_select' in kwargs.keys(): self.group_select = kwargs['group_select']
 
 		#Filter & Validate Input
-		if self.nav and self.payload['input'] not in ['0','00']:#Validate input but dont filter Back 0 and Main 00
+		if self.nav and self.payload['input'] not in ['0','00','BEG']:#Validate input but dont filter Back 0 and Main 00
 			try:
 				allowed_input_list = self.nav.menu.input_variable.allowed_input_list
 				if ((len(self.payload['input'])>=int(self.nav.menu.input_variable.validate_min) and \
