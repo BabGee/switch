@@ -230,9 +230,9 @@ class VAS:
 			if 'input' in self.payload.keys() and len(self.navigator)<1 and self.channel.name == 'USSD':#the ussd string is available on first request meaning is shortcut
 				lgr.info('\n\n\tCreate Code:  1\n\n\n')
 				extension = self.payload['input']
-				self.payload['input'] = 'BEG'
+				self.payload['input'] = 'SBEG'
 				self.access_point = '*%s*%s#' % (self.access_point,extension)
-			elif len(self.navigator)==1 and self.navigator[0].input_select != 'BEG' and \
+			elif len(self.navigator)==1 and self.navigator[0].input_select == 'SBEG' and \
 			self.navigator[0].code.mno.name=='Safaricom':#A shortcut first call
 				lgr.info('\n\n\tCreate Code:  2\n\n\n')
 				self.payload['input'] = 'BEG'
@@ -297,7 +297,7 @@ class VAS:
 		if 'group_select' in kwargs.keys(): self.group_select = kwargs['group_select']
 
 		#Filter & Validate Input
-		if self.nav and self.payload['input'] not in ['0','00','BEG']:#Validate input but dont filter Back 0 and Main 00
+		if self.nav and self.payload['input'] not in ['0','00','BEG','SBEG']:#Validate input but dont filter Back 0 and Main 00
 			try:
 				allowed_input_list = self.nav.menu.input_variable.allowed_input_list
 				if ((len(self.payload['input'])>=int(self.nav.menu.input_variable.validate_min) and \
