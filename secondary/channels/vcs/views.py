@@ -416,6 +416,7 @@ class VAS:
 
 					elif 'Validated Pin' in self.nav.menu.input_variable.name:
 
+						lgr.info('Validated PIN')
 						if override_group_select not in [None,'']: self.group_select = override_group_select
 						if override_level not in [None,'']: self.level = str(override_level)
 						if override_service not in [None,'']: self.service = override_service
@@ -431,9 +432,11 @@ class VAS:
 								self.pin_auth = True
 								#Validated Pin last as initialize create menu with input 00 changes self.nave to None
 								if self.nav.menu.input_variable.name == 'Validated Pin':
+									lgr.info('Validated PIN, to reset')
 									self.group_select = 0
 									self.level = '0'
 									self.service = None
+									lgr.info('LEVEL: %s | GROUP: %s | Protected: %s | Service: %s | Selection: %s ' % (self.level, self.group_select, self.pin_auth, self.service, self.selection))
 							else:
 								if session_gateway_profile.pin_retries >= self.code[0].gateway.max_pin_retries:
 									session_gateway_profile.status = ProfileStatus.objects.get(name='LOCKED')
