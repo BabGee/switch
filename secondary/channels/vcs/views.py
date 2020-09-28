@@ -306,7 +306,7 @@ class VAS:
 				isinstance(globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable](self.payload['input']), \
 				globals()['__builtins__'][self.nav.menu.input_variable.variable_type.variable])) or \
 				(allowed_input_list and self.payload['input'] in allowed_input_list.split(','))):
-					lgr.info('Validated')
+					lgr.info('Validated: %s' % self.nav.menu.id)
 					override_group_select = self.nav.menu.input_variable.override_group_select
 					error_group_select = self.nav.menu.input_variable.error_group_select
 					override_level = self.nav.menu.input_variable.override_level
