@@ -47,7 +47,7 @@ class VAS:
 				self.pin_auth = True
 				self.navigator = self.navigator.filter(pin_auth=True)
 			
-			if len(self.navigator) > 0 and self.payload['input']!='00':#Not a Main Menu Request
+			if len(self.navigator) > 0 and self.payload['input'] not in ['00','<BEG>','<SBEG>']:#Not a Main Menu Request
 				if self.gateway_profile.exists():
 					self.navigator = self.navigator.filter(session__gateway_profile=self.gateway_profile[0])
 				self.nav = self.navigator[0]
@@ -62,7 +62,7 @@ class VAS:
 				else:
 					self.menu = self.menu.filter(access_level__name='SYSTEM', code=self.code[0],profile_status=None)
 
-			elif self.payload['input'] == '00' or len(self.navigator)<1:#Main Menu Request|First call
+			elif self.payload['input'] in ['00','<BEG>','<SBEG>'] or len(self.navigator)<1:#Main Menu Request|First call
 				self.group_select=0
 				self.nav_step = (self.navigator[0].nav_step + 1) if self.payload['input'] == '00' and len(self.navigator)>0 else 0
 				self.level = '0';self.nav = None; self.service = None
@@ -230,12 +230,12 @@ class VAS:
 			if 'input' in self.payload.keys() and len(self.navigator)<1 and self.channel.name == 'USSD':#the ussd string is available on first request meaning is shortcut
 				lgr.info('\n\n\tCreate Code:  1\n\n\n')
 				extension = self.payload['input']
-				self.payload['input'] = 'SBEG'
+				self.payload['input'] = '<SBEG>'
 				self.access_point = '*%s*%s#' % (self.access_point,extension)
-			elif len(self.navigator)==1 and self.navigator[0].input_select == 'SBEG' and \
+			elif len(self.navigator)==1 and self.navigator[0].input_select == '<SBEG>' and \
 			self.navigator[0].code.mno.name=='Safaricom':#A shortcut first call
 				lgr.info('\n\n\tCreate Code:  2\n\n\n')
-				self.payload['input'] = 'BEG'
+				self.payload['input'] = '<BEG>'
 				#self.payload['input'] = '00'
 				self.access_point = self.navigator[0].code.code
 			elif 'input' in self.payload.keys() and len(self.navigator)>0 and self.channel.name == 'USSD':#All Succeeding USSD calls
@@ -262,7 +262,7 @@ class VAS:
 		#Inject input if still missing (for all channels)
 		if 'input' not in self.payload.keys():
 			#Injecting Zero ensures that the menu does not progress in case of bad input, but remains on the same page as back entry is initiated
-			self.payload['input'] = 'BEG' 
+			self.payload['input'] = '<BEG>' 
 			#self.payload['input'] = '00' 
 
 		#Filter Code
@@ -301,7 +301,7 @@ class VAS:
 		if 'group_select' in kwargs.keys(): self.group_select = kwargs['group_select']
 
 		#Filter & Validate Input
-		if self.nav and self.payload['input'] not in ['0','00','BEG','SBEG']:#Validate input but dont filter Back 0 and Main 00
+		if self.nav and self.payload['input'] not in ['0','00','<BEG>','<SBEG>']:#Validate input but dont filter Back 0 and Main 00
 			try:
 				allowed_input_list = self.nav.menu.input_variable.allowed_input_list
 				if ((len(self.payload['input'])>=int(self.nav.menu.input_variable.validate_min) and \
