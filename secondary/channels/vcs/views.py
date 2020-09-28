@@ -230,11 +230,11 @@ class VAS:
 				extension = self.payload['input']
 				self.payload['input'] = 'BEG'
 				self.access_point = '*%s*%s#' % (self.access_point,extension)
-			#elif len(self.navigator)==1 and self.navigator[0].input_select != 'BEG' and \
-			#self.navigator[0].code.mno.name=='Safaricom':#A shortcut first call
-			#	self.payload['input'] = 'BEG'
-			#	#self.payload['input'] = '00'
-			#	self.access_point = self.navigator[0].code.code
+			elif len(self.navigator)==1 and self.navigator[0].input_select != 'BEG' and \
+			self.navigator[0].code.mno.name=='Safaricom':#A shortcut first call
+				self.payload['input'] = 'BEG'
+				#self.payload['input'] = '00'
+				self.access_point = self.navigator[0].code.code
 			elif 'input' in self.payload.keys() and len(self.navigator)>0 and self.channel.name == 'USSD':#All Succeeding USSD calls
 				ussd_string = self.payload['input'].split('*')
 				#self.payload['input'] = ussd_string[len(ussd_string)-1]
