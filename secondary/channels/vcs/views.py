@@ -220,6 +220,7 @@ class VAS:
 		#Get Access Point
 		if 'access_point' in kwargs.keys():
 			self.access_point = kwargs['access_point']
+			lgr.info('\n\n\tGet Access Point \n\n\n')
 		else:
 			if 'accesspoint' not in self.payload.keys() and len(self.navigator)>0:
 				self.payload['accesspoint'] = str(self.navigator[0].code.code)
