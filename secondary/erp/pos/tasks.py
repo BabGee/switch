@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 from celery import shared_task
-#from celery.contrib.methods import task_method
-from celery import task, group, chain
+from celery import group, chain
 from switch.celery import app
 from celery.utils.log import get_task_logger
 from switch.celery import single_instance_task

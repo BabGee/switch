@@ -1,7 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 from celery import shared_task
-#from celery.contrib.methods import task_method
-from celery import task, group, chain
+from celery import group, chain
 from switch.celery import app
 from celery.utils.log import get_task_logger
 from switch.celery import single_instance_task
@@ -885,6 +884,73 @@ class System(Wrappers):
 
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			#lgr.info('Payload: %s' % payload)
+			notification_product = NotificationProduct.objects.filter(Q(notification__status__name='ACTIVE'), \
+						Q(notification__code__gateway=gateway_profile.gateway),\
+						Q(notification__channel__id=payload['chid'])|Q(notification__channel=None),
+						 Q(service__name=payload['SERVICE'])).\
+						prefetch_related('notification__code','product_type')
+
+
+
+
+			if 'notification_delivery_channel' in payload.keys():
+				notification_product = notification_product.filter(notification__code__channel__name=payload['notification_delivery_channel'])
+
+			#lgr.info('Notification Product: %s ' % notification_product)
+			if 'notification_product_id' in payload.keys():
+				notification_product = notification_product.filter(id=payload['notification_product_id'])
+
+			#lgr.info('Notification Product: %s ' % notification_product)
+			if 'product_item_id' in payload.keys():
+				product_type = ProductItem.objects.get(id=payload['product_item_id']).product_type
+				notification_product = notification_product.filter(product_type=product_type)
+
+			#lgr.info('Notification Product: %s ' % notification_product)
+			if 'product_type_id' in payload.keys():
+				notification_product = notification_product.filter(product_type__id=payload['product_type_id'])
+
+			#lgr.info('Notification Product: %s ' % notification_product)
+			if 'product_type' in payload.keys():
+				notification_product = notification_product.filter(product_type__name=payload['product_type'])
+
+			#lgr.info('Notification Product: %s ' % notification_product)
+			if 'payment_method' in payload.keys():
+				notification_product = notification_product.filter(payment_method__name=payload['payment_method'])
+
+			#lgr.info('Notification Product: %s ' % notification_product)
+			if 'code' in payload.keys():
+				notification_product = notification_product.filter(notification__code__code=payload['code'])
+
+			#lgr.info('Notification Product: %s ' % notification_product)
+			if 'alias' in payload.keys():
+				notification_product = notification_product.filter(notification__code__alias=payload['alias'])
+
+			#lgr.info('Notification Product: %s ' % notification_product)
+			if 'institution_id' in payload.keys():
+				#Filter to send an institution notification or otherwise a gateway if institution does not exist (gateway only has institution as None)
+				institution_notification_product = notification_product.filter(notification__code__institution__id=payload['institution_id'])
+				gateway_notification_product = notification_product.filter(notification__code__institution=None, institution_allowed=True)
+				notification_product =  institution_notification_product if len(institution_notification_product) else gateway_notification_product
+			else:
+				notification_product = notification_product.filter(notification__code__institution=None)
+
+			#lgr.info('Notification Product: %s ' % notification_product)
+			if "keyword" in payload.keys():
+				notification_product=notification_product.filter(keyword__iexact=payload['keyword'])
+
+			#lgr.info('Notification Product: %s ' % notification_product)
+			
+			#Distinct is meant to send to unique MNOs with same alias, hence returns one notification_product per MNO (distinct MNO)
+			notification_product.distinct('notification__code__alias','notification__code__mno__id','notification__code__channel__name')
+
+			#lgr.info('Product List: %s' % notification_product)
+			# Message Len
+			message = payload['message'].strip()
+			message = unescape(message)
+			message = smart_text(message)
+			message = escape(message)
+
+
 			recipient_list = json.loads(payload['recipients'])
 
 			recipient=np.asarray(recipient_list)
@@ -894,28 +960,16 @@ class System(Wrappers):
 
 			notifications = dict()
 			notifications_preview = dict()
-			product_list = NotificationProduct.objects.filter(Q(notification__code__institution=gateway_profile.institution),\
-									Q(notification__code__alias__iexact=payload['alias']),
-									Q(notification__status__name='ACTIVE'), \
-									Q(notification__channel__id=payload['chid'])|Q(notification__channel=None),
-									 Q(service__name=payload['SERVICE'])).distinct('notification__code__mno__id')
 
-			#Service is meant to send to unique MNOs with same alias, hence returns one product per MNO (distinct MNO)
-			#lgr.info('Product List: %s' % product_list)
-			# Message Len
-			message = payload['message'].strip()
-			message = unescape(message)
-			message = smart_text(message)
-			message = escape(message)
 			notifications_preview['message'] = {
 								'text':message,
 								'scheduled_date':payload['scheduled_date'] if 'scheduled_date' in payload.keys() else None,
 								'scheduled_time':payload['scheduled_time'] if 'scheduled_time' in payload.keys() else None
 								}
 
-			if len(product_list) and len(recipient)<=100:
+			if len(notification_product) and len(recipient)<=100:
 				#lgr.info('Recipients: %s' % recipient)
-				for product in product_list:
+				for product in notification_product:
 					ns,nsp = self.batch_product_notifications(payload, df, product, message, gateway_profile)
 					if ns: notifications.update(ns)
 					if nsp: notifications_preview.update(nsp)
@@ -923,7 +977,7 @@ class System(Wrappers):
 				payload['notifications_preview'] = json.dumps(notifications_preview)
 				payload['response'] = 'Batch Request Captured'
 				payload['response_status']= '00'
-			elif not product.exists():
+			elif not notification_product.exists():
 				payload["response_status"] = "25"
 				payload['response'] = 'Notification Product not Found'
 			else:	

@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 from celery import shared_task
-#from celery.contrib.methods import task_method
-from celery import task
 from switch.celery import app
 from celery.utils.log import get_task_logger
 from switch.celery import single_instance_task
@@ -47,12 +45,7 @@ except ImportError:
 		# raise on Linux
 		raise
 
-#from celery import shared_task
-#from celery.contrib.methods import task_method
-#from celery.contrib.methods import t
 from celery import shared_task
-#from celery import task_method
-from celery import task
 from switch.celery import app
 
 
@@ -2053,8 +2046,8 @@ class System(Wrappers):
 			if re.search(r'\d', password) is None: error += 'Digit, ' 
 			if re.search(r'[A-Z]', password) is None: error += 'Uppercase, '
 			if re.search(r'[a-z]', password) is None: error += 'Lowercase, '
-			if len(password) >=6 is None: error += 'More than 6 Characters, '
-			if len(password) <=30 is None: error += 'Less than 30 Characters, '
+			if len(password) >=6: error += 'More than 6 Characters, '
+			if len(password) <=30: error += 'Less than 30 Characters, '
 			if re.search(r"[ !@#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) is None: error += 'Special character, '
 			if confirm_password and password != confirm_password: error += "Matching, " 
 			if error == '':
@@ -2092,8 +2085,8 @@ class System(Wrappers):
 			if re.search(r'\d', password) is None: error += 'Digit, ' 
 			if re.search(r'[A-Z]', password) is None: error += 'Uppercase, '
 			if re.search(r'[a-z]', password) is None: error += 'Lowercase, '
-			if len(password) >=6 is None: error += 'More than 6 Characters, '
-			if len(password) <=30 is None: error += 'Less than 30 Characters, '
+			if len(password) >=6: error += 'More than 6 Characters, '
+			if len(password) <=30: error += 'Less than 30 Characters, '
 			if re.search(r"[ !@#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) is None: error += 'Special character, '
 			if password != confirm_password: error += "Matching, " 
 			if error == '':

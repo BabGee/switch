@@ -13,8 +13,7 @@ from functools import reduce
 import pytz
 import re
 from celery import shared_task
-from celery import task, group, chain
-#from celery.contrib.methods import task_method
+from celery import group, chain
 from celery.utils.log import get_task_logger
 from secondary.finance.crc.models import *
 from secondary.erp.crm.models import *

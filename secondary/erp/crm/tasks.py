@@ -1,8 +1,6 @@
 from __future__ import absolute_import
 
 from celery import shared_task
-#from celery.contrib.methods import task_method
-from celery import task
 from switch.celery import app
 from celery.utils.log import get_task_logger
 
