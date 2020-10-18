@@ -225,7 +225,7 @@ class System(Generator):
 			payload['response_status'] = '00'
 		except Exception as e:
 			payload['response_status'] = '96'
-			lgr.info("Error on Login: %s" % e)
+			lgr.info("Error on Update Role Permissions: %s" % e)
 		return payload
 
 
