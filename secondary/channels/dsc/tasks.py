@@ -291,8 +291,8 @@ class Wrappers:
 					if len(af_list)==2:
 						if af_list[0] in payload.keys() and getattr(model_class, af_list[1].split('__')[0], False):
 							and_filter_data[af_list[1]] = payload[af_list[0]]
-						elif getattr(model_class, of_list[0].split('__')[0], False) and getattr(model_class, of_list[1].split('__')[0], False):
-							k,v = of_list
+						elif getattr(model_class, af_list[0].split('__')[0], False) and getattr(model_class, af_list[1].split('__')[0], False):
+							k,v = af_list
 							and_filter_data[k.strip()] = F(v.strip())
 						elif getattr(model_class, af_list[0].split('__')[0], False):
 							k,v = af_list
@@ -327,8 +327,8 @@ class Wrappers:
 					if len(nf_list)==2:
 						if nf_list[0] in payload.keys() and getattr(model_class, nf_list[1].split('__')[0], False):
 							not_filter_data[nf_list[1] + '__icontains'] = payload[nf_list[0]]
-						elif getattr(model_class, of_list[0].split('__')[0], False) and getattr(model_class, of_list[1].split('__')[0], False):
-							k,v = of_list
+						elif getattr(model_class, nf_list[0].split('__')[0], False) and getattr(model_class, nf_list[1].split('__')[0], False):
+							k,v = nf_list
 							not_filter_data[k.strip()] = F(v.strip())
 						elif getattr(model_class, nf_list[0].split('__')[0], False):
 							k,v = nf_list
@@ -636,8 +636,8 @@ class Wrappers:
 							if len(af_list)==2:
 								if af_list[0] in payload.keys() and getattr(join_model_class, af_list[1].split('__')[0], False):
 									join_and_filter_data[af_list[1]] = payload[af_list[0]]
-								elif getattr(join_model_class, of_list[0].split('__')[0], False) and getattr(join_model_class, of_list[1].split('__')[0], False):
-									k,v = of_list
+								elif getattr(join_model_class, af_list[0].split('__')[0], False) and getattr(join_model_class, af_list[1].split('__')[0], False):
+									k,v = af_list
 									join_and_filter_data[k.strip()] = F(v.strip())
 								elif getattr(join_model_class, af_list[0].split('__')[0], False):
 									k,v = af_list
@@ -672,8 +672,8 @@ class Wrappers:
 							if len(nf_list)==2:
 								if nf_list[0] in payload.keys() and getattr(join_model_class, nf_list[1].split('__')[0], False):
 									join_not_filter_data[nf_list[1] + '__icontains'] = payload[nf_list[0]]
-								elif getattr(join_model_class, of_list[0].split('__')[0], False) and getattr(join_model_class, of_list[1].split('__')[0], False):
-									k,v = of_list
+								elif getattr(join_model_class, nf_list[0].split('__')[0], False) and getattr(join_model_class, nf_list[1].split('__')[0], False):
+									k,v = nf_list
 									join_not_filter_data[k.strip()] = F(v.strip())
 								elif getattr(join_model_class, nf_list[0].split('__')[0], False):
 									k,v = nf_list
