@@ -223,7 +223,8 @@ class System(Generator):
 					permission.role_action.add(role_action)
 				else:
 					lgr.info('Clearing')
-					permission.role_action.remove(*permission.role_action.all())
+					#permission.role_action.remove(*permission.role_action.all())
+					permission.role_action.clear()
 
 			payload['response'] = 'Role Permissions Updated'
 			payload['response_status'] = '00'
