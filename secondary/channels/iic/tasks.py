@@ -217,13 +217,13 @@ class System(Generator):
 			for right in role_right_list:
 				#Has Race Condition
 				permission = RolePermission.objects.get_or_create(role=role, role_right=right)
-				lgr.info('Permission: %s' % permission)
+				lgr.info('Permission: %s | Created: %s' % (permission[0], permission[1]))
 				if role_action:
 					lgr.info('Adding')
-					permission.role_action.add(role_action)
+					permission[0].role_action.add(role_action)
 				else:
 					lgr.info('Clearing')
-					permission.role_action.clear()
+					permission[0].role_action.clear()
 
 			payload['response'] = 'Role Permissions Updated'
 			payload['response_status'] = '00'
