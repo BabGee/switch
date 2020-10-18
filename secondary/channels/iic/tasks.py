@@ -203,6 +203,32 @@ class Generator:
 
 
 class System(Generator):
+	def update_role_permissions(self, payload, node_info):
+		lgr = node_info.log
+		try:
+			'''
+			{"action": "Enable", "role_id": "1", "role_rights": "1,2,3,4"}
+			'''
+			role_action = RoleAction.objects.get(name='VIEW') if payload.get('action') == 'Enable' else None 
+			role = Role.objects.get(id=payload.get('role_id'))
+			role_right_list = RoleRight.objects.filter(id__in=payload.get('role_rights').split(','))
+
+			for right in role_right_list:
+				#Has Race Condition
+				permission = RolePermission.objects.get_or_create(role=role, role_right=right)
+				if role_action:
+					permission.role_action.add(role_action)
+				else:
+					permission.role_action.clear()
+
+			payload['response'] = 'Role Permissions Updated'
+			payload['response_status'] = '00'
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Login: %s" % e)
+		return payload
+
+
 	def redirect(self, payload, node_info):
 
 		lgr = node_info.log
