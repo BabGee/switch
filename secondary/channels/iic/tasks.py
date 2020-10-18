@@ -209,16 +209,20 @@ class System(Generator):
 			'''
 			{"action": "Enable", "role_id": "1", "role_rights": "1,2,3,4"}
 			'''
+			lgr.info('Update Role Permission Payload: %s' % payload)
 			role_action = RoleAction.objects.get(name='VIEW') if payload.get('action') == 'Enable' else None 
 			role = Role.objects.get(id=payload.get('role_id'))
 			role_right_list = RoleRight.objects.filter(id__in=payload.get('role_rights').split(','))
-
+			lgr.info('Role Action: %s | Role: %s | Rights: %s' % (role_action, role, role_right_list))
 			for right in role_right_list:
 				#Has Race Condition
 				permission = RolePermission.objects.get_or_create(role=role, role_right=right)
+				lgr.info('Permission: %s' % permission)
 				if role_action:
+					lgr.info('Adding')
 					permission.role_action.add(role_action)
 				else:
+					lgr.info('Clearing')
 					permission.role_action.clear()
 
 			payload['response'] = 'Role Permissions Updated'
