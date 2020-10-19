@@ -310,8 +310,8 @@ class System(Generator):
 				for permission in role_permission:
 					for page in permission.role_right.page.all():
 						if page not in pages.keys():
-							pages[page] = []
 							for action in permission.role_action.all(): 
+								pages[page] = list()
 								if action not in pages[page]: pages[page].append(action)
 				if pages:
 					query = reduce(operator.or_, ( Q(Q(page=k),Q(Q(role_action=None)|Q(role_action__in=v))) for k,v in pages.items() ))
