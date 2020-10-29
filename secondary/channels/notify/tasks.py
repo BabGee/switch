@@ -733,6 +733,11 @@ class System(Wrappers):
 
 			#lgr.info('Notification Product: %s ' % notification_product)
 
+			if 'ext_product_id' in payload.keys():
+				notification_product = notification_product.filter(Q(ext_product_id=payload['ext_product_id']), Q(ext_product_id=None))
+
+			#lgr.info('Notification Product: %s ' % notification_product)
+
 			if 'notification_delivery_channel' in payload.keys():
 				notification_product = notification_product.filter(notification__code__channel__name=payload['notification_delivery_channel'])
 
