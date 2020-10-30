@@ -843,9 +843,10 @@ class System(Wrappers):
 				if 'recipient_count' in payload.keys():
 					float_amount = float_amount*Decimal(payload['recipient_count'])
 
+				payload['message'] = payload['message'].strip().format(**payload)
 				#Calculate price per SMS per each 160 characters
 				if notification_product[0].notification.code.channel.name == 'SMS':
-					message = payload['message'].strip()
+					message = payload['message']
 					message = unescape(message)
 					message = smart_text(message)
 					message = escape(message)
@@ -950,7 +951,9 @@ class System(Wrappers):
 
 			#lgr.info('Product List: %s' % notification_product)
 			# Message Len
-			message = payload['message'].strip()
+
+			payload['message'] = payload['message'].strip().format(**payload)
+			message = payload['message']
 			message = unescape(message)
 			message = smart_text(message)
 			message = escape(message)
@@ -1029,8 +1032,6 @@ class System(Wrappers):
 
 				#Construct Message to send
 				if 'message' in payload.keys() and payload['message'] not in ['',None]:
-					message = payload['message']
-
 					if "linkid" in payload.keys():
 						contact = contact.filter(linkid=payload['linkid'])
 
@@ -1058,7 +1059,7 @@ class System(Wrappers):
 						new_contact.save()
 					state = OutBoundState.objects.get(name='CREATED')
 
-					message = payload['message'].strip()
+					message = payload['message']
 					message = unescape(message)
 					message = smart_text(message)
 					message = escape(message)
@@ -1367,6 +1368,8 @@ class System(Wrappers):
 				#if '[URL]' in message and 'URL' in payload.keys():
 				#	message = message.replace('[URL]', str(payload['URL']))
 
+				message = message.strip().format(**payload)
+
 				outbound = Outbound(contact=new_contact, message=message, scheduled_send=timezone.now()+timezone.timedelta(seconds=5), state=state, sends=0)
 
 				if new_contact.product.notification.code.channel.name == 'SMS':
@@ -1478,6 +1481,7 @@ class System(Wrappers):
 			#Service is meant to send to unique MNOs with same alias, hence returns one product per MNO (distinct MNO)
 			#lgr.info('Product List: %s' % product_list)
 			# Message Len
+
 			message = payload['message'].strip()
 			message = unescape(message)
 			message = smart_text(message)
@@ -1538,6 +1542,7 @@ class System(Wrappers):
 				new_contact.save()
 
 			#Message Len
+
 			message = payload['message'].strip()
 			message = unescape(message)
 			message = smart_text(message)
@@ -1570,7 +1575,8 @@ class System(Wrappers):
 			if notification_product_list.exists():
 				for notification_product in notification_product_list:
 					contact_list_count = Contact.objects.filter(product=notification_product,subscribed=True,status__name='ACTIVE').count()
-					message = payload['message'].strip()
+
+					message = payload['message']
 					message = unescape(message)
 					message = smart_text(message)
 					message = escape(message)
@@ -1678,6 +1684,7 @@ class System(Wrappers):
 							.values_list('recipient', flat=True)
 
 			if 'message' in payload.keys() and len(recipient_list):
+
 				lgr.info('Message and Contact Captured')
 				#Bulk Create Outbound
 				recipient=np.asarray(recipient_list)
