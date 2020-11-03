@@ -11,6 +11,10 @@ os.environ.setdefault('FAUST_LOOP', 'eventlet')
 # set the default Django settings module for the 'faust' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'switch.settings')
 
+# set for models to run on async
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+
+
 #app = faust.App('django-switch', autodiscover=False, origin='faustapp')
 app = faust.App('switch-faust')
 

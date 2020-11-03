@@ -22,7 +22,7 @@ CELERY_BROKER_URL = celery_broker
 
  
 #faust
-FAUST_BROKER_URL = faust_broker
+FAUST_BROKER_URL = faust_broker.split(',')
 FAUST_STORE_URL = 'rocksdb://'
 
 try:conf_products = os.getenv("INSTALLED_APPS_products", cf.get('INSTALLED_APPS','products'))
