@@ -431,7 +431,7 @@ class Payments(System):
 @single_instance_task(60*10)
 
 '''
-def process_pending_transactions(id_list):
+def process_pending_transactions(id_list, gateway_profile_id):
 	#from celery.utils.log import get_task_logger
 	#lgr = get_task_logger(__name__)
 	#transactions = Transaction.objects.select_for_update().filter(id__in=id_list)
@@ -441,7 +441,7 @@ def process_pending_transactions(id_list):
 	payload = {}
 	payload['repeat_bridge_transaction'] = ','.join(map(str, transactions.values_list('id', flat=True)))
 	payload['gateway_host'] = '127.0.0.1'
-	Wrappers().service_call(Service.objects.get(name='BOOTSTRAP'), GatewayProfile.objects.get(id=1), payload)
+	Wrappers().service_call(Service.objects.get(name='BOOTSTRAP'), GatewayProfile.objects.get(id=gateway_profile_id), payload)
 
 	lgr.info("Transaction Processed")
 
