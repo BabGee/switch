@@ -164,8 +164,8 @@ class System(Wrappers):
 
 			if payload.get('paygate_outgoing_response_status'):  
 				outgoing.response_status = ResponseStatus.objects.get(response=payload['paygate_outgoing_response_status'])
-			if payload.get('paygate_outgoing_ext_outbound_id'): 
-				outgoing.ext_outbound_id = payload['paygate_outgoing_ext_outbound_id'] 
+			if payload.get('ext_outbound_id'): 
+				outgoing.ext_outbound_id = payload['ext_outbound_id'] 
 			if payload.get('paygate_outgoing_state'):  
 				outgoing.state = OutgoingState.objects.get(name=payload['paygate_outgoing_state'])
 
@@ -191,7 +191,7 @@ class System(Wrappers):
 			payload['paygate_outgoing_response'] = outgoing.response_status.description
 			payload['paygate_outgoing_response_status'] = outgoing.response_status.response
 			payload['paygate_outgoing_message'] = outgoing.message
-			payload['paygate_outgoing_ext_outbound_id'] = outgoing.ext_outbound_id
+			payload['ext_outbound_id'] = outgoing.ext_outbound_id
 			payload['paygate_outgoing_state'] = outgoing.state.name
 
 			payload['response_status'] = '00'
