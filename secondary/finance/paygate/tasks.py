@@ -187,7 +187,7 @@ class System(Wrappers):
 			payload['paygate_outgoing_reference'] = outgoing.reference
 			payload['paygate_outgoing_amount'] = outgoing.amount
 			payload['paygate_outgoing_charge'] = outgoing.charge
-			payload['paygate_outgoing_currency'] = outgoing.currency.code
+			if outgoing.currency: payload['paygate_outgoing_currency'] = outgoing.currency.code
 			payload['paygate_outgoing_response_status'] = outgoing.response_status.response
 			payload['paygate_outgoing_message'] = outgoing.message
 			payload['paygate_outgoing_ext_outbound_id'] = outgoing.ext_outbound_id
