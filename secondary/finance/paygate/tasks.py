@@ -157,6 +157,27 @@ class Wrappers:
 			return new_payload
 
 class System(Wrappers):
+	def outgoing_payment_details(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			outgoing = Outgoing.objects.get(id=payload['paygate_outgoing_id'])
+
+			payload['paygate_outgoing_reference'] = outgoing.reference
+			payload['paygate_outgoing_amount'] = outgoing.amount
+			payload['paygate_outgoing_charge'] = outgoing.charge
+			payload['paygate_outgoing_currency'] = outgoing.currency.code
+			payload['paygate_outgoing_response'] = outgoing.response_status.response
+			payload['paygate_outgoing_message'] = outgoing.message
+			payload['paygate_outgoing_ext_outbound_id'] = outgoing.ext_outbound_id
+			payload['paygate_outgoing_state'] = outgoing.state.namee
+
+			payload['response_status'] = '00'
+			payload['response'] = 'Captrued Outgoing Payment Details'
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Outgoing Payment Details: %s" % e)
+		return payload
+
 	def float_balance(self, payload, node_info):
 		#service to user verify_institution to avoid institutions using other institutions float
 		try:
