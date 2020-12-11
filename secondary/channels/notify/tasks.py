@@ -270,6 +270,43 @@ class Wrappers:
 			return False
 
 class System(Wrappers):
+	def notification_template_details(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			notification_template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
+
+			payload['template_heading'] = notification_template.template_heading
+			payload['template_message'] = notification_template.template_message
+
+			payload['response'] = 'Notification Template Details Captured'
+			payload['response_status'] = '00'
+
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Notification Template Details: %s" % e)
+		return payload
+
+
+	def edit_notification_template_message(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			notification_template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
+
+			if 'message' in payload.keys() and payload['message'] not in ['',None]:
+				notification_template.template_message = payload['template_message']
+				notification_template.save()
+
+				payload['response'] = 'Message Updated'
+				payload['response_status'] = '00'
+			else:
+				payload['response'] = 'No Message to Update'
+				payload['response_status'] = '25'
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Editing Notification Template Message: %s" % e)
+		return payload
+
+
 	def update_notification_template(self, payload, node_info):
 		try:
 
