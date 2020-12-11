@@ -292,7 +292,7 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			notification_template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
 
-			if 'message' in payload.keys() and payload['message'] not in ['',None]:
+			if 'template_message' in payload.keys() and payload['template_message'] not in ['',None]:
 				notification_template.template_message = payload['template_message']
 				notification_template.save()
 
