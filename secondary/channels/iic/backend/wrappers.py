@@ -34,7 +34,8 @@ class Wrappers:
 
 
 			#Replace values in {} as well
-			default_value5 = default_value5.strip().format(**payload)
+			try: default_value5 = default_value5.strip().format(**payload)
+			except: pass
 			#Escape html entities
 			#default_value5 = unescape(default_value5)
 			#default_value5 = smart_str(default_value5)
@@ -64,7 +65,8 @@ class Wrappers:
 				else: pass
 
 			#Replace values in {} as well
-			default_value8 = default_value8.strip().format(**payload)
+			try: default_value8 = default_value8.strip().format(**payload)
+			except: pass
 			#Escape html entities
 			#default_value8 = unescape(default_value8)
 			#default_value8 = smart_str(default_value8)
