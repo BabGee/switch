@@ -618,7 +618,6 @@ class System(Wrappers):
 						params = WebService().post_request(params, node)
 
 						if 'response' in params.keys(): outgoing.message = str(self.response_payload(params['response']))[:3839]
-						lgr.info('\n\n\n\n\tParams Caught: %s\n\n\n\n' % params)
 						if params.get('reference'): 
 							payload['reference'] = params['reference']
 							outgoing.reference = payload['reference']
@@ -1965,7 +1964,10 @@ def send_payment(outgoing):
 
 		payload = WebService().post_request(payload, node)
 
-		if 'response' in payload.keys(): i.message = str(Wrappers().response_payload(payload['response']))[:3839]; payload['response'] = payload['response']
+		if payload.get('response'): i.message = str(Wrappers().response_payload(payload['response']))[:3839]
+		if payload.get('reference'): i.reference = payload['reference']
+		if payload.get('ext_outbound_id'): i.ext_outbound_id = payload['ext_outbound_id']
+
 		else: payload['response'] = 'Remit Submitted'
 		if 'response_status' in payload.keys() and payload['response_status'] not in [None,""]:
 			try:i.response_status = ResponseStatus.objects.get(response=str(payload['response_status']))
