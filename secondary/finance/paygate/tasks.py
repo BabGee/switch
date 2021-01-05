@@ -622,11 +622,11 @@ class System(Wrappers):
 						if params.get('reference'): 
 							payload['reference'] = params['reference']
 							outgoing.reference = payload['reference']
-
+							outgoing.save()
 						if params.get('ext_outbound_id'): 
 							payload['ext_outbound_id'] = params['ext_outbound_id']
 							outgoing.ext_outbound_id = payload['ext_outbound_id']
-
+							outgoing.save()
 						if params.get('ext_inbound_id'): payload['ext_inbound_id'] = params['ext_inbound_id']
 
 						if 'response' in params.keys(): payload['remit_response'] = params['response']
