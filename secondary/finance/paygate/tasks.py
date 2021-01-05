@@ -1962,7 +1962,9 @@ def send_payment(outgoing):
 			try:payload.update(i.remittance_product.endpoint.request)
 			except:pass
 
+		lgr.info('Request Payload: %s' % payload)
 		payload = WebService().post_request(payload, node)
+		lgr.info('Response Payload: %s' % payload)
 
 		if payload.get('response'): i.message = str(Wrappers().response_payload(payload['response']))[:3839]
 		if payload.get('reference'): i.reference = payload['reference']
