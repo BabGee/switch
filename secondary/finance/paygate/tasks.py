@@ -630,26 +630,26 @@ class System(Wrappers):
 								else:
 									payload['response'] = 'Remittance Submitted'
 							else:
-								#if product.fail_continues:
-								#	payload['trigger'] = 'fail_continues%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-								#	params['response_status'] = '00'
-								#else:
 								outgoing.state = OutgoingState.objects.get(name='SENT')
 								if 'response' in params.keys() and product.show_message:
 									payload['response'] = params['response']
 								else:
 									payload['response'] = 'Remittance Failed'
 
+								if product.fail_continues:
+									payload['trigger'] = 'fail_continues%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+									params['response_status'] = '00'
+
 							payload['response_status'] = params['response_status']
 						else:
 							outgoing.state = OutgoingState.objects.get(name='FAILED')
-							#if product.fail_continues:
-							#	payload['trigger'] = 'fail_continues%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-							#	outgoing.response_status = ResponseStatus.objects.get(response='00')
-							#	payload['response_status'] = '00'
-							#else:
 							outgoing.response_status = ResponseStatus.objects.get(response='06')
-							payload['response_status'] = '06'
+
+							if product.fail_continues:
+								payload['trigger'] = 'fail_continues%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+								payload['response_status'] = '00'
+							else:
+								payload['response_status'] = '06'
 
 						outgoing.save()	
 					else:
