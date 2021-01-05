@@ -452,12 +452,17 @@ class System(Wrappers):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
+			outgoing = Outgoing.objects.none()
 
-			p = payload['paygate_outgoing_id'].split('-')
-			try: paygate_outgoing_id =  int(p[len(p)-1])
-			except: paygate_outgoing_id = 0
+			if payload.get('paygate_outgoing_id'):
+				p = payload['paygate_outgoing_id'].split('-')
+				try: paygate_outgoing_id =  int(p[len(p)-1])
+				except: paygate_outgoing_id = 0
 
-			outgoing = Outgoing.objects.filter(id=paygate_outgoing_id,response_status__response='09')
+				outgoing = Outgoing.objects.filter(id=paygate_outgoing_id,response_status__response='09')
+			elif payload.get('paygate_outgoing_reference'):
+				paygate_outgoing_reference = payload['paygate_outgoing_reference']
+				outgoing = Outgoing.objects.filter(reference=paygate_outgoing_reference,response_status__response='09')
 
 			if outgoing.exists():
 				o = outgoing[0]
@@ -613,11 +618,16 @@ class System(Wrappers):
 						params = WebService().post_request(params, node)
 
 						if 'response' in params.keys(): outgoing.message = str(self.response_payload(params['response']))[:3839]
-						if 'ext_outbound_id' in params.keys(): 
+
+						if params.get('reference'): 
+							payload['reference'] = params['reference']
+							outgoing.reference = payload['reference']
+
+						if params.get('ext_outbound_id'): 
 							payload['ext_outbound_id'] = params['ext_outbound_id']
 							outgoing.ext_outbound_id = payload['ext_outbound_id']
-							outgoing.save()
-						if 'ext_inbound_id' in params.keys(): payload['ext_inbound_id'] = params['ext_inbound_id']
+
+						if params.get('ext_inbound_id'): payload['ext_inbound_id'] = params['ext_inbound_id']
 
 						if 'response' in params.keys(): payload['remit_response'] = params['response']
 						if 'response_status' in params.keys() and params['response_status'] not in [None,""]:
