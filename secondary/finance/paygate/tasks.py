@@ -347,26 +347,25 @@ class System(Wrappers):
 
 					#keyword = reference[:4] #Add regex to get Keyword in future
 					keyword = ''.join(re.findall(r'(^[A-Za-z]+)(?<=[\S])|(?<=[\d])', reference)).lower()  #Add Intent Classification Model to get Keyword/intent in future
-					if keyword:
-						lgr.info('Keyword: %s' % keyword)
-						institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(remittance_product=product)|Q(remittance_product=None),\
-											Q(keyword__iexact=keyword)|Q(keyword='')|Q(keyword__isnull=True))
+					lgr.info('Keyword: %s' % keyword)
+					institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(remittance_product=product)|Q(remittance_product=None),\
+										Q(keyword__iexact=keyword)|Q(keyword='')|Q(keyword__isnull=True))
 
-						if len(institution_incoming_service_list):
-							if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
-								amount = Decimal(payload['amount'])
-								institution_incoming_service_list = institution_incoming_service_list.filter(Q(min_amount__gte=amount)|Q(min_amount__isnull=True),\
-																		Q(max_amount__lte=amount)|Q(max_amount__isnull=True))
+					if len(institution_incoming_service_list):
+						if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
+							amount = Decimal(payload['amount'])
+							institution_incoming_service_list = institution_incoming_service_list.filter(Q(min_amount__gte=amount)|Q(min_amount__isnull=True),\
+																	Q(max_amount__lte=amount)|Q(max_amount__isnull=True))
 
-							if institution_incoming_service_list.count() == 1:
-								lgr.info('Keyword Found')
-								institution_incoming_service = institution_incoming_service_list.last()
-							else:
-								lgr.info('Multi Keyword Found') #Take the one with an empty keyword
-								_institution_incoming_service_list = institution_incoming_service_list.filter(Q(keyword__in=[''])|Q(keyword__isnull=True))
-								institution_incoming_service = _institution_incoming_service_list.first() if _institution_incoming_service_list.exists() else institution_incoming_service_list.last()
+						if institution_incoming_service_list.count() == 1:
+							lgr.info('Keyword Found')
+							institution_incoming_service = institution_incoming_service_list.last()
+						else:
+							lgr.info('Multi Keyword Found') #Take the one with an empty keyword
+							_institution_incoming_service_list = institution_incoming_service_list.filter(Q(keyword__in=[''])|Q(keyword__isnull=True))
+							institution_incoming_service = _institution_incoming_service_list.first() if _institution_incoming_service_list.exists() else institution_incoming_service_list.last()
 
-							lgr.info('Institution Service: %s' % institution_incoming_service)
+						lgr.info('Institution Service: %s' % institution_incoming_service)
 
 					######### Institution Incoming Service ###############
 
