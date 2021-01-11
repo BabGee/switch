@@ -903,10 +903,14 @@ class System(Wrappers):
 
 				if 'expiry' in payload.keys():
 					expiry = datetime.strptime(payload['expiry'], '%Y-%m-%d')
-				elif 'expiry_days_period' in payload.keys():
-					expiry = timezone.now()+timezone.timedelta(days=(int(payload['expiry_days_period'])))
 				elif 'expiry_years_period' in payload.keys():
 					expiry = timezone.now()+timezone.timedelta(days=(365*int(payload['expiry_years_period'])))
+				elif 'expiry_days_period' in payload.keys():
+					expiry = timezone.now()+timezone.timedelta(days=(int(payload['expiry_days_period'])))
+				elif 'expiry_hours_period' in payload.keys():
+					expiry = timezone.now()+timezone.timedelta(hours=(int(payload['expiry_hours_period'])))
+				elif 'expiry_minutes_period' in payload.keys():
+					expiry = timezone.now()+timezone.timedelta(minutes=(int(payload['expiry_minutes_period'])))
 				elif 'expiry_seconds_period' in payload.keys():
 					expiry = timezone.now()+timezone.timedelta(seconds=(int(payload['expiry_seconds_period'])))
 				else:
