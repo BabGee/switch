@@ -17,10 +17,10 @@ class NodeSystemAdmin(admin.ModelAdmin):
 
 admin.site.register(NodeSystem, NodeSystemAdmin)
 
-
+'''
 class BearerAuthenticationAdmin(admin.ModelAdmin):
 	list_display = ('id','name','description','url','api_key','api_secret','api_token','access_token',\
 			'token_validity','token_expiration','updated',)
 admin.site.register(BearerAuthentication, BearerAuthenticationAdmin)
-
+'''
 
