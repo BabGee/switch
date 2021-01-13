@@ -29,3 +29,20 @@ class NodeSystem(models.Model):
 		return u'%s' % (self.name)
 
 
+class BearerAuthentication(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	url = models.CharField(max_length=640)
+	api_key = models.CharField(max_length=128, null=True, blank=True)
+	api_secret = models.CharField(max_length=1024, null=True, blank=True)
+	api_token = models.CharField(max_length=1024, null=True, blank=True)
+	access_token = models.CharField(max_length=1024, null=True, blank=True)
+	token_validity = models.IntegerField(blank=True, null=True, help_text='In Seconds')
+	token_expiration = models.DateTimeField()
+	updated = models.BooleanField(default=False)
+	def __str__(self):
+		return u'%s' % (self.name)
+
+
