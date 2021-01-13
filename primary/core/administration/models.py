@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import MultiPolygonField, PointField (Manager as GeoManager)
+from django.contrib.gis.db.models import MultiPolygonField, PointField, Manager as GeoManager
 from django.contrib.auth.models import User
 from datetime import date
 from django.utils import timezone
