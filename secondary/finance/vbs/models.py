@@ -69,7 +69,7 @@ class AccountStatus(models.Model):
 class Account(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	is_default = models.NullBooleanField(default=False)
+	is_default = models.BooleanField(default=False, null=True)
 	account_status = models.ForeignKey(AccountStatus, on_delete=models.CASCADE)	
 	credit_limit = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	account_type = models.ForeignKey(AccountType, on_delete=models.CASCADE)

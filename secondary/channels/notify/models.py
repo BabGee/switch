@@ -227,7 +227,7 @@ class Inbound(models.Model):
 	heading = models.CharField(max_length=200,blank=True, null=True)
 	message = models.CharField(max_length=3840)
 	state = models.ForeignKey(InBoundState, on_delete=models.CASCADE) #CREATED / PROCESSED / COMPLETED (Institution URL notified if not None Exists)
-	inst_notified = models.NullBooleanField(default=False)
+	inst_notified = models.BooleanField(default=False, null=True)
 	inst_num_tries = models.IntegerField(null=True,blank=True)
 	attachment = models.ManyToManyField(NotificationAttachment, blank=True)
 	recipient = models.CharField(max_length=200, blank=True, null=True)
@@ -255,7 +255,7 @@ class Outbound(models.Model):
 	state = models.ForeignKey(OutBoundState, on_delete=models.CASCADE) #Sent/Delivered or Undelivered
 	sends = models.IntegerField()
 	ext_outbound_id = models.CharField(max_length=200, blank=True, null=True)
-	inst_notified = models.NullBooleanField(default=False)
+	inst_notified = models.BooleanField(default=False, null=True)
 	inst_num_tries = models.IntegerField(null=True,blank=True)
 	attachment = models.ManyToManyField(NotificationAttachment, blank=True)
 	recipient = models.CharField(max_length=200, blank=True, null=True)

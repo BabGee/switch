@@ -257,7 +257,7 @@ class InstitutionIncomingService(models.Model):
 	product_item = models.ForeignKey(ProductItem, blank=True, null=True, on_delete=models.CASCADE)
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	details = models.CharField(max_length=512, default=json.dumps({}))
-	process_order = models.NullBooleanField(help_text='Null=Both Order & None-Order, True=Only Order, False=Only Non-Orders')
+	process_order = models.BooleanField(null=True, help_text='Null=Both Order & None-Order, True=Only Order, False=Only Non-Orders')
 	remittance_product = models.ForeignKey(RemittanceProduct, blank=True, null=True, on_delete=models.CASCADE)
 	min_amount = models.IntegerField(blank=True, null=True)
 	max_amount = models.IntegerField(blank=True, null=True)
@@ -287,10 +287,10 @@ class Incoming(models.Model):
 	ext_first_name = models.CharField(max_length=200, blank=True, null=True)
 	ext_middle_name = models.CharField(max_length=200, blank=True, null=True)
 	ext_last_name = models.CharField(max_length=200, blank=True, null=True)
-	inst_notified = models.NullBooleanField(default=False)
+	inst_notified = models.BooleanField(default=False, null=True)
 	inst_num_tries = models.IntegerField(null=True,blank=True)
 	state = models.ForeignKey(IncomingState, null=True, blank=True, on_delete=models.CASCADE)
-	processed = models.NullBooleanField(default=False) #If service is none, then Null, else, false/true
+	processed = models.BooleanField(default=False, null=True) #If service is none, then Null, else, false/true
 	institution_incoming_service = models.ForeignKey(InstitutionIncomingService, blank=True, null=True, on_delete=models.CASCADE)
 	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 	institution_notification = models.ForeignKey(InstitutionNotification, null=True, blank=True, on_delete=models.CASCADE)
@@ -344,7 +344,7 @@ class Outgoing(models.Model):
 	message = models.CharField(max_length=3840, blank=True, null=True)
 	sends = models.IntegerField()
 	ext_outbound_id = models.CharField(max_length=200, blank=True, null=True)
-	inst_notified = models.NullBooleanField(default=False) #notify on success status
+	inst_notified = models.BooleanField(default=False, null=True) #notify on success status
 	inst_num_tries = models.IntegerField(null=True,blank=True)
 	state = models.ForeignKey(OutgoingState, null=True, blank=True, on_delete=models.CASCADE)
 	institution_notification = models.ForeignKey(InstitutionNotification, null=True, blank=True, on_delete=models.CASCADE)

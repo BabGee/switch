@@ -187,7 +187,7 @@ class Transaction(models.Model):
 	currency = models.ForeignKey(Currency, related_name="bridge", null=True, blank=True, on_delete=models.CASCADE)
 	amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	charges = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
-	raise_charges = models.NullBooleanField(default=False) #False - Not inclusive of the amount | True - Inclusive of the amount
+	raise_charges = models.BooleanField(default=False, null=True) #False - Not inclusive of the amount | True - Inclusive of the amount
 	response = models.CharField(max_length=3840, blank=True, null=True)
 	transaction_status = models.ForeignKey(TransactionStatus, on_delete=models.CASCADE)
 	#ip_address = models.CharField(max_length=20)

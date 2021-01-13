@@ -97,7 +97,7 @@ class ProductCharge(models.Model):
 	charge_value = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	is_percentage = models.BooleanField(default=False)
 	description = models.CharField(max_length=200, null=True, blank=True)
-	for_float = models.NullBooleanField(default=False) #True=Float Manager Charge
+	for_float = models.BooleanField(default=False, null=True) #True=Float Manager Charge
 	payment_method = models.ManyToManyField(PaymentMethod, blank=True)
 	def __str__(self):
 		return u'%s %s' % (self.product_type,self.charge_value)
@@ -122,7 +122,7 @@ class ProductDiscount(models.Model):
 	charge_value = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	is_percentage = models.BooleanField(default=False)
 	description = models.CharField(max_length=200, null=True, blank=True)
-	for_float = models.NullBooleanField(default=False) #True=Float Manager Coupon
+	for_float = models.BooleanField(default=False, null=True) #True=Float Manager Coupon
 	def __str__(self):
 		return u'%s' % (self.coupon)
 	def institution_list(self):
@@ -148,7 +148,7 @@ class ProductItem(models.Model):
 	unit_limit_min = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	unit_limit_max = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	unit_cost =  models.DecimalField(max_digits=19, decimal_places=2) 
-	variable_unit = models.NullBooleanField(default=False) #The product cost has no fixed unit sale, e.g. donations
+	variable_unit = models.BooleanField(default=False, null=True) #The product cost has no fixed unit sale, e.g. donations
 	float_limit_min = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	float_limit_max = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	float_cost =  models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True) 

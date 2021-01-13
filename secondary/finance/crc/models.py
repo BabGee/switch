@@ -55,7 +55,7 @@ class CardRecord(models.Model):
 	activation_amount = models.DecimalField(max_digits=19, decimal_places=2)
 	activation_pin = models.CharField(max_length=200, null=True, blank=True)
 	pin_retries = models.SmallIntegerField(default=0, help_text="Max PIN retries=3 then locks record")
-	is_default = models.NullBooleanField(default=False)
+	is_default = models.BooleanField(default=False, null=True)
 	def __str__(self):
 		return u'%s' % (self.card_number)
 
@@ -69,7 +69,7 @@ class CardRecordActivity(models.Model):
 	currency = models.ForeignKey(Currency, on_delete=models.CASCADE)
 	amount = models.DecimalField(max_digits=19, decimal_places=2)
 	charges = models.DecimalField(max_digits=19, decimal_places=2)
-	raise_charges = models.NullBooleanField(default=False) #False - Not inclusive of the amount | True - Inclusive of the amount
+	raise_charges = models.BooleanField(default=False, null=True) #False - Not inclusive of the amount | True - Inclusive of the amount
 	response = models.CharField(max_length=12800, blank=True, null=True)
 	transaction_status = models.ForeignKey(TransactionStatus, on_delete=models.CASCADE)
 	response_status = models.ForeignKey(ResponseStatus, on_delete=models.CASCADE)
