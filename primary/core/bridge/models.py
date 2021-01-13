@@ -1,6 +1,5 @@
 from django.contrib.gis.db import models
 from django.contrib.gis.db.models import Manager as GeoManager
-from django.contrib.postgres.fields import JSONField
 
 from primary.core.upc.models import *
 import json
@@ -56,7 +55,7 @@ class PaymentMethodProduct(models.Model):
 	description = models.CharField(max_length=100)
 	payment_method= models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)
 	ext_product_id = models.CharField(max_length=250, null=True, blank=True)
-	details = JSONField(max_length=1920, null=True, blank=True)
+	details = models.JSONField(max_length=1920, null=True, blank=True)
 	status = models.ForeignKey(PaymentMethodStatus, on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s %s' % (self.name, self.payment_method)
@@ -239,7 +238,7 @@ class BackgroundServiceActivity(models.Model):
 	status = models.ForeignKey(TransactionStatus, on_delete=models.CASCADE)
 	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
 	request_old = models.CharField(max_length=10240, null=True, blank=True)
-	request = JSONField()
+	request = models.JSONField()
 	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 	response_status = models.ForeignKey(ResponseStatus, on_delete=models.CASCADE)
 	transaction_reference = models.CharField(max_length=256, null=True, blank=True) #Transaction ID
@@ -390,7 +389,7 @@ class ApprovalActivity(models.Model):
 	affected_gateway_profile = models.ForeignKey(GatewayProfile, related_name='affecting_approvals', on_delete=models.CASCADE)
 	requestor_gateway_profile = models.ForeignKey(GatewayProfile, related_name='requested_approvals', on_delete=models.CASCADE)
 	approver_gateway_profile = models.ForeignKey(GatewayProfile, related_name='pending_approvals',blank=True,null=True, on_delete=models.CASCADE)
-	request = JSONField()
+	request = models.JSONField()
 	#request = models.CharField(max_length=10240)
 	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 	response_status = models.ForeignKey(ResponseStatus, on_delete=models.CASCADE)

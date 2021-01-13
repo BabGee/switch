@@ -3,7 +3,6 @@ from secondary.erp.crm.models import *
 from django.contrib.gis.db import models
 from primary.core.bridge.models import Trigger
 
-from django.contrib.postgres.fields import JSONField
 #interactive interface controller
 
 class VariableType(models.Model):
@@ -29,7 +28,7 @@ class InputVariable(models.Model):
 	description = models.CharField(max_length=200, null=True, blank=True)
 	service = models.ForeignKey(Service, null=True, blank=True, on_delete=models.CASCADE)	
 	#details = models.CharField(max_length=512, default=json.dumps({}))
-	details = JSONField(max_length=512, default=dict)
+	details = models.JSONField(max_length=512, default=dict)
 	def __str__(self):
 		return u'%s %s %s' % (self.id, self.name, self.variable_type)		
 

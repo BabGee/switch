@@ -1,7 +1,6 @@
 from django.contrib.gis.db import models
 from django.db.models import Manager as GeoManager
 
-from django.contrib.postgres.fields import JSONField
 from primary.core.administration.models import *
 from primary.core.api.models import *
 
@@ -37,7 +36,7 @@ class Institution(models.Model):
 	logo = models.ImageField(upload_to='upc_institution_logo/', max_length=200, blank=True, null=True)
 	icon_image = models.ImageField(upload_to='upc_institution_icon_image/', max_length=200, blank=True, null=True)
 	documents = models.FileField(upload_to='upc_institution_documents/', max_length=200, blank=True, null=True)
-	details = JSONField(max_length=1920, null=True, blank=True)
+	details = models.JSONField(max_length=1920, null=True, blank=True)
 	industries = models.ManyToManyField(IndustryClass,related_name='industries',blank=True)
 	default_color = models.CharField(max_length=100)
 	website = models.CharField(max_length=200, blank=True, null=True)

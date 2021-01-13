@@ -1,7 +1,6 @@
 from django.contrib.gis.db import models
 from secondary.channels.vcs.models import *
 from secondary.erp.crm.models import *
-from django.contrib.postgres.fields import JSONField
 from postgres_copy import CopyManager
 
 class Credential(models.Model):
@@ -25,7 +24,7 @@ class Endpoint(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	request = JSONField(max_length=1920, null=True, blank=True)
+	request = models.JSONField(max_length=1920, null=True, blank=True)
 	url = models.CharField(max_length=640)
 	account_id = models.CharField(max_length=128)
 	username = models.CharField(max_length=128)
@@ -150,7 +149,7 @@ class Recipient(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	status = models.ForeignKey(ContactStatus, on_delete=models.CASCADE) 
-	details = JSONField(max_length=38400)
+	details = models.JSONField(max_length=38400)
 	subscribed = models.BooleanField(default=False)
 	recipient = models.CharField(max_length=200)
 	contact_group = models.ForeignKey(ContactGroup, on_delete=models.CASCADE)

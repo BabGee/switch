@@ -1,6 +1,5 @@
 from django.db import models
 from secondary.erp.crm.models import *
-from django.contrib.postgres.fields import JSONField
 
 
 class FloatType(models.Model):
@@ -77,7 +76,7 @@ class FloatAlert(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
 	status = models.ForeignKey(FloatAlertStatus, on_delete=models.CASCADE)
-	request = JSONField()
+	request = models.JSONField()
 	frequency = models.ForeignKey(PollerFrequency, on_delete=models.CASCADE)
 	next_run = models.DateTimeField()
 	alert_below_value = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
@@ -97,7 +96,7 @@ class FloatManager(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	ext_outbound_id = models.CharField(max_length=200, blank=True, null=True)
 	credit = models.BooleanField(default=False) #Dr | Cr
-	request = JSONField(null=True, blank=True)
+	request = models.JSONField(null=True, blank=True)
 	float_amount = models.DecimalField(max_digits=19, decimal_places=2)
 	charge = models.DecimalField(max_digits=19, decimal_places=2)
 	balance_bf = models.DecimalField(max_digits=19, decimal_places=2)
@@ -134,7 +133,7 @@ class Endpoint(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	request = JSONField(null=True, blank=True)
+	request = models.JSONField(null=True, blank=True)
 	url = models.CharField(max_length=640)
 	account_id = models.CharField(max_length=512, null=True, blank=True)
 	username = models.CharField(max_length=128, null=True, blank=True)
@@ -213,7 +212,7 @@ class NotificationService(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	request = JSONField()
+	request = models.JSONField()
 	notification_key = models.ManyToManyField(NotificationKey)
 	service = models.ForeignKey(Service, on_delete=models.CASCADE)
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
@@ -238,7 +237,7 @@ class InstitutionNotification(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	remittance_product = models.OneToOneField(RemittanceProduct, on_delete=models.CASCADE)
 	description = models.CharField(max_length=100)
-	request = JSONField()
+	request = models.JSONField()
 	url = models.CharField(max_length=640)
 	account_id = models.CharField(max_length=512, null=True, blank=True)
 	username = models.CharField(max_length=128, null=True, blank=True)
@@ -278,7 +277,7 @@ class Incoming(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	remittance_product = models.ForeignKey(RemittanceProduct, on_delete=models.CASCADE)
 	reference = models.CharField(max_length=200, blank=True, null=True) #Transaction ID
-	request = JSONField()
+	request = models.JSONField()
 	amount = models.DecimalField(max_digits=19, decimal_places=2, blank=True, null=True)
 	charge = models.DecimalField(max_digits=19, decimal_places=2, blank=True, null=True)
 	currency = models.ForeignKey(Currency, blank=True, null=True, on_delete=models.CASCADE)
@@ -313,7 +312,7 @@ class IncomingPoller(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
-	request = JSONField()
+	request = models.JSONField()
 	remittance_product = models.ForeignKey(RemittanceProduct, on_delete=models.CASCADE)
 	frequency = models.ForeignKey(PollerFrequency, on_delete=models.CASCADE)
 	service = models.ForeignKey(Service, on_delete=models.CASCADE)
@@ -336,7 +335,7 @@ class Outgoing(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	remittance_product = models.ForeignKey(RemittanceProduct, on_delete=models.CASCADE)
 	reference = models.CharField(max_length=200, blank=True, null=True) #Transaction ID
-	request = JSONField()
+	request = models.JSONField()
 	amount = models.DecimalField(max_digits=19, decimal_places=2, blank=True, null=True)
 	charge = models.DecimalField(max_digits=19, decimal_places=2, blank=True, null=True)
 	currency = models.ForeignKey(Currency, blank=True, null=True, on_delete=models.CASCADE)
