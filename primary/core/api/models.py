@@ -28,7 +28,6 @@ class NodeSystem(models.Model):
 	def __str__(self):
 		return u'%s' % (self.name)
 
-'''
 class BearerAuthentication(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
@@ -45,4 +44,3 @@ class BearerAuthentication(models.Model):
 	def __str__(self):
 		return u'%s' % (self.name)
 
-'''
