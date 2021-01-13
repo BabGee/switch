@@ -1,4 +1,4 @@
-from django.contrib.gis.db import models
+from django.db import models
 from secondary.channels.vcs.models import *
 from secondary.erp.crm.models import *
 from postgres_copy import CopyManager

@@ -1,6 +1,5 @@
-from django.contrib.gis.db import models
-from django.db.models import Manager as GeoManager
-
+from django.db import models
+from django.db.models import MultiPolygonField, PointField (Manager as GeoManager)
 from primary.core.administration.models import *
 from primary.core.api.models import *
 
@@ -45,7 +44,7 @@ class Institution(models.Model):
 	gateway = models.ManyToManyField(Gateway)
 	currency = models.ManyToManyField(Currency, blank=True) #Allowed Currencies
 	country = models.ForeignKey(Country, on_delete=models.CASCADE)
-	geometry = models.PointField(srid=4326)
+	geometry = PointField(srid=4326)
 	objects = GeoManager()
 	design = models.ForeignKey(DesignSystem, on_delete=models.CASCADE)
 	primary_color = models.CharField(max_length=100, blank=True, null=True)
@@ -76,7 +75,7 @@ class Profile(models.Model):
 	api_key = models.CharField(max_length=200)
 	timezone = models.CharField(max_length=50)
 	language = models.ForeignKey(Language, on_delete=models.CASCADE)
-	geometry = models.PointField(srid=4326)
+	geometry = PointField(srid=4326)
 	objects = GeoManager()
 	country = models.ForeignKey(Country, null=True, blank=True, on_delete=models.CASCADE)
 	dob = models.DateField(null=True, blank=True)

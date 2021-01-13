@@ -1,4 +1,4 @@
-from django.contrib.gis.db import models
+from django.db import models
 from primary.core.bridge.models import *
 from django.utils import timezone
 

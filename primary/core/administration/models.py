@@ -1,5 +1,5 @@
-from django.contrib.gis.db import models
-from django.db.models import Manager as GeoManager
+from django.db import models
+from django.db.models import MultiPolygonField, PointField (Manager as GeoManager)
 from django.contrib.auth.models import User
 from datetime import date
 from django.utils import timezone
@@ -55,7 +55,7 @@ class Country(models.Model):
 	subregion = models.IntegerField('Sub-Region Code')
 	lon = models.FloatField()
 	lat = models.FloatField()
-	mpoly = models.MultiPolygonField()
+	mpoly = MultiPolygonField()
 	objects = GeoManager()
 	ccode = models.CharField('3 Digit Country Code', max_length=3, blank=True, null=True)
 	def __str__(self):

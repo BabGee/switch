@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from secondary.erp.crm.models import *
-from django.contrib.gis.db import models
+from django.db import models
 from primary.core.bridge.models import Trigger
 
 #interactive interface controller

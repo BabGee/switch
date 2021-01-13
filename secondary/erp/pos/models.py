@@ -1,6 +1,5 @@
-from django.contrib.gis.db import models
-from django.contrib.gis.db.models import Manager as GeoManager
-
+from django.db import models
+from django.db.models import MultiPolygonField, PointField (Manager as GeoManager)
 from secondary.erp.crm.models import *
 from secondary.finance.paygate.models import *
 
@@ -25,7 +24,7 @@ class SaleCharge(models.Model):
 	charge_value = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
 	is_percentage = models.BooleanField(default=False)
 	description = models.CharField(max_length=256, null=True, blank=True)
-	main_location = models.PointField(srid=4326,blank=True,null=True)
+	main_location = PointField(srid=4326,blank=True,null=True)
 	objects = GeoManager()
 	min_distance = models.IntegerField(null=True, blank=True)
 	max_distance = models.IntegerField(null=True, blank=True)
@@ -259,10 +258,10 @@ class Delivery(models.Model):
 	delivery_profile = models.ForeignKey(GatewayProfile,null=True, on_delete=models.CASCADE)
 
 	origin_name = models.CharField(max_length=200,blank=True,null=True)
-	origin_coord = models.PointField(srid=4326,blank=True,null=True)
+	origin_coord = PointField(srid=4326,blank=True,null=True)
 
 	destination_name = models.CharField(max_length=200)
-	destination_coord = models.PointField(srid=4326)
+	destination_coord = PointField(srid=4326)
 
 	follow_on = models.ForeignKey('self',null=True, on_delete=models.CASCADE)
 

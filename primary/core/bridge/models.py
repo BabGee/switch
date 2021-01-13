@@ -1,6 +1,5 @@
-from django.contrib.gis.db import models
-from django.contrib.gis.db.models import Manager as GeoManager
-
+from django.db import models
+from django.db.models import MultiPolygonField, PointField (Manager as GeoManager)
 from primary.core.upc.models import *
 import json
 
@@ -193,7 +192,7 @@ class Transaction(models.Model):
 	#ip_address = models.CharField(max_length=20)
 	ip_address = models.GenericIPAddressField(editable=False)
 	response_status = models.ForeignKey(ResponseStatus, on_delete=models.CASCADE)
-	geometry = models.PointField(srid=4326)
+	geometry = PointField(srid=4326)
 	objects = GeoManager()
 	current_command = models.ForeignKey(ServiceCommand, null=True, blank=True, related_name="transaction_current_command", on_delete=models.CASCADE)
 	next_command = models.ForeignKey(ServiceCommand, null=True, blank=True, related_name="transaction_next_command", on_delete=models.CASCADE)
