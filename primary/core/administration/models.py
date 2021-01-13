@@ -26,12 +26,6 @@ class TimeLimitedPaginator(Paginator):
            except OperationalError:
                return 9999999999
 
-
-#User._meta.get_field('email')._unique = False
-User._meta.get_field("username").max_length = 100
-User._meta.get_field("first_name").max_length = 100
-
-
 class UserPasswordHistory(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
