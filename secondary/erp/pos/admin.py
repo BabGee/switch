@@ -29,7 +29,7 @@ class CartItemAdmin(admin.ModelAdmin):
 				'currency','status','quantity','expiry','price',\
 				'sub_total','vat','other_tax','discount','other_relief',\
 				'total','details','token','channel','pn','pn_ack','cart_type','api_callback_url',\
-				'api_gateway_profile','api_callback_status','api_message',)
+				'api_gateway_profile','api_callback_status','api_message','date_modified','date_created',)
 		list_filter = ('product_item__institution','gateway_profile__gateway','product_item__product_type',)
 		search_fields = ('gateway_profile__msisdn__phone_number','product_item__name','details','quantity','price','sub_total','total','token')
 admin.site.register(CartItem, CartItemAdmin)

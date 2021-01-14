@@ -714,7 +714,7 @@ class System(Wrappers):
 				#An order will ALWAYS have an initial bill manager, hence
 				reference = payload['reference'].strip()
 
-				bill_manager_list = BillManager.objects.filter(order__reference__iexact=reference,order__status__name='UNPAID').order_by("-date_created")
+				bill_manager_list = BillManager.objects.filter(order__reference__iexact=reference,order__status__name='UNPAID', order__expiry__gte=timezone.now()).order_by("-date_created")
 				if bill_manager_list.exists():
 					order = bill_manager_list[0].order
 					amount = Decimal(payload['balance_bf'])
@@ -883,14 +883,14 @@ class System(Wrappers):
 					#reference_list = PurchaseOrder.objects.filter(reference=trial,status__name='UNPAID',\
 					#		expiry__gte=timezone.now()).order_by('-reference')[:1]
 
-					reference_list = PurchaseOrder.objects.filter(reference=trial).order_by('-reference')[:1]
+					reference_list = PurchaseOrder.objects.filter(reference=trial, expiry__gte=timezone.now()).order_by('-reference')[:1]
 					if reference_list.exists():
 						return reference(pre_reference)
 					else:
 						return trial
 
 				if 'reference' in payload.keys():
-					reference_order = PurchaseOrder.objects.filter(status__name='UNPAID', reference__iexact=payload['reference'],
+					reference_order = PurchaseOrder.objects.filter(status__name='UNPAID', reference__iexact=payload['reference'], expiry__gte=timezone.now(), 
 								cart_item__product_item__institution__id__in=[i['product_item__institution__id'] \
 								for i in cart_items.values('product_item__institution__id').distinct('product_item__institution__id')])
 					if reference_order.exists(): reference_order.update(status=OrderStatus.objects.get(name='CANCELLED'))			
