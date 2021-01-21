@@ -2809,6 +2809,22 @@ class System(Wrappers):
 			lgr.info("Error on getting session gateway Profile: %s" % e)
 		return payload
 
+	def get_msisdn_profile(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
+			if payload.get('msisdn'):
+				payload = self.get_profile(payload, node_info)
+				if 'response_status' in payload.keys() and payload['response_status'] == '00':
+					payload['response'] = 'Session Profile Captured'
+			else:
+				payload['response'] = 'MSISDN does not exist'
+				payload['response_status'] = '30'
+		except Exception as e:
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+			lgr.info("Error on getting session gateway Profile with MSISDN: %s" % e)
+		return payload
+
 	def get_update_profile(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
