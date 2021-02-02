@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime, timedelta
+import dateutil.parser
 import time, os, random, string, json
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
@@ -146,7 +147,8 @@ class Wrappers:
 				try: gender = Gender.objects.get(code=payload['gender']); profile.gender = gender
 				except Exception as e: lgr.info('Error on Gender: %s' % e)
 			if 'dob' in payload.keys() and profile.dob in [None,""]: 
-				try: profile.dob = datetime.strptime(payload['dob'], '%Y-%m-%d').date()
+				#try: profile.dob = datetime.strptime(payload['dob'], '%Y-%m-%d').date()
+				try: profile.dob = dateutil.parser.parse(str(payload['dob']).strip()).date()
 				except Exception as e: lgr.info('Error on DOB: %s' % e)
 
 			profile.save()
@@ -198,7 +200,8 @@ class Wrappers:
 			try: gender = Gender.objects.get(code=payload['gender']); profile.gender = gender
 			except Exception as e: lgr.info('Error on Gender: %s' % e)
 		if 'dob' in payload.keys():
-			try: profile.dob = datetime.strptime(payload['dob'], '%Y-%m-%d').date()
+			#try: profile.dob = datetime.strptime(payload['dob'], '%Y-%m-%d').date()
+			try: profile.dob = dateutil.parser.parse(str(payload['dob']).strip()).date()
 			except Exception as e: lgr.info('Error on DOB: %s' % e)
 
 		if 'photo' in payload.keys():
