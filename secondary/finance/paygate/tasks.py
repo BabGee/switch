@@ -1815,7 +1815,7 @@ def process_gateway_institution_notification(notification, payload):
 		notification_key_list = gateway_institution_notification.notification_service.notification_key.all().values_list('key', flat=True)
 
 		entry_keys = list(set(payload.keys()).intersection(set(list(notification_key_list))))
-		missing_keys = list(set(notification_key_list).intersection(set(list(payload.keys()))))
+		missing_keys = list(set(notification_key_list).difference(set(list(payload.keys()))))
 
 		params = gateway_institution_notification.notification_service.request if isinstance(gateway_institution_notification.notification_service.request, dict) else {}
 
