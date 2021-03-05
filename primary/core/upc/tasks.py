@@ -520,6 +520,22 @@ class Wrappers:
 			lgr.info("Unable to save image: %s to: %s because: %s" % (filename, image_obj, e))
 
 class System(Wrappers):
+	def email_verification(self, payload, node_info):
+		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+		try:
+			if payload['response_status'] == '00':
+					payload['trigger'] = 'session_active%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					payload['response'] ='Session is Active'
+					payload['response_status'] = '00'
+			else:
+				payload['trigger'] = 'session_expired%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+				payload['response'] = 'Session Expired or Does not Exist'
+				payload['response_status'] = '25'
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on email verification: %s" % e)
+		return payload
+
 	def login_verification(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
