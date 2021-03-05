@@ -3134,9 +3134,11 @@ class System(Wrappers):
 						break
 
 			elif 'sec' in payload.keys() and 'gpid' in payload.keys():
-				session_id = base64.urlsafe_b64decode(payload['sec'])
-				lgr.info('Session Got: %s' % session_id.decode('hex'))
-				session = Session.objects.filter(session_id=session_id.decode('hex'),gateway_profile__id=payload['gpid'],\
+
+				session_id = base64.urlsafe_b64decode(str(payload['sec']).encode()).decode('utf-8')
+				lgr.info('Session Got: %s' % session_id)
+
+				session = Session.objects.filter(session_id=session_id,gateway_profile__id=payload['gpid'],\
 						gateway_profile__gateway=gateway_profile.gateway,\
 						date_created__gte=timezone.localtime(timezone.now())-timezone.timedelta(hours=12))
 				lgr.info('Fectch Existing session: %s' % session)
