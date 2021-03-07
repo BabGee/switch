@@ -2020,10 +2020,7 @@ class System(Wrappers):
 				lgr.info('Regex: %s' % regex)
 				if re.search(regex, password) is None: error += '%s, ' % c.validation_response
 			if error == '':
-				status = ProfileStatus.objects.get(name="ACTIVATED")
 				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-				session_gateway_profile.status = status
-				session_gateway_profile.save()
 				session_gateway_profile.user.set_password(password)
 				session_gateway_profile.user.is_active = True
 				session_gateway_profile.user.save()
