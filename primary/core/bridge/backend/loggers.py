@@ -28,7 +28,7 @@ class Loggers:
 			 'gateway_profile' not in key and 'transaction_timestamp' not in key and \
 			 'action_id' not in key and 'bridge__transaction_id' not in key and \
 			 'merchant_data' not in key and 'signedpares' not in key and \
-			 key != 'gpid' and key != 'sec' and  key != 'fingerprint' and key != 'user_agent'\
+			 key != 'gpid' and key != 'sec' and  key != 'fingerprint' and key != 'user_agent' and\
 			 key not in ['vpc_securehash','currency','amount'] and \
 			 'institution_id' not in key and key != 'response' and key != 'input':
 				if count <= 30:
