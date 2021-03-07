@@ -28,7 +28,7 @@ class Loggers:
 			 'gateway_profile' not in key and 'transaction_timestamp' not in key and \
 			 'action_id' not in key and 'bridge__transaction_id' not in key and \
 			 'merchant_data' not in key and 'signedpares' not in key and \
-			 key != 'gpid' and key != 'sec' and  key != 'fingerprint' and \
+			 key != 'gpid' and key != 'sec' and  key != 'fingerprint' and key != 'user_agent'\
 			 key not in ['vpc_securehash','currency','amount'] and \
 			 'institution_id' not in key and key != 'response' and key != 'input':
 				if count <= 30:
@@ -106,6 +106,9 @@ class Loggers:
 				trans.token = payload['csrfmiddlewaretoken']
 			elif 'token' in payload.keys():
 				trans.token = payload['token']
+			if 'user_agent' in payload.keys():
+				trans.user_agent = payload['user_agent']
+
 
 			results = trans.save()
 

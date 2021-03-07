@@ -38,7 +38,7 @@ class Wrappers:
 			new_payload, transaction, count = {}, None, 1
 			for k, v in dict(payload).items():
 				key = k.lower()
-				if 'photo' not in key and 'fingerprint' not in key and 'signature' not in key and \
+				if 'photo' not in key and 'fingerprint' not in key and 'user_agent' not in key and 'signature' not in key and \
 				'institution_id' not in key and 'gateway_id' not in key and 'response_status' not in key and \
 				'username' not in key and 'product_item' not in key and 'bridge__transaction_id' not in key and \
 				'currency' not in key and 'action_id' not in key:
@@ -62,7 +62,7 @@ class Wrappers:
 					   'access_level','response_status','sec_hash','ip_address','service' ,'lat','lng',\
 					   'chid','session','session_id','csrf_token','csrfmiddlewaretoken' , 'gateway_host' ,'gateway_profile' ,\
 					   'transaction_timestamp' ,'action_id' , 'bridge__transaction_id','merchant_data', 'signedpares',\
-					   'gpid','sec','fingerprint','vpc_securehash',\
+					   'gpid','sec','fingerprint','user_agent','vpc_securehash',\
 					   'institution_id','response','input','trigger','send_minutes_period','send_hours_period',\
 					   'send_days_period','send_years_period','token','repeat_bridge_transaction','transaction_auth']
 
@@ -89,7 +89,7 @@ class Wrappers:
 					   'access_level','response_status','sec_hash','ip_address','service' ,'lat','lng',\
 					   'chid','session','session_id','csrf_token','csrfmiddlewaretoken' , 'gateway_host' ,'gateway_profile' ,\
 					   'transaction_timestamp' ,'action_id' , 'bridge__transaction_id','merchant_data', 'signedpares',\
-					   'gpid','sec','fingerprint','vpc_securehash','currency','amount',\
+					   'gpid','sec','fingerprint','user_agent','vpc_securehash','currency','amount',\
 					   'institution_id','response','input','trigger','send_minutes_period','send_hours_period',\
 					   'send_days_period','send_years_period','token','repeat_bridge_transaction','transaction_auth']
 
