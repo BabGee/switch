@@ -526,11 +526,11 @@ class System(Wrappers):
 			if payload['response_status'] == '00':
 					payload['trigger'] = 'session_active%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 					payload['response'] ='Session is Active'
-					payload['response_status'] = '00'
 			else:
 				payload['trigger'] = 'session_expired%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 				payload['response'] = 'Session Expired or Does not Exist'
-				payload['response_status'] = '25'
+			#Proceed after setting trigger
+			payload['response_status'] = '06'
 		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on email verification: %s" % e)
