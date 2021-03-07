@@ -201,6 +201,7 @@ class Transaction(models.Model):
 	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
 	fingerprint = models.CharField(max_length=1024, editable=False, null=True, blank=True)
 	token = models.CharField(max_length=1024, editable=False, null=True, blank=True)
+	user_agent = models.TextField(editable=False, null=True, blank=True)
 	def __str__(self):
 		#return '%s %s %s' % (self.request, self.geometry.x, self.geometry.y)
  		return '%s' % (self.request)

@@ -77,7 +77,7 @@ class TransactionAdmin(admin.OSMGeoAdmin):
 		 'request','currency','amount',\
 		  'charges','raise_charges','response','ip_address','transaction_status','response_status',\
 		    'geometry','current_command','next_command','msisdn','overall_status','institution',\
-			'fingerprint','token','date_modified','date_created')
+			'fingerprint','token','user_agent','date_modified','date_created')
 		search_fields = ('id','gateway_profile__user__first_name','gateway_profile__user__last_name',\
 				'gateway_profile__user__username','gateway_profile__msisdn__phone_number',
 				'request','response','ip_address',)
