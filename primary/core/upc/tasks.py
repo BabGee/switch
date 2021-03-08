@@ -924,6 +924,22 @@ class System(Wrappers):
 		return payload
 
 
+	def unset_session(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			if 'session' in payload.keys():
+				del payload['session']
+
+			payload['response'] = 'Session Unset'
+			payload['response_status'] = '00'
+		except Exception as e:
+			lgr.info('Unsetting Session Failed: %s' % e)
+			payload['response_status'] = '96'
+
+		return payload
+
+
 	def session(self, payload, node_info):
 		try:
 			lgr.info('Got Here')
