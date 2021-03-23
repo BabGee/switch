@@ -60,23 +60,30 @@ class Wrappers:
 		r, c = df_data.shape
 		for key, value in notifications.items():
 			contact = Contact.objects.get(id=value['contact_id'])
-			mno = contact.product.notification.code.mno
-			mno_prefix = MNOPrefix.objects.filter(mno=mno).values_list('prefix', flat=True)
-			ccode=contact.product.notification.code.mno.country.ccode
-			code = [re.findall(r'^\+'+ccode+'([\d]*)$', p)[0] for p in mno_prefix]
-			prefix = '|'.join(code)
-			fprefix = '|'.join(mno_prefix).replace('+','')
+			if contact.product.notification.code.channel.name == 'EMAIL':
+				df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w]+\.[a-z]{2,3}$)')
+				df_email = df_email[~df_email['email'].isnull()]
+				_recipient = df_email['email'].values
+			else:
+				mno = contact.product.notification.code.mno
+				mno_prefix = MNOPrefix.objects.filter(mno=mno).values_list('prefix', flat=True)
+				ccode=contact.product.notification.code.mno.country.ccode
+				code = [re.findall(r'^\+'+ccode+'([\d]*)$', p)[0] for p in mno_prefix]
+				prefix = '|'.join(code)
+				fprefix = '|'.join(mno_prefix).replace('+','')
 
-			df_prefix=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
-			df_fprefix=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
+				df_prefix=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
+				df_fprefix=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
 
-			df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
-			df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
-			df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
+				df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
+				df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
+				df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
 
-			df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
+				df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
 
-			_recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
+				_recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
+
+			#Capture Recipients
 			_recipient = np.unique(_recipient)
 			_recipient_count = _recipient.size
 
