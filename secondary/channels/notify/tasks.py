@@ -144,31 +144,38 @@ class Wrappers:
 			new_contact.status = status
 			new_contact.subscribed=True
 			new_contact.save()
+		if product.notification.code.channel.name == 'EMAIL':
+			df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w]+\.[a-z]{2,3}$)')
+			df_email = df_email[~df_email['email'].isnull()]
+			_recipient = df_email['email'].values
+		else:
+			#For SMS
+			mno_prefix = MNOPrefix.objects.filter(mno=product.notification.code.mno).values_list('prefix', flat=True)
 
-		mno_prefix = MNOPrefix.objects.filter(mno=product.notification.code.mno).values_list('prefix', flat=True)
+			ccode=product.notification.code.mno.country.ccode
 
-		ccode=product.notification.code.mno.country.ccode
+			code = [re.findall(r'^\+'+ccode+'([\d]*)$', p)[0] for p in mno_prefix]
 
-		code = [re.findall(r'^\+'+ccode+'([\d]*)$', p)[0] for p in mno_prefix]
+			prefix = '|'.join(code)
 
-		prefix = '|'.join(code)
+			fprefix = '|'.join(mno_prefix).replace('+','')
 
-		fprefix = '|'.join(mno_prefix).replace('+','')
+			lgr.info('Full Prefix: %s' % fprefix)
+			lgr.info('Prefix: %s' % prefix)
 
-		lgr.info('Full Prefix: %s' % fprefix)
-		lgr.info('Prefix: %s' % prefix)
+			#df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$))')
+			df_prefix=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
+			df_fprefix=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
 
-		#df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$))')
-		df_prefix=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
-		df_fprefix=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
+			df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
+			df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
+			df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
 
-		df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
-		df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
-		df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
+			df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
 
-		df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
+			_recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
 
-		_recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
+		#Capture Recipients
 		_recipient = np.unique(_recipient)
 		_recipient_count = _recipient.size
 
@@ -987,6 +994,50 @@ class System(Wrappers):
 			notification_product.distinct('notification__code__alias','notification__code__mno__id','notification__code__channel__name')
 
 			#lgr.info('Product List: %s' % notification_product)
+
+			if 'notification_template_id' in payload.keys():
+				notification_template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
+				notification_product = notification_product.filter(id__in=[t.id for t in notification_template.product.all()])
+			else:
+				#get notification_template using service
+				notification_template_list = NotificationTemplate.objects.filter(product__in=notification_product,service__name=payload['SERVICE'])
+
+				notification_template_list = self.trigger_notification_template(payload,notification_template_list)
+				notification_template = notification_template_list[0] if len(notification_template_list) else None
+
+			#lgr.info('Notification Product: %s ' % notification_product)
+
+			if len(notification_product):
+				#Construct Message to send
+				if 'message' not in payload.keys():
+					if notification_template:
+						payload['notification_template_id'] = notification_template.id
+						message = notification_template.template_message
+						variables = re.findall("\[(.*?)\]", message)
+						for v in variables:
+							variable_key, variable_val = None, None
+							n = v.find("=")
+							if n >=0:
+								variable_key = v[:n]
+								variable_val = str(v[(n+1):]).strip()
+							else:
+								variable_key = v
+							message_item = ''
+							if variable_key in payload.keys():
+								message_item = payload[variable_key]
+								if variable_val is not None:
+									if '|' in variable_val:
+										prefix, suffix = variable_val.split('|')
+										message_item = '%s %s %s' % (prefix, message_item, suffix)
+									else:
+										message_item = '%s %s' % (variable_val, message_item)
+							message = message.replace('['+v+']',str(message_item).strip())
+						#Message after loop
+						payload['message'] = message
+					else:
+						payload['message'] = ''
+
+
 			# Message Len
 
 			payload['message'] = payload['message'].strip().format(**payload)
