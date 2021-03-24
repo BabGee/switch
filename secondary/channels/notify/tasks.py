@@ -61,7 +61,7 @@ class Wrappers:
 		for key, value in notifications.items():
 			contact = Contact.objects.get(id=value['contact_id'])
 			if contact.product.notification.code.channel.name == 'EMAIL':
-				df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w]+\.[a-z]{2,3}$)')
+				df_email=df_data['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w]+\.[a-z]{2,3}$)')
 				df_email = df_email[~df_email['email'].isnull()]
 				_recipient = df_email['email'].values
 			else:
