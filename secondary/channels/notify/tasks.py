@@ -194,7 +194,11 @@ class Wrappers:
 			if product.notification.code.institution:
 				notifications[product.id]['institution_id'] = product.notification.code.institution.id
 
-			notifications_preview[product.notification.code.mno.name] = {'float_amount': float(product_charge),'recipient_count':_recipient_count,'message_len':message_len,'alias':product.notification.code.alias}
+			notifications_preview[product.notification.code.mno.name if product.notification.code.mno \
+						else product.notification.code.channel.name] = {'float_amount': float(product_charge),
+												'recipient_count':_recipient_count,
+												'message_len':message_len,
+												'alias':product.notification.code.alias}
 
 		return notifications, notifications_preview
 
