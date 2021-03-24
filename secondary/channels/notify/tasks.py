@@ -85,6 +85,7 @@ class Wrappers:
 
 			#Capture Recipients
 			_recipient = np.unique(_recipient)
+			lgr.info('\n\n\n\n\n\tRecipient: %s' % _recipient)
 			_recipient_count = _recipient.size
 
 
@@ -146,6 +147,7 @@ class Wrappers:
 								state=state, recipient=r, sends=0, ext_outbound_id=ext_outbound_id,\
 								 contact_group=contact_group, message_len=message_len) for r in _recipient]
 
+				lgr.info('\n\n\n\n\n\tObject List: %s' % obj_list)
 		outbound_log = None
 
 		if df_list:
