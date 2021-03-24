@@ -87,9 +87,40 @@ class Wrappers:
 			_recipient = np.unique(_recipient)
 			_recipient_count = _recipient.size
 
+			if 'notification_template_id' in payload.keys():
+				template = NotificationTemplate.objects.get(id=payload['notification_template_id'])
+				outbound.template = template
+
+				heading = template.template_heading
+				variables = re.findall("\[(.*?)\]", heading)
+				for v in variables:
+					variable_key, variable_val = None, None
+					n = v.find("=")
+					if n >=0:
+						variable_key = v[:n]
+						variable_val = str(v[(n+1):]).strip()
+					else:
+						variable_key = v
+					heading_item = ''
+					if variable_key in payload.keys():
+						heading_item = payload[variable_key]
+						if variable_val is not None:
+							if '|' in variable_val:
+								prefix, suffix = variable_val.split('|')
+								heading_item = '%s %s %s' % (prefix, heading_item, suffix)
+							else:
+								heading_item = '%s %s' % (variable_val, heading_item)
+					heading = heading.replace('['+v+']',str(heading_item).strip())
+
+			elif 'subject' in payload.keys():
+				heading = payload['subject'].strip()[:512]
+			else:
+				heading = payload['SERVICE'].title()
+
 			#lgr.info('Message and Contact Captured: %s | %s | %s' % (mno.name, prefix, _recipient_count) )
 			if r >= 100:
 				df = pd.DataFrame({'recipient': _recipient})
+				df['heading'] = heading
 				df['message'] = payload['message']
 				df['scheduled_send'] = scheduled_send
 				df['contact'] = value['contact_id']
@@ -110,7 +141,7 @@ class Wrappers:
 				contact_group = payload['contact_group'] if 'contact_group' in payload.keys() else None
 				message_len =  value['message_len'] if 'message_len' in value.keys() else 1
 				#Append by adding
-				obj_list = obj_list+[Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,\
+				obj_list = obj_list+[Outbound(contact=contact,heading=heading,message=payload['message'],scheduled_send=scheduled_send,\
 								state=state, recipient=r, sends=0, ext_outbound_id=ext_outbound_id,\
 								 contact_group=contact_group, message_len=message_len) for r in _recipient]
 
@@ -1278,12 +1309,12 @@ class System(Wrappers):
 
 			df_data = pd.DataFrame({'recipient': recipient})
 
-			if 'message' in payload.keys() and recipient.size and len(notifications):
+			if 'message' in payload.keys() and payload['message'] not in ['',None] and recipient.size and len(notifications):
 				outbound_log = self.batch_product_send(payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
 				lgr.info('Recipient Outbound Bulk Logger Completed Task')
 				payload['response'] = 'Batch Notification Sent'
 				payload['response_status']= '00'
-			elif 'message' not in payload.keys() and len(recipient_list):
+			elif len(recipient_list):
 				payload['response'] = 'No Message to Send'
 				payload['response_status']= '00'
 			else:
