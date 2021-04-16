@@ -2161,7 +2161,8 @@ def get_delivery_status():
 	try:
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 60}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
-		data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 125}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:7321/data/request/', timeout=5)['response']['data']
+		#data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 125}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:7321/data/request/', timeout=5)['response']['data']
+		data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 125}, "max_duration": {"seconds": 120}}, 'https://integrator.interintel.co/data/request/', timeout=5)['response']['data']
 
 		if data:
 			dchunks, dchunk_size = len(data), 125
@@ -2183,7 +2184,8 @@ def get_delivery_status_test():
 	try:
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 60}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
-		data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":20000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/', timeout=5)['response']['data']
+		#data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":20000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/', timeout=5)['response']['data']
+		data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":20000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'https://integrator.interintel.co/data/request/', timeout=5)['response']['data']
 
 		if data:
 			df = pd.DataFrame(data)
