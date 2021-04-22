@@ -811,7 +811,7 @@ class System(Wrappers):
 									 Q(service__name=payload['SERVICE'])).\
 									prefetch_related('notification__code','product_type')
 
-			#lgr.info('Notification Product: %s' % notification_product)
+			lgr.info('Notification Product: %s' % notification_product)
 			msisdn = UPCWrappers().get_msisdn(payload)
 			if msisdn is not None:
 				#Get/Filter MNO
@@ -838,56 +838,62 @@ class System(Wrappers):
 					lgr.info(contact)
 					notification_product = notification_product.filter(id__in=[c.product.id for c in contact])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 
 			if 'ext_product_id' in payload.keys():
 				notification_product = notification_product.filter(Q(ext_product_id=payload['ext_product_id'])|Q(ext_product_id=None))
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 
 			if 'notification_delivery_channel' in payload.keys():
 				notification_product = notification_product.filter(notification__code__channel__name=payload['notification_delivery_channel'])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if 'notification_product_id' in payload.keys():
 				notification_product = notification_product.filter(id=payload['notification_product_id'])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if 'product_item_id' in payload.keys():
 				product_type = ProductItem.objects.get(id=payload['product_item_id']).product_type
 				notification_product = notification_product.filter(product_type=product_type)
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if 'product_type_id' in payload.keys():
 				notification_product = notification_product.filter(product_type__id=payload['product_type_id'])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if 'product_type' in payload.keys():
 				notification_product = notification_product.filter(product_type__name=payload['product_type'])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if 'payment_method' in payload.keys():
 				notification_product = notification_product.filter(payment_method__name=payload['payment_method'])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if 'code' in payload.keys():
 				notification_product = notification_product.filter(notification__code__code=payload['code'])
 
+			lgr.info('Notification Product: %s ' % notification_product)
+			institution = None
+			if payload.get('institution_id'):
+				institution = Institution.objects.get(id=payload['institution_id'])
+			elif gateway_profile.institution:
+				institution = gateway_profile.institution
 
-			#lgr.info('Notification Product: %s ' % notification_product)
-			if 'institution_id' in payload.keys():
+			if institution:
 				#Filter to send an institution notification or otherwise a gateway if institution does not exist (gateway only has institution as None)
-				institution_notification_product = notification_product.filter(notification__code__institution__id=payload['institution_id'])
+				institution_notification_product = notification_product.filter(notification__code__institution=gateway_profile.institution)
 				gateway_notification_product = notification_product.filter(notification__code__institution=None, institution_allowed=True)
 				notification_product =  institution_notification_product if len(institution_notification_product) else gateway_notification_product
+
 			else:
 				notification_product = notification_product.filter(notification__code__institution=None)
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 			if "keyword" in payload.keys():
 				notification_product=notification_product.filter(keyword__iexact=payload['keyword'])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 
 
 			if 'notification_template_id' in payload.keys():
@@ -902,7 +908,7 @@ class System(Wrappers):
 
 
 
-			#lgr.info('Notification Product: %s ' % notification_product)
+			lgr.info('Notification Product: %s ' % notification_product)
 
 			if len(notification_product):
 				#Construct Message to send
