@@ -351,6 +351,7 @@ class System(Wrappers):
 					institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(remittance_product=product)|Q(remittance_product=None),\
 										Q(keyword__iexact=keyword)|Q(keyword='')|Q(keyword__isnull=True))
 
+					lgr.info('Keyword: %s' % institution_incoming_service_list)
 					if len(institution_incoming_service_list):
 						if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
 							amount = Decimal(payload['amount'])
@@ -371,6 +372,7 @@ class System(Wrappers):
 
 				# Capture remittance product institution
 
+				lgr.info('Capture Institution')
 				if 'institution_id' not in payload.keys() and product.institution:
 					payload['institution_id'] = product.institution.id
 
@@ -397,6 +399,7 @@ class System(Wrappers):
 					payload['response_status'] = '94'
 					payload['response'] = 'External Inbound ID Exists'
 				else:
+
 					incoming = Incoming(remittance_product=product,reference=reference,\
 						request=self.transaction_payload(payload),channel=Channel.objects.get(id=payload['chid']),\
 						response_status=response_status, ext_inbound_id=ext_inbound_id,state=state)

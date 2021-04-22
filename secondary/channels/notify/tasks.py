@@ -795,11 +795,22 @@ class System(Wrappers):
 			lgr.info("Payload: %s" % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			notification_product = NotificationProduct.objects.filter(Q(notification__status__name='ACTIVE'), \
-						Q(notification__code__gateway=gateway_profile.gateway),\
-						Q(notification__channel__id=payload['chid'])|Q(notification__channel=None),
-						 Q(service__name=payload['SERVICE'])).\
-						prefetch_related('notification__code','product_type')
+			if payload.get('alias'):
+				notification_product = NotificationProduct.objects.filter(Q(notification__status__name='ACTIVE'), 
+									Q(notification__code__gateway=gateway_profile.gateway),
+									Q(notification__channel__id=payload['chid'])|Q(notification__channel=None),
+									Q(notification__code__alias__iexact=payload['alias'].strip()),
+									 Q(service__name=payload['SERVICE'])).\
+									prefetch_related('notification__code','product_type')
+
+			else:
+
+				notification_product = NotificationProduct.objects.filter(Q(notification__status__name='ACTIVE'), \
+									Q(notification__code__gateway=gateway_profile.gateway),\
+									Q(notification__channel__id=payload['chid'])|Q(notification__channel=None),
+									 Q(service__name=payload['SERVICE'])).\
+									prefetch_related('notification__code','product_type')
+
 			#lgr.info('Notification Product: %s' % notification_product)
 			msisdn = UPCWrappers().get_msisdn(payload)
 			if msisdn is not None:
@@ -862,9 +873,6 @@ class System(Wrappers):
 			if 'code' in payload.keys():
 				notification_product = notification_product.filter(notification__code__code=payload['code'])
 
-			#lgr.info('Notification Product: %s ' % notification_product)
-			if 'alias' in payload.keys():
-				notification_product = notification_product.filter(notification__code__alias=payload['alias'])
 
 			#lgr.info('Notification Product: %s ' % notification_product)
 			if 'institution_id' in payload.keys():
