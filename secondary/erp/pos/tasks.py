@@ -879,7 +879,7 @@ class System(Wrappers):
 					rnd = random.SystemRandom()
 					prefix = ''.join(rnd.choice(chars) for i in range(3))
 					suffix = ''.join(rnd.choice(nums) for i in range(2,4))
-					trial = '%s-%s%s' % (pre_reference.upper()[:8], prefix.upper(), suffix)
+					trial = '%s-%s%s' % (''.join(re.findall(r'[\d\w]+', pre_reference)).upper()[:4], prefix.upper(), suffix)
 					#reference_list = PurchaseOrder.objects.filter(reference=trial,status__name='UNPAID',\
 					#		expiry__gte=timezone.now()).order_by('-reference')[:1]
 
