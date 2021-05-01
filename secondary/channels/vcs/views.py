@@ -23,9 +23,11 @@ class VAS:
 		if 'timelimit' in args:
 			self.channel = Channel.objects.get(id=self.payload["chid"])
 			if self.channel.name == 'USSD':
-				return 200
+				return 180 #3 minutes
 			elif self.channel.name == 'IVR':
-				return 3600
+				return 3600 #1 hour
+			else:
+				return 86400 #24 hours
 
 		if 'mno' in args:
 			#self.prefix = MNOPrefix.objects.filter(prefix=self.payload['msisdn'][4:][:3], mno__country__ccode=self.payload['msisdn'][1:][:3])

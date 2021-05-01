@@ -2284,7 +2284,6 @@ class System(Wrappers):
 			media_temp = settings.MEDIA_ROOT + '/tmp/uploads/'
 			filename = payload['file_upload']
 			tmp_file = media_temp + str(filename)
-
 			upload = FileUpload.objects.filter(trigger_service__name=payload['SERVICE'])
 
 			if upload.exists():
@@ -2302,10 +2301,13 @@ class System(Wrappers):
 				if 'description' in payload.keys():
 					activity.description = payload['description']
 
+				#with open(tmp_file, 'rb+') as f:
 				with open(tmp_file, 'r',encoding="utf8", errors='ignore') as f:
 					activity.file_path.save(filename, File(f), save=False)
-				activity.save()
 				f.close()
+
+
+				activity.save()
 
 				payload['response'] = "File Saved. Wait to Process"
 				payload['response_status'] = '00'
