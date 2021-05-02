@@ -172,6 +172,7 @@ class VAS:
 			elif error_prefix:
 				message = error_prefix.split('|')
 				self.payload['error_prefix'] = message
+				page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
 			else:
 				page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
 
