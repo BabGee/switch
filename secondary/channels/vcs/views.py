@@ -64,7 +64,7 @@ class VAS:
 				else:
 					self.menu = self.menu.filter(access_level__name='SYSTEM', code=self.code[0],profile_status=None)
 
-			elif self.payload['input'] in ['00','<BEG>','<SBEG>'] or len(self.navigator)<1:#Main Menu Request|First call
+			elif self.payload['input'] in ['00','<BEG>','<SBEG>'] or len(self.navigator)<1 or (len(self.navigator) and self.navigator[0].menu.session_state.name == 'END'):#Main Menu Request|First call|Or if previous step had an END state
 				self.group_select=0
 				self.nav_step = (self.navigator[0].nav_step + 1) if self.payload['input'] == '00' and len(self.navigator)>0 else 0
 				self.level = '0';self.nav = None; self.service = None
