@@ -60,6 +60,7 @@ class ServiceCall:
 class Authorize:
 	def secure(self, payload, API_KEY):
 		new_payload = {}
+		payload = dict(map(lambda x:(str(x[0]).lower(), json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1]) ), payload.items()))
 		for key, value in payload.items():
 			if 'sec_hash' not in key and 'credentials' not in key:
 				try:value=json.loads(value, parse_float=Decimal);value=str(value) if isinstance(value,Decimal) else value #(BUG!!) JSON loads converts decimal places

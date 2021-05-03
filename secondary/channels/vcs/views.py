@@ -165,14 +165,18 @@ class VAS:
 
 			menuitems = menuitems.filter(menu=self.nav.menu)
 
-			if error_prefix and self.channel in ['USSD','IVR']:
+			#if error_prefix and self.channel in ['USSD','IVR']:
+			#	message = error_prefix.split('|')
+			#	if len(message)>1 and message[1].strip()=='REPLACE': page_string = '%s' % (message[0])
+			#	else: page_string = '%s %s%s' % (error_prefix, self.payload['page_string'], get_menu_items(menuitems))
+			#elif error_prefix:
+			#	message = error_prefix.split('|')
+			#	self.payload['error_prefix'] = message
+			#	page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
+			if error_prefix:
 				message = error_prefix.split('|')
 				if len(message)>1 and message[1].strip()=='REPLACE': page_string = '%s' % (message[0])
 				else: page_string = '%s %s%s' % (error_prefix, self.payload['page_string'], get_menu_items(menuitems))
-			elif error_prefix:
-				message = error_prefix.split('|')
-				self.payload['error_prefix'] = message
-				page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
 			else:
 				page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
 
