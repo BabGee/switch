@@ -49,7 +49,7 @@ class VAS:
 				self.pin_auth = True
 				self.navigator = self.navigator.filter(pin_auth=True)
 			
-			if len(self.navigator) > 0 and self.payload['input'] not in ['00','<BEG>','<SBEG>']:#Not a Main Menu Request
+			if len(self.navigator) > 0 and self.payload['input'] not in ['00','<BEG>','<SBEG>'] and self.navigator[0].menu.session_state.name != 'END':#Not a Main Menu Request
 				if self.gateway_profile.exists():
 					self.navigator = self.navigator.filter(session__gateway_profile=self.gateway_profile[0])
 				self.nav = self.navigator[0]
