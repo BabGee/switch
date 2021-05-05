@@ -1,69 +1,69 @@
 [submodule "gus"]
 	path = products/gus
-	url = https://bitbucket.org/interintel/switch.products.gus.git
+	url = https://github.com/interintel-technologies/switch.products.gus.git
 [submodule "muziqbit"]
 	path = products/muziqbit
-	url = https://bitbucket.org/interintel/switch.products.muziqbit.git
+	url = https://github.com/interintel-technologies/switch.products.muziqbit.git
 [submodule "nikobizz"]
 	path = products/nikobizz
-	url = https://bitbucket.org/interintel/switch.products.nikobizz.git
+	url = https://github.com/interintel-technologies/switch.products.nikobizz.git
 
 
 [submodule "amkagroup_co_ke"]
 	path = thirdparty/amkagroup_co_ke
-	url = https://bitbucket.org/interintel/switch.thirdparty.amkagroup_co_ke.git
+	url = https://github.com/interintel-technologies/switch.thirdparty.amkagroup_co_ke.git
 [submodule "bidfather"]
 	path = thirdparty/bidfather
-	url = https://bitbucket.org/interintel/switch.thirdparty.bidfather.git
+	url = https://github.com/interintel-technologies/switch.thirdparty.bidfather.git
 [submodule "mcsk"]
 	path = thirdparty/mcsk
-	url = https://bitbucket.org/interintel/switch.thirdparty.mcsk.git
+	url = https://github.com/interintel-technologies/switch.thirdparty.mcsk.git
 [submodule "regix"]
 	path = thirdparty/regix
-	url = https://bitbucket.org/interintel/switch.thirdparty.regix.git
+	url = https://github.com/interintel-technologies/switch.thirdparty.regix.git
 [submodule "roadroute"]
 	path = thirdparty/roadroute
-	url = https://bitbucket.org/interintel/switch.thirdparty.roadroute.git
+	url = https://github.com/interintel-technologies/switch.thirdparty.roadroute.git
 [submodule "sortika"]
 	path = thirdparty/sortika
-	url = https://bitbucket.org/interintel/switch.thirdparty.sortika.git
+	url = https://github.com/interintel-technologies/switch.thirdparty.sortika.git
 [submodule "wahi"]
 	path = thirdparty/wahi
-	url = https://bitbucket.org/interintel/switch.thirdparty.wahi.git
+	url = https://github.com/interintel-technologies/switch.thirdparty.wahi.git
 
 [submodule "products/gus"]
 	path = products/gus
-	url = https://bitbucket.org/interintel/switch.products.gus.git
+	url = https://github.com/interintel-technologies/switch.products.gus.git
 [submodule "products/muziqbit"]
 	path = products/muziqbit
-	url = https://bitbucket.org/interintel/switch.products.muziqbit.git
+	url = https://github.com/interintel-technologies/switch.products.muziqbit.git
 [submodule "products/nikobizz"]
 	path = products/nikobizz
-	url = https://bitbucket.org/interintel/switch.products.nikobizz.git
+	url = https://github.com/interintel-technologies/switch.products.nikobizz.git
 [submodule "thirdparty/amkagroup_co_ke"]
 	path = thirdparty/amkagroup_co_ke
-	url = https://bitbucket.org/interintel/switch.thirdparty.amkagroup_co_ke.git
+	url = https://github.com/interintel-technologies/switch.thirdparty.amkagroup_co_ke.git
 [submodule "thirdparty/bidfather"]
 	path = thirdparty/bidfather
-	url = https://bitbucket.org/interintel/switch.thirdparty.bidfather.git
+	url = https://github.com/interintel-technologies/switch.thirdparty.bidfather.git
 [submodule "thirdparty/mcsk"]
 	path = thirdparty/mcsk
-	url = https://bitbucket.org/interintel/switch.thirdparty.mcsk.git
+	url = https://github.com/interintel-technologies/switch.thirdparty.mcsk.git
 [submodule "thirdparty/regix"]
 	path = thirdparty/regix
-	url = https://bitbucket.org/interintel/switch.thirdparty.regix.git
+	url = https://github.com/interintel-technologies/switch.thirdparty.regix.git
 [submodule "thirdparty/roadroute"]
 	path = thirdparty/roadroute
-	url = https://bitbucket.org/interintel/switch.thirdparty.roadroute.git
+	url = https://github.com/interintel-technologies/switch.thirdparty.roadroute.git
 [submodule "thirdparty/sortika"]
 	path = thirdparty/sortika
-	url = https://bitbucket.org/interintel/switch.thirdparty.sortika.git
+	url = https://github.com/interintel-technologies/switch.thirdparty.sortika.git
 [submodule "thirdparty/wahi"]
 	path = thirdparty/wahi
-	url = https://bitbucket.org/interintel/switch.thirdparty.wahi.git
+	url = https://github.com/interintel-technologies/switch.thirdparty.wahi.git
 [submodule "products/bulksms"]
 	path = products/bulksms
-	url = https://bitbucket.org/interintel/switch.products.bulksms.git
+	url = https://github.com/interintel-technologies/switch.products.bulksms.git
 [submodule "thirdparty/voltic"]
 	path = thirdparty/voltic
-	url = https://bitbucket.org/interintel/switch.thirdparty.voltic
+	url = https://github.com/interintel-technologies/switch.thirdparty.voltic
