@@ -2,8 +2,8 @@
 	path = products/nikobizz
 	url = https://github.com/interintel-technologies/switch.products.nikobizz.git
 [submodule "nenasasa"]
-	path = products/nikobizz
+	path = products/nenasasa
 	url = https://github.com/interintel-technologies/switch.products.nenasasa.git
 [submodule "mipay"]
-	path = products/nikobizz
+	path = products/mipay
 	url = https://github.com/interintel-technologies/switch.products.mipay.git
