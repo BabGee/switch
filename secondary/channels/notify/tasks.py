@@ -41,6 +41,7 @@ from primary.core.upc.tasks import Wrappers as UPCWrappers
 import numpy as np
 import pandas as pd
 from django.conf import settings
+from collections import defaultdict
 
 from primary.core.administration.views import WebService
 from .models import *
@@ -953,7 +954,10 @@ class System(Wrappers):
 				if 'recipient_count' in payload.keys():
 					float_amount = float_amount*Decimal(payload['recipient_count'])
 
-				payload['message'] = payload['message'].strip().format(**payload)
+				payload_d = defaultdict(lambda: "...")
+				payload_d.update(payload)
+				payload['message'] = payload['message'].strip().format_map(payload_d)
+
 				#Calculate price per SMS per each 160 characters
 				if notification_product[0].notification.code.channel.name == 'SMS':
 					message = payload['message']
