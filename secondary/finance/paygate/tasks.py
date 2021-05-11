@@ -1818,15 +1818,15 @@ def process_gateway_institution_notification(notification, payload):
 		notification_key_list = gateway_institution_notification.notification_service.notification_key.all().values_list('key', flat=True)
 
 		entry_keys = list(set(payload.keys()).intersection(set(list(notification_key_list))))
-		missing_keys = list(set(notification_key_list).difference(set(list(payload.keys()))))
+		#missing_keys = list(set(notification_key_list).difference(set(list(payload.keys()))))
 
 		params = gateway_institution_notification.notification_service.request if isinstance(gateway_institution_notification.notification_service.request, dict) else {}
 
 		for entry in entry_keys:
 			params[entry] = payload[entry]
 
-		for missing in missing_keys:
-			params[missing] = ''
+		#for missing in missing_keys:
+		#	params[missing] = ''
 
 		bridgetasks.background_service_call.delay(gateway_institution_notification.notification_service.service.name,
 							gateway_institution_notification.gateway_profile.id, 
