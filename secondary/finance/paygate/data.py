@@ -29,12 +29,97 @@ import numpy as np
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core import serializers
+import numpy as np
+import pandas as pd
 
 from .models import *
 
 lgr = logging.getLogger('secondary.finance.paygate')
 
 class List:
+	def incoming_status_report(self, payload, gateway_profile, profile_tz, data):
+		params = {}
+		params['rows'] = []
+		params['cols'] = []
+
+		params['data'] = []
+		params['lines'] = []
+
+		max_id = 0
+		min_id = 0
+		ct = 0
+		push = {}
+
+		lgr.info('Started Incoming Status Report')
+
+		try:
+
+			#.annotate(send_date=Cast(DateTrunc('minute','scheduled_send'), CharField(max_length=32)))\
+			incoming_list = Incoming.objects.using('read').filter(remittance_product__institution=gateway_profile.institution,\
+							remittance_product__institution__gateway=gateway_profile.gateway, date_created__gte=timezone.now()-timezone.timedelta(days=7))\
+							.annotate(received_date=Cast(F('date_created'), CharField(max_length=32)))\
+							.values('received_date')\
+							.annotate(total_count=Count('received_date'), total_amount=Sum('amount')).filter(total_count__gte=5)\
+							.values_list('received_date','remittance_product__ext_product_id','reference','remittance_product__name','total_count','total_amount')\
+							.order_by('-received_date')
+
+			incoming=np.asarray(incoming_list)
+			df = pd.DataFrame({'DATE': incoming[:,0], 'CODE': incoming[:,1], 'REFERENCE': incoming[:,2], 'PRODUCT': incoming[:,3], 'TOTAL_COUNT': incoming[:,4], 'TOTAL_AMOUNT': incoming[:,5],})
+			lgr.info('DF: %s' % df)
+			df['DATE'] = pd.to_datetime(df['DATE'])
+			df['REFERENCE'] = df['REFERENCE'].fillna('')
+			df['TOTAL_COUNT'] = pd.to_numeric(df['TOTAL_COUNT'])
+			df['TOTAL_AMOUNT'] = pd.to_numeric(df['TOTAL_AMOUNT'])
+			df1=df[['DATE','PRODUCT','CODE']]
+			df2= df[['REFERENCE','TOTAL_COUNT','TOTAL_AMOUNT']].pivot(columns='REFERENCE',values=['TOTAL_COUNT','TOTAL_AMOUNT']).fillna(0)
+			df3=pd.concat([df1,df2], ignore_index=False, axis=1)
+			df = df3.groupby(['DATE','PRODUCT','CODE']).sum()
+
+			lgr.info('DF 2: %s' % df)
+			for d in df2.columns:
+				df[d+'(%)'] = ((df[d]/df[df2.columns].sum(axis=1))*100).round(2)
+
+			lgr.info('DF 3: %s' % df)
+			df = df.reset_index().sort_values('DATE',ascending=False)
+			dtype = {'float': 'number','int': 'number','datetime': 'datetime', 'object': 'string','datetime64[ns, UTC]':'datetime','float64':'number','int64':'number'}
+			for c in df.columns:
+				lgr.info(df[c].dtype)
+				if df[c].dtype in dtype.keys():
+					cols = {'label': c, 'type': 'string' }
+					for k,v in dtype.items(): 
+						if k == str(df[c].dtype):
+							cols = {'label': c, 'type': v }
+					params['cols'].append(cols)
+				else:
+					params['cols'].append({'label': c, 'type': 'string' })
+
+			lgr.info('DF 4: %s' % df)
+			report_list  = df.astype(str).values.tolist()
+			paginator = Paginator(report_list, payload.get('limit',50))
+
+			try:
+				page = int(payload.get('page', '1'))
+			except ValueError:
+				page = 1
+
+			try:
+				results = paginator.page(page)
+			except(EmptyPage, InvalidPage):
+				results = paginator.page(paginator.num_pages)
+
+
+			report_list = results.object_list
+
+
+			params['rows'] = report_list
+
+
+		except Exception as e:
+			lgr.info('Error on  Incoming Status Report: %s' % e,exc_info=True)
+		return params,max_id,min_id,ct,push
+
+
+
 	def balance(self, payload, gateway_profile, profile_tz, data):
 		params = {}
 		params['rows'] = []
