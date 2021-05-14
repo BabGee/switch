@@ -5,7 +5,8 @@ import psycopg2
 # Django settings for switch project.
 #from django.conf.global_settings import TEMPLATE_CONTEXT_PROCESSORS
 
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+#BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 import configparser
 
