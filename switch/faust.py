@@ -26,3 +26,27 @@ def configure_from_settings(app, conf, **kwargs):
 #Apps Require Loading for Discovery
 django.setup()
 
+
+#Discover agents modules only
+module_name = 'agents'
+
+#app.discover('secondary.channels.notify')
+def autodiscover(django_apps):
+	for django_app in django_apps:
+		# Attempt to import the app's ``module_name``.
+		try:
+			import_module('{0}.{1}'.format(django_app, module_name))
+			print('found: %s' % django_app)
+		except Exception as e:
+			print('%s: :%s' % (e,django_app))
+			pass
+
+autodiscover(settings.INSTALLED_APPS)
+
+'''
+def main():
+    app.main()
+if __name__ == '__main__':
+    main()
+'''
+
