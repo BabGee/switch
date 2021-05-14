@@ -25,7 +25,7 @@ def configure_from_settings(app, conf, **kwargs):
 
 #Apps Require Loading for Discovery
 django.setup()
-
+'''
 #Discover agents modules only
 module_name = 'agents'
 
@@ -41,7 +41,7 @@ def autodiscover(django_apps):
 			pass
 
 autodiscover(settings.INSTALLED_APPS)
-
+'''
 
 '''
 def main():
