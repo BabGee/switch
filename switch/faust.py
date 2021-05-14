@@ -26,3 +26,5 @@ def configure_from_settings(app, conf, **kwargs):
 #Apps Require Loading for Discovery
 django.setup()
 
+
+app.autodiscover_modules()
