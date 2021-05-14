@@ -19,8 +19,7 @@ from django.core.validators import validate_email
 from django.db import IntegrityError
 from django.db import transaction
 from django.db.models import Count, Sum, Max, Min, Avg, Q, F, Func, Value, CharField, Case, Value, When, TextField
-from django.db.models.functions import Cast
-from django.db.models.functions import Concat, Substr
+from django.db.models.functions import Cast, Concat, Substr, Lower
 from django.shortcuts import render
 from django.utils import timezone
 from django.utils.timezone import localtime
@@ -35,6 +34,12 @@ import pandas as pd
 from .models import *
 
 lgr = logging.getLogger('secondary.finance.paygate')
+
+class DateTrunc(Func):
+	function = 'DATE_TRUNC'
+	def __init__(self, trunc_type, field_expression, **extra): 
+		super(DateTrunc, self).__init__(Value(trunc_type), field_expression, **extra)                      
+
 
 class List:
 	def incoming_status_report(self, payload, gateway_profile, profile_tz, data):
@@ -57,44 +62,54 @@ class List:
 			#.annotate(send_date=Cast(DateTrunc('minute','scheduled_send'), CharField(max_length=32)))\
 			incoming_list = Incoming.objects.using('read').filter(remittance_product__institution=gateway_profile.institution,\
 							remittance_product__institution__gateway=gateway_profile.gateway, date_created__gte=timezone.now()-timezone.timedelta(days=7))\
-							.annotate(received_date=Cast(F('date_created'), CharField(max_length=32)))\
+							.annotate(received_date=Cast(DateTrunc('day','date_created'), CharField(max_length=32)))\
 							.values('received_date')\
-							.annotate(total_count=Count('received_date'), total_amount=Sum('amount')).filter(total_count__gte=5)\
-							.values_list('received_date','remittance_product__ext_product_id','reference','remittance_product__name','total_count','total_amount')\
+							.annotate(reference_lower=Lower('reference'), total_count=Count('received_date'), total_amount=Sum('amount')).filter(total_count__gte=5)\
+							.values_list('received_date','remittance_product__ext_product_id','reference_lower','remittance_product__name','total_count','total_amount')\
 							.order_by('-received_date')
 
-			incoming=np.asarray(incoming_list)
-			df = pd.DataFrame({'DATE': incoming[:,0], 'CODE': incoming[:,1], 'REFERENCE': incoming[:,2], 'PRODUCT': incoming[:,3], 'TOTAL_COUNT': incoming[:,4], 'TOTAL_AMOUNT': incoming[:,5],})
-			lgr.info('DF: %s' % df)
-			df['DATE'] = pd.to_datetime(df['DATE'])
-			df['REFERENCE'] = df['REFERENCE'].fillna('')
-			df['TOTAL_COUNT'] = pd.to_numeric(df['TOTAL_COUNT'])
-			df['TOTAL_AMOUNT'] = pd.to_numeric(df['TOTAL_AMOUNT'])
-			df1=df[['DATE','PRODUCT','CODE']]
-			df2= df[['REFERENCE','TOTAL_COUNT','TOTAL_AMOUNT']].pivot(columns='REFERENCE',values=['TOTAL_COUNT','TOTAL_AMOUNT']).fillna(0)
-			df3=pd.concat([df1,df2], ignore_index=False, axis=1)
-			df = df3.groupby(['DATE','PRODUCT','CODE']).sum()
+			lgr.info('Incoming List: %s' % incoming_list)
+			if len(incoming_list):
+				incoming=np.asarray(incoming_list)
+				lgr.info('Incoming: %s' % incoming)
+				df = pd.DataFrame({'DATE': incoming[:,0], 'CODE': incoming[:,1], 'REFERENCE': incoming[:,2], 'PRODUCT': incoming[:,3], 'TOTAL_COUNT': incoming[:,4], 'TOTAL_AMOUNT': incoming[:,5],})
+				lgr.info('DF: %s' % df)
+				df['DATE'] = pd.to_datetime(df['DATE'])
+				df['REFERENCE'] = df['REFERENCE'].fillna('')
+				df['TOTAL_COUNT'] = pd.to_numeric(df['TOTAL_COUNT'])
+				df['TOTAL_AMOUNT'] = pd.to_numeric(df['TOTAL_AMOUNT'])
+				df1=df[['DATE','PRODUCT','CODE']]
+				df2= df[['REFERENCE','TOTAL_COUNT','TOTAL_AMOUNT']].pivot(columns='REFERENCE',values=['TOTAL_COUNT','TOTAL_AMOUNT']).fillna(0)
+				df3=pd.concat([df1,df2], ignore_index=False, axis=1)
+				df = df3.groupby(['DATE','PRODUCT','CODE']).sum()
 
-			lgr.info('DF 2: %s' % df)
-			for d in df2.columns:
-				df[d+'(%)'] = ((df[d]/df[df2.columns].sum(axis=1))*100).round(2)
+				#df2= df[['REFERENCE','TOTAL_AMOUNT']].pivot(columns='REFERENCE',values='TOTAL_AMOUNT').fillna(0)
+				#df3= df[['REFERENCE','TOTAL_COUNT']].pivot(columns='REFERENCE',values='TOTAL_COUNT').fillna(0)
+				#df4=pd.concat([df1,df2,df3], ignore_index=False, axis=1)
+				#df = df4.groupby(['DATE','PRODUCT','CODE']).sum()
 
-			lgr.info('DF 3: %s' % df)
-			df = df.reset_index().sort_values('DATE',ascending=False)
-			dtype = {'float': 'number','int': 'number','datetime': 'datetime', 'object': 'string','datetime64[ns, UTC]':'datetime','float64':'number','int64':'number'}
-			for c in df.columns:
-				lgr.info(df[c].dtype)
-				if df[c].dtype in dtype.keys():
-					cols = {'label': c, 'type': 'string' }
-					for k,v in dtype.items(): 
-						if k == str(df[c].dtype):
-							cols = {'label': c, 'type': v }
-					params['cols'].append(cols)
-				else:
-					params['cols'].append({'label': c, 'type': 'string' })
+				#lgr.info('DF 2: %s' % df)
+				#for d in df2.columns:
+				#	df[d+'(%)'] = ((df[d]/df[df2.columns].sum(axis=1))*100).round(2)
 
-			lgr.info('DF 4: %s' % df)
-			report_list  = df.astype(str).values.tolist()
+				lgr.info('DF 3: %s' % df)
+				df = df.reset_index().sort_values('DATE',ascending=False)
+				dtype = {'float': 'number','int': 'number','datetime': 'datetime', 'object': 'string','datetime64[ns, UTC]':'datetime','float64':'number','int64':'number'}
+				for c in df.columns:
+					lgr.info(df[c].dtype)
+					if df[c].dtype in dtype.keys():
+						cols = {'label': ' '.join(c) if isinstance(c, tuple) else c, 'type': 'string' }
+						for k,v in dtype.items(): 
+							if k == str(df[c].dtype):
+								cols = {'label': ' '.join(c) if isinstance(c, tuple) else c, 'type': v }
+						params['cols'].append(cols)
+					else:
+						params['cols'].append({'label': ' '.join(c) if isinstance(c, tuple) else c, 'type': 'string' })
+
+				lgr.info('DF 4: %s' % df)
+				report_list  = df.astype(str).values.tolist()
+			else:
+				report_list = list()
 			paginator = Paginator(report_list, payload.get('limit',50))
 
 			try:
