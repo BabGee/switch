@@ -60,7 +60,7 @@ async def hello(greetings):
     async for greeting in greetings:
         lgr.info(f'Hello from {greeting.from_name} to {greeting.to_name} | Count {greeting.count} | Records {greeting.records}')
 
-@app.task
+#@app.task
 async def example_sender_task(app):
     while True:
         count = time.perf_counter() - s
