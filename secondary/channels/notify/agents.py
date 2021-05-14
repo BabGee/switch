@@ -12,12 +12,36 @@ import numpy as np
 import time
 from asgiref.sync import sync_to_async
 import asyncio
-
-from primary.core.administration.views import WebService
+import random
 import logging
+import aiohttp
+from http.client import HTTPConnection  # py3
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    FrozenSet,
+    List,
+    Mapping,
+    MutableMapping,
+    Set,
+    Tuple,
+    Type,
+    cast,
+)
+
 lgr = logging.getLogger(__name__)
+lgr.setLevel(logging.DEBUG)
 
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
 
+formatter = logging.Formatter('%(asctime)s-%(name)s %(funcName)s %(process)d %(thread)d-(%(threadName)-2s) %(levelname)s-%(message)s')
+ch.setFormatter(formatter)
+
+lgr.addHandler(ch)
+
+HTTPConnection.debuglevel = 1
 
 s = time.perf_counter()
 is_bulk = False
@@ -36,7 +60,7 @@ async def hello(greetings):
     async for greeting in greetings:
         lgr.info(f'Hello from {greeting.from_name} to {greeting.to_name} | Count {greeting.count} | Records {greeting.records}')
 
-#@app.task
+@app.task
 async def example_sender_task(app):
     while True:
         count = time.perf_counter() - s
@@ -48,7 +72,7 @@ async def example_sender_task(app):
         )
         count+=1
 
-@app.task
+#@app.task
 @transaction.atomic
 async def _send_outbound_sms_messages_list(app):
     try:
