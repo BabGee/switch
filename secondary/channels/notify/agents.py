@@ -1,7 +1,7 @@
 import faust
 from faust.types import StreamT
 #from primary.core.async.faust import app
-from integrator.faust import app
+from switch.faust import app
 import requests, json
 
 import pandas as pd
