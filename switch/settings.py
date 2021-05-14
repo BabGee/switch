@@ -13,17 +13,20 @@ cf = configparser.ConfigParser()
 cf.read(os.path.join(BASE_DIR, 'switch/conf/switch.properties'))
 
 logroot =  os.getenv("LOG_root", cf.get('LOG','root')).strip()
+#kafka
+kafka_broker =  os.getenv("BROKER_kafka", cf.get('BROKER','kafka')).strip()
+KAFKA_BROKER_URL = kafka_broker.split(',')
 
-celery_broker =  os.getenv("BROKER_celery", cf.get('BROKER','celery')).strip()
-faust_broker =  os.getenv("BROKER_faust", cf.get('BROKER','faust')).strip()
-
-#celery
-CELERY_BROKER_URL = celery_broker
-
- 
 #faust
+faust_broker =  os.getenv("BROKER_faust", cf.get('BROKER','faust')).strip()
 FAUST_BROKER_URL = faust_broker.split(',')
 FAUST_STORE_URL = 'rocksdb://'
+
+
+#celery
+celery_broker =  os.getenv("BROKER_celery", cf.get('BROKER','celery')).strip()
+faust_broker =  os.getenv("BROKER_faust", cf.get('BROKER','faust')).strip()
+CELERY_BROKER_URL = celery_broker
 
 try:conf_products = os.getenv("INSTALLED_APPS_products", cf.get('INSTALLED_APPS','products'))
 except:conf_products=''

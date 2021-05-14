@@ -21,3 +21,4 @@ root=
 [BROKER]
 celery=redis://localhost:6379/
 faust=kafka://localhost:9092
+kafka='localhost:9092'
