@@ -35,23 +35,6 @@ from .models import *
 
 lgr = logging.getLogger('secondary.finance.paygate')
 
-class RegexpMatches(Func):
-	function = 'REGEXP_MATCHES'
-	def __init__(self, source, regexp, flags=None, group=None, output_field=None, **extra):
-		template = '%(function)s(%(expressions)s)'
-		if group:
-			if not hasattr(regexp, 'resolve_expression'):
-				regexp = Value(regexp)
-			template = '({})[{}]'.format(template, str(group))
-		expressions = (source, regexp)
-		if flags:
-			if not hasattr(flags, 'resolve_expression'):
-				flags = Value(flags)
-			expressions += (flags,)
-		self.template = template
-		super().__init__(*expressions, output_field=output_field, **extra)
-
-
 class DateTrunc(Func):
 	function = 'DATE_TRUNC'
 	def __init__(self, trunc_type, field_expression, **extra): 
@@ -77,11 +60,14 @@ class List:
 
 			#.annotate(send_date=Cast(DateTrunc('minute','scheduled_send'), CharField(max_length=32)))\
 			#reference_lower=Lower('reference')
+			#escaped_save_name=Func(F('some_field'),Value('[\*\"\/\\\[\]\:\;\|\=\>\<\,\|]'), Value('-'), Value('g'), function='regexp_replace',)
+			#escaped_save_name=Func(F('reference'),Value('[^a-zA-Z]'), Value(''), Value('g'), function='regexp_replace',)
 			incoming_list = Incoming.objects.using('read').filter(remittance_product__institution=gateway_profile.institution,\
 							remittance_product__institution__gateway=gateway_profile.gateway, date_created__gte=timezone.now()-timezone.timedelta(days=7))\
 							.annotate(received_date=Cast(DateTrunc('day','date_created'), CharField(max_length=32)))\
 							.values('received_date')\
-							.annotate(reference_lower=RegexpMatches('reference',r'[^a-zA-Z]'), total_count=Count('received_date'), total_amount=Sum('amount')).filter(total_count__gte=5)\
+							.annotate(reference_lower=Lower(Func(F('reference'),Value('[^a-zA-Z]'), Value(''), Value('g'), function='regexp_replace',)), 
+							total_count=Count('received_date'), total_amount=Sum('amount')).filter(total_count__gte=5)\
 							.values_list('received_date','remittance_product__ext_product_id','reference_lower','remittance_product__name','total_count','total_amount')\
 							.order_by('-received_date')
 
