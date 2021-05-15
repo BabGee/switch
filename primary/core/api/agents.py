@@ -95,7 +95,7 @@ transformed_api_topic = app.topic('primary.core.upc.api.transformedinterface', v
 @app.agent(api_topic)
 async def _interface(_requests):
 	async for _request in _requests:
-		request = await sync_to_async(request_factory.post, thread_sensitive=False)(f'/api/{_request.service_name}/', json.dumps(_request.payload), content_type='application/json')
+		request = await sync_to_async(request_factory.post)(f'/api/{_request.service_name}/', json.dumps(_request.payload), content_type='application/json')
 		response = await sync_to_async(Interface().interface)(request, _request.service_name)
 		transformed = TransformedInterface(
 					    request=_request.payload,
@@ -105,6 +105,6 @@ async def _interface(_requests):
 					)
 
 		await transformed_api_topic.send(value=transformed)   
-		lgr.info(f'Interface Request: {_request.service_name}')
+		#lgr.info(f'Interface Request: {_request.service_name}')
 
 
