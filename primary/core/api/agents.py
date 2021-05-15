@@ -101,7 +101,8 @@ async def _interface(_requests):
 		transformed = TransformedInterface(
 					    request=_request.payload,
 					    service_name=_request.service_name,
-					    response=json.loads(response.content)
+					    response=response.content
+					    #response=json.loads(response.content)
 					)
 
 		await transformed_api_topic.send(value=transformed)   
