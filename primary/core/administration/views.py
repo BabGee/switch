@@ -28,7 +28,8 @@ class WebService:
 
 	def post_request(self, payload, node, timeout=30):
 		try:
-			if self.validate_url(node):
+			#if self.validate_url(node):
+			if True:
 				jdata = json.dumps(payload)
 
 				#response = urllib2.urlopen(node, jdata, timeout = timeout)
