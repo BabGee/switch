@@ -95,7 +95,7 @@ transformed_api_topic = app.topic('primary.core.upc.api.transformedinterface', v
 @app.agent(api_topic)
 async def _interface(_requests):
 	async for _request in _requests:
-		request = request_factory.post(f'/api/{_request.service_name}/', json.dumps(payload), content_type='application/json')
+		request = request_factory.post(f'/api/{_request.service_name}/', json.dumps(_request.payload), content_type='application/json')
 		response = Interface().interface(request, _request.service_name)
 		transformed = TransformedInterface(
 					    request=_request.payload,
