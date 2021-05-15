@@ -3,7 +3,7 @@ from faust.types import StreamT
 #from primary.core.async.faust import app
 from switch.faust import app
 import requests, json
-
+from .models import *
 from django.db import transaction
 import pandas as pd
 import numpy as np
