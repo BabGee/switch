@@ -4,6 +4,7 @@ from faust.types import StreamT
 from switch.faust import app
 import requests, json
 
+from django.db import transaction
 import pandas as pd
 import numpy as np
 import time
