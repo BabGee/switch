@@ -2847,14 +2847,14 @@ def _send_outbound_sms_messages_list(is_bulk, limit_batch):
 @transaction.atomic
 @single_instance_task(60*10)
 def send_outbound_sms_messages_list():
-	_send_outbound_sms_messages_list(is_bulk=False, limit_batch=300)
+	_send_outbound_sms_messages_list(is_bulk=False, limit_batch=240)
 
 @app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
 #@app.task(ignore_result=True) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
 @transaction.atomic
 @single_instance_task(60*10)
 def bulk_send_outbound_sms_messages_list():
-	_send_outbound_sms_messages_list(is_bulk=True, limit_batch=300)
+	_send_outbound_sms_messages_list(is_bulk=True, limit_batch=240)
 
 
 
@@ -2931,7 +2931,7 @@ def _send_outbound_sms_messages(is_bulk, limit_batch):
 @transaction.atomic
 @single_instance_task(60*10)
 def send_outbound_sms_messages():
-	_send_outbound_sms_messages(is_bulk=False, limit_batch=300)
+	_send_outbound_sms_messages(is_bulk=False, limit_batch=240)
 
 
 @app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
@@ -2939,7 +2939,7 @@ def send_outbound_sms_messages():
 @transaction.atomic
 @single_instance_task(60*10)
 def bulk_send_outbound_sms_messages():
-	_send_outbound_sms_messages(is_bulk=True, limit_batch=300)
+	_send_outbound_sms_messages(is_bulk=True, limit_batch=240)
 
 
 @app.task(ignore_result=True, soft_time_limit=3600) #Ignore results ensure that no results are saved. Saved results on damons would cause deadlocks and fillup of disk
