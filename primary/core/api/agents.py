@@ -105,7 +105,7 @@ async def _interface(_requests):
 					    #response=json.loads(response.content)
 					)
 
-		await transformed_api_topic.send(transformed)   
+		await transformed_api_topic.send(value=transformed)   
 		lgr.info(f'Interface Request: {_request.service_name}')
 
 '''
