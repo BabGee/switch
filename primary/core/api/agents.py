@@ -99,9 +99,9 @@ async def _interface(_requests):
 		response = Interface().interface(request, _request.service_name)
 		lgr.info('Response: %s' % response)
 		transformed = TransformedInterface(
-					    request=_request.json(),
+					    request=_request.payload,
 					    service_name=_request.service_name,
-					    response=response
+					    response=response.content
 					)
 
 		await transformed_api_topic.send(value=transformed)   
