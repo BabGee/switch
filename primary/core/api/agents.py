@@ -97,8 +97,9 @@ async def _interface(_requests):
 	async for _request in _requests:
 		request = request_factory.post(f'/api/{_request.service_name}/', json.dumps(_request.payload), content_type='application/json')
 		response = Interface().interface(request, _request.service_name)
+		lgr.info('Response: %s' % response)
 		transformed = TransformedInterface(
-					    request=_request.payload,
+					    request=_request.json(),
 					    service_name=_request.service_name,
 					    response=response
 					)
