@@ -107,11 +107,11 @@ async def _interface(_requests):
 
 		await transformed_api_topic.send(value=transformed)   
 		lgr.info(f'Interface Request: {_request.service_name}')
-
+'''
 @app.agent(transformed_api_topic)
 async def _interface(transformed_requests):
 	async for transformed_request in transformed_requests:
 		lgr.info('Request: %s | Service: %s | Response: %s' % (transformed_request.request, transformed_request.service_name, transformed_request.response))
-
+'''
 
 
