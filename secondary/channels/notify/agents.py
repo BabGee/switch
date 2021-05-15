@@ -70,8 +70,8 @@ async def example_sender_task(app):
     count+=1
 
 
-
-
+is_bulk = False
+limit_batch = 100
 
 #@app.task
 @app.timer(interval=10)
