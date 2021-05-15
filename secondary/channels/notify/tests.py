@@ -16,7 +16,7 @@ class InboundTests(TestCase):
 		#time = timezone.now() + datetime.timedelta(days=30)
 		#future_question = Question(pub_date=time)
 		#self.assertIs(future_question.was_published_recently(), False)
-		contact = Contact.objects.get(id=2247)
+		contact = Contact.objects.filter(gateway_profile__id=2247, product__name='TEST NOTIFICATION').first()
 		#Append by adding
 		_recipient = ['254717103598']*3
 		obj_list = [Outbound(contact=contact, message='Test', scheduled_send=timezone.now(),state=OutBoundState.objects.get(name='CREATED'), recipient=r, sends=0) for r in _recipient]
