@@ -65,7 +65,7 @@ async def example_sender_task(app):
     elapsed = "{0:.2f}".format(count)
     records = random.randint(1,1000) 
     await hello.send(
-        value=Greeting(from_name='Faust Task', to_name='you', count=float(elapsed), records=records),
+        value=Greeting(from_name='Switch Notify Task', to_name='you', count=float(elapsed), records=records),
     )
     count+=1
 
