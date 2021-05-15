@@ -50,7 +50,7 @@ class Greeting(faust.Record):
     records: int
 
 
-topic = app.topic('hello-topic', value_type=Greeting)
+topic = app.topic('switch-hello-topic', value_type=Greeting)
 
 @app.agent(topic)
 async def hello(greetings):
