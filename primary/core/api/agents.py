@@ -96,7 +96,7 @@ transformed_api_topic = app.topic('primary.core.upc.api.transformedinterface', v
 async def _interface(_requests):
 	async for _request in _requests:
 		request = await sync_to_async(request_factory.post, thread_sensitive=False)(f'/api/{_request.service_name}/', json.dumps(_request.payload), content_type='application/json')
-		response = await sync_to_async(Interface().interface, thread_sensitive=False)(request, _request.service_name)
+		response = await sync_to_async(Interface().interface)(request, _request.service_name)
 		transformed = TransformedInterface(
 					    request=_request.payload,
 					    service_name=_request.service_name,
