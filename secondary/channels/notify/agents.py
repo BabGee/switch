@@ -96,7 +96,7 @@ async def _send_outbound_sms_messages_list(app):
                                                 Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
                                                 |Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60))\
                                                 |Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60)),\
-                                                Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related('contact').all
+                                                Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk),Q(contact__product__notification__endpoint__name='TEST NOTIFICATION')).order_by('contact__product__priority').select_related('contact').all
 
 			#orig_outbound = await outbound_query()
 			orig_outbound = await sync_to_async(outbound_query, thread_sensitive=True)()
