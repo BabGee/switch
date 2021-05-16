@@ -49,7 +49,7 @@ HTTPConnection.debuglevel = 1
 s = time.perf_counter()
 
 
-
+'''
 class OutBoundMessage(faust.Record):
     from_name: str
     to_name: str
@@ -58,7 +58,7 @@ class OutBoundMessage(faust.Record):
 {'product': '433', 'batch': '10', 'kmp_service_id': 'TEST', 'kmp_code': 'TEST', 'kmp_message': 'Test', 'kmp_spid': 'TEST', 'kmp_password': 'TEST', 'node_account_id': 'TEST', 'node_password': 'TEST', 'node_username': 'TEST', 'contact_info': '', 'node_url': 'integrator.apps.test.notification', 'kmp_recipients': ['254725765441', '254717103598']} 
 
 topic = app.topic('switch.channels.notify.whatsapp_message', value_type=Greeting)
-
+'''
 
 async def send_outbound_message(messages):
 	try:
