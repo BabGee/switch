@@ -13,6 +13,7 @@ import random
 import logging
 import aiohttp
 from http.client import HTTPConnection  # py3
+from itertools import islice
 
 lgr = logging.getLogger(__name__)
 lgr.setLevel(logging.DEBUG)
