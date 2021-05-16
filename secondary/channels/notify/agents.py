@@ -7,7 +7,7 @@ import requests, json
 
 from django.db import transaction
 from .models import *
-from .service import send_outbound_message
+#from .service import send_outbound_message
 from django.db.models import Q,F
 
 import pandas as pd
