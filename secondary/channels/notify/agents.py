@@ -104,7 +104,7 @@ async def send_outbound_message(messages):
 			lgr.info('MULTI: %s \n %s' % (group_df.shape,group_df.head()))
 			if batch_size>1 and len(group_df.shape)>1 and group_df.shape[0]>1:
 				objs = recipients
-				lgr.info('Got Here (multi): %s' % objs)
+				lgr.info('Got Here (multi): %s' % type(objs))
 				start = 0
 				while True:
 					batch = list(islice(objs, start, start+batch_size))
