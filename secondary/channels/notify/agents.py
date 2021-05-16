@@ -57,8 +57,11 @@ class OutBoundMessage(faust.Record):
     records: int
 {'product': '433', 'batch': '10', 'kmp_service_id': 'TEST', 'kmp_code': 'TEST', 'kmp_message': 'Test', 'kmp_spid': 'TEST', 'kmp_password': 'TEST', 'node_account_id': 'TEST', 'node_password': 'TEST', 'node_username': 'TEST', 'contact_info': '', 'node_url': 'integrator.apps.test.notification', 'kmp_recipients': ['254725765441', '254717103598']} 
 
+{'product_id': '433', 'batch': '10', 'ext_service_id': 'TEST', 'code': 'TEST', 'message': 'Test', 'account_id': 'TEST', 'endpoint_password': 'TEST', 'endpoint_username': 'TEST', 'subscription_details': '', 'endpoint_url': 'integrator.apps.test.notification', 'recipients': [(61690123, '254725765441'), (61690124, '254725765441'), (61690125, '254725765441'), (61144994, '254717103598'), (61144995, '254717103598'), (61144996, '254717103598')]}
+
 topic = app.topic('switch.channels.notify.whatsapp_message', value_type=Greeting)
 '''
+class OutBoundMessage(faust.Record):
 
 async def send_outbound_message(messages):
 	try:
@@ -79,7 +82,7 @@ async def send_outbound_message(messages):
 	
 		df = pd.DataFrame({'outbound_id':messages[:,0], 'recipient':messages[:,1], 'product_id':messages[:,2], 'batch':messages[:,3],'ext_outbound_id':messages[:,4],'ext_service_id':messages[:,5],'code':messages[:,6],\
 			'message':messages[:,7],'account_id':messages[:,8],'endpoint_password':messages[:,9],'endpoint_username':messages[:,10],\
-			'endpoint_api_key':messages[:,11],'subscription_details':messages[:,12],'linkid':messages[:,13],'endpoint_url':messages[:,14]})
+			'endpoint_api_key':messages[:,11],'subscription_details':messages[:,12],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'channel':messages[:,15]})
 
 		lgr.info(f'3:Elapsed {elapsed}')
 		lgr.info('DF: %s' % df)
@@ -105,7 +108,7 @@ async def send_outbound_message(messages):
 			lgr.info('MULTI: %s \n %s' % (group_df.shape,group_df.head()))
 			if batch_size>1 and len(group_df.shape)>1 and group_df.shape[0]>1:
 				objs = recipients
-				lgr.info('Got Here (multi): %s' % type(objs))
+				lgr.info(f'Got Here (multi): {objs}')
 				start = 0
 				while True:
 					batch = list(islice(objs, start, start+batch_size))
@@ -114,12 +117,12 @@ async def send_outbound_message(messages):
 					payload['recipients'] = batch
 					lgr.info(payload)
 			elif len(group_df.shape)>1 :
-				lgr.info('Got Here (list of singles): %s' % recipients)
+				lgr.info(f'Got Here (list of singles): {recipients}')
 				for d in recipients:
 					payload['recipients'] = [d]       
 					lgr.info(payload)
 			else:
-				lgr.info('Got Here (single): %s' % recipients)
+				lgr.info(f'Got Here (single): {recipients}')
 				payload['recipients'] = recipients
 				lgr.info(payload)
 			#Control Speeds
@@ -159,7 +162,7 @@ async def send_outbound_messages(app):
 			outbound = orig_outbound()[:limit_batch].values_list('id','recipient','contact__product__id','contact__product__notification__endpoint__batch','ext_outbound_id',\
                                                 'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',\
                                                 'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',\
-                                                'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url')
+                                                'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url','contact__product__notification__code__channel__name')
 
 			lgr.info(f'1:Elapsed {elapsed}')
 			lgr.info('Outbound: %s' % outbound)
