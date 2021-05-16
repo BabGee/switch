@@ -60,7 +60,7 @@ class OutBoundMessage(faust.Record):
 topic = app.topic('switch.channels.notify.whatsapp_message', value_type=Greeting)
 '''
 
-async def send_outbound_message(outbound):
+async def send_outbound_message(messages):
 	try:
 
 		'''
@@ -76,12 +76,6 @@ async def send_outbound_message(outbound):
 			'kmp_message':messages[:,7],'kmp_spid':messages[:,8],'kmp_password':messages[:,9],'node_account_id':messages[:,8],'node_password':messages[:,9],'node_username':messages[:,10],\
 			'node_api_key':messages[:,11],'contact_info':messages[:,12],'linkid':messages[:,13],'node_url':messages[:,14]})
 		'''
-
-		messages=np.asarray(outbound)
-
-		lgr.info(f'2:Elapsed {elapsed}')
-		lgr.info('Messages: %s' % messages)
-
 	
 		df = pd.DataFrame({'outbound_id':messages[:,0], 'recipient':messages[:,1], 'product_id':messages[:,2], 'batch':messages[:,3],'ext_outbound_id':messages[:,4],'ext_service_id':messages[:,5],'code':messages[:,6],\
 			'message':messages[:,7],'account_id':messages[:,8],'endpoint_password':messages[:,9],'endpoint_username':messages[:,10],\
@@ -169,8 +163,10 @@ async def send_outbound_messages(app):
 
 			lgr.info(f'1:Elapsed {elapsed}')
 			lgr.info('Outbound: %s' % outbound)
-			if outbound.exists():
-				lgr.info('OutBound IDs: %s' % outbound.values_list('id', flat=True))
+			if len(outbound):
+				messages=np.asarray(outbound)
+				lgr.info(f'2:Elapsed {elapsed}')
+				lgr.info('Messages: %s' % messages)
 
 				##Update State
 				#processing = orig_outbound().filter(id__in=messages[:,0].tolist()).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
