@@ -59,6 +59,8 @@ class OutBoundMessage(faust.Record):
 
 {'product_id': '433', 'batch': '10', 'ext_service_id': 'TEST', 'code': 'TEST', 'message': 'Test', 'account_id': 'TEST', 'endpoint_password': 'TEST', 'endpoint_username': 'TEST', 'subscription_details': '', 'endpoint_url': 'integrator.apps.test.notification', 'recipients': [(61690123, '254725765441'), (61690124, '254725765441'), (61690125, '254725765441'), (61144994, '254717103598'), (61144995, '254717103598'), (61144996, '254717103598')]}
 
+{'product_id': '433', 'batch': '10', 'ext_service_id': 'TEST', 'code': 'TEST', 'message': 'Test', 'account_id': 'TEST', 'endpoint_password': 'TEST', 'endpoint_username': 'TEST', 'subscription_details': '', 'endpoint_url': 'integrator.apps.test.notification', 'channel': 'WHATSAPP API', 'recipients': [(61690123, '254725765441'), (61690124, '254725765441'), (61690125, '254725765441'), (61144994, '254717103598'), (61144995, '254717103598'), (61144996, '254717103598')]}
+
 topic = app.topic('switch.channels.notify.whatsapp_message', value_type=Greeting)
 '''
 
@@ -115,18 +117,23 @@ async def send_outbound_message(messages):
 					if not batch: break
 					payload['recipients'] = batch
 					lgr.info(payload)
+					app.topic(payload['endpoint_url']).send(value=payload)
 			elif len(group_df.shape)>1 :
 				lgr.info(f'Got Here (list of singles): {recipients}')
 				for d in recipients:
 					payload['recipients'] = [d]       
 					lgr.info(payload)
+					app.topic(payload['endpoint_url']).send(value=payload)
 			else:
 				lgr.info(f'Got Here (single): {recipients}')
 				payload['recipients'] = recipients
 				lgr.info(payload)
+				app.topic(payload['endpoint_url']).send(value=payload)
+
 			#Control Speeds
 			#await asyncio.sleep(0.10)
-
+			lgr.info(f'4:Elapsed {elapsed}')
+			lgr.info(f'Sent Message to topic {payload["endpoint_url"]}')
 	except Exception as e: lgr.error(f'Send Outbound Message Error: {e}')
 
 is_bulk = False
