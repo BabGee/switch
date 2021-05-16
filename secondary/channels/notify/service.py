@@ -2,7 +2,6 @@ import requests, json
 
 from django.db import transaction
 from .models import *
-from .service import *
 from django.db.models import Q,F
 
 import pandas as pd
@@ -52,6 +51,31 @@ async def send_outbound_message(messages):
 			payload = dict()    
 			for c in cols: payload[c] = str(group_df[c].unique()[0])
 			lgr.info('MULTI: %s \n %s' % (group_df.shape,group_df.head()))
+			if batch_size>1 and len(group_df.shape)>1 and group_df.shape[0]>1:
+				objs = kmp_recipients
+				lgr.info('Got Here (multi): %s' % objs)
+				start = 0
+				while True:
+					batch = list(islice(objs, start, start+batch_size))
+					start+=batch_size
+					if not batch: break
+					payload['kmp_recipients'] = batch
+					lgr.info(payload)
+					#if is_bulk: tasks.append(bulk_send_outbound_batch_list.s(payload))
+					#else: tasks.append(send_outbound_batch_list.s(payload))
+			elif len(group_df.shape)>1 :
+				lgr.info('Got Here (list of singles): %s' % kmp_recipients)
+				for d in kmp_recipients:
+					payload['kmp_recipients'] = [d]       
+					lgr.info(payload)
+					#if is_bulk: tasks.append(bulk_send_outbound_list.s(payload))
+					#else: tasks.append(send_outbound_list.s(payload))
+			else:
+				lgr.info('Got Here (single): %s' % kmp_recipients)
+				payload['kmp_recipients'] = kmp_recipients
+				lgr.info(payload)
+				#if is_bulk: tasks.append(bulk_send_outbound_list.s(payload))
+				#else: tasks.append(send_outbound_list.s(payload))
 
 
 		'''
