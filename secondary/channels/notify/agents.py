@@ -89,6 +89,7 @@ async def _send_outbound_sms_messages_list(app):
 		elapsed = "{0:.2f}".format(count)
 		lgr.info(f'0:Elapsed {elapsed}')
 		with transaction.atomic():
+			'''
 			def outbound_query():        
 				return Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='WHATSAPP API'),\
                                                 Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),contact__product__trading_box__close_time__gte=timezone.localtime().time())),\
@@ -97,6 +98,22 @@ async def _send_outbound_sms_messages_list(app):
                                                 |Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60))\
                                                 |Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60)),\
                                                 Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related('contact').all
+
+			#orig_outbound = await outbound_query()
+			orig_outbound = await sync_to_async(outbound_query, thread_sensitive=True)()
+			'''
+
+			def outbound_query():        
+				return Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='WHATSAPP API'),\
+                                                Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),contact__product__trading_box__close_time__gte=timezone.localtime().time())),\
+                                                ~Q(recipient=None),~Q(recipient=''),~Q(contact__product__notification__endpoint__url=None),~Q(contact__product__notification__endpoint__url=''),\
+                                                Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
+                                                |Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60))\
+                                                |Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60)),\
+                                                Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related('id','recipient','contact__product__id',
+						'contact__product__notification__endpoint__batch','ext_outbound_id','contact__product__notification__ext_service_id','contact__product__notification__code__code',
+						'message','contact__product__notification__endpoint__account_id','contact__product__notification__endpoint__password','contact__product__notification__endpoint__username',
+						'contact__product__notification__endpoint__api_key','contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url').all
 
 			#orig_outbound = await outbound_query()
 			orig_outbound = await sync_to_async(outbound_query, thread_sensitive=True)()
