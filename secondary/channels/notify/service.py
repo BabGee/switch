@@ -28,8 +28,15 @@ lgr.addHandler(ch)
 HTTPConnection.debuglevel = 1
 
 
+s = time.perf_counter()
+
+
 async def send_outbound_message(messages):
 	try:
+
+
+		count = time.perf_counter() - s
+		elapsed = "{0:.2f}".format(count)
 		df = pd.DataFrame({'kmp_recipients':messages[:,1], 'product':messages[:,2], 'batch':messages[:,3],'kmp_correlator':messages[:,4],'kmp_service_id':messages[:,5],'kmp_code':messages[:,6],\
 			'kmp_message':messages[:,7],'kmp_spid':messages[:,8],'kmp_password':messages[:,9],'node_account_id':messages[:,8],'node_password':messages[:,9],'node_username':messages[:,10],\
 			'node_api_key':messages[:,11],'contact_info':messages[:,12],'linkid':messages[:,13],'node_url':messages[:,14]})
