@@ -75,96 +75,39 @@ async def example_sender_task(app):
     count+=1
 
 
-is_bulk = False
-limit_batch = 100
 
-#@app.task
-@app.timer(interval=10)
-#@transaction.atomic
-async def _send_outbound_sms_messages_list(app):
+
+
+
+
+async def send_outbound_message(messages):
 	try:
-		lgr.info(f'{app}')
+		df = pd.DataFrame({'kmp_recipients':messages[:,1], 'product':messages[:,2], 'batch':messages[:,3],'kmp_correlator':messages[:,4],'kmp_service_id':messages[:,5],'kmp_code':messages[:,6],\
+			'kmp_message':messages[:,7],'kmp_spid':messages[:,8],'kmp_password':messages[:,9],'node_account_id':messages[:,8],'node_password':messages[:,9],'node_username':messages[:,10],\
+			'node_api_key':messages[:,11],'contact_info':messages[:,12],'linkid':messages[:,13],'node_url':messages[:,14]})
 
-		count = time.perf_counter() - s
-		elapsed = "{0:.2f}".format(count)
-		lgr.info(f'0:Elapsed {elapsed}')
-		with transaction.atomic():
-			'''
-			def outbound_query():        
-				return Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='WHATSAPP API'),\
-                                                Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),contact__product__trading_box__close_time__gte=timezone.localtime().time())),\
-                                                ~Q(recipient=None),~Q(recipient=''),~Q(contact__product__notification__endpoint__url=None),~Q(contact__product__notification__endpoint__url=''),\
-                                                Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
-                                                |Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60))\
-                                                |Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60)),\
-                                                Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related('contact').all
+		lgr.info(f'3:Elapsed {elapsed}')
+		lgr.info('DF: %s' % df)
+		df['batch'] = pd.to_numeric(df['batch'])
+		df = df.dropna(axis='columns',how='all')
+		cols = df.columns.tolist()
+		#df.set_index(cols, inplace=True)
+		#df = df.sort_index()
+		cols.remove('kmp_recipients')
+		grouped_df = df.groupby(cols)
+		lgr.info('Grouped DF: %s' % grouped_df)
 
-			#orig_outbound = await outbound_query()
-			orig_outbound = await sync_to_async(outbound_query, thread_sensitive=True)()
 
-			def outbound_query():        
-				return Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='WHATSAPP API'),\
-                                                Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),contact__product__trading_box__close_time__gte=timezone.localtime().time())),\
-                                                ~Q(recipient=None),~Q(recipient=''),~Q(contact__product__notification__endpoint__url=None),~Q(contact__product__notification__endpoint__url=''),\
-                                                Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
-                                                |Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60))\
-                                                |Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60)),\
-                                                Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related('contact','state','template').all
-			'''
+		tasks = []
+		for name,group_df in grouped_df:
+			batch_size = group_df['batch'].unique()[0]
+			kmp_recipients = group_df['kmp_recipients'].unique().tolist()
+			payload = dict()    
+			for c in cols: payload[c] = str(group_df[c].unique()[0])
+			lgr.info('MULTI: %s \n %s' % (group_df.shape,group_df.head()))
 
-			#.order_by('contact__product__priority').select_related('contact','template','state').all
-			def outbound_query():        
-				return Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='WHATSAPP API'),~Q(recipient=None),
-					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk),
-					Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),
-					contact__product__trading_box__close_time__gte=timezone.localtime().time())),
-					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
-					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60))\
-					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60)))\
-					.select_related('contact','template','state').all
 
-			#orig_outbound = await outbound_query()
-			orig_outbound = await sync_to_async(outbound_query, thread_sensitive=True)()
-
-			lgr.info('Orig Outbound: %s' % orig_outbound)
-
-			outbound = orig_outbound()[:limit_batch].values_list('id','recipient','contact__product__id','contact__product__notification__endpoint__batch','ext_outbound_id',\
-                                                'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',\
-                                                'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',\
-                                                'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url')
-
-			lgr.info(f'1:Elapsed {elapsed}')
-			lgr.info('Outbound: %s' % outbound)
-			if len(outbound):
-				messages=np.asarray(outbound)
-
-				lgr.info(f'2:Elapsed {elapsed}')
-				lgr.info('Messages: %s' % messages)
-
-				##Update State
-				#processing = orig_outbound().filter(id__in=messages[:,0].tolist()).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
-
-				df = pd.DataFrame({'kmp_recipients':messages[:,1], 'product':messages[:,2], 'batch':messages[:,3],'kmp_correlator':messages[:,4],'kmp_service_id':messages[:,5],'kmp_code':messages[:,6],\
-                                	'kmp_message':messages[:,7],'kmp_spid':messages[:,8],'kmp_password':messages[:,9],'node_account_id':messages[:,8],'node_password':messages[:,9],'node_username':messages[:,10],\
-	                                'node_api_key':messages[:,11],'contact_info':messages[:,12],'linkid':messages[:,13],'node_url':messages[:,14]})
-
-				lgr.info(f'3:Elapsed {elapsed}')
-				lgr.info('DF: %s' % df)
-				df['batch'] = pd.to_numeric(df['batch'])
-				df = df.dropna(axis='columns',how='all')
-				cols = df.columns.tolist()
-				#df.set_index(cols, inplace=True)
-				#df = df.sort_index()
-				cols.remove('kmp_recipients')
-				grouped_df = df.groupby(cols)
-				lgr.info('Grouped DF: %s' % grouped_df)
-				lgr.info('Grouped DF List Series: %s' % grouped_df.apply(list))
-				grouped_df_list = grouped_df.apply(list).tolist()
-				lgr.info('Grouped DF List: %s' % grouped_df_list)
-				async for group in grouped_df_list:
-					lgr.info('Group: %s' % group)
-
-			'''
+		'''
                 if len(outbound):
                     messages=np.asarray(outbound)
 
@@ -225,11 +168,11 @@ async def _send_outbound_sms_messages_list(app):
 
                     lgr.info('Tasks: %s' % tasks)
 
-			'''
+		'''
 			#Control Speeds
 			#await asyncio.sleep(0.10)
 
-			'''
+		'''
 
                         tasks = []
                         for name,group_df in grouped_df:
@@ -268,8 +211,66 @@ async def _send_outbound_sms_messages_list(app):
 
                         chunks, chunk_size = len(tasks), 100
                         sms_tasks= [ group(*tasks[i:i+chunk_size])() for i in range(0, chunks, chunk_size) ]
-			'''
-
+		'''
 	except Exception as e: lgr.error(f'Send Outbound Message Error: {e}')
+
+
+
+
+
+
+
+
+
+
+is_bulk = False
+limit_batch = 100
+
+#@app.task
+@app.timer(interval=10)
+#@transaction.atomic
+async def send_outbound_messages(app):
+	try:
+		lgr.info(f'{app}')
+
+		count = time.perf_counter() - s
+		elapsed = "{0:.2f}".format(count)
+		lgr.info(f'0:Elapsed {elapsed}')
+		with transaction.atomic():
+			#.order_by('contact__product__priority').select_related('contact','template','state').all
+			def outbound_query():        
+				return Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='WHATSAPP API'),~Q(recipient=None),
+					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk),
+					Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),
+					contact__product__trading_box__close_time__gte=timezone.localtime().time())),
+					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
+					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60))\
+					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60)))\
+					.select_related('contact','template','state').all
+
+			#orig_outbound = await outbound_query()
+			orig_outbound = await sync_to_async(outbound_query, thread_sensitive=True)()
+
+			lgr.info('Orig Outbound: %s' % orig_outbound)
+
+			outbound = orig_outbound()[:limit_batch].values_list('id','recipient','contact__product__id','contact__product__notification__endpoint__batch','ext_outbound_id',\
+                                                'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',\
+                                                'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',\
+                                                'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url')
+
+			lgr.info(f'1:Elapsed {elapsed}')
+			lgr.info('Outbound: %s' % outbound)
+			if len(outbound):
+				messages=np.asarray(outbound)
+
+				lgr.info(f'2:Elapsed {elapsed}')
+				lgr.info('Messages: %s' % messages)
+
+				##Update State
+				#processing = orig_outbound().filter(id__in=messages[:,0].tolist()).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
+
+				await sync_to_async(send_outbound_message)(messages)
+
+	except Exception as e: lgr.error(f'Send Outbound Messages Error: {e}')
 
 
