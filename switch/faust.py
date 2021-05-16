@@ -29,7 +29,6 @@ django.setup()
 #Discover agents modules only
 module_name = 'agents'
 
-'''
 #app.discover('secondary.channels.notify')
 def autodiscover(django_apps):
 	for django_app in django_apps:
@@ -42,7 +41,7 @@ def autodiscover(django_apps):
 			pass
 
 autodiscover(settings.INSTALLED_APPS)
-'''
+
 '''
 def main():
     app.main()
