@@ -158,7 +158,7 @@ async def _send_outbound_sms_messages_list(app):
 				cols.remove('kmp_recipients')
 				grouped_df = df.groupby(cols)
 				lgr.info('Grouped DF: %s' % grouped_df)
-				lgr.info('Grouped DF List: %s' % grouped_df.tolist())
+				lgr.info('Grouped DF List: %s' % grouped_df.apply(list))
 
 			'''
                 if len(outbound):
