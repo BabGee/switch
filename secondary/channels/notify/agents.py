@@ -85,8 +85,8 @@ async def send_outbound_message(messages):
 			'message':messages[:,7],'account_id':messages[:,8],'endpoint_password':messages[:,9],'endpoint_username':messages[:,10],\
 			'endpoint_api_key':messages[:,11],'subscription_details':messages[:,12],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'channel':messages[:,15]})
 
-		lgr.info(f'3:Elapsed {elapsed}')
-		lgr.info('DF: %s' % df)
+		#lgr.info(f'3:Elapsed {elapsed}')
+		#lgr.info('DF: %s' % df)
 		df['batch'] = pd.to_numeric(df['batch'])
 		df = df.dropna(axis='columns',how='all')
 		cols = df.columns.tolist()
@@ -95,7 +95,7 @@ async def send_outbound_message(messages):
 		cols.remove('outbound_id')
 		cols.remove('recipient')
 		grouped_df = df.groupby(cols)
-		lgr.info('Grouped DF: %s' % grouped_df)
+		#lgr.info('Grouped DF: %s' % grouped_df)
 
 
 		tasks = []
@@ -106,7 +106,7 @@ async def send_outbound_message(messages):
 			recipients = tuple(zip(outbound_id_list, recipient_list))
 			payload = dict()    
 			for c in cols: payload[c] = str(group_df[c].unique()[0])
-			lgr.info('MULTI: %s \n %s' % (group_df.shape,group_df.head()))
+			#lgr.info('MULTI: %s \n %s' % (group_df.shape,group_df.head()))
 			if batch_size>1 and len(group_df.shape)>1 and group_df.shape[0]>1:
 				objs = recipients
 				lgr.info(f'Got Here (multi): {objs}')
@@ -132,7 +132,7 @@ async def send_outbound_message(messages):
 
 			#Control Speeds
 			#await asyncio.sleep(0.10)
-			lgr.info(f'4:Elapsed {elapsed}')
+			#lgr.info(f'4:Elapsed {elapsed}')
 			lgr.info(f'Sent Message to topic {payload["endpoint_url"]}')
 	except Exception as e: lgr.error(f'Send Outbound Message Error: {e}')
 
@@ -170,12 +170,12 @@ async def send_outbound_messages(app):
                                                 'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',\
                                                 'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url','contact__product__notification__code__channel__name')
 
-			lgr.info(f'1:Elapsed {elapsed}')
-			lgr.info('Outbound: %s' % outbound)
+			#lgr.info(f'1:Elapsed {elapsed}')
+			#lgr.info('Outbound: %s' % outbound)
 			if len(outbound):
 				messages=np.asarray(outbound)
-				lgr.info(f'2:Elapsed {elapsed}')
-				lgr.info('Messages: %s' % messages)
+				#lgr.info(f'2:Elapsed {elapsed}')
+				#lgr.info('Messages: %s' % messages)
 
 				##Update State
 				#processing = orig_outbound().filter(id__in=messages[:,0].tolist()).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
