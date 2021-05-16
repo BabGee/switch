@@ -135,6 +135,30 @@ async def _send_outbound_sms_messages_list(app):
 
 			lgr.info(f'1:Elapsed {elapsed}')
 			lgr.info('Outbound: %s' % outbound)
+			if len(outbound):
+				messages=np.asarray(outbound)
+
+				lgr.info(f'2:Elapsed {elapsed}')
+				lgr.info('Messages: %s' % messages)
+
+				##Update State
+				#processing = orig_outbound().filter(id__in=messages[:,0].tolist()).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
+
+				df = pd.DataFrame({'kmp_recipients':messages[:,1], 'product':messages[:,2], 'batch':messages[:,3],'kmp_correlator':messages[:,4],'kmp_service_id':messages[:,5],'kmp_code':messages[:,6],\
+                                	'kmp_message':messages[:,7],'kmp_spid':messages[:,8],'kmp_password':messages[:,9],'node_account_id':messages[:,8],'node_password':messages[:,9],'node_username':messages[:,10],\
+	                                'node_api_key':messages[:,11],'contact_info':messages[:,12],'linkid':messages[:,13],'node_url':messages[:,14]})
+
+				lgr.info(f'3:Elapsed {elapsed}')
+				lgr.info('DF: %s' % df)
+				df['batch'] = pd.to_numeric(df['batch'])
+				df = df.dropna(axis='columns',how='all')
+				cols = df.columns.tolist()
+				#df.set_index(cols, inplace=True)
+				#df = df.sort_index()
+				cols.remove('kmp_recipients')
+				grouped_df = df.groupby(cols)
+				lgr.info('Grouped DF: %s' % grouped_df)
+
 			'''
                 if len(outbound):
                     messages=np.asarray(outbound)
