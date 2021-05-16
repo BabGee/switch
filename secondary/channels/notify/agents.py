@@ -117,18 +117,18 @@ async def send_outbound_message(messages):
 					if not batch: break
 					payload['recipients'] = batch
 					lgr.info(payload)
-					app.topic(payload['endpoint_url']).send(value=payload)
+					await app.topic(payload['endpoint_url']).send(value=payload)
 			elif len(group_df.shape)>1 :
 				lgr.info(f'Got Here (list of singles): {recipients}')
 				for d in recipients:
 					payload['recipients'] = [d]       
 					lgr.info(payload)
-					app.topic(payload['endpoint_url']).send(value=payload)
+					await app.topic(payload['endpoint_url']).send(value=payload)
 			else:
 				lgr.info(f'Got Here (single): {recipients}')
 				payload['recipients'] = recipients
 				lgr.info(payload)
-				app.topic(payload['endpoint_url']).send(value=payload)
+				await app.topic(payload['endpoint_url']).send(value=payload)
 
 			#Control Speeds
 			#await asyncio.sleep(0.10)
