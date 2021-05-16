@@ -171,7 +171,6 @@ async def send_outbound_messages(app):
 				##Update State
 				#processing = orig_outbound().filter(id__in=messages[:,0].tolist()).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
 
-				from .service import send_outbound_message
 				response = await send_outbound_message(messages)
 
 	except Exception as e: lgr.error(f'Send Outbound Messages Error: {e}')
