@@ -110,10 +110,8 @@ async def _send_outbound_sms_messages_list(app):
                                                 Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
                                                 |Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60))\
                                                 |Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60)),\
-                                                Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related('id','recipient','contact__product__id',
-						'contact__product__notification__endpoint__batch','ext_outbound_id','contact__product__notification__ext_service_id','contact__product__notification__code__code',
-						'message','contact__product__notification__endpoint__account_id','contact__product__notification__endpoint__password','contact__product__notification__endpoint__username',
-						'contact__product__notification__endpoint__api_key','contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url').all
+                                                Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk)).order_by('contact__product__priority').select_related('contact','state','template',
+						'contact__product','contact__subscription','contact__product__notification''contact__product__notification__endpoint','contact__product__notification__code').all
 
 			#orig_outbound = await outbound_query()
 			orig_outbound = await sync_to_async(outbound_query, thread_sensitive=True)()
