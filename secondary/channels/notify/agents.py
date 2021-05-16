@@ -61,7 +61,6 @@ class OutBoundMessage(faust.Record):
 
 topic = app.topic('switch.channels.notify.whatsapp_message', value_type=Greeting)
 '''
-class OutBoundMessage(faust.Record):
 
 async def send_outbound_message(messages):
 	try:
