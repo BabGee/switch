@@ -159,6 +159,9 @@ async def _send_outbound_sms_messages_list(app):
 				grouped_df = df.groupby(cols)
 				lgr.info('Grouped DF: %s' % grouped_df)
 				lgr.info('Grouped DF List: %s' % grouped_df.apply(list))
+				grouped_df_list = grouped_df.apply(list)
+				async for group in grouped_df_list:
+					lgr.info('Group: %s' % group)
 
 			'''
                 if len(outbound):
