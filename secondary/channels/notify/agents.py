@@ -57,19 +57,21 @@ async def sent_messages(messages):
 			
 			elapsed = lambda: time.perf_counter() - s
 
-			lgr.info(f'{elapsed()} RECEIVED Sent Notification {len(message)}: {message}')
+			lgr.info(f'RECEIVED Sent Notification {len(message)}: {message}')
 			message = np.asarray(message)
 			message_id = message[:,0]
 			message_status = message[:,1]
+			message_response = message[:,2]
 
-			def update_sent_outbound(outbound_id, outbound_state):
+			def update_sent_outbound(outbound_id, outbound_state, response):
 				outbound = Outbound.objects.get(id=outbound_id)
 				outbound.state = OutBoundState.objects.get(name=outbound_state)
+				outbound.response = response
 				return outbound
 
-			outbound_list = np.vectorize(update_sent_outbound)(outbound_id=message_id, outbound_state=message_status).tolist()
-			Outbound.objects.bulk_update(outbound_list, ['state'])
-			lgr.info(f'{elapsed()} Outbound List: {outbound_list} | Status: {message_status}')
+			outbound_list = np.vectorize(update_sent_outbound)(outbound_id=message_id, outbound_state=message_status, response=message_response).tolist()
+			Outbound.objects.bulk_update(outbound_list, ['state','response'])
+			lgr.info(f'{elapsed()} Sent Messages Updated')
 
 	except Exception as e: lgr.info(f'Error on Sent Notification: {e}')
 
@@ -81,11 +83,20 @@ async def delivery_status(messages):
 
 			elapsed = lambda: time.perf_counter() - s
 
-			lgr.info(f'{elapsed()} RECEIVED Delivery Status {len(message)}: {message}')
+			lgr.info(f'RECEIVED Delivery Status {len(message)}: {message}')
 			message = np.asarray(message)
 			message_id = message[:,0]
 			message_status = message[:,1]
-			lgr.info(f'{elapsed()} Message: {message_id} | Status: {message_status}')
+
+			def update_sent_outbound(outbound_id, outbound_state):
+				outbound = Outbound.objects.get(id=outbound_id)
+				outbound.state = OutBoundState.objects.get(name=outbound_state)
+				return outbound
+
+			outbound_list = np.vectorize(update_sent_outbound)(outbound_id=message_id, outbound_state=message_status).tolist()
+			Outbound.objects.bulk_update(outbound_list, ['state'])
+			lgr.info(f'{elapsed()} Delivery Status Updated')
+
 	except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
 async def send_outbound_message(messages):
@@ -157,7 +168,6 @@ async def send_outbound_messages(is_bulk=True, limit_batch=100):
 
 		s = time.perf_counter()
 		elapsed = lambda: time.perf_counter() - s
-		lgr.info(f'0:Elapsed {elapsed()}')
 		with transaction.atomic():
 			#.order_by('contact__product__priority').select_related('contact','template','state').all
 			def outbound_query():        
