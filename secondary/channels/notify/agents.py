@@ -59,8 +59,8 @@ async def sent_messages(messages):
 
 			lgr.info(f'{elapsed} RECEIVED Sent Notification {len(message)}: {message}')
 			message = np.asarray(message)
-			message_id = r[:,0]
-			message_status = r[:,1]
+			message_id = message[:,0]
+			message_status = message[:,1]
 			lgr.info(f'{elapsed} Message: {message_id} | Status: {message_status}')
 
 	except Exception as e: lgr.info(f'Error on Sent Notification: {e}')
@@ -75,8 +75,8 @@ async def delivery_status(messages):
 
 			lgr.info(f'{elapsed} RECEIVED Delivery Status {len(message)}: {message}')
 			message = np.asarray(message)
-			message_id = r[:,0]
-			message_status = r[:,1]
+			message_id = message[:,0]
+			message_status = message[:,1]
 			lgr.info(f'{elapsed} Message: {message_id} | Status: {message_status}')
 	except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
