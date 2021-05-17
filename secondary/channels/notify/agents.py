@@ -54,10 +54,10 @@ async def sent_messages(messages):
 	try:
 		async for message in messages.take(300, within=10):
 			s = time.perf_counter()
-			count = time.perf_counter() - s
-			elapsed = "{0:.2f}".format(count)
+			
+			elapsed = lambda: time.perf_counter() - s
 
-			lgr.info(f'{elapsed} RECEIVED Sent Notification {len(message)}: {message}')
+			lgr.info(f'{elapsed()} RECEIVED Sent Notification {len(message)}: {message}')
 			message = np.asarray(message)
 			message_id = message[:,0]
 			message_status = message[:,1]
@@ -69,7 +69,7 @@ async def sent_messages(messages):
 
 			outbound_list = np.vectorize(update_sent_outbound)(outbound_id=message_id, outbound_state=message_status).tolist()
 
-			lgr.info(f'{elapsed} Outbound List: {outbound_list} | Status: {message_status}')
+			lgr.info(f'{elapsed()} Outbound List: {outbound_list} | Status: {message_status}')
 
 	except Exception as e: lgr.info(f'Error on Sent Notification: {e}')
 
@@ -78,27 +78,27 @@ async def delivery_status(messages):
 	try:
 		async for message in messages.take(300, within=10):
 			s = time.perf_counter()
-			count = time.perf_counter() - s
-			elapsed = "{0:.2f}".format(count)
 
-			lgr.info(f'{elapsed} RECEIVED Delivery Status {len(message)}: {message}')
+			elapsed = lambda: time.perf_counter() - s
+
+			lgr.info(f'{elapsed()} RECEIVED Delivery Status {len(message)}: {message}')
 			message = np.asarray(message)
 			message_id = message[:,0]
 			message_status = message[:,1]
-			lgr.info(f'{elapsed} Message: {message_id} | Status: {message_status}')
+			lgr.info(f'{elapsed()} Message: {message_id} | Status: {message_status}')
 	except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
 async def send_outbound_message(messages):
 	try:
 		s = time.perf_counter()
-		count = time.perf_counter() - s
-		elapsed = "{0:.2f}".format(count)
+
+		elapsed = lambda: time.perf_counter() - s
 	
 		df = pd.DataFrame({'outbound_id':messages[:,0], 'recipient':messages[:,1], 'product_id':messages[:,2], 'batch':messages[:,3],'ext_outbound_id':messages[:,4],'ext_service_id':messages[:,5],'code':messages[:,6],\
 			'message':messages[:,7],'endpoint_account_id':messages[:,8],'endpoint_password':messages[:,9],'endpoint_username':messages[:,10],\
 			'endpoint_api_key':messages[:,11],'subscription_details':messages[:,12],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'channel':messages[:,15]})
 
-		lgr.info(f'3:Elapsed {elapsed}')
+		lgr.info(f'3:Elapsed {elapsed()}')
 		#lgr.info('DF: %s' % df)
 		df['batch'] = pd.to_numeric(df['batch'])
 		df = df.dropna(axis='columns',how='all')
@@ -145,10 +145,10 @@ async def send_outbound_message(messages):
 
 			#Control Speeds
 			#await asyncio.sleep(0.10)
-			lgr.info(f'4:Elapsed {elapsed}')
+			lgr.info(f'4:Elapsed {elapsed()}')
 			lgr.info(f'Sent Message to topic {payload["endpoint_url"]}')
 
-		lgr.info(f'4.1:Elapsed {elapsed}')
+		lgr.info(f'4.1:Elapsed {elapsed()}')
 	except Exception as e: lgr.error(f'Send Outbound Message Error: {e}')
 
 
@@ -156,9 +156,8 @@ async def send_outbound_messages(is_bulk=True, limit_batch=100):
 	try:
 
 		s = time.perf_counter()
-		count = time.perf_counter() - s
-		elapsed = "{0:.2f}".format(count)
-		lgr.info(f'0:Elapsed {elapsed}')
+		elapsed = lambda: time.perf_counter() - s
+		lgr.info(f'0:Elapsed {elapsed()}')
 		with transaction.atomic():
 			#.order_by('contact__product__priority').select_related('contact','template','state').all
 			def outbound_query():        
@@ -181,11 +180,11 @@ async def send_outbound_messages(is_bulk=True, limit_batch=100):
                                                 'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',\
                                                 'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url','contact__product__notification__code__channel__name')
 
-			lgr.info(f'1:Elapsed {elapsed}')
+			lgr.info(f'1:Elapsed {elapsed()}')
 			#lgr.info('Outbound: %s' % outbound)
 			if len(outbound):
 				messages=np.asarray(outbound)
-				lgr.info(f'2:Elapsed {elapsed}')
+				lgr.info(f'2:Elapsed {elapsed()}')
 				#lgr.info('Messages: %s' % messages)
 
 				##Update State
@@ -193,7 +192,7 @@ async def send_outbound_messages(is_bulk=True, limit_batch=100):
 
 				response = await send_outbound_message(messages)
 
-			lgr.info(f'1.1:Elapsed {elapsed}')
+			lgr.info(f'1.1:Elapsed {elapsed()}')
 	except Exception as e: lgr.error(f'Send Outbound Messages Error: {e}')
 
 
