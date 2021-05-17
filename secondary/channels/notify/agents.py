@@ -46,25 +46,43 @@ lgr.addHandler(ch)
 
 HTTPConnection.debuglevel = 1
 
-s = time.perf_counter()
-
 sent_message_log_topic = app.topic('switch.secondary.channels.notify.sent_messages_log')
 delivery_status_log_topic = app.topic('switch.secondary.channels.notify.delivery_status_log')
 
 @app.agent(sent_message_log_topic)
 async def sent_messages(messages):
-	async for message in messages.take(100, within=10):
-        	print(f'RECEIVED Sent Notification {len(message)}: {message}')
+	try:
+		async for message in messages.take(300, within=10):
+			s = time.perf_counter()
+			count = time.perf_counter() - s
+			elapsed = "{0:.2f}".format(count)
+
+        		lgr.info(f'{elapsed} RECEIVED Sent Notification {len(message)}: {message}')
+			message = np.asarray(message)
+			message_id = r[:,0]
+			message_status = r[:,1]
+        		lgr.info(f'{elapsed} Message: {message_id} | Status: {message_status}')
+
+	except Exception as e: lgr.info(f'Error on Sent Notification: {e}')
 
 @app.agent(delivery_status_log_topic)
 async def delivery_status(messages):
-	async for message in messages:
-		lgr.info(f'Received Delivery Status Notification: {message}')
+	try:
+		async for message in messages.take(300, within=10):
+			s = time.perf_counter()
+			count = time.perf_counter() - s
+			elapsed = "{0:.2f}".format(count)
 
+        		lgr.info(f'{elapsed} RECEIVED Delivery Status {len(message)}: {message}')
+			message = np.asarray(message)
+			message_id = r[:,0]
+			message_status = r[:,1]
+        		lgr.info(f'{elapsed} Message: {message_id} | Status: {message_status}')
+	except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
 async def send_outbound_message(messages):
 	try:
-
+		s = time.perf_counter()
 		count = time.perf_counter() - s
 		elapsed = "{0:.2f}".format(count)
 	
@@ -72,7 +90,7 @@ async def send_outbound_message(messages):
 			'message':messages[:,7],'endpoint_account_id':messages[:,8],'endpoint_password':messages[:,9],'endpoint_username':messages[:,10],\
 			'endpoint_api_key':messages[:,11],'subscription_details':messages[:,12],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'channel':messages[:,15]})
 
-		#lgr.info(f'3:Elapsed {elapsed}')
+		lgr.info(f'3:Elapsed {elapsed}')
 		#lgr.info('DF: %s' % df)
 		df['batch'] = pd.to_numeric(df['batch'])
 		df = df.dropna(axis='columns',how='all')
@@ -119,19 +137,17 @@ async def send_outbound_message(messages):
 
 			#Control Speeds
 			#await asyncio.sleep(0.10)
-			#lgr.info(f'4:Elapsed {elapsed}')
+			lgr.info(f'4:Elapsed {elapsed}')
 			lgr.info(f'Sent Message to topic {payload["endpoint_url"]}')
+
+		lgr.info(f'4.1:Elapsed {elapsed}')
 	except Exception as e: lgr.error(f'Send Outbound Message Error: {e}')
 
-is_bulk = False
-limit_batch = 100
 
-
-@app.timer(interval=10)
-async def send_outbound_messages(app):
+async def send_outbound_messages(is_bulk=True, limit_batch=100):
 	try:
-		lgr.info(f'{app}')
 
+		s = time.perf_counter()
 		count = time.perf_counter() - s
 		elapsed = "{0:.2f}".format(count)
 		lgr.info(f'0:Elapsed {elapsed}')
@@ -157,7 +173,7 @@ async def send_outbound_messages(app):
                                                 'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',\
                                                 'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url','contact__product__notification__code__channel__name')
 
-			#lgr.info(f'1:Elapsed {elapsed}')
+			lgr.info(f'1:Elapsed {elapsed}')
 			#lgr.info('Outbound: %s' % outbound)
 			if len(outbound):
 				messages=np.asarray(outbound)
@@ -169,6 +185,14 @@ async def send_outbound_messages(app):
 
 				response = await send_outbound_message(messages)
 
+			lgr.info(f'1.1:Elapsed {elapsed}')
 	except Exception as e: lgr.error(f'Send Outbound Messages Error: {e}')
 
 
+@app.timer(interval=5)
+async def _nbulk_send_outbound_messages
+	await send_outbound_messages(is_bulk=False, limit_batch=60)
+
+@app.timer(interval=5)
+async def _bulk_send_outbound_messages
+	await send_outbound_messages(is_bulk=True, limit_batch=240)
