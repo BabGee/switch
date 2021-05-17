@@ -113,7 +113,7 @@ async def send_outbound_message(messages):
 			'endpoint_api_key':messages[:,11],'subscription_details':messages[:,12],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'endpoint_request':messages[:,15], 'channel':messages[:,16]})
 
 		lgr.info(f'3:Elapsed {elapsed()}')
-		#lgr.info('DF: %s' % df)
+		lgr.info('DF: %s' % df)
 		df['batch'] = pd.to_numeric(df['batch'])
 		df = df.dropna(axis='columns',how='all')
 		cols = df.columns.tolist()
@@ -122,7 +122,7 @@ async def send_outbound_message(messages):
 		cols.remove('outbound_id')
 		cols.remove('recipient')
 		grouped_df = df.groupby(cols)
-		#lgr.info('Grouped DF: %s' % grouped_df)
+		lgr.info('Grouped DF: %s' % grouped_df)
 
 
 		tasks = []
