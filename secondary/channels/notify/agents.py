@@ -68,7 +68,7 @@ async def sent_messages(messages):
 				return outbound
 
 			outbound_list = np.vectorize(update_sent_outbound)(outbound_id=message_id, outbound_state=message_status).tolist()
-
+			Outbound.objects.bulk_update(outbound_list, ['state'])
 			lgr.info(f'{elapsed()} Outbound List: {outbound_list} | Status: {message_status}')
 
 	except Exception as e: lgr.info(f'Error on Sent Notification: {e}')
