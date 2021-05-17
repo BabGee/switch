@@ -48,7 +48,7 @@ HTTPConnection.debuglevel = 1
 
 s = time.perf_counter()
 
-sent_message_log_topic = app.topic('integrator.apps.test.sent_messages_log')
+sent_message_log_topic = app.topic('switch.channels.notify.sent_messages_log')
 
 @app.agent(sent_message_log_topic)
 async def sent_messages(messages):
