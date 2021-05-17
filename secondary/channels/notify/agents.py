@@ -120,7 +120,7 @@ async def send_outbound_message(messages):
 		#df['endpoint_request'] = df['endpoint_request'].to_json(orient="records")
 
 		df['endpoint_request']= df['endpoint_request'].fillna({i: {} for i in df.index})
-		df['endpoint_request'] = df['endpoint_request'].apply(ast.literal_eval)
+		#df['endpoint_request'] = df['endpoint_request'].apply(ast.literal_eval)
 		df = df.join(pd.json_normalize(df['endpoint_request']))
 		df.drop(columns=['endpoint_request'], inplace=True)
 
