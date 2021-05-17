@@ -53,9 +53,8 @@ delivery_status_log_topic = app.topic('switch.secondary.channels.notify.delivery
 
 @app.agent(sent_message_log_topic)
 async def sent_messages(messages):
-	async for message in messages:
-		lgr.info(f'Received Sent Notification: {message}')
-
+	async for message in messages.take(100, within=10):
+        	print(f'RECEIVED Sent Notification {len(message)}: {message}')
 
 @app.agent(delivery_status_log_topic)
 async def delivery_status(messages):
