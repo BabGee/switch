@@ -16,7 +16,7 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 
 #app = faust.App('django-switch', autodiscover=False, origin='faustapp')
-app = faust.App('switch-faust', topic_partitions=4)
+app = faust.App('switch-faust', topic_partitions=4, autodiscover=False)
 
 @app.on_configured.connect
 def configure_from_settings(app, conf, **kwargs):
