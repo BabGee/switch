@@ -84,17 +84,20 @@ async def delivery_status(messages):
 			elapsed = lambda: time.perf_counter() - s
 
 			lgr.info(f'RECEIVED Delivery Status {len(message)}: {message}')
+
 			message = np.asarray(message)
 			message_id = message[:,0]
 			message_status = message[:,1]
+			message_response = message[:,2]
 
-			def update_sent_outbound(outbound_id, outbound_state):
+			def update_sent_outbound(outbound_id, outbound_state, response):
 				outbound = Outbound.objects.get(id=outbound_id)
 				outbound.state = OutBoundState.objects.get(name=outbound_state)
+				outbound.response = response
 				return outbound
 
-			outbound_list = np.vectorize(update_sent_outbound)(outbound_id=message_id, outbound_state=message_status).tolist()
-			Outbound.objects.bulk_update(outbound_list, ['state'])
+			outbound_list = np.vectorize(update_sent_outbound)(outbound_id=message_id, outbound_state=message_status, response=message_response).tolist()
+			Outbound.objects.bulk_update(outbound_list, ['state','response'])
 			lgr.info(f'{elapsed()} Delivery Status Updated')
 
 	except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
