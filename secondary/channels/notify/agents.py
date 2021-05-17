@@ -57,11 +57,11 @@ async def sent_messages(messages):
 			count = time.perf_counter() - s
 			elapsed = "{0:.2f}".format(count)
 
-        		lgr.info(f'{elapsed} RECEIVED Sent Notification {len(message)}: {message}')
+			lgr.info(f'{elapsed} RECEIVED Sent Notification {len(message)}: {message}')
 			message = np.asarray(message)
 			message_id = r[:,0]
 			message_status = r[:,1]
-        		lgr.info(f'{elapsed} Message: {message_id} | Status: {message_status}')
+			lgr.info(f'{elapsed} Message: {message_id} | Status: {message_status}')
 
 	except Exception as e: lgr.info(f'Error on Sent Notification: {e}')
 
@@ -73,11 +73,11 @@ async def delivery_status(messages):
 			count = time.perf_counter() - s
 			elapsed = "{0:.2f}".format(count)
 
-        		lgr.info(f'{elapsed} RECEIVED Delivery Status {len(message)}: {message}')
+			lgr.info(f'{elapsed} RECEIVED Delivery Status {len(message)}: {message}')
 			message = np.asarray(message)
 			message_id = r[:,0]
 			message_status = r[:,1]
-        		lgr.info(f'{elapsed} Message: {message_id} | Status: {message_status}')
+		lgr.info(f'{elapsed} Message: {message_id} | Status: {message_status}')
 	except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
 async def send_outbound_message(messages):
@@ -190,14 +190,13 @@ async def send_outbound_messages(is_bulk=True, limit_batch=100):
 
 
 @app.timer(interval=5)
-async def _nbulk_send_outbound_messages
+async def _nbulk_send_outbound_messages(app):
 	try:
 		await send_outbound_messages(is_bulk=False, limit_batch=60)
-
 	except Exception as e: lgr.error(f'Non-Bulk Send Outbound Messages Error: {e}')
 
 @app.timer(interval=5)
-async def _bulk_send_outbound_messages
+async def _bulk_send_outbound_messages(app):
 	try:
 		await send_outbound_messages(is_bulk=True, limit_batch=240)
 	except Exception as e: lgr.error(f'Bulk Send Outbound Messages Error: {e}')
