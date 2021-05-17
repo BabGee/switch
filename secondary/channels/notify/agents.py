@@ -115,6 +115,7 @@ async def send_outbound_message(messages):
 		lgr.info(f'3:Elapsed {elapsed()}')
 		lgr.info('DF: %s' % df)
 		df['batch'] = pd.to_numeric(df['batch'])
+		df['endpoint_request'] = df['endpoint_request'].to_json()
 		df = df.dropna(axis='columns',how='all')
 		cols = df.columns.tolist()
 		#df.set_index(cols, inplace=True)
