@@ -63,7 +63,9 @@ async def sent_messages(messages):
 			message_status = message[:,1]
 
 			def update_sent_outbound(outbound_id, outbound_state):
-				return Outbound.objects.get(id=outbound_id).state = OutBoundState.objects.get(name=outbound_state)
+				outbound = Outbound.objects.get(id=outbound_id)
+				outbound.state = OutBoundState.objects.get(name=outbound_state)
+				return outbound
 
 			outbound_list = np.vectorize(update_sent_outbound)(outbound_id=message_id, outbound_state=message_status).tolist()
 
