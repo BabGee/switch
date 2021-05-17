@@ -48,38 +48,20 @@ HTTPConnection.debuglevel = 1
 
 s = time.perf_counter()
 
+sent_message_log_topic = app.topic('integrator.apps.test.sent_messages_log')
 
-'''
-class OutBoundMessage(faust.Record):
-    from_name: str
-    to_name: str
-    count: float
-    records: int
-{'product': '433', 'batch': '10', 'kmp_service_id': 'TEST', 'kmp_code': 'TEST', 'kmp_message': 'Test', 'kmp_spid': 'TEST', 'kmp_password': 'TEST', 'node_account_id': 'TEST', 'node_password': 'TEST', 'node_username': 'TEST', 'contact_info': '', 'node_url': 'integrator.apps.test.notification', 'kmp_recipients': ['254725765441', '254717103598']} 
+@app.agent(sent_message_log_topic)
+async def sent_messages(messages):
+	async for message in messages:
+		lgr.info(f'Received Sent Notification: {message}')
 
-{'product_id': '433', 'batch': '10', 'ext_service_id': 'TEST', 'code': 'TEST', 'message': 'Test', 'account_id': 'TEST', 'endpoint_password': 'TEST', 'endpoint_username': 'TEST', 'subscription_details': '', 'endpoint_url': 'integrator.apps.test.notification', 'recipients': [(61690123, '254725765441'), (61690124, '254725765441'), (61690125, '254725765441'), (61144994, '254717103598'), (61144995, '254717103598'), (61144996, '254717103598')]}
 
-{'product_id': '433', 'batch': '10', 'ext_service_id': 'TEST', 'code': 'TEST', 'message': 'Test', 'account_id': 'TEST', 'endpoint_password': 'TEST', 'endpoint_username': 'TEST', 'subscription_details': '', 'endpoint_url': 'integrator.apps.test.notification', 'channel': 'WHATSAPP API', 'recipients': [(61690123, '254725765441'), (61690124, '254725765441'), (61690125, '254725765441'), (61144994, '254717103598'), (61144995, '254717103598'), (61144996, '254717103598')]}
-
-topic = app.topic('switch.channels.notify.whatsapp_message', value_type=Greeting)
-'''
 
 async def send_outbound_message(messages):
 	try:
 
-		'''
-		'id','recipient','contact__product__id','contact__product__notification__endpoint__batch','ext_outbound_id',\
-		'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',\
-		'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',\
-		'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url'
-		'''
 		count = time.perf_counter() - s
 		elapsed = "{0:.2f}".format(count)
-		'''
-		df = pd.DataFrame({'kmp_recipients':messages[:,1], 'product':messages[:,2], 'batch':messages[:,3],'kmp_correlator':messages[:,4],'kmp_service_id':messages[:,5],'kmp_code':messages[:,6],\
-			'kmp_message':messages[:,7],'kmp_spid':messages[:,8],'kmp_password':messages[:,9],'node_account_id':messages[:,8],'node_password':messages[:,9],'node_username':messages[:,10],\
-			'node_api_key':messages[:,11],'contact_info':messages[:,12],'linkid':messages[:,13],'node_url':messages[:,14]})
-		'''
 	
 		df = pd.DataFrame({'outbound_id':messages[:,0], 'recipient':messages[:,1], 'product_id':messages[:,2], 'batch':messages[:,3],'ext_outbound_id':messages[:,4],'ext_service_id':messages[:,5],'code':messages[:,6],\
 			'message':messages[:,7],'endpoint_account_id':messages[:,8],'endpoint_password':messages[:,9],'endpoint_username':messages[:,10],\
