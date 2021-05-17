@@ -60,7 +60,7 @@ async def sent_messages(messages):
 @app.agent(delivery_status_log_topic)
 async def delivery_status(messages):
 	async for message in messages:
-		lgr.info(f'Received Sent Notification: {message}')
+		lgr.info(f'Received Delivery Status Notification: {message}')
 
 
 async def send_outbound_message(messages):
