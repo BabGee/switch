@@ -110,7 +110,7 @@ async def send_outbound_message(messages):
 	
 		df = pd.DataFrame({'outbound_id':messages[:,0], 'recipient':messages[:,1], 'product_id':messages[:,2], 'batch':messages[:,3],'ext_outbound_id':messages[:,4],'ext_service_id':messages[:,5],'code':messages[:,6],\
 			'message':messages[:,7],'endpoint_account_id':messages[:,8],'endpoint_password':messages[:,9],'endpoint_username':messages[:,10],\
-			'endpoint_api_key':messages[:,11],'subscription_details':messages[:,12],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'channel':messages[:,15]})
+			'endpoint_api_key':messages[:,11],'subscription_details':messages[:,12],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'endpoint_request':messages[:,15], 'channel':messages[:,16]})
 
 		lgr.info(f'3:Elapsed {elapsed()}')
 		#lgr.info('DF: %s' % df)
@@ -188,10 +188,11 @@ async def send_outbound_messages(is_bulk=True, limit_batch=100):
 
 			lgr.info('Orig Outbound: %s' % orig_outbound)
 
-			outbound = orig_outbound()[:limit_batch].values_list('id','recipient','contact__product__id','contact__product__notification__endpoint__batch','ext_outbound_id',\
-                                                'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',\
-                                                'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',\
-                                                'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url','contact__product__notification__code__channel__name')
+			outbound = orig_outbound()[:limit_batch].values_list('id','recipient','contact__product__id','contact__product__notification__endpoint__batch','ext_outbound_id',
+                                                'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',
+                                                'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',
+                                                'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url','contact__product__notification__endpoint__request',
+						'contact__product__notification__code__channel__name')
 
 			lgr.info(f'1:Elapsed {elapsed()}')
 			#lgr.info('Outbound: %s' % outbound)
