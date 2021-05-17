@@ -77,7 +77,7 @@ async def delivery_status(messages):
 			message = np.asarray(message)
 			message_id = r[:,0]
 			message_status = r[:,1]
-		lgr.info(f'{elapsed} Message: {message_id} | Status: {message_status}')
+			lgr.info(f'{elapsed} Message: {message_id} | Status: {message_status}')
 	except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
 async def send_outbound_message(messages):
