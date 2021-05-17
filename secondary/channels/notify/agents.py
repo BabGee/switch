@@ -49,12 +49,18 @@ HTTPConnection.debuglevel = 1
 s = time.perf_counter()
 
 sent_message_log_topic = app.topic('switch.secondary.channels.notify.sent_messages_log')
+delivery_status_log_topic = app.topic('switch.secondary.channels.notify.delivery_status_log')
 
 @app.agent(sent_message_log_topic)
 async def sent_messages(messages):
 	async for message in messages:
 		lgr.info(f'Received Sent Notification: {message}')
 
+
+@app.agent(delivery_status_log_topic)
+async def delivery_status(messages):
+	async for message in messages:
+		lgr.info(f'Received Sent Notification: {message}')
 
 
 async def send_outbound_message(messages):
