@@ -121,7 +121,7 @@ async def send_outbound_message(messages):
 		#if not df['endpoint_request'].empty:
 		#df['endpoint_request'] = df['endpoint_request'].to_json(orient="records")
 		df['endpoint_request']= df['endpoint_request'].fillna({i: {} for i in df.index})
-		df['endpoint_request'] = df['endpoint_request'].to_json(orient="records").apply(ast.literal_eval)
+		df['endpoint_request'] = df['endpoint_request'].to_json(orient="records")
 		#df['endpoint_request'] = df['endpoint_request'].apply(ast.literal_eval)
 		lgr.info(f'DF 1 {df}')
 		#df = df.join(pd.json_normalize(df['endpoint_request']))
