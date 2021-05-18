@@ -70,7 +70,7 @@ async def sent_messages(messages):
 				return outbound
 
 			outbound_list = np.vectorize(update_sent_outbound)(outbound_id=message_id, outbound_state=message_status, response=message_response).tolist()
-			Outbound.objects.bulk_update(outbound_list, ['state','response'])
+			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response'])
 			lgr.info(f'{elapsed()} Sent Messages Updated')
 
 		except Exception as e: lgr.info(f'Error on Sent Notification: {e}')
@@ -97,7 +97,7 @@ async def delivery_status(messages):
 				return outbound
 
 			outbound_list = np.vectorize(update_sent_outbound)(outbound_id=message_id, outbound_state=message_status, response=message_response).tolist()
-			Outbound.objects.bulk_update(outbound_list, ['state','response'])
+			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response'])
 			lgr.info(f'{elapsed()} Delivery Status Updated')
 
 		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
