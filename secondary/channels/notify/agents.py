@@ -117,7 +117,7 @@ async def send_outbound_message(messages):
 		df['batch'] = pd.to_numeric(df['batch'])
 		df = df.dropna(axis='columns',how='all')
 
-		if 'endpoint_request' in df.columns:
+		if not df['endpoint_request'].empty:
 			#df['endpoint_request'] = df['endpoint_request'].to_json(orient="records")
 			df['endpoint_request']= df['endpoint_request'].fillna({i: {} for i in df.index})
 			#df['endpoint_request'] = df['endpoint_request'].apply(ast.literal_eval)
