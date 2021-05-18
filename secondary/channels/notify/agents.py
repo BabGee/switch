@@ -118,16 +118,17 @@ async def send_outbound_message(messages):
 		df = df.dropna(axis='columns',how='all')
 
 		lgr.info(f'DF 0 {df}')
-		#if not df['endpoint_request'].empty:
-		#df['endpoint_request'] = df['endpoint_request'].to_json(orient="records")
-		df['endpoint_request']= df['endpoint_request'].fillna({i: {} for i in df.index})
-		df['endpoint_request'] = df['endpoint_request'].to_json(orient="records")
-		df['endpoint_request'] = df['endpoint_request'].apply(ast.literal_eval)
-		lgr.info(f'DF 1 {df}')
+
+		df['endpoint_request'] = df['endpoint_request'].to_json()
+
+		##if not df['endpoint_request'].empty:
+		##df['endpoint_request'] = df['endpoint_request'].to_json(orient="records")
+		#df['endpoint_request']= df['endpoint_request'].fillna({i: {} for i in df.index})
+		##df['endpoint_request'] = df['endpoint_request'].apply(ast.literal_eval)
+		#lgr.info(f'DF 1 {df}')
 		#df = df.join(pd.json_normalize(df['endpoint_request']))
-		df = df.merge(pd.json_normalize(df['endpoint_request']))
-		lgr.info(f'DF 2 {df}')
-		df.drop(columns=['endpoint_request'], inplace=True)
+		#lgr.info(f'DF 2 {df}')
+		#df.drop(columns=['endpoint_request'], inplace=True)
 
 		lgr.info(f'DF 3 {df}')
 		cols = df.columns.tolist()
