@@ -187,7 +187,7 @@ async def send_outbound_messages(is_bulk=True, limit_batch=100):
 		with transaction.atomic():
 			#.order_by('contact__product__priority').select_related('contact','template','state').all
 			def outbound_query():        
-				return Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='WHATSAPP API'),~Q(recipient=None),
+				return Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='SMS'),~Q(recipient=None),
 					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk),
 					Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),
 					contact__product__trading_box__close_time__gte=timezone.localtime().time())),
