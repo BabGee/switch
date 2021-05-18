@@ -77,7 +77,7 @@ async def sent_messages(messages):
 
 @app.agent(delivery_status_log_topic)
 async def delivery_status(messages):
-	async for message in messages.take(300, within=10):
+	async for message in messages.take(300, within=5):
 		try:
 			s = time.perf_counter()
 
