@@ -186,13 +186,13 @@ async def send_outbound_messages(is_bulk=True, limit_batch=100):
 		elapsed = lambda: time.perf_counter() - s
 		with transaction.atomic():
 			#.order_by('contact__product__priority').select_related('contact','template','state').all
+			#|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60))\
 			def outbound_query():        
 				return Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name='SMS'),~Q(recipient=None),
 					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk),
 					Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),
 					contact__product__trading_box__close_time__gte=timezone.localtime().time())),
 					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
-					|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60))\
 					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60)))\
 					.select_related('contact','template','state').all
 
