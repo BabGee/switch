@@ -117,18 +117,18 @@ async def send_outbound_message(messages):
 		df['batch'] = pd.to_numeric(df['batch'])
 		df = df.dropna(axis='columns',how='all')
 
-		lgr.info('DF 0 {df}')
+		lgr.info(f'DF 0 {df}')
 		#if not df['endpoint_request'].empty:
 		#df['endpoint_request'] = df['endpoint_request'].to_json(orient="records")
 		df['endpoint_request']= df['endpoint_request'].fillna({i: {} for i in df.index})
 		#df['endpoint_request'] = df['endpoint_request'].apply(ast.literal_eval)
-		lgr.info('DF 1 {df}')
-		df = df.join(pd.json_normalize(df['endpoint_request']))
-
-		lgr.info('DF 2 {df}')
+		lgr.info(f'DF 1 {df}')
+		#df = df.join(pd.json_normalize(df['endpoint_request']))
+		df = df.merge(pd.json_normalize(df['endpoint_request']))
+		lgr.info(f'DF 2 {df}')
 		df.drop(columns=['endpoint_request'], inplace=True)
 
-		lgr.info('DF 3 {df}')
+		lgr.info(f'DF 3 {df}')
 		cols = df.columns.tolist()
 		#df.set_index(cols, inplace=True)
 		#df = df.sort_index()
