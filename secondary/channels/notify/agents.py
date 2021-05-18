@@ -51,8 +51,8 @@ delivery_status_log_topic = app.topic('switch.secondary.channels.notify.delivery
 
 @app.agent(sent_message_log_topic)
 async def sent_messages(messages):
-	try:
-		async for message in messages.take(300, within=1):
+	async for message in messages.take(300, within=1):
+		try:
 			s = time.perf_counter()
 			
 			elapsed = lambda: time.perf_counter() - s
@@ -73,12 +73,12 @@ async def sent_messages(messages):
 			Outbound.objects.bulk_update(outbound_list, ['state','response'])
 			lgr.info(f'{elapsed()} Sent Messages Updated')
 
-	except Exception as e: lgr.info(f'Error on Sent Notification: {e}')
+		except Exception as e: lgr.info(f'Error on Sent Notification: {e}')
 
 @app.agent(delivery_status_log_topic)
 async def delivery_status(messages):
-	try:
-		async for message in messages.take(300, within=10):
+	async for message in messages.take(300, within=10):
+		try:
 			s = time.perf_counter()
 
 			elapsed = lambda: time.perf_counter() - s
@@ -100,7 +100,7 @@ async def delivery_status(messages):
 			Outbound.objects.bulk_update(outbound_list, ['state','response'])
 			lgr.info(f'{elapsed()} Delivery Status Updated')
 
-	except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
+		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
 async def send_outbound_message(messages):
 	try:
