@@ -52,7 +52,7 @@ delivery_status_log_topic = app.topic('switch.secondary.channels.notify.delivery
 @app.agent(sent_message_log_topic)
 async def sent_messages(messages):
 	try:
-		async for message in messages.take(300, within=10):
+		async for message in messages.take(200, within=1):
 			s = time.perf_counter()
 			
 			elapsed = lambda: time.perf_counter() - s
