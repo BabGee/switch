@@ -110,7 +110,7 @@ async def send_outbound_message(messages):
 	
 		df = pd.DataFrame({'outbound_id':messages[:,0], 'recipient':messages[:,1], 'product_id':messages[:,2], 'batch':messages[:,3],'ext_outbound_id':messages[:,4],'ext_service_id':messages[:,5],'code':messages[:,6],\
 			'message':messages[:,7],'endpoint_account_id':messages[:,8],'endpoint_password':messages[:,9],'endpoint_username':messages[:,10],\
-			'endpoint_api_key':messages[:,11],'subscription_details':messages[:,12],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'endpoint_request':messages[:,15], 'channel':messages[:,16]})
+			'endpoint_api_key':messages[:,11],'subscription_details':messages[:,12],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'channel':messages[:,16]})
 
 		lgr.info(f'3:Elapsed {elapsed()}')
 		lgr.info('DF: %s' % df)
@@ -118,10 +118,6 @@ async def send_outbound_message(messages):
 		df = df.dropna(axis='columns',how='all')
 
 		lgr.info(f'DF 0 {df}')
-
-		endpoint_request = df['endpoint_request'].to_json()
-		df = df.join(pd.json_normalize(endpoint_request))
-		df.drop(columns=['endpoint_request'], inplace=True)
 
 		##if not df['endpoint_request'].empty:
 		##df['endpoint_request'] = df['endpoint_request'].to_json(orient="records")
