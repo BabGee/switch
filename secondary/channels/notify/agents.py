@@ -77,15 +77,12 @@ async def sent_messages(messages):
 
 @app.agent(delivery_status_log_topic)
 async def delivery_status(messages):
-	#async for message in messages.take(300, within=5):
-	async for message in messages:
+	async for message in messages.take(300, within=5):
 		try:
-			#s = time.perf_counter()
-
-			#elapsed = lambda: time.perf_counter() - s
+			s = time.perf_counter()
+			elapsed = lambda: time.perf_counter() - s
 
 			lgr.info(f'RECEIVED Delivery Status {len(message)}: {message}')
-			'''
 			message = np.asarray(message)
 			message_id = message[:,0]
 			message_status = message[:,1]
@@ -100,7 +97,6 @@ async def delivery_status(messages):
 			outbound_list = await sync_to_async(np.vectorize(update_sent_outbound))(outbound_id=message_id, outbound_state=message_status, response=message_response)
 			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list.tolist(), ['state','response'])
 			lgr.info(f'{elapsed()} Delivery Status Updated')
-			'''
 		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
 async def send_outbound_message(messages):
