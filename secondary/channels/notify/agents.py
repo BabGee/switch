@@ -49,6 +49,26 @@ HTTPConnection.debuglevel = 1
 sent_message_log_topic = app.topic('switch.secondary.channels.notify.sent_messages_log')
 delivery_status_log_topic = app.topic('switch.secondary.channels.notify.delivery_status_log')
 
+join_sent_messages_topic = app.topic('switch.secondary.channels.notify.join_sent_messages')
+join_delivery_status_topic = app.topic('switch.secondary.channels.notify.join_delivery_status')
+
+
+@app.agent(join_sent_messages_topic)
+async def join_sent_messages(messages):
+	async for message in messages:
+		try:
+			lgr.info(f'Join Sent Message: {message}')
+		except Exception as e: lgr.info(f'Error on Join Sent Notification: {e}')
+
+@app.agent(join_delivery_status_topic)
+async def join_delivery_status(messages):
+	async for message in messages:
+		try:
+			lgr.info(f'Join Delivery Status: {message}')
+		except Exception as e: lgr.info(f'Error on Join Delivery Status: {e}')
+
+
+
 @app.agent(sent_message_log_topic)
 async def sent_messages(messages):
 	async for message in messages.take(300, within=1):
