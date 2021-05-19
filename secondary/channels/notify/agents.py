@@ -154,30 +154,24 @@ async def send_outbound_message(messages):
 					if not batch: break
 					payload['recipients'] = batch
 					lgr.info(payload)
-					try:
-						topic = app.topic(payload['endpoint_url'])
-						lgr.info(f'Topic: {topic}')
-						response = await asyncio.wait_for(topic.send(value=payload), timeout=1.0)
-					except Exception as e: lgr.info(f'Sent to topic {topic} Failed: {e}')
+					topic = app.topic(payload['endpoint_url'])
+					lgr.info(f'Topic: {topic}')
+					tasks.append(topic.send(value=payload))
 			elif len(group_df.shape)>1 :
 				lgr.info(f'Got Here (list of singles): {recipients}')
 				for d in recipients:
 					payload['recipients'] = [d]       
 					lgr.info(payload)
-					try:
-						topic = app.topic(payload['endpoint_url'])
-						lgr.info(f'Topic: {topic}')
-						response = await asyncio.wait_for(topic.send(value=payload), timeout=1.0)
-					except Exception as e: lgr.info(f'Sent to topic {topic} Failed: {e}')
+					topic = app.topic(payload['endpoint_url'])
+					lgr.info(f'Topic: {topic}')
+					tasks.append(topic.send(value=payload))
 			else:
 				lgr.info(f'Got Here (single): {recipients}')
 				payload['recipients'] = recipients
 				lgr.info(payload)
-				try:
-					topic = app.topic(payload['endpoint_url'])
-					lgr.info(f'Topic: {topic}')
-					response = await asyncio.wait_for(topic.send(value=payload), timeout=1.0)
-				except Exception as e: lgr.info(f'Sent to topic {topic} Failed: {e}')
+				topic = app.topic(payload['endpoint_url'])
+				lgr.info(f'Topic: {topic}')
+				tasks.append(topic.send(value=payload))
 
 			#Control Speeds
 			#await asyncio.sleep(0.10)
@@ -185,6 +179,8 @@ async def send_outbound_message(messages):
 			lgr.info(f'Sent Message to topic {payload["endpoint_url"]}')
 
 		lgr.info(f'4.1:Elapsed {elapsed()}')
+		response = await asyncio.gather(*tasks)
+		lgr.info(f'5:Elapsed {elapsed()} Sent Outbound Message {response}')
 	except Exception as e: lgr.error(f'Send Outbound Message Error: {e}')
 
 
