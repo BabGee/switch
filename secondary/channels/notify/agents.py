@@ -157,7 +157,7 @@ async def send_outbound_message(messages):
 					try:
 						topic = app.topic(payload['endpoint_url'])
 						lgr.info(f'Topic: {topic}')
-						response = await topic.send(value=payload)
+						response = await asyncio.wait_for(topic.send(value=payload), timeout=1.0)
 					except Exception as e: lgr.info(f'Sent to topic {topic} Failed: {e}')
 			elif len(group_df.shape)>1 :
 				lgr.info(f'Got Here (list of singles): {recipients}')
@@ -167,7 +167,7 @@ async def send_outbound_message(messages):
 					try:
 						topic = app.topic(payload['endpoint_url'])
 						lgr.info(f'Topic: {topic}')
-						response = await topic.send(value=payload)
+						response = await asyncio.wait_for(topic.send(value=payload), timeout=1.0)
 					except Exception as e: lgr.info(f'Sent to topic {topic} Failed: {e}')
 			else:
 				lgr.info(f'Got Here (single): {recipients}')
@@ -176,7 +176,7 @@ async def send_outbound_message(messages):
 				try:
 					topic = app.topic(payload['endpoint_url'])
 					lgr.info(f'Topic: {topic}')
-					response = await topic.send(value=payload)
+					response = await asyncio.wait_for(topic.send(value=payload), timeout=1.0)
 				except Exception as e: lgr.info(f'Sent to topic {topic} Failed: {e}')
 
 			#Control Speeds
