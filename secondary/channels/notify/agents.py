@@ -156,6 +156,7 @@ async def send_outbound_message(messages):
 					lgr.info(payload)
 					try:
 						topic = app.topic(payload['endpoint_url'])
+						lgr.info(f'Topic: {topic}')
 						response = await topic.send(value=payload)
 					except Exception as e: lgr.info(f'Sent to topic {topic} Failed: {e}')
 			elif len(group_df.shape)>1 :
@@ -165,6 +166,7 @@ async def send_outbound_message(messages):
 					lgr.info(payload)
 					try:
 						topic = app.topic(payload['endpoint_url'])
+						lgr.info(f'Topic: {topic}')
 						response = await topic.send(value=payload)
 					except Exception as e: lgr.info(f'Sent to topic {topic} Failed: {e}')
 			else:
@@ -173,6 +175,7 @@ async def send_outbound_message(messages):
 				lgr.info(payload)
 				try:
 					topic = app.topic(payload['endpoint_url'])
+					lgr.info(f'Topic: {topic}')
 					response = await topic.send(value=payload)
 				except Exception as e: lgr.info(f'Sent to topic {topic} Failed: {e}')
 
@@ -229,13 +232,13 @@ async def send_outbound_messages(is_bulk=True, limit_batch=100):
 	except Exception as e: lgr.error(f'Send Outbound Messages Error: {e}')
 
 
-@app.timer(interval=1)
+@app.timer(interval=2)
 async def _nbulk_send_outbound_messages(app):
 	try:
 		await send_outbound_messages(is_bulk=False, limit_batch=60)
 	except Exception as e: lgr.error(f'Non-Bulk Send Outbound Messages Error: {e}')
 
-@app.timer(interval=1)
+@app.timer(interval=2)
 async def _bulk_send_outbound_messages(app):
 	try:
 		await send_outbound_messages(is_bulk=True, limit_batch=240)
