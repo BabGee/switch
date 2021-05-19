@@ -157,10 +157,12 @@ async def send_outbound_message(messages):
 					await app.topic(payload['endpoint_url']).send(value=payload)
 			elif len(group_df.shape)>1 :
 				lgr.info(f'Got Here (list of singles): {recipients}')
-				for d in recipients:
-					payload['recipients'] = [d]       
-					lgr.info(payload)
-					await app.topic(payload['endpoint_url']).send(value=payload)
+				async def _send_recipients(recipients, payload):
+					for d in recipients:
+						payload['recipients'] = [d]       
+						lgr.info(payload)
+						await app.topic(payload['endpoint_url']).send(value=payload)
+				await _send_recipients(recipients, payload)
 			else:
 				lgr.info(f'Got Here (single): {recipients}')
 				payload['recipients'] = recipients
