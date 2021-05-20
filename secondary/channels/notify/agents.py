@@ -8,6 +8,7 @@ import requests, json, ast
 from django.db import transaction
 from .models import *
 from django.db.models import Q,F
+from functools import reduce
 
 from itertools import islice
 import pandas as pd
@@ -55,9 +56,19 @@ join_delivery_status_topic = app.topic('switch.secondary.channels.notify.join_de
 
 @app.agent(join_sent_messages_topic)
 async def join_sent_messages(messages):
-	async for message in messages:
+	async for message in messages.take(300, within=1):
 		try:
 			lgr.info(f'Join Sent Message: {message}')
+			async def update_sent_status(data):
+				df = pd.DataFrame(data)
+				for response_state in df['sent_response_state'].unique():
+					response_state_df = df[df['sent_response_state']==response_state]
+					q_list = map(lambda n: Q(id=n[1]['outbound_id']), response_state_df.iterrows())
+					q_list = reduce(lambda a, b: a | b, q_list) 
+					state = OutBoundState.objects.get(name=response_state)
+					Outbound.objects.filter(~Q(state=state), q_list).update(state=state)
+
+			response = await update_sent_status(message)
 		except Exception as e: lgr.info(f'Error on Join Sent Notification: {e}')
 
 @app.agent(join_delivery_status_topic)
