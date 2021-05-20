@@ -58,6 +58,10 @@ join_delivery_status_topic = app.topic('switch.secondary.channels.notify.join_de
 async def join_sent_messages(messages):
 	async for message in messages.take(300, within=1):
 		try:
+			s = time.perf_counter()
+			
+			elapsed = lambda: time.perf_counter() - s
+
 			lgr.info(f'Join Sent Message: {message}')
 			async def update_sent_status(data):
 				df = pd.DataFrame(data)
@@ -69,6 +73,7 @@ async def join_sent_messages(messages):
 					Outbound.objects.filter(~Q(state=state), q_list).update(state=state)
 
 			response = await update_sent_status(message)
+			lgr.info(f'{elapsed} Update Join Sent Messages')
 		except Exception as e: lgr.info(f'Error on Join Sent Notification: {e}')
 
 @app.agent(join_delivery_status_topic)
