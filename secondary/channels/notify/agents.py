@@ -55,8 +55,8 @@ async def join_sent_messages(messages):
 						response_state_df = df[df['sent_response_state']==response_state]
 						q_list = map(lambda n: Q(id=n[1]['outbound_id']), response_state_df.iterrows())
 						q_list = reduce(lambda a, b: a | b, q_list) 
-						state = OutBoundState.objects.get(name=response_state)
-						outbound = Outbound.objects.filter(~Q(state=state), q_list).update(state=state)
+						state = await sync_to_async(OutBoundState.objects.get)(name=response_state)
+						outbound = await sync_to_async(Outbound.objects.filter(~Q(state=state), q_list).update)(state=state)
 						lgr.info(f'{elapsed()} Updated Outbound Join Sent {outbound}')
 
 				except Exception as e: lgr.info(f' Error on Update Sent Status {e}')
