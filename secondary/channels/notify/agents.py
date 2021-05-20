@@ -256,14 +256,18 @@ async def send_outbound_messages(is_bulk=True, limit_batch=100):
 	except Exception as e: lgr.error(f'Send Outbound Messages Error: {e}')
 
 
-@app.timer(interval=1)
+#@app.timer(interval=1)
+@app.task()
 async def _nbulk_send_outbound_messages(app):
 	try:
 		await send_outbound_messages(is_bulk=False, limit_batch=60)
+		await asyncio.sleep(1)
 	except Exception as e: lgr.error(f'Non-Bulk Send Outbound Messages Error: {e}')
 
-@app.timer(interval=1)
+#@app.timer(interval=1)
+@app.task()
 async def _bulk_send_outbound_messages(app):
 	try:
 		await send_outbound_messages(is_bulk=True, limit_batch=240)
+		await asyncio.sleep(1)
 	except Exception as e: lgr.error(f'Bulk Send Outbound Messages Error: {e}')
