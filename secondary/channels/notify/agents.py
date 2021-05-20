@@ -73,7 +73,7 @@ async def join_sent_messages(messages):
 					Outbound.objects.filter(~Q(state=state), q_list).update(state=state)
 
 			response = await update_sent_status(message)
-			lgr.info(f'{elapsed} Update Join Sent Messages')
+			lgr.info(f'{elapsed()} Update Join Sent Messages')
 		except Exception as e: lgr.info(f'Error on Join Sent Notification: {e}')
 
 @app.agent(join_delivery_status_topic)
