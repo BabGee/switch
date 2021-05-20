@@ -47,8 +47,8 @@ lgr.addHandler(ch)
 
 HTTPConnection.debuglevel = 1
 
-sent_message_log_topic = app.topic('switch.secondary.channels.notify.sent_messages_log')
-delivery_status_log_topic = app.topic('switch.secondary.channels.notify.delivery_status_log')
+#sent_message_log_topic = app.topic('switch.secondary.channels.notify.sent_messages_log')
+#delivery_status_log_topic = app.topic('switch.secondary.channels.notify.delivery_status_log')
 
 join_sent_messages_topic = app.topic('switch.secondary.channels.notify.join_sent_messages')
 join_delivery_status_topic = app.topic('switch.secondary.channels.notify.join_delivery_status')
@@ -85,7 +85,7 @@ async def join_delivery_status(messages):
 
 
 
-@app.agent(sent_message_log_topic)
+#@app.agent(sent_message_log_topic)
 async def sent_messages(messages):
 	async for message in messages.take(300, within=1):
 		try:
@@ -111,7 +111,7 @@ async def sent_messages(messages):
 
 		except Exception as e: lgr.info(f'Error on Sent Notification: {e}')
 
-@app.agent(delivery_status_log_topic)
+#@app.agent(delivery_status_log_topic)
 async def delivery_status(messages):
 	async for message in messages.take(300, within=5):
 		try:
