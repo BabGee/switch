@@ -261,7 +261,7 @@ async def send_outbound_messages(is_bulk=True, limit_batch=100):
 async def _nbulk_send_outbound_messages(app):
 	try:
 		await send_outbound_messages(is_bulk=False, limit_batch=60)
-		await asyncio.sleep(1)
+		await asyncio.sleep(4)
 	except Exception as e: lgr.error(f'Non-Bulk Send Outbound Messages Error: {e}')
 
 #@app.timer(interval=1)
@@ -269,5 +269,5 @@ async def _nbulk_send_outbound_messages(app):
 async def _bulk_send_outbound_messages(app):
 	try:
 		await send_outbound_messages(is_bulk=True, limit_batch=240)
-		await asyncio.sleep(1)
+		await asyncio.sleep(4)
 	except Exception as e: lgr.error(f'Bulk Send Outbound Messages Error: {e}')
