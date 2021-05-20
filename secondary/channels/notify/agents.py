@@ -52,6 +52,7 @@ async def join_sent_messages(messages):
 				try:
 					df = pd.DataFrame(data)
 					for response_state in df['sent_response_state'].unique():
+						lgr.info(f'{elapsed()} Response State {response_state}')
 						response_state_df = df[df['sent_response_state']==response_state]
 						q_list = map(lambda n: Q(id=n[1]['outbound_id']), response_state_df.iterrows())
 						q_list = reduce(lambda a, b: a | b, q_list) 
@@ -60,7 +61,7 @@ async def join_sent_messages(messages):
 						#outbound = await sync_to_async(Outbound.objects.filter)(~Q(state=state), q_list)
 						outbound = await sync_to_async(Outbound.objects.filter)(q_list)
 						lgr.info(f'{elapsed()} Filter Outbound Join Sent {outbound}')
-						lgr.info(f'Outbound: {outbound.query.__str__()}')
+						lgr.info(f'{elapsed()} Outbound: {outbound.query.__str__()}')
 						outbound = await sync_to_async(outbound.update)(state=state)
 						lgr.info(f'{elapsed()} Updated Outbound Join Sent {outbound}')
 				except Exception as e: lgr.info(f' Error on Update Sent Status {e}')
