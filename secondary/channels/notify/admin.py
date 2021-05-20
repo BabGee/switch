@@ -94,7 +94,7 @@ class InboundAdmin(admin.ModelAdmin):
 admin.site.register(Inbound, InboundAdmin)
 
 class OutBoundStateAdmin(admin.ModelAdmin):
-		list_display = ('name','description','date_modified','date_created',)
+		list_display = ('id','name','description','date_modified','date_created',)
 admin.site.register(OutBoundState, OutBoundStateAdmin)
 
 class OutboundAdmin(admin.ModelAdmin):
