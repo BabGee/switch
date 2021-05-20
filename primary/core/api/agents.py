@@ -31,47 +31,6 @@ from typing import (
 )
 
 lgr = logging.getLogger(__name__)
-lgr.setLevel(logging.DEBUG)
-
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s-%(name)s %(funcName)s %(process)d %(thread)d-(%(threadName)-2s) %(levelname)s-%(message)s')
-ch.setFormatter(formatter)
-
-lgr.addHandler(ch)
-
-HTTPConnection.debuglevel = 1
-
-s = time.perf_counter()
-
-
-class Greeting(faust.Record):
-    from_name: str
-    to_name: str
-    count: float
-    records: int
-
-
-topic = app.topic('switch-hello-topic', value_type=Greeting)
-
-@app.agent(topic)
-async def hello(greetings):
-	async for greeting in greetings:
-		lgr.info(f'Hello from {greeting.from_name} to {greeting.to_name} | Count {greeting.count} | Records {greeting.records}')
-
-#@app.task
-#@app.timer(interval=0.25)
-@app.timer(interval=10)
-async def example_sender_task(app):
-    count = time.perf_counter() - s
-    elapsed = "{0:.2f}".format(count)
-    records = random.randint(1,1000) 
-    await hello.send(
-        value=Greeting(from_name='Switch API Task', to_name='you', count=float(elapsed), records=records),
-    )
-    count+=1
-
 
 #request_factory = RequestFactory(**{"SERVER_NAME": "localhost", "wsgi.url_scheme":"https"}).
 request_factory = RequestFactory(**{"SERVER_NAME": "localhost"})

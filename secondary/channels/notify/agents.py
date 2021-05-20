@@ -35,24 +35,9 @@ from typing import (
 )
 
 lgr = logging.getLogger(__name__)
-lgr.setLevel(logging.DEBUG)
-
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s-%(name)s %(funcName)s %(process)d %(thread)d-(%(threadName)-2s) %(levelname)s-%(message)s')
-ch.setFormatter(formatter)
-
-lgr.addHandler(ch)
-
-HTTPConnection.debuglevel = 1
-
-#sent_message_log_topic = app.topic('switch.secondary.channels.notify.sent_messages_log')
-#delivery_status_log_topic = app.topic('switch.secondary.channels.notify.delivery_status_log')
 
 join_sent_messages_topic = app.topic('switch.secondary.channels.notify.join_sent_messages')
 join_delivery_status_topic = app.topic('switch.secondary.channels.notify.join_delivery_status')
-
 
 @app.agent(join_sent_messages_topic)
 async def join_sent_messages(messages):
@@ -89,55 +74,53 @@ async def join_delivery_status(messages):
 
 
 
-#@app.agent(sent_message_log_topic)
-async def sent_messages(messages):
-	async for message in messages.take(300, within=1):
-		try:
-			s = time.perf_counter()
-			
-			elapsed = lambda: time.perf_counter() - s
-
-			lgr.info(f'RECEIVED Sent Notification {len(message)}: {message}')
-			message = np.asarray(message)
-			message_id = message[:,0]
-			message_status = message[:,1]
-			message_response = message[:,2]
-
-			def update_sent_outbound(outbound_id, outbound_state, response):
-				outbound = Outbound.objects.get(id=outbound_id)
-				outbound.state = OutBoundState.objects.get(name=outbound_state)
-				outbound.response = response
-				return outbound
-
-			outbound_list = await sync_to_async(np.vectorize(update_sent_outbound))(outbound_id=message_id, outbound_state=message_status, response=message_response)
-			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list.tolist(), ['state','response'])
-			lgr.info(f'{elapsed()} Sent Messages Updated')
-
-		except Exception as e: lgr.info(f'Error on Sent Notification: {e}')
-
-#@app.agent(delivery_status_log_topic)
-async def delivery_status(messages):
-	async for message in messages.take(300, within=5):
-		try:
-			s = time.perf_counter()
-			elapsed = lambda: time.perf_counter() - s
-
-			lgr.info(f'RECEIVED Delivery Status {len(message)}: {message}')
-			message = np.asarray(message)
-			message_id = message[:,0]
-			message_status = message[:,1]
-			message_response = message[:,2]
-
-			def update_sent_outbound(outbound_id, outbound_state, response):
-				outbound = Outbound.objects.get(id=outbound_id)
-				outbound.state = OutBoundState.objects.get(name=outbound_state)
-				outbound.response = response
-				return outbound
-
-			outbound_list = await sync_to_async(np.vectorize(update_sent_outbound))(outbound_id=message_id, outbound_state=message_status, response=message_response)
-			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list.tolist(), ['state','response'])
-			lgr.info(f'{elapsed()} Delivery Status Updated')
-		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
+#async def sent_messages(messages):
+#	async for message in messages.take(300, within=1):
+#		try:
+#			s = time.perf_counter()
+#			
+#			elapsed = lambda: time.perf_counter() - s
+#
+#			lgr.info(f'RECEIVED Sent Notification {len(message)}: {message}')
+#			message = np.asarray(message)
+#			message_id = message[:,0]
+#			message_status = message[:,1]
+#			message_response = message[:,2]
+#
+#			def update_sent_outbound(outbound_id, outbound_state, response):
+#				outbound = Outbound.objects.get(id=outbound_id)
+#				outbound.state = OutBoundState.objects.get(name=outbound_state)
+#				outbound.response = response
+#				return outbound
+#
+#			outbound_list = await sync_to_async(np.vectorize(update_sent_outbound))(outbound_id=message_id, outbound_state=message_status, response=message_response)
+#			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list.tolist(), ['state','response'])
+#			lgr.info(f'{elapsed()} Sent Messages Updated')
+#
+#		except Exception as e: lgr.info(f'Error on Sent Notification: {e}')
+#
+#async def delivery_status(messages):
+#	async for message in messages.take(300, within=5):
+#		try:
+#			s = time.perf_counter()
+#			elapsed = lambda: time.perf_counter() - s
+#
+#			lgr.info(f'RECEIVED Delivery Status {len(message)}: {message}')
+#			message = np.asarray(message)
+#			message_id = message[:,0]
+#			message_status = message[:,1]
+#			message_response = message[:,2]
+#
+#			def update_sent_outbound(outbound_id, outbound_state, response):
+#				outbound = Outbound.objects.get(id=outbound_id)
+#				outbound.state = OutBoundState.objects.get(name=outbound_state)
+#				outbound.response = response
+#				return outbound
+#
+#			outbound_list = await sync_to_async(np.vectorize(update_sent_outbound))(outbound_id=message_id, outbound_state=message_status, response=message_response)
+#			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list.tolist(), ['state','response'])
+#			lgr.info(f'{elapsed()} Delivery Status Updated')
+#		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
 async def send_outbound_message(messages):
 	try:
