@@ -10,7 +10,7 @@ from .models import *
 from django.db.models import Q,F
 from functools import reduce
 
-from itertools import islice
+from itertools import islice, chain
 import pandas as pd
 import numpy as np
 import time
@@ -86,12 +86,18 @@ async def delivery_status(messages):
 			response_code = df['response_code'].values
 
 			def update_delivery_outbound(batch_id, outbound_state, response):
-				outbound = Outbound.objects.filter(batch_id=batch_id)\
-							.update(state=OutBoundState.objects.get(name=outbound_state),
-								response=response)
+				outbound_list = Outbound.objects.filter(batch_id=batch_id)
+				outbound = list()
+				for _outbound in outbound_list:
+					_outbound.state=OutBoundState.objects.get(name=outbound_state)
+					_outbound.response=response=response
+					outbound.append(_outbound)
 				return outbound
-
 			outbound_list = await sync_to_async(np.vectorize(update_delivery_outbound))(batch_id=batch_id, outbound_state=response_state, response=response_code)
+			lgr.info(f'{elapsed()} Delivery Status List {outbound_list}')
+			outbound_list = list(chain(*outbound_list))
+			lgr.info(f'{elapsed()} Delivery Status List Chained {outbound_list}')
+			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response'])
 			lgr.info(f'{elapsed()} Delivery Status Updated {outbound_list}')
 
 		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
