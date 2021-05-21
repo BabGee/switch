@@ -51,7 +51,7 @@ async def sent_messages(messages):
 			outbound = Outbound.objects.get(id=message['outbound_id'])
 			outbound.state = OutBoundState.objects.get(name=message['response_state'])
 			outbound.response = message['response_code']
-			outbound.batch_id = batch_id
+			outbound.batch_id = message['batch_id']
 			outbound.save()
 			lgr.info(f'{elapsed()} Sent Messages Updated')
 		except Exception as e: lgr.info(f'Error on Sent Messages: {e}')
