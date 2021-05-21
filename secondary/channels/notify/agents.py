@@ -366,33 +366,33 @@ async def send_outbound_messages(is_bulk=True, limit_batch=100):
 
 
 
-#from mode import Service
-#
-#@app.service
-#class NotificationService(Service):
-#	async def on_start(self):
-#		print('NOTIFICATION SERVICEIS STARTING')
-#
-#	async def on_stop(self):
-#		print('NOTIFICATION SERVICE IS STOPPING')
-#
-#	@Service.task
-#	async def _notification(self):
-#		while not self.should_stop:
-#			print('NOTIFICATION SERVICE RUNNING')
-#			try:
-#				await send_outbound_messages(is_bulk=False, limit_batch=60)
-#				await self.sleep(2.0)
-#			except Exception as e: lgr.error(f'Non-Bulk Send Outbound Messages Error: {e}')
-#
-#	@Service.task
-#	async def _bulk_notification(self):
-#		while not self.should_stop:
-#			print('BULK NOTIFICATION SERVICE RUNNING')
-#			try:
-#				await send_outbound_messages(is_bulk=True, limit_batch=240)
-#				await self.sleep(2.0)
-#			except Exception as e: lgr.error(f'Bulk Send Outbound Messages Error: {e}')
+from mode import Service
+
+@app.service
+class NotificationService(Service):
+	async def on_start(self):
+		print('NOTIFICATION SERVICEIS STARTING')
+
+	async def on_stop(self):
+		print('NOTIFICATION SERVICE IS STOPPING')
+
+	@Service.task
+	async def _notification(self):
+		while not self.should_stop:
+			print('NOTIFICATION SERVICE RUNNING')
+			try:
+				await send_outbound_messages(is_bulk=False, limit_batch=60)
+				#await self.sleep(2.0)
+			except Exception as e: lgr.error(f'Non-Bulk Send Outbound Messages Error: {e}')
+
+	@Service.task
+	async def _bulk_notification(self):
+		while not self.should_stop:
+			print('BULK NOTIFICATION SERVICE RUNNING')
+			try:
+				await send_outbound_messages(is_bulk=True, limit_batch=240)
+				#await self.sleep(2.0)
+			except Exception as e: lgr.error(f'Bulk Send Outbound Messages Error: {e}')
 
 
 
