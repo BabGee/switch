@@ -86,16 +86,13 @@ async def delivery_status(messages):
 			response_code = df['response_code'].values
 
 			def update_delivery_outbound(batch_id, outbound_state, response):
-				outbound = Outbound.objects.filter(batch_id=batch_id).last()
-				if outbound:
-					outbound.state = OutBoundState.objects.get(name=outbound_state)
-					outbound.response = response
+				outbound = Outbound.objects.filter(batch_id=batch_id)\
+							.update(state=OutBoundState.objects.get(name=outbound_state),
+								response=response)
 				return outbound
 
 			outbound_list = await sync_to_async(np.vectorize(update_delivery_outbound))(batch_id=batch_id, outbound_state=response_state, response=response_code)
-			outbound_list = list(filter(None, outbound_list))
-			if outbound_list: await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response'])
-			lgr.info(f'{elapsed()} Delivery Status Updated')
+			lgr.info(f'{elapsed()} Delivery Status Updated {outbound_list}')
 
 		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
