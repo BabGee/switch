@@ -133,7 +133,8 @@ async def delivery_status(messages):
 
 
 			outbound_list = await sync_to_async(np.vectorize(update_delivery_outbound))(batch_id=batch_id, outbound_state=response_state, response=response_code)
-			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(list(filter(None,outbound_list)), ['state','response'])
+			outbound_list = list(filter(None,outbound_list))
+			if outbound_list: await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response'])
 
 			lgr.info(f'{elapsed()} Delivery Status Updated {outbound_list}')
 
