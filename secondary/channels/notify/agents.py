@@ -46,14 +46,15 @@ async def sent_messages(messages):
 		try:
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
-
-			lgr.info(f'RECEIVED Sent Messages {message}')
-			outbound = Outbound.objects.get(id=message['outbound_id'])
-			outbound.state = OutBoundState.objects.get(name=message['response_state'])
-			outbound.response = message['response_code']
-			outbound.batch_id = message['batch_id']
-			outbound.save()
-			lgr.info(f'{elapsed()} Sent Messages Updated')
+			async def _record(message):
+				lgr.info(f'RECEIVED Sent Messages {message}')
+				outbound = Outbound.objects.get(id=message['outbound_id'])
+				outbound.state = OutBoundState.objects.get(name=message['response_state'])
+				outbound.response = message['response_code']
+				outbound.batch_id = message['batch_id']
+				outbound.save()
+				lgr.info(f'{elapsed()} Sent Messages Updated')
+			await _record(message)
 		except Exception as e: lgr.info(f'Error on Sent Messages: {e}')
 	#async for message in messages.take(150, within=1):
 	#	try:
@@ -89,12 +90,14 @@ async def delivery_status(messages):
 		try:
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
+			async def _record(message):
+				lgr.info(f'RECEIVED Delivery Status {message}')
+				outbound = Outbound.objects.filter(batch_id=message['batch_id']).\
+								update(state=OutBoundState.objects.get(name=message['response_state']),
+								response=message['response_code'])
+				lgr.info(f'{elapsed()} Delivery Status Updated')
 
-			lgr.info(f'RECEIVED Delivery Status {message}')
-			outbound = Outbound.objects.filter(batch_id=message['batch_id']).\
-							update(state=OutBoundState.objects.get(name=message['response_state']),
-							response=message['response_code'])
-			lgr.info(f'{elapsed()} Delivery Status Updated')
+			await _record(message)
 		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
 	#async for message in messages.take(150, within=5):
