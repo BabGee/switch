@@ -91,7 +91,7 @@ async def delivery_status(messages):
 				outbound.response = response
 				return outbound
 
-			outbound_list = await sync_to_async(np.vectorize(update_sent_outbound))(batch_id=batch_id, outbound_state=response_state, response=response_code)
+			outbound_list = await sync_to_async(np.vectorize(update_delivery_outbound))(batch_id=batch_id, outbound_state=response_state, response=response_code)
 			outbound = await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list.tolist(), ['state','response'])
 			lgr.info(f'{elapsed()} Delivery Status Updated {outbound}')
 
