@@ -39,7 +39,7 @@ lgr = logging.getLogger(__name__)
 sent_messages_topic = app.topic('switch.secondary.channels.notify.sent_messages')
 delivery_status_topic = app.topic('switch.secondary.channels.notify.delivery_status')
 
-@app.agent(join_sent_messages_topic)
+@app.agent(sent_messages_topic)
 async def sent_messages(messages):
 	async for message in messages.take(300, within=1):
 		try:
