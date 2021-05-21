@@ -36,48 +36,98 @@ from typing import (
 
 lgr = logging.getLogger(__name__)
 
-join_sent_messages_topic = app.topic('switch.secondary.channels.notify.join_sent_messages')
-join_delivery_status_topic = app.topic('switch.secondary.channels.notify.join_delivery_status')
+sent_messages_topic = app.topic('switch.secondary.channels.notify.sent_messages')
+delivery_status_topic = app.topic('switch.secondary.channels.notify.delivery_status')
 
 @app.agent(join_sent_messages_topic)
-async def join_sent_messages(messages):
+async def sent_messages(messages):
 	async for message in messages.take(300, within=1):
 		try:
 			s = time.perf_counter()
 			
 			elapsed = lambda: time.perf_counter() - s
 
-			lgr.info(f'Join Sent Message: {message}')
-			async def update_sent_status(data):
-				try:
-					df = pd.DataFrame(data)
-					for response_state in df['sent_response_state'].unique():
-						lgr.info(f'{elapsed()} Response State {response_state}')
-						response_state_df = df[df['sent_response_state']==response_state]
-						q_list = map(lambda n: Q(id=n[1]['outbound_id']), response_state_df.iterrows())
-						q_list = reduce(lambda a, b: a | b, q_list) 
-						state = await sync_to_async(OutBoundState.objects.get)(name=response_state)
-						lgr.info(f'{elapsed()} State Outbound Join Sent {state}')
-						#outbound = await sync_to_async(Outbound.objects.filter)(~Q(state=state), q_list)
-						outbound = await sync_to_async(Outbound.objects.filter)(q_list)
-						lgr.info(f'{elapsed()} Filter Outbound Join Sent {outbound}')
-						lgr.info(f'{elapsed()} Outbound: {outbound.query.__str__()}')
-						outbound = await sync_to_async(outbound.update)(state=state)
-						lgr.info(f'{elapsed()} Updated Outbound Join Sent {outbound}')
-				except Exception as e: lgr.info(f' Error on Update Sent Status {e}')
+			lgr.info(f'RECEIVED Sent Messages {len(message)}: {message}')
+			df = pd.DataFrame(data)
 
-			response = await update_sent_status(message)
-			lgr.info(f'{elapsed()} Update Join Sent Messages')
-		except Exception as e: lgr.info(f'Error on Join Sent Notification: {e}')
+			batch_id = df['batch_id'].values
+			outbound_id = df['outbound_id'].values
+			recipient = df['recipient'].values
+			response_state = df['response_state'].values
+			response_code = df['response_code'].values
 
-@app.agent(join_delivery_status_topic)
-async def join_delivery_status(messages):
+			def update_sent_outbound(outbound_id, outbound_state, response):
+				outbound = Outbound.objects.get(id=outbound_id)
+				outbound.state = OutBoundState.objects.get(name=outbound_state)
+				outbound.response = response
+				outbound.batch_id = batch_id
+				return outbound
+
+			outbound_list = await sync_to_async(np.vectorize(update_sent_outbound))(outbound_id=outbound_id, outbound_state=response_state, response=response_code, batch_id=batch_id)
+			outbound = await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list.tolist(), ['state','response','batch_id'])
+			lgr.info(f'{elapsed()} Sent Messages Updated {outbound}')
+
+		except Exception as e: lgr.info(f'Error on Sent Messages: {e}')
+
+@app.agent(delivery_status_topic)
+async def delivery_status(messages):
 	async for message in messages:
 		try:
-			lgr.info(f'Join Delivery Status: {message}')
+			s = time.perf_counter()
+			
+			elapsed = lambda: time.perf_counter() - s
+
+			lgr.info(f'RECEIVED Delivery Status {len(message)}: {message}')
+			df = pd.DataFrame(data)
+
+			batch_id = df['batch_id'].values
+			recipient = df['recipient'].values
+			response_state = df['response_state'].values
+			response_code = df['response_code'].values
+
+			def update_delivery_outbound(outbound_id, outbound_state, response):
+				outbound = Outbound.objects.get(batch_id=batch_id)
+				outbound.state = OutBoundState.objects.get(name=outbound_state)
+				outbound.response = response
+				return outbound
+
+			outbound_list = await sync_to_async(np.vectorize(update_sent_outbound))(batch_id=batch_id, outbound_state=response_state, response=response_code)
+			outbound = await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list.tolist(), ['state','response'])
+			lgr.info(f'{elapsed()} Delivery Status Updated {outbound}')
+
 		except Exception as e: lgr.info(f'Error on Join Delivery Status: {e}')
 
 
+#@app.agent(join_sent_messages_topic)
+#async def join_sent_messages(messages):
+#	async for message in messages.take(300, within=1):
+#		try:
+#			s = time.perf_counter()
+#			
+#			elapsed = lambda: time.perf_counter() - s
+#
+#			lgr.info(f'Join Sent Message: {message}')
+#			async def update_sent_status(data):
+#				try:
+#					df = pd.DataFrame(data)
+#					for response_state in df['sent_response_state'].unique():
+#						lgr.info(f'{elapsed()} Response State {response_state}')
+#						response_state_df = df[df['sent_response_state']==response_state]
+#						q_list = map(lambda n: Q(id=n[1]['outbound_id']), response_state_df.iterrows())
+#						q_list = reduce(lambda a, b: a | b, q_list) 
+#						state = await sync_to_async(OutBoundState.objects.get)(name=response_state)
+#						lgr.info(f'{elapsed()} State Outbound Join Sent {state}')
+#						#outbound = await sync_to_async(Outbound.objects.filter)(~Q(state=state), q_list)
+#						outbound = await sync_to_async(Outbound.objects.filter)(q_list)
+#						lgr.info(f'{elapsed()} Filter Outbound Join Sent {outbound}')
+#						lgr.info(f'{elapsed()} Outbound: {outbound.query.__str__()}')
+#						outbound = await sync_to_async(outbound.update)(state=state)
+#						lgr.info(f'{elapsed()} Updated Outbound Join Sent {outbound}')
+#				except Exception as e: lgr.info(f' Error on Update Sent Status {e}')
+#
+#			response = await update_sent_status(message)
+#			lgr.info(f'{elapsed()} Update Join Sent Messages')
+#		except Exception as e: lgr.info(f'Error on Join Sent Notification: {e}')
 
 #async def sent_messages(messages):
 #	async for message in messages.take(300, within=1):

@@ -264,6 +264,7 @@ class Outbound(models.Model):
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
 	message_len = models.IntegerField(default=1)
+	batch_id = models.CharField(max_length=256, blank=True, null=True)
 	objects = CopyManager()
 	def __str__(self):
 		return u'%s %s %s' % (self.contact, self.heading, self.message)
