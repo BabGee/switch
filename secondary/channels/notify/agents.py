@@ -42,7 +42,7 @@ delivery_status_topic = app.topic('switch.secondary.channels.notify.delivery_sta
 
 @app.agent(sent_messages_topic)
 async def sent_messages(messages):
-	async for message in messages.take(15, within=1):
+	async for message in messages.take(150, within=1):
 		try:
 			s = time.perf_counter()
 			
@@ -353,7 +353,7 @@ class NotificationService(Service):
 		while not self.should_stop:
 			print('NOTIFICATION SERVICE RUNNING')
 			try:
-				await send_outbound_messages(is_bulk=False, limit_batch=30)
+				await send_outbound_messages(is_bulk=False, limit_batch=60)
 				await self.sleep(2.0)
 			except Exception as e: lgr.error(f'Non-Bulk Send Outbound Messages Error: {e}')
 
@@ -362,7 +362,7 @@ class NotificationService(Service):
 		while not self.should_stop:
 			print('BULK NOTIFICATION SERVICE RUNNING')
 			try:
-				await send_outbound_messages(is_bulk=True, limit_batch=120)
+				await send_outbound_messages(is_bulk=True, limit_batch=240)
 				await self.sleep(2.0)
 			except Exception as e: lgr.error(f'Bulk Send Outbound Messages Error: {e}')
 
