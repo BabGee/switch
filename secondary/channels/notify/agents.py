@@ -56,7 +56,7 @@ async def sent_messages(messages):
 			response_state = df['response_state'].values
 			response_code = df['response_code'].values
 
-			def update_sent_outbound(outbound_id, outbound_state, response):
+			def update_sent_outbound(outbound_id, outbound_state, response, batch_id):
 				outbound = Outbound.objects.get(id=outbound_id)
 				outbound.state = OutBoundState.objects.get(name=outbound_state)
 				outbound.response = response
@@ -85,7 +85,7 @@ async def delivery_status(messages):
 			response_state = df['response_state'].values
 			response_code = df['response_code'].values
 
-			def update_delivery_outbound(outbound_id, outbound_state, response):
+			def update_delivery_outbound(batch_id, outbound_state, response):
 				outbound_list = Outbound.objects.filter(batch_id=batch_id).last()
 				outbound.state = OutBoundState.objects.get(name=outbound_state)
 				outbound.response = response
