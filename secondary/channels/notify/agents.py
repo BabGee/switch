@@ -64,8 +64,8 @@ async def sent_messages(messages):
 				return outbound
 
 			outbound_list = await sync_to_async(np.vectorize(update_sent_outbound))(outbound_id=outbound_id, outbound_state=response_state, response=response_code, batch_id=batch_id)
-			outbound = await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list.tolist(), ['state','response','batch_id'])
-			lgr.info(f'{elapsed()} Sent Messages Updated {outbound}')
+			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list.tolist(), ['state','response','batch_id'])
+			lgr.info(f'{elapsed()} Sent Messages Updated')
 
 		except Exception as e: lgr.info(f'Error on Sent Messages: {e}')
 
@@ -86,14 +86,14 @@ async def delivery_status(messages):
 			response_code = df['response_code'].values
 
 			def update_delivery_outbound(batch_id, outbound_state, response):
-				outbound_list = Outbound.objects.filter(batch_id=batch_id).last()
+				outbound = Outbound.objects.filter(batch_id=batch_id).last()
 				outbound.state = OutBoundState.objects.get(name=outbound_state)
 				outbound.response = response
 				return outbound
 
 			outbound_list = await sync_to_async(np.vectorize(update_delivery_outbound))(batch_id=batch_id, outbound_state=response_state, response=response_code)
-			outbound = await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list.tolist(), ['state','response'])
-			lgr.info(f'{elapsed()} Delivery Status Updated {outbound}')
+			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list.tolist(), ['state','response'])
+			lgr.info(f'{elapsed()} Delivery Status Updated')
 
 		except Exception as e: lgr.info(f'Error on Join Delivery Status: {e}')
 
