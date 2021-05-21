@@ -48,7 +48,7 @@ async def sent_messages(messages):
 			elapsed = lambda: time.perf_counter() - s
 
 			lgr.info(f'RECEIVED Sent Messages {len(message)}: {message}')
-			df = pd.DataFrame(data)
+			df = pd.DataFrame(message)
 
 			batch_id = df['batch_id'].values
 			outbound_id = df['outbound_id'].values
@@ -78,7 +78,7 @@ async def delivery_status(messages):
 			elapsed = lambda: time.perf_counter() - s
 
 			lgr.info(f'RECEIVED Delivery Status {len(message)}: {message}')
-			df = pd.DataFrame(data)
+			df = pd.DataFrame(message)
 
 			batch_id = df['batch_id'].values
 			recipient = df['recipient'].values
