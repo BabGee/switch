@@ -8,7 +8,7 @@ import requests, json, ast
 from django.db import transaction
 from .models import *
 from django.db.models import Q,F
-from django.core.exceptions import MultipleObjectsReturned
+from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from functools import reduce
 
 from itertools import islice, chain
@@ -100,6 +100,9 @@ async def delivery_status(messages):
 									response=response)
 					lgr.info(f'{elapsed()} Delivery Status Outbound {result}')
 					return None
+				except ObjectDoesNotExist:
+					return None
+
 
 			outbound_list = await sync_to_async(np.vectorize(update_delivery_outbound))(batch_id=batch_id, outbound_state=response_state, response=response_code)
 			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(list(filter(None,outbound_list)), ['state','response'])
