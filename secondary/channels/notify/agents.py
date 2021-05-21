@@ -79,35 +79,35 @@ async def delivery_status(messages):
 			elapsed = lambda: time.perf_counter() - s
 
 			lgr.info(f'RECEIVED Delivery Status {len(message)}: {message}')
-			df = pd.DataFrame(message)
+			#df = pd.DataFrame(message)
 
-			batch_id = df['batch_id'].values
-			recipient = df['recipient'].values
-			response_state = df['response_state'].values
-			response_code = df['response_code'].values
+			#batch_id = df['batch_id'].values
+			#recipient = df['recipient'].values
+			#response_state = df['response_state'].values
+			#response_code = df['response_code'].values
 
-			def update_delivery_outbound(batch_id, outbound_state, response):
-				outbound = None
-				try:
-					outbound = Outbound.objects.get(batch_id=batch_id)
-					outbound.state=OutBoundState.objects.get(name=outbound_state)
-					outbound.response=response
-					return outbound
-				except MultipleObjectsReturned:
-					outbound_list = Outbound.objects.filter(batch_id=batch_id)
-					lgr.info(f'{elapsed()} Delivery Status Outbound List {outbound_list}')
-					result = outbound_list.update(state=OutBoundState.objects.get(name=outbound_state), 
-									response=response)
-					lgr.info(f'{elapsed()} Delivery Status Outbound {result}')
-					return None
-				except ObjectDoesNotExist:
-					return None
+			#def update_delivery_outbound(batch_id, outbound_state, response):
+			#	outbound = None
+			#	try:
+			#		outbound = Outbound.objects.get(batch_id=batch_id)
+			#		outbound.state=OutBoundState.objects.get(name=outbound_state)
+			#		outbound.response=response
+			#		return outbound
+			#	except MultipleObjectsReturned:
+			#		outbound_list = Outbound.objects.filter(batch_id=batch_id)
+			#		lgr.info(f'{elapsed()} Delivery Status Outbound List {outbound_list}')
+			#		result = outbound_list.update(state=OutBoundState.objects.get(name=outbound_state), 
+			#						response=response)
+			#		lgr.info(f'{elapsed()} Delivery Status Outbound {result}')
+			#		return None
+			#	except ObjectDoesNotExist:
+			#		return None
 
 
-			outbound_list = await sync_to_async(np.vectorize(update_delivery_outbound))(batch_id=batch_id, outbound_state=response_state, response=response_code)
-			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(list(filter(None,outbound_list)), ['state','response'])
+			#outbound_list = await sync_to_async(np.vectorize(update_delivery_outbound))(batch_id=batch_id, outbound_state=response_state, response=response_code)
+			#await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(list(filter(None,outbound_list)), ['state','response'])
 
-			lgr.info(f'{elapsed()} Delivery Status Updated {outbound_list}')
+			#lgr.info(f'{elapsed()} Delivery Status Updated {outbound_list}')
 
 		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
