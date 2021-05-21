@@ -354,7 +354,7 @@ class NotificationService(Service):
 			print('NOTIFICATION SERVICE RUNNING')
 			try:
 				await send_outbound_messages(is_bulk=False, limit_batch=30)
-				await self.sleep(4.0)
+				await self.sleep(2.0)
 			except Exception as e: lgr.error(f'Non-Bulk Send Outbound Messages Error: {e}')
 
 	@Service.task
@@ -363,7 +363,7 @@ class NotificationService(Service):
 			print('BULK NOTIFICATION SERVICE RUNNING')
 			try:
 				await send_outbound_messages(is_bulk=True, limit_batch=120)
-				await self.sleep(4.0)
+				await self.sleep(2.0)
 			except Exception as e: lgr.error(f'Bulk Send Outbound Messages Error: {e}')
 
 
