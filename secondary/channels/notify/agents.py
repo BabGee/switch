@@ -56,7 +56,7 @@ async def sent_messages(messages):
 	#			lgr.info(f'{elapsed()} Sent Messages Updated')
 	#		await _record(message)
 	#	except Exception as e: lgr.info(f'Error on Sent Messages: {e}')
-	async for message in messages.take(300, within=1):
+	async for message in messages.take(150, within=1):
 		try:
 			s = time.perf_counter()
 			
@@ -100,7 +100,7 @@ async def delivery_status(messages):
 	#		await _record(message)
 	#	except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
-	async for message in messages.take(300, within=5):
+	async for message in messages.take(150, within=5):
 		try:
 			s = time.perf_counter()
 			
