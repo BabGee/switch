@@ -71,7 +71,7 @@ async def sent_messages(messages):
 
 @app.agent(delivery_status_topic)
 async def delivery_status(messages):
-	async for message in messages:
+	async for message in messages.take(300, within=10):
 		try:
 			s = time.perf_counter()
 			
@@ -86,7 +86,7 @@ async def delivery_status(messages):
 			response_code = df['response_code'].values
 
 			def update_delivery_outbound(outbound_id, outbound_state, response):
-				outbound = Outbound.objects.get(batch_id=batch_id)
+				outbound_list = Outbound.objects.filter(batch_id=batch_id).last()
 				outbound.state = OutBoundState.objects.get(name=outbound_state)
 				outbound.response = response
 				return outbound
