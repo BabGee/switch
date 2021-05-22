@@ -90,11 +90,12 @@ async def delivery_status(messages):
 					outbound.response=response_code
 					outbound_list.append(outbound)
 				except MultipleObjectsReturned:
-					def _update():
-						return Outbound.objects.filter(batch_id=batch_id).update
-
-					outbound = await sync_to_async(_update)(state=OutBoundState.objects.get(name=response_state), 
+					async def _update(response_state):
+						return Outbound.objects.filter(batch_id=batch_id).\
+							update(state=OutBoundState.objects.get(name=response_state), 
 									response=response_code)
+
+					outbound = await sync_to_async(_update)(response_state=response_state, response_code=response_code)
 					lgr.info(f'{elapsed()} Delivery Status Outbound {outbound}')
 				except ObjectDoesNotExist: pass
 
