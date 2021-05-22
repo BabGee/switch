@@ -68,6 +68,9 @@ app.conf.task_routes = {
 		'secondary.channels.notify.tasks.send_outbound_batch': {'queue': 'spawned_outbound_notification','exchange': 'spawned_outbound_notification','routing_key':'spawned_outbound_notification','delivery_mode': 'transient'}, 
 		'secondary.channels.notify.tasks.send_outbound': {'queue': 'spawned_outbound_notification','exchange': 'spawned_outbound_notification','routing_key':'spawned_outbound_notification','delivery_mode': 'transient'}, 
 
+		'secondary.channels.notify.tasks.bulk_send_outbound_messages': {'queue': 'bulk_spawned_outbound_notification','exchange': 'bulk_spawned_outbound_notification','routing_key':'bulk_spawned_outbound_notification','delivery_mode': 'transient'}, 
+		'secondary.channels.notify.tasks.send_outbound_messages': {'queue': 'spawned_outbound_notification','exchange': 'spawned_outbound_notification','routing_key':'spawned_outbound_notification','delivery_mode': 'transient'}, 
+
 		'secondary.channels.notify.tasks.send_outbound_email_messages': {'queue': 'bulk_notification','exchange': 'bulk_notification','routing_key':'bulk_notification','delivery_mode': 'transient'}, 
 
 		'secondary.channels.dsc.tasks.pre_process_file_upload': {'queue': 'files','exchange': 'files','routing_key':'files','delivery_mode': 'transient'},
