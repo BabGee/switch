@@ -187,7 +187,7 @@ async def send_outbound_message(messages):
 
 		lgr.info(f'4.1:Elapsed {elapsed()}')
 		response = await asyncio.gather(*tasks)
-		lgr.info(f'5:Elapsed {elapsed()} Sent Outbound Message {response}')
+		lgr.info(f'5:Elapsed {elapsed()} Sent Outbound Message {len(response)}')
 	except Exception as e: lgr.error(f'Send Outbound Message Error: {e}')
 
 
