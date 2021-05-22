@@ -90,7 +90,7 @@ async def delivery_status(messages):
 					outbound.response=response_code
 					outbound_list.append(outbound)
 				except MultipleObjectsReturned:
-					async def _update(response_state):
+					async def _update(response_state, response_code):
 						return Outbound.objects.filter(batch_id=batch_id).\
 							update(state=OutBoundState.objects.get(name=response_state), 
 									response=response_code)
