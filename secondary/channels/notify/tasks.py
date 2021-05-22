@@ -2189,31 +2189,34 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 							start+=batch_size
 							if not batch: break
 							payload['recipients'] = batch
-							lgr.info(payload)
-							tasks.append(
-				kafka_producer.publish_message(payload['endpoint_url'], None, json.dumps(payload) )
-								)
+							lgr.info(f'{elapsed()} Producer Payload: {payload}')
+							kafka_producer.publish_message(
+									payload['endpoint_url'], 
+									None, json.dumps(payload) 
+									)
+
 					elif len(group_df.shape)>1 :
 						lgr.info(f'Got Here (list of singles): {recipients}')
 						for d in recipients:
 							payload['recipients'] = [d]       
-							lgr.info(payload)
-							tasks.append(
-				kafka_producer.publish_message(payload['endpoint_url'], None, json.dumps(payload) )
-								)
+							lgr.info(f'{elapsed()} Producer Payload: {payload}')
+							kafka_producer.publish_message(
+									payload['endpoint_url'], 
+									None, json.dumps(payload) 
+									)
 					else:
 						lgr.info(f'Got Here (single): {recipients}')
 						payload['recipients'] = recipients
-						lgr.info(payload)
-						tasks.append(
-				kafka_producer.publish_message(payload['endpoint_url'], None, json.dumps(payload) )
+						lgr.info(f'{elapsed()} Producer Payload: {payload}')
+						kafka_producer.publish_message(
+								payload['endpoint_url'], 
+								None, json.dumps(payload) 
 								)
 					#Control Speeds
-					lgr.info(f'4:Elapsed {elapsed()}')
+
+					lgr.info(f'4:Elapsed {elapsed()} Producer Sent')
 					lgr.info(f'Sent Message to topic {payload["endpoint_url"]}')
 
-				lgr.info(f'4.1:Elapsed {elapsed()}')
-				response = group(*tasks)()
 				lgr.info(f'5:Elapsed {elapsed()} Sent Outbound Message {response}')
 
 	except Exception as e: lgr.error(f'Send Outbound Messages Error: {e}')
