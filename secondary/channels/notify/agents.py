@@ -51,18 +51,15 @@ async def sent_messages(messages):
 			lgr.info(f'RECEIVED Sent Messages {len(message)}: {message}')
 			df = pd.DataFrame(message)
 
-			#batch_id = df['batch_id'].values
-			#outbound_id = df['outbound_id'].values
-			#recipient = df['recipient'].values
-			#response_state = df['response_state'].values
-			#response_code = df['response_code'].values
 			outbound_list = []
 			for r in zip(*df.to_dict("list").values()):
+				batch_id, outbound_id, recipient, response_state, response_code = r
+				lgr.info(f'Batch ID {batch_id} | Outbound ID {outbound_id} | Recipient {recipient} | Response State {response_state} | Response Code {response_code}')
 				try:
-					outbound = Outbound.objects.get(id=r[1])
-					outbound.state = OutBoundState.objects.get(name=r[2])
-					outbound.response = r[3]
-					outbound.batch_id = r[0]
+					outbound = Outbound.objects.get(id=outbound_id)
+					outbound.state = OutBoundState.objects.get(name=response_state)
+					outbound.response = response_code
+					outbound.batch_id = batch_id
 					outbound_list.append(outbound)
 				except ObjectDoesNotExist: pass
 
@@ -83,28 +80,21 @@ async def delivery_status(messages):
 			lgr.info(f'RECEIVED Delivery Status {len(message)}: {message}')
 			df = pd.DataFrame(message)
 
-			#batch_id = df['batch_id'].values
-			#recipient = df['recipient'].values
-			#response_state = df['response_state'].values
-			#response_code = df['response_code'].values
-
 			outbound_list = []
 			for r in zip(*df.to_dict("list").values()):
-				outbound = Outbound.objects.get(id=r[1])
-				outbound.state = OutBoundState.objects.get(name=r[2])
-				outbound.response = r[3]
-				outbound.batch_id = r[0]
+				batch_id, recipient, response_state, response_code = r
+				lgr.info(f'Batch ID {batch_id} | Recipient {recipient} | Response State {response_state} | Response Code {response_code}')
 				try:
-					outbound = Outbound.objects.get(batch_id=r[0])
-					outbound.state=OutBoundState.objects.get(name=r[2])
-					outbound.response=r[3]
+					outbound = Outbound.objects.get(batch_id=batch_id)
+					outbound.state=OutBoundState.objects.get(name=response_state)
+					outbound.response=response_code
 					outbound_list.append(outbound)
 				except MultipleObjectsReturned:
 					def _update():
 						return Outbound.objects.filter(batch_id=batch_id).update
 
-					outbound = await sync_to_async(_update)(state=OutBoundState.objects.get(name=r[2]), 
-									response=r[3])
+					outbound = await sync_to_async(_update)(state=OutBoundState.objects.get(name=response_state), 
+									response=response_code)
 					lgr.info(f'{elapsed()} Delivery Status Outbound {outbound}')
 				except ObjectDoesNotExist: pass
 
