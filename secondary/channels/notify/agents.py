@@ -42,7 +42,7 @@ delivery_status_topic = app.topic('switch.secondary.channels.notify.delivery_sta
 
 @app.agent(sent_messages_topic)
 async def sent_messages(messages):
-	async for message in messages.take(300, within=1):
+	async for message in messages.take(100, within=1):
 		try:
 			s = time.perf_counter()
 			
@@ -54,7 +54,7 @@ async def sent_messages(messages):
 			outbound_list = []
 			for r in zip(*df.to_dict("list").values()):
 				batch_id, outbound_id, recipient, response_state, response_code = r
-				lgr.info(f'Batch ID {batch_id} | Outbound ID {outbound_id} | Recipient {recipient} | Response State {response_state} | Response Code {response_code}')
+				#lgr.info(f'Batch ID {batch_id} | Outbound ID {outbound_id} | Recipient {recipient} | Response State {response_state} | Response Code {response_code}')
 				try:
 					outbound = Outbound.objects.get(id=outbound_id)
 					outbound.state = OutBoundState.objects.get(name=response_state)
@@ -71,7 +71,7 @@ async def sent_messages(messages):
 
 @app.agent(delivery_status_topic)
 async def delivery_status(messages):
-	async for message in messages.take(300, within=5):
+	async for message in messages.take(100, within=5):
 		try:
 			s = time.perf_counter()
 			
@@ -83,7 +83,7 @@ async def delivery_status(messages):
 			outbound_list = []
 			for r in zip(*df.to_dict("list").values()):
 				batch_id, recipient, response_state, response_code = r
-				lgr.info(f'Batch ID {batch_id} | Recipient {recipient} | Response State {response_state} | Response Code {response_code}')
+				#lgr.info(f'Batch ID {batch_id} | Recipient {recipient} | Response State {response_state} | Response Code {response_code}')
 				try:
 					outbound = Outbound.objects.get(batch_id=batch_id)
 					outbound.state=OutBoundState.objects.get(name=response_state)
