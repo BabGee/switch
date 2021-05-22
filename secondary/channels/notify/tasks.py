@@ -45,7 +45,7 @@ from collections import defaultdict
 
 from primary.core.administration.views import WebService
 from .models import *
-from integrator.kafka import app as kafka_producer
+from switch.kafka import app as kafka_producer
 
 import logging
 lgr = logging.getLogger('secondary.channels.notify')
