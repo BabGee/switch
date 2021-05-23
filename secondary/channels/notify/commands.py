@@ -160,15 +160,17 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 
 
 @app.command()
-async def switch_channels_notify_command_notifications():
+async def notify_notifications():
 	"""This docstring is used as the command help in --help."""
 	while 1:
 		try:
 
 			print('NOTIFICATION SERVICE RUNNING')
-			self.loop.run_in_executor(thread_pool, _send_outbound_messages, *[False, 60])
+			app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[False, 60])
 			await asyncio.sleep(4.0)
 			print('BULK NOTIFICATION SERVICE RUNNING')
-			self.loop.run_in_executor(thread_pool, _send_outbound_messages, *[True, 240])
+			app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[True, 240])
 			await asyncio.sleep(4.0)
-		except Exception as e: lgr.error(f'Bulk Send Outbound Messages Error: {e}')
+		except Exception as e: 
+			lgr.error(f'Bulk Send Outbound Messages Error: {e}')
+			break
