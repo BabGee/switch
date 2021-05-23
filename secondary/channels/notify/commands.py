@@ -47,4 +47,6 @@ lgr = logging.getLogger(__name__)
 async def example():
 	"""This docstring is used as the command help in --help."""
 	while 1:
-		print('RUNNING EXAMPLE COMMAND')
+		try:
+			print('RUNNING EXAMPLE COMMAND')
+			app.sleep(4.0)
