@@ -47,7 +47,7 @@ thread_pool = ThreadPoolExecutor(max_workers=16)
 
 @app.agent(sent_messages_topic, concurrency=16)
 async def sent_messages(messages):
-	async for message in messages.take(150, within=5):
+	async for message in messages.take(15, within=1):
 		try:
 			s = time.perf_counter()
 			
@@ -76,7 +76,7 @@ async def sent_messages(messages):
 
 @app.agent(delivery_status_topic, concurrency=16)
 async def delivery_status(messages):
-	async for message in messages.take(30, within=10):
+	async for message in messages.take(15, within=10):
 		try:
 			s = time.perf_counter()
 			
