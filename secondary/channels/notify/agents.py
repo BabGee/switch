@@ -45,7 +45,7 @@ delivery_status_topic = app.topic('switch.secondary.channels.notify.delivery_sta
 
 @app.agent(sent_messages_topic, concurrency=1)
 async def sent_messages(messages):
-	async for message in messages.take(30, within=1):
+	async for message in messages.take(150, within=1):
 		try:
 			s = time.perf_counter()
 			
