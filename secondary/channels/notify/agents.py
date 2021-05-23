@@ -45,7 +45,7 @@ delivery_status_topic = app.topic('switch.secondary.channels.notify.delivery_sta
 
 thread_pool = ThreadPoolExecutor(max_workers=16)
 
-@app.agent(sent_messages_topic)
+@app.agent(sent_messages_topic, concurrency=16)
 async def sent_messages(messages):
 	async for message in messages.take(150, within=5):
 		try:
@@ -53,7 +53,6 @@ async def sent_messages(messages):
 			
 			elapsed = lambda: time.perf_counter() - s
 
-			with thread_pool as executor:
 			lgr.info(f'RECEIVED Sent Messages {len(message)}: {message}')
 			df = await sync_to_async(pd.DataFrame)(message)
 
@@ -75,9 +74,9 @@ async def sent_messages(messages):
 
 		except Exception as e: lgr.info(f'Error on Sent Messages: {e}')
 
-@app.agent(delivery_status_topic)
+@app.agent(delivery_status_topic, concurrency=16)
 async def delivery_status(messages):
-	async for message in messages.take(150, within=10):
+	async for message in messages.take(30, within=10):
 		try:
 			s = time.perf_counter()
 			
