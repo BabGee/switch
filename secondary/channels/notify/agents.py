@@ -12,6 +12,7 @@ from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from functools import reduce
 from concurrent.futures import ThreadPoolExecutor
 from switch.kafka import app as kafka_producer
+from mode import Service
 
 from itertools import islice, chain
 import pandas as pd
@@ -224,24 +225,6 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 
 	except Exception as e: lgr.error(f'Send Outbound Messages Error: {e}')
 
-
-#@app.timer(interval=1)
-#async def _nbulk_send_outbound_messages(app):
-#	try:
-#		await app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[False, 60])
-#		#await send_outbound_messages(is_bulk=False, limit_batch=60)
-#	except Exception as e: lgr.error(f'Non-Bulk Send Outbound Messages Error: {e}')
-#
-#@app.timer(interval=1)
-#async def _bulk_send_outbound_messages(app):
-#	try:
-#		await app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[True, 240])
-#		#await send_outbound_messages(is_bulk=True, limit_batch=240)
-#	except Exception as e: lgr.error(f'Bulk Send Outbound Messages Error: {e}')
-
-
-
-from mode import Service
 
 @app.service
 class NotificationService(Service):
