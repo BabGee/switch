@@ -62,8 +62,8 @@ async def sent_messages(messages):
 				batch_id, outbound_id, recipient, response_state, response_code = r
 				#lgr.info(f'Batch ID {batch_id} | Outbound ID {outbound_id} | Recipient {recipient} | Response State {response_state} | Response Code {response_code}')
 				try:
-					outbound = Outbound.objects.get(id=outbound_id)
-					outbound.state = OutBoundState.objects.get(name=response_state)
+					outbound = await sync_to_async(Outbound.objects.get)(id=outbound_id)
+					outbound.state = await sync_to_async(OutBoundState.objects.get)(name=response_state)
 					outbound.response = response_code
 					outbound.batch_id = batch_id
 					outbound_list.append(outbound)
@@ -91,9 +91,9 @@ async def delivery_status(messages):
 				batch_id, recipient, response_state, response_code = r
 				#lgr.info(f'Batch ID {batch_id} | Recipient {recipient} | Response State {response_state} | Response Code {response_code}')
 				try:
-					outbound = Outbound.objects.get(batch_id=batch_id)
-					outbound.state=OutBoundState.objects.get(name=response_state)
-					outbound.response=response_code
+					outbound = await sync_to_async(Outbound.objects.get)(batch_id=batch_id)
+					outbound.state = await sync_to_async(OutBoundState.objects.get)(name=response_state)
+					outbound.response = response_code
 					outbound_list.append(outbound)
 				except MultipleObjectsReturned:
 					async def _update(response_state, response_code):
