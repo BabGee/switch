@@ -41,7 +41,7 @@ lgr = logging.getLogger(__name__)
 sent_messages_topic = app.topic('switch.secondary.channels.notify.sent_messages')
 delivery_status_topic = app.topic('switch.secondary.channels.notify.delivery_status')
 
-thread_pool = ThreadPoolExecutor(max_workers=1)
+#thread_pool = ThreadPoolExecutor(max_workers=1)
 
 
 @app.agent(sent_messages_topic)
@@ -268,8 +268,8 @@ class NotificationService(Service):
 		while not self.should_stop:
 			print('NOTIFICATION SERVICE RUNNING')
 			try:
-				app.loop.run_in_executor(thread_pool, send_outbound_messages, [False, 60])
-				#await send_outbound_messages(is_bulk=False, limit_batch=60)
+				#app.loop.run_in_executor(thread_pool, send_outbound_messages, [False, 60])
+				await send_outbound_messages(is_bulk=False, limit_batch=60)
 			except Exception as e: lgr.error(f'Non-Bulk Send Outbound Messages Error: {e}')
 			await self.sleep(2.0)
 
@@ -278,8 +278,8 @@ class NotificationService(Service):
 		while not self.should_stop:
 			print('BULK NOTIFICATION SERVICE RUNNING')
 			try:
-				app.loop.run_in_executor(thread_pool, send_outbound_messages, [True, 240])
-				#await send_outbound_messages(is_bulk=True, limit_batch=240)
+				#app.loop.run_in_executor(thread_pool, send_outbound_messages, [True, 240])
+				await send_outbound_messages(is_bulk=True, limit_batch=240)
 			except Exception as e: lgr.error(f'Bulk Send Outbound Messages Error: {e}')
 			await self.sleep(2.0)
 
