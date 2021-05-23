@@ -68,7 +68,7 @@ async def sent_messages(messages):
 					except ObjectDoesNotExist: pass
 					yield outbound
 
-			outbound_list = await _outbound_list()
+			outbound_list = await _outbound_list(df)
 			lgr.info(f'{elapsed()} Sent Messages Outbound List {len(outbound_list)}')
 			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response','batch_id'])
 			lgr.info(f'{elapsed()} Sent Messages Updated')
@@ -103,7 +103,7 @@ async def delivery_status(messages):
 						lgr.info(f'{elapsed()} Multi Delivery Status Outbound {_outbound}')
 					except ObjectDoesNotExist: pass
 					yield outbound
-			outbound_list = await _outbound_list()
+			outbound_list = await _outbound_list(df)
 			lgr.info(f'{elapsed()} Delivery Status Outbound List {len(outbound_list)}')
 			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response'])
 			lgr.info(f'{elapsed()} Delivery Status Updated')
