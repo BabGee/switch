@@ -49,6 +49,11 @@ async def example():
 	while 1:
 		try:
 			print('RUNNING EXAMPLE COMMAND')
-			app.sleep(4.0)
+			asyncio.sleep(4.0)
+			print('Good Run')
+			break
 		except Exception as e:
 			print(f'Error on Example Command {e}')
+			break
+
+
