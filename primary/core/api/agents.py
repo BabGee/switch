@@ -32,6 +32,7 @@ from typing import (
 
 lgr = logging.getLogger(__name__)
 
+'''
 #request_factory = RequestFactory(**{"SERVER_NAME": "localhost", "wsgi.url_scheme":"https"}).
 request_factory = RequestFactory(**{"SERVER_NAME": "localhost"})
 
@@ -50,7 +51,6 @@ api_topic = app.topic('primary.core.upc.api.interface', value_type=_Interface)
 
 transformed_api_topic = app.topic('primary.core.upc.api.transformedinterface', value_type=TransformedInterface)
 
-
 @app.agent(api_topic)
 async def _interface(_requests):
 	async for _request in _requests:
@@ -68,5 +68,5 @@ async def _interface(_requests):
 			#lgr.info(f'Interface Request: {_request.service_name}')
 		except Exception as e:
 			lgr.info(f'Error in _interface request {e}')
-
+'''
 
