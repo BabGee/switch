@@ -45,7 +45,7 @@ delivery_status_topic = app.topic('switch.secondary.channels.notify.delivery_sta
 
 @app.agent(sent_messages_topic, concurrency=1)
 async def sent_messages(messages):
-	async for message in messages.take(150, within=1):
+	async for message in messages.take(15, within=1):
 		try:
 			s = time.perf_counter()
 			
@@ -106,7 +106,7 @@ async def delivery_status(messages):
 			lgr.info(f'{elapsed()} Delivery Status Outbound List {len(outbound_list)}')
 			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response'])
 			lgr.info(f'{elapsed()} Delivery Status Updated')
-			await asyncio.sleep(10.0)
+			await asyncio.sleep(15.0)
 		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
 
