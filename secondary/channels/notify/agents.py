@@ -47,7 +47,7 @@ thread_pool = ThreadPoolExecutor(max_workers=4)
 
 @app.agent(sent_messages_topic, concurrency=1)
 async def sent_messages(messages):
-	async for message in messages.take(30, within=1):
+	async for message in messages.take(300, within=1):
 		try:
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
@@ -73,12 +73,12 @@ async def sent_messages(messages):
 
 			await app.loop.run_in_executor(thread_pool, _outbound_list, message)
 			lgr.info(f'{elapsed()} Sent Message Task Completed')
-			await asyncio.sleep(2.0)
+			await asyncio.sleep(5.0)
 		except Exception as e: lgr.info(f'Error on Sent Messages: {e}')
 
 @app.agent(delivery_status_topic, concurrency=1)
 async def delivery_status(messages):
-	async for message in messages.take(60, within=5):
+	async for message in messages.take(300, within=5):
 		try:
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
@@ -108,7 +108,7 @@ async def delivery_status(messages):
 				lgr.info(f'{elapsed()} Delivery Status Updated')
 
 			await app.loop.run_in_executor(thread_pool, _outbound_list, message)
-			await asyncio.sleep(5.0)
+			await asyncio.sleep(10.0)
 		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
 
