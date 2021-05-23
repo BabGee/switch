@@ -50,14 +50,12 @@ async def sent_messages(messages):
 	async for message in messages.take(30, within=1):
 		try:
 			s = time.perf_counter()
-			
 			elapsed = lambda: time.perf_counter() - s
-
-			lgr.info(f'RECEIVED Sent Messages {len(message)}')
-			df = await sync_to_async(pd.DataFrame)(message)
-			lgr.info(f'{elapsed()}Sent Messages Data Captured')
-			def  _outbound_list(df):
-				__outbound_list = list()
+			def  _outbound_list(message):
+				lgr.info(f'RECEIVED Sent Messages {len(message)}')
+				df = pd.DataFrame(message)
+				lgr.info(f'{elapsed()}Sent Messages Data Captured')
+				outbound_list = list()
 				for r in zip(*df.to_dict("list").values()):
 					batch_id, outbound_id, recipient, response_state, response_code = r
 					#lgr.info(f'Batch ID {batch_id} | Outbound ID {outbound_id} | Recipient {recipient} | Response State {response_state} | Response Code {response_code}')
@@ -66,15 +64,15 @@ async def sent_messages(messages):
 						outbound.state = OutBoundState.objects.get(name=response_state)
 						outbound.response = response_code
 						outbound.batch_id = batch_id
-						__outbound_list.append(outbound)
+						outbound_list.append(outbound)
 					except ObjectDoesNotExist: pass
-				return __outbound_list
 
-			outbound_list = await app.loop.run_in_executor(thread_pool, _outbound_list, df)
+				lgr.info(f'{elapsed()} Sent Messages Outbound List {len(outbound_list)}')
+				Outbound.objects.bulk_update(outbound_list, ['state','response','batch_id'])
+				lgr.info(f'{elapsed()} Sent Messages Updated')
 
-			lgr.info(f'{elapsed()} Sent Messages Outbound List {len(outbound_list)}')
-			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response','batch_id'])
-			lgr.info(f'{elapsed()} Sent Messages Updated')
+			await app.loop.run_in_executor(thread_pool, _outbound_list, message)
+			lgr.info(f'{elapsed()} Sent Message Task Completed')
 			await asyncio.sleep(2.0)
 		except Exception as e: lgr.info(f'Error on Sent Messages: {e}')
 
@@ -83,15 +81,13 @@ async def delivery_status(messages):
 	async for message in messages.take(60, within=5):
 		try:
 			s = time.perf_counter()
-			
 			elapsed = lambda: time.perf_counter() - s
 
-			lgr.info(f'RECEIVED Delivery Status {len(message)}')
-			df = await sync_to_async(pd.DataFrame)(message)
-			lgr.info(f'{elapsed()}Delivery Status Data Captured')
-
-			def _outbound_list(df):
-				__outbound_list = list()
+			def _outbound_list(message):
+				lgr.info(f'RECEIVED Delivery Status {len(message)}')
+				df = pd.DataFrame(message)
+				lgr.info(f'{elapsed()}Delivery Status Data Captured')
+				outbound_list = list()
 				for r in zip(*df.to_dict("list").values()):
 					batch_id, recipient, response_state, response_code = r
 					#lgr.info(f'Batch ID {batch_id} | Recipient {recipient} | Response State {response_state} | Response Code {response_code}')
@@ -99,7 +95,7 @@ async def delivery_status(messages):
 						outbound = Outbound.objects.get(batch_id=batch_id)
 						outbound.state = OutBoundState.objects.get(name=response_state)
 						outbound.response = response_code
-						__outbound_list.append(outbound)
+						outbound_list.append(outbound)
 					except MultipleObjectsReturned:
 						
 						_outbound = Outbound.objects.filter(batch_id=batch_id).update(
@@ -107,13 +103,12 @@ async def delivery_status(messages):
 							response=response_code)
 						lgr.info(f'{elapsed()} Multi Delivery Status Outbound {_outbound}')
 					except ObjectDoesNotExist: pass
-				return __outbound_list
+				lgr.info(f'{elapsed()} Delivery Status Outbound List {len(outbound_list)}')
+				if outbound_list: Outbound.objects.bulk_update(outbound_list, ['state','response'])
+				lgr.info(f'{elapsed()} Delivery Status Updated')
 
-			outbound_list = await app.loop.run_in_executor(thread_pool, _outbound_list, df)
-			lgr.info(f'{elapsed()} Delivery Status Outbound List {len(outbound_list)}')
-			if outbound_list: await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response'])
-			lgr.info(f'{elapsed()} Delivery Status Updated')
-			await asyncio.sleep(15.0)
+			await app.loop.run_in_executor(thread_pool, _outbound_list, message)
+			await asyncio.sleep(5.0)
 		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
 
