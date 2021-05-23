@@ -49,7 +49,7 @@ async def sent_messages(messages):
 			elapsed = lambda: time.perf_counter() - s
 
 			lgr.info(f'RECEIVED Sent Messages {len(message)}: {message}')
-			df = pd.DataFrame(message)
+			df = await sync_to_async(pd.DataFrame)(message)
 
 			outbound_list = []
 			for r in zip(*df.to_dict("list").values()):
@@ -78,7 +78,7 @@ async def delivery_status(messages):
 			elapsed = lambda: time.perf_counter() - s
 
 			lgr.info(f'RECEIVED Delivery Status {len(message)}: {message}')
-			df = pd.DataFrame(message)
+			df = await sync_to_async(pd.DataFrame)(message)
 
 			outbound_list = []
 			for r in zip(*df.to_dict("list").values()):
@@ -112,7 +112,7 @@ async def send_outbound_message(messages):
 
 		elapsed = lambda: time.perf_counter() - s
 	
-		df = pd.DataFrame({'outbound_id':messages[:,0], 'recipient':messages[:,1], 'product_id':messages[:,2], 'batch':messages[:,3], 'ext_service_id':messages[:,5],'code':messages[:,6],\
+		df = await sync_to_async(pd.DataFrame)({'outbound_id':messages[:,0], 'recipient':messages[:,1], 'product_id':messages[:,2], 'batch':messages[:,3], 'ext_service_id':messages[:,5],'code':messages[:,6],\
 			'message':messages[:,7],'endpoint_account_id':messages[:,8],'endpoint_password':messages[:,9],'endpoint_username':messages[:,10],\
 			'endpoint_api_key':messages[:,11],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'channel':messages[:,16]})
 
@@ -263,18 +263,18 @@ class NotificationService(Service):
 	async def _notification(self):
 		while not self.should_stop:
 			print('NOTIFICATION SERVICE RUNNING')
-			#try:
-			#	await send_outbound_messages(is_bulk=False, limit_batch=60)
-			#except Exception as e: lgr.error(f'Non-Bulk Send Outbound Messages Error: {e}')
+			try:
+				await send_outbound_messages(is_bulk=False, limit_batch=60)
+			except Exception as e: lgr.error(f'Non-Bulk Send Outbound Messages Error: {e}')
 			await self.sleep(2.0)
 
 	@Service.task
 	async def _bulk_notification(self):
 		while not self.should_stop:
 			print('BULK NOTIFICATION SERVICE RUNNING')
-			#try:
-			#	await send_outbound_messages(is_bulk=True, limit_batch=240)
-			#except Exception as e: lgr.error(f'Bulk Send Outbound Messages Error: {e}')
+			try:
+				await send_outbound_messages(is_bulk=True, limit_batch=240)
+			except Exception as e: lgr.error(f'Bulk Send Outbound Messages Error: {e}')
 			await self.sleep(2.0)
 
 
