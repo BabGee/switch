@@ -73,7 +73,7 @@ async def sent_messages(messages):
 			outbound_list = await app.loop.run_in_executor(thread_pool, _outbound_list, df)
 
 			lgr.info(f'{elapsed()} Sent Messages Outbound List {outbound_list}')
-			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response','batch_id'])
+			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(*outbound_list, ['state','response','batch_id'])
 			lgr.info(f'{elapsed()} Sent Messages Updated')
 			await asyncio.sleep(2.0)
 		except Exception as e: lgr.info(f'Error on Sent Messages: {e}')
@@ -111,7 +111,7 @@ async def delivery_status(messages):
 
 			outbound_list = await app.loop.run_in_executor(thread_pool, _outbound_list, df)
 			lgr.info(f'{elapsed()} Delivery Status Outbound List {outbound_list}')
-			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response'])
+			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(*outbound_list, ['state','response'])
 			lgr.info(f'{elapsed()} Delivery Status Updated')
 			await asyncio.sleep(15.0)
 		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
