@@ -219,7 +219,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 					lgr.info(f'4:Elapsed {elapsed()} Producer Sent')
 					lgr.info(f'Sent Message to topic {payload["endpoint_url"]}')
 
-				lgr.info(f'5:Elapsed {elapsed()} Sent Outbound Message {response}')
+				lgr.info(f'5:Elapsed {elapsed()} Sent Outbound Message')
 
 	except Exception as e: lgr.error(f'Send Outbound Messages Error: {e}')
 
