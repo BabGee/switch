@@ -43,7 +43,8 @@ lgr = logging.getLogger(__name__)
 sent_messages_topic = app.topic('switch.secondary.channels.notify.sent_messages')
 delivery_status_topic = app.topic('switch.secondary.channels.notify.delivery_status')
 
-thread_pool = ThreadPoolExecutor(max_workers=16)
+#thread_pool = ThreadPoolExecutor(max_workers=16) #Heavy on database
+thread_pool = ThreadPoolExecutor(max_workers=1)
 
 @app.agent(sent_messages_topic, concurrency=16)
 async def sent_messages(messages):
