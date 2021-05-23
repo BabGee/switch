@@ -167,10 +167,10 @@ async def notify_notifications():
 
 			print('NOTIFICATION SERVICE RUNNING')
 			app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[False, 60])
-			await asyncio.sleep(4.0)
+			await asyncio.sleep(1.0)
 			print('BULK NOTIFICATION SERVICE RUNNING')
 			app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[True, 240])
-			await asyncio.sleep(4.0)
+			await asyncio.sleep(1.0)
 		except Exception as e: 
 			lgr.error(f'Bulk Send Outbound Messages Error: {e}')
 			break
