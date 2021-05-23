@@ -53,6 +53,7 @@ async def sent_messages(messages):
 			
 			elapsed = lambda: time.perf_counter() - s
 
+			with thread_pool as executor:
 			lgr.info(f'RECEIVED Sent Messages {len(message)}: {message}')
 			df = await sync_to_async(pd.DataFrame)(message)
 
@@ -242,7 +243,7 @@ class NotificationService(Service):
 				self.loop.run_in_executor(thread_pool, _send_outbound_messages, *[False, 60])
 				#await send_outbound_messages(is_bulk=False, limit_batch=60)
 			except Exception as e: lgr.error(f'Non-Bulk Send Outbound Messages Error: {e}')
-			await self.sleep(2.0)
+			await self.sleep(4.0)
 
 	@Service.task
 	async def _bulk_notification(self):
@@ -252,6 +253,6 @@ class NotificationService(Service):
 				self.loop.run_in_executor(thread_pool, _send_outbound_messages, *[True, 240])
 				#await send_outbound_messages(is_bulk=True, limit_batch=240)
 			except Exception as e: lgr.error(f'Bulk Send Outbound Messages Error: {e}')
-			await self.sleep(2.0)
+			await self.sleep(4.0)
 
 
