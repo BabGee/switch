@@ -72,7 +72,7 @@ async def sent_messages(messages):
 			await asyncio.sleep(2.0)
 		except Exception as e: lgr.info(f'Error on Sent Messages: {e}')
 
-@app.agent(delivery_status_topic, concurrency=16)
+@app.agent(delivery_status_topic, concurrency=1)
 async def delivery_status(messages):
 	async for message in messages.take(15, within=10):
 		try:
