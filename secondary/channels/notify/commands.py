@@ -50,3 +50,5 @@ async def example():
 		try:
 			print('RUNNING EXAMPLE COMMAND')
 			app.sleep(4.0)
+		except Exception as e:
+			print(f'Error on Example Command {e}')
