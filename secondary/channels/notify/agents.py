@@ -70,7 +70,7 @@ async def sent_messages(messages):
 					except ObjectDoesNotExist: pass
 					yield outbound
 
-			outbound_list = app.loop.run_in_executor(thread_pool, _outbound_list, df)
+			outbound_list = await app.loop.run_in_executor(thread_pool, _outbound_list, df)
 
 			lgr.info(f'{elapsed()} Sent Messages Outbound List {outbound_list}')
 			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response','batch_id'])
@@ -109,7 +109,7 @@ async def delivery_status(messages):
 					except ObjectDoesNotExist: pass
 					yield outbound
 
-			outbound_list = app.loop.run_in_executor(thread_pool, _outbound_list, df)
+			outbound_list = await app.loop.run_in_executor(thread_pool, _outbound_list, df)
 			lgr.info(f'{elapsed()} Delivery Status Outbound List {outbound_list}')
 			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response'])
 			lgr.info(f'{elapsed()} Delivery Status Updated')
