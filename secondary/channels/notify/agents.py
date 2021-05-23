@@ -54,14 +54,14 @@ async def sent_messages(messages):
 			lgr.info(f'RECEIVED Sent Messages {len(message)}')
 			df = await sync_to_async(pd.DataFrame)(message)
 			lgr.info(f'{elapsed()}Sent Messages Data Captured')
-			def _outbound_list(df):
+			async def  _outbound_list(df):
 				outbound = list()
 				for r in zip(*df.to_dict("list").values()):
 					batch_id, outbound_id, recipient, response_state, response_code = r
 					#lgr.info(f'Batch ID {batch_id} | Outbound ID {outbound_id} | Recipient {recipient} | Response State {response_state} | Response Code {response_code}')
 					try:
-						outbound = Outbound.objects.get(id=outbound_id)
-						outbound.state = OutBoundState.objects.get(name=response_state)
+						outbound = await sync_to_async(Outbound.objects.get)(id=outbound_id)
+						outbound.state = await sync_to_async(OutBoundState.objects.get)(name=response_state)
 						outbound.response = response_code
 						outbound.batch_id = batch_id
 						outbound_list.append(outbound)
@@ -83,10 +83,11 @@ async def delivery_status(messages):
 			
 			elapsed = lambda: time.perf_counter() - s
 
-			lgr.info(f'RECEIVED Delivery Status {len(message)}: {message}')
+			lgr.info(f'RECEIVED Delivery Status {len(message)}')
 			df = await sync_to_async(pd.DataFrame)(message)
 			lgr.info(f'{elapsed()}Delivery Status Data Captured')
-			def _outbound_list(df):
+
+			async def _outbound_list(df):
 				outbound = list()
 				for r in zip(*df.to_dict("list").values()):
 					batch_id, recipient, response_state, response_code = r
@@ -97,12 +98,15 @@ async def delivery_status(messages):
 						outbound.response = response_code
 						outbound_list.append(outbound)
 					except MultipleObjectsReturned:
-						_outbound = Outbound.objects.filter(batch_id=batch_id).update(
-								state=OutBoundState.objects.get(name=response_state), 
-								response=response_code)
-						lgr.info(f'{elapsed()} Multi Delivery Status Outbound {_outbound}')
+						async def _update(response_state, response_code):
+							state = await sync_to_async(OutBoundState.objects.get)(name=response_state)
+							return Outbound.objects.filter(batch_id=batch_id).update
+
+						outbound = await sync_to_async(_update)(response_state=response_state, response_code=response_code)
+						lgr.info(f'{elapsed()} Multi Delivery Status Outbound {outbound}')
 					except ObjectDoesNotExist: pass
 					yield outbound
+
 			outbound_list = await _outbound_list(df)
 			lgr.info(f'{elapsed()} Delivery Status Outbound List {len(outbound_list)}')
 			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response'])
