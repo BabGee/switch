@@ -42,10 +42,11 @@ lgr = logging.getLogger(__name__)
 sent_messages_topic = app.topic('switch.secondary.channels.notify.sent_messages')
 delivery_status_topic = app.topic('switch.secondary.channels.notify.delivery_status')
 
+thread_pool = ThreadPoolExecutor(max_workers=16)
 
 @app.agent(sent_messages_topic)
 async def sent_messages(messages):
-	async for message in messages.take(15, within=5):
+	async for message in messages.take(150, within=5):
 		try:
 			s = time.perf_counter()
 			
@@ -74,7 +75,7 @@ async def sent_messages(messages):
 
 @app.agent(delivery_status_topic)
 async def delivery_status(messages):
-	async for message in messages.take(15, within=10):
+	async for message in messages.take(150, within=10):
 		try:
 			s = time.perf_counter()
 			
@@ -224,7 +225,6 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 	except Exception as e: lgr.error(f'Send Outbound Messages Error: {e}')
 
 
-thread_pool = ThreadPoolExecutor(max_workers=1)
 #@app.timer(interval=1)
 #async def _nbulk_send_outbound_messages(app):
 #	try:
