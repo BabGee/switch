@@ -241,14 +241,14 @@ thread_pool = ThreadPoolExecutor(max_workers=1)
 @app.timer(interval=1)
 async def _nbulk_send_outbound_messages(app):
 	try:
-		app.loop.run_in_executor(thread_pool, send_outbound_messages, (False, 60))
+		await app.loop.run_in_executor(thread_pool, send_outbound_messages, (False, 60))
 		#await send_outbound_messages(is_bulk=False, limit_batch=60)
 	except Exception as e: lgr.error(f'Non-Bulk Send Outbound Messages Error: {e}')
 
 @app.timer(interval=1)
 async def _bulk_send_outbound_messages(app):
 	try:
-		app.loop.run_in_executor(thread_pool, send_outbound_messages, (True, 240))
+		await app.loop.run_in_executor(thread_pool, send_outbound_messages, (True, 240))
 		#await send_outbound_messages(is_bulk=True, limit_batch=240)
 	except Exception as e: lgr.error(f'Bulk Send Outbound Messages Error: {e}')
 
