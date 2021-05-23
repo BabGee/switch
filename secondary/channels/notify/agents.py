@@ -72,7 +72,7 @@ async def sent_messages(messages):
 
 			outbound_list = await app.loop.run_in_executor(thread_pool, _outbound_list, df)
 
-			lgr.info(f'{elapsed()} Sent Messages Outbound List {outbound_list}')
+			lgr.info(f'{elapsed()} Sent Messages Outbound List {len(outbound_list)}')
 			await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response','batch_id'])
 			lgr.info(f'{elapsed()} Sent Messages Updated')
 			await asyncio.sleep(2.0)
@@ -110,7 +110,7 @@ async def delivery_status(messages):
 				return __outbound_list
 
 			outbound_list = await app.loop.run_in_executor(thread_pool, _outbound_list, df)
-			lgr.info(f'{elapsed()} Delivery Status Outbound List {outbound_list}')
+			lgr.info(f'{elapsed()} Delivery Status Outbound List {len(outbound_list)}')
 			if outbound_list: await sync_to_async(Outbound.objects.bulk_update, thread_sensitive=True)(outbound_list, ['state','response'])
 			lgr.info(f'{elapsed()} Delivery Status Updated')
 			await asyncio.sleep(15.0)
