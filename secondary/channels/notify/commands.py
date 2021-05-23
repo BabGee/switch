@@ -55,5 +55,15 @@ async def example():
 		except Exception as e:
 			print(f'Error on Example Command {e}')
 			break
+	@app.service
+	class NotificationService(Service):
+		async def on_start(self):
+			print('NOTIFICATION SERVICEIS STARTING')
 
+		async def on_stop(self):
+			print('NOTIFICATION SERVICE IS STOPPING')
+
+		@Service.task
+		async def _notification(self):
+			print('NOTIFICATION TASK RUNS')
 
