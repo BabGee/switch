@@ -54,16 +54,19 @@ transformed_api_topic = app.topic('primary.core.upc.api.transformedinterface', v
 @app.agent(api_topic)
 async def _interface(_requests):
 	async for _request in _requests:
-		request = await sync_to_async(request_factory.post)(f'/api/{_request.service_name}/', json.dumps(_request.payload), content_type='application/json')
-		response = await sync_to_async(Interface().interface)(request, _request.service_name)
-		transformed = TransformedInterface(
-					    request=_request.payload,
-					    service_name=_request.service_name,
-					    response=response.content
-					    #response=json.loads(response.content)
-					)
+		try:
+			request = await sync_to_async(request_factory.post)(f'/api/{_request.service_name}/', json.dumps(_request.payload), content_type='application/json')
+			response = await sync_to_async(Interface().interface)(request, _request.service_name)
+			transformed = TransformedInterface(
+						    request=_request.payload,
+						    service_name=_request.service_name,
+						    response=response.content
+						    #response=json.loads(response.content)
+						)
 
-		await transformed_api_topic.send(value=transformed)   
-		#lgr.info(f'Interface Request: {_request.service_name}')
+			await transformed_api_topic.send(value=transformed)   
+			#lgr.info(f'Interface Request: {_request.service_name}')
+		except Exception as e:
+			lgr.info(f'Error in _interface request {e}')
 
 
