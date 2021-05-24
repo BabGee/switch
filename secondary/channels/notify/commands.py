@@ -162,15 +162,21 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 @app.command()
 async def notify_notifications():
 	"""This docstring is used as the command help in --help."""
+	lgr.info('NOTIFICATION SERVICE STARTING.........')
 	while 1:
 		try:
-
 			print('NOTIFICATION SERVICE RUNNING')
-			await app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[False, 120])
-			await asyncio.sleep(1.0)
-			print('BULK NOTIFICATION SERVICE RUNNING')
-			await app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[True, 480])
+			task = list()
+			#Transactional Notification
+			notification = app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[False, 120])
+			task.append(notification)
+			#Bulk Notification
+			bulk_notification = app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[True, 480])
+			task.append(bulk_notification)
+			#Run Tasks
+			response = await asyncio.gather(*tasks)
+			#Control Speeds
 			await asyncio.sleep(1.0)
 		except Exception as e: 
-			lgr.error(f'Bulk Send Outbound Messages Error: {e}')
+			lgr.error(f'NOTIFICATION SERVICE ERROR: {e}')
 			break
