@@ -97,14 +97,14 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 				#lgr.info(f'DF 2 {df}')
 				#df.drop(columns=['endpoint_request'], inplace=True)
 
-				lgr.info(f'DF 3 {df}')
+				#lgr.info(f'DF 3 {df}')
 				cols = df.columns.tolist()
 				#df.set_index(cols, inplace=True)
 				#df = df.sort_index()
 				cols.remove('outbound_id')
 				cols.remove('recipient')
 				grouped_df = df.groupby(cols)
-				lgr.info('Grouped DF: %s' % grouped_df)
+				#lgr.info('Grouped DF: %s' % grouped_df)
 
 
 				tasks = []
@@ -118,7 +118,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 					#lgr.info('MULTI: %s \n %s' % (group_df.shape,group_df.head()))
 					if batch_size>1 and len(group_df.shape)>1 and group_df.shape[0]>1:
 						objs = recipients
-						lgr.info(f'Got Here (multi): {objs}')
+						lgr.info(f'Got Here (multi): {len(objs)}')
 						start = 0
 						while True:
 							batch = list(islice(objs, start, start+batch_size))
@@ -132,7 +132,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 									)
 
 					elif len(group_df.shape)>1 :
-						lgr.info(f'Got Here (list of singles): {recipients}')
+						lgr.info(f'Got Here (list of singles): {len(recipients)}')
 						for d in recipients:
 							payload['recipients'] = [d]       
 							lgr.info(f'{elapsed()} Producer Payload: {payload}')
