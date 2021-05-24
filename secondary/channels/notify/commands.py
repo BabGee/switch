@@ -72,7 +72,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 			if len(outbound):
 				messages=np.asarray(outbound)
 				lgr.info(f'2:Elapsed {elapsed()}')
-				lgr.info('Messages: %s' % messages)
+				#lgr.info('Messages: %s' % messages)
 
 				##Update State
 				processing = orig_outbound.filter(id__in=messages[:,0].tolist()).update(state=OutBoundState.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
