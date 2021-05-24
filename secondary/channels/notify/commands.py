@@ -125,7 +125,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 							start+=batch_size
 							if not batch: break
 							payload['recipients'] = batch
-							lgr.info(f'{elapsed()} Producer Payload: {payload}')
+							#lgr.info(f'{elapsed()} Producer Payload: {payload}')
 							kafka_producer.publish_message(
 									payload['endpoint_url'], 
 									None, json.dumps(payload) 
@@ -135,7 +135,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 						lgr.info(f'Got Here (list of singles): {len(recipients)}')
 						for d in recipients:
 							payload['recipients'] = [d]       
-							lgr.info(f'{elapsed()} Producer Payload: {payload}')
+							#lgr.info(f'{elapsed()} Producer Payload: {payload}')
 							kafka_producer.publish_message(
 									payload['endpoint_url'], 
 									None, json.dumps(payload) 
@@ -143,7 +143,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 					else:
 						lgr.info(f'Got Here (single): {recipients}')
 						payload['recipients'] = recipients
-						lgr.info(f'{elapsed()} Producer Payload: {payload}')
+						#lgr.info(f'{elapsed()} Producer Payload: {payload}')
 						kafka_producer.publish_message(
 								payload['endpoint_url'], 
 								None, json.dumps(payload) 
