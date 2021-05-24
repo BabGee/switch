@@ -59,7 +59,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60)))\
 					.select_related('contact','template','state')
 
-			lgr.info('Orig Outbound: %s' % orig_outbound)
+			#lgr.info('Orig Outbound: %s' % orig_outbound)
 
 			outbound = orig_outbound[:limit_batch].values_list('id','recipient','contact__product__id','contact__product__notification__endpoint__batch','ext_outbound_id',
                                                 'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',
@@ -68,7 +68,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 						'contact__product__notification__code__channel__name')
 
 			lgr.info(f'1:Elapsed {elapsed()}')
-			lgr.info('Outbound: %s' % outbound)
+			#lgr.info('Outbound: %s' % outbound)
 			if len(outbound):
 				messages=np.asarray(outbound)
 				lgr.info(f'2:Elapsed {elapsed()}')
@@ -82,11 +82,11 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 					'endpoint_api_key':messages[:,11],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'channel':messages[:,16]})
 
 				lgr.info(f'3:Elapsed {elapsed()}')
-				lgr.info('DF: %s' % df)
+				#lgr.info('DF: %s' % df)
 				df['batch'] = pd.to_numeric(df['batch'])
 				df = df.dropna(axis='columns',how='all')
 
-				lgr.info(f'DF 0 {df}')
+				#lgr.info(f'DF 0 {df}')
 
 				##if not df['endpoint_request'].empty:
 				##df['endpoint_request'] = df['endpoint_request'].to_json(orient="records")
