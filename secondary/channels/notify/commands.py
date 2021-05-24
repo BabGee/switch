@@ -41,7 +41,7 @@ from typing import (
 lgr = logging.getLogger(__name__)
 
 #thread_pool = ThreadPoolExecutor(max_workers=16) #Heavy on database
-thread_pool = ThreadPoolExecutor(max_workers=4)
+thread_pool = ThreadPoolExecutor(max_workers=6)
 
 def _send_outbound_messages(is_bulk=True, limit_batch=100):
 	try:
