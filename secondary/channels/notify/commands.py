@@ -171,10 +171,10 @@ async def notify_notifications():
 			print('NOTIFICATION SERVICE RUNNING')
 			tasks = list()
 			#Transactional Notification
-			notification = app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[False, 160])
+			notification = app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[False, 120])
 			tasks.append(notification)
 			#Bulk Notification
-			bulk_notification = app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[True, 640])
+			bulk_notification = app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[True, 480])
 			tasks.append(bulk_notification)
 			#Run Tasks
 			response = await asyncio.gather(*tasks)
