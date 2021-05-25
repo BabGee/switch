@@ -89,7 +89,8 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 				lgr.info(f'DF 0 {df}')
 
 				if 'endpoint_request' in df.columns: 
-					df['endpoint_request'] = df['endpoint_request'].to_json()
+					#df['endpoint_request'] = df['endpoint_request'].to_json()
+					df['endpoint_request'] = pd.json_normalize(df['endpoint_request'])
 					##df['endpoint_request'] = df['endpoint_request'].astype(str)
 					##if not df['endpoint_request'].empty:
 					#df['endpoint_request']= df['endpoint_request'].fillna({i: {} for i in df.index})
