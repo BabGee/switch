@@ -79,7 +79,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 
 				df = pd.DataFrame({'outbound_id':messages[:,0], 'recipient':messages[:,1], 'product_id':messages[:,2], 'batch':messages[:,3], 'ext_service_id':messages[:,5],'code':messages[:,6],\
 					'message':messages[:,7],'endpoint_account_id':messages[:,8],'endpoint_password':messages[:,9],'endpoint_username':messages[:,10],\
-					'endpoint_api_key':messages[:,11],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'channel':messages[:,16]})
+					'endpoint_api_key':messages[:,11],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'endpoint_request':messages[:,15], 'channel':messages[:,16]})
 
 				lgr.info(f'3:Elapsed {elapsed()}')
 				#lgr.info('DF: %s' % df)
@@ -88,11 +88,13 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 
 				#lgr.info(f'DF 0 {df}')
 
+				df['endpoint_request'] = df['endpoint_request']..astype(str)
+
 				##if not df['endpoint_request'].empty:
 				##df['endpoint_request'] = df['endpoint_request'].to_json(orient="records")
 				#df['endpoint_request']= df['endpoint_request'].fillna({i: {} for i in df.index})
 				##df['endpoint_request'] = df['endpoint_request'].apply(ast.literal_eval)
-				#lgr.info(f'DF 1 {df}')
+				lgr.info(f'DF 1 {df}')
 				#df = df.join(pd.json_normalize(df['endpoint_request']))
 				#lgr.info(f'DF 2 {df}')
 				#df.drop(columns=['endpoint_request'], inplace=True)
@@ -104,7 +106,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 				cols.remove('outbound_id')
 				cols.remove('recipient')
 				grouped_df = df.groupby(cols)
-				#lgr.info('Grouped DF: %s' % grouped_df)
+				lgr.info('Grouped DF: %s' % grouped_df)
 
 
 				tasks = []
@@ -125,7 +127,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 							start+=batch_size
 							if not batch: break
 							payload['recipients'] = batch
-							#lgr.info(f'{elapsed()} Producer Payload: {payload}')
+							lgr.info(f'{elapsed()} Producer Payload: {payload}')
 							kafka_producer.publish_message(
 									payload['endpoint_url'], 
 									None, json.dumps(payload) 
@@ -135,7 +137,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 						lgr.info(f'Got Here (list of singles): {len(recipients)}')
 						for d in recipients:
 							payload['recipients'] = [d]       
-							#lgr.info(f'{elapsed()} Producer Payload: {payload}')
+							lgr.info(f'{elapsed()} Producer Payload: {payload}')
 							kafka_producer.publish_message(
 									payload['endpoint_url'], 
 									None, json.dumps(payload) 
@@ -143,7 +145,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 					else:
 						lgr.info(f'Got Here (single): {recipients}')
 						payload['recipients'] = recipients
-						#lgr.info(f'{elapsed()} Producer Payload: {payload}')
+						lgr.info(f'{elapsed()} Producer Payload: {payload}')
 						kafka_producer.publish_message(
 								payload['endpoint_url'], 
 								None, json.dumps(payload) 
