@@ -88,16 +88,16 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 
 				lgr.info(f'DF 0 {df}')
 
-				if 'endpoint_request' in df.columns: df['endpoint_request'] = df['endpoint_request'].astype(str)
-
-				##if not df['endpoint_request'].empty:
-				##df['endpoint_request'] = df['endpoint_request'].to_json(orient="records")
-				#df['endpoint_request']= df['endpoint_request'].fillna({i: {} for i in df.index})
-				##df['endpoint_request'] = df['endpoint_request'].apply(ast.literal_eval)
-				lgr.info(f'DF 1 {df}')
-				#df = df.join(pd.json_normalize(df['endpoint_request']))
-				#lgr.info(f'DF 2 {df}')
-				#df.drop(columns=['endpoint_request'], inplace=True)
+				if 'endpoint_request' in df.columns: 
+					df['endpoint_request'] = df['endpoint_request'].to_json()
+					##df['endpoint_request'] = df['endpoint_request'].astype(str)
+					##if not df['endpoint_request'].empty:
+					#df['endpoint_request']= df['endpoint_request'].fillna({i: {} for i in df.index})
+					##df['endpoint_request'] = df['endpoint_request'].apply(ast.literal_eval)
+					#lgr.info(f'DF 1 {df}')
+					#df = df.join(pd.json_normalize(df['endpoint_request']))
+					#lgr.info(f'DF 2 {df}')
+					#df.drop(columns=['endpoint_request'], inplace=True)
 
 				#lgr.info(f'DF 3 {df}')
 				cols = df.columns.tolist()
