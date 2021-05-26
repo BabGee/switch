@@ -7,7 +7,8 @@ import psycopg2
 
 #BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField' #'django.db.models.BigAutoField' - Change in app.py for bigger tables
 
 import configparser
 
