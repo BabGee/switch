@@ -8,6 +8,12 @@ default_dbuser=
 default_dbpassword=
 default_dbhost=
 default_dbport=
+read_dbengine=django.contrib.gis.db.backends.postgis
+read_dbname=
+read_dbuser=
+read_dbpassword=
+read_dbhost=
+read_dbport=
 [ALLOWED_HOSTS]
 hosts=127.0.0.1,localhost
 [SMTP]
