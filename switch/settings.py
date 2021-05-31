@@ -66,16 +66,16 @@ conf_hosts =  os.getenv("ALLOWED_HOSTS_hosts", cf.get('ALLOWED_HOSTS','hosts'))
 hosts = conf_hosts.split(",")        
     
 installed_apps = products+thirdparty
-installed_apps = filter(None, installed_apps)
+installed_apps = list(filter(None, installed_apps))
 
-primary = (
+primary = [
     'primary.core.administration',
     'primary.core.api',
     'primary.core.upc',
     'primary.core.bridge',
-	)
+	]
 
-secondary = (
+secondary = [
     'secondary.channels.vcs',
     'secondary.channels.iic',
     'secondary.channels.dsc',
@@ -88,9 +88,9 @@ secondary = (
     'secondary.finance.vbs',
     'secondary.finance.crc',
     'secondary.finance.paygate',
-	)
+	]
 
-installed_apps = primary + secondary + tuple(installed_apps)
+installed_apps = primary + secondary + installed_apps
 
 
 timezone='Africa/Nairobi'
@@ -156,7 +156,7 @@ DATABASES['read'] = {
 	},
 
 
-installed_apps = installed_apps + tuple(['django_cassandra_engine'])
+installed_apps = installed_apps + ['django_cassandra_engine']
 DATABASES['cassandra'] = {
 		'ENGINE': 'django_cassandra_engine',
 		'NAME': 'switch',
@@ -164,7 +164,6 @@ DATABASES['cassandra'] = {
 		'PASSWORD': 'pass',
 		#'TEST_NAME': 'test_switch',
 		'HOST': 'cassandra-0-service',
-		'ATOMIC_REQUESTS': False,
 		'OPTIONS': {
 			'replication': {
 			'strategy_class': 'SimpleStrategy',
@@ -275,7 +274,7 @@ INSTALLED_APPS = (
     'primary.core.bridge',
 )
 '''
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.auth',
@@ -286,7 +285,7 @@ INSTALLED_APPS = (
     'django.contrib.gis',
     'django_extensions',
     'django_celery_beat',
-) +  installed_apps
+] +  installed_apps
 
 '''
 
