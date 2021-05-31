@@ -132,7 +132,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 
 							topic = app.topic(payload['endpoint_url'])
 							lgr.info(f'Topic: {topic}')
-							topic.send(value=payload)
+							await topic.send(value=payload)
 
 							#kafka_producer.publish_message(
 							#		payload['endpoint_url'], 
@@ -147,7 +147,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 
 							topic = app.topic(payload['endpoint_url'])
 							lgr.info(f'Topic: {topic}')
-							topic.send(value=payload)
+							await topic.send(value=payload)
 
 							#kafka_producer.publish_message(
 							#		payload['endpoint_url'], 
@@ -160,7 +160,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 
 						topic = app.topic(payload['endpoint_url'])
 						lgr.info(f'Topic: {topic}')
-						topic.send(value=payload)
+						await topic.send(value=payload)
 
 
 						#kafka_producer.publish_message(
