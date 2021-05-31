@@ -1,6 +1,7 @@
 import os
 import datetime
 import psycopg2
+from cassandra import ConsistencyLevel
 
 # Django settings for switch project.
 #from django.conf.global_settings import TEMPLATE_CONTEXT_PROCESSORS
@@ -132,26 +133,52 @@ SUIT_CONFIG = {
 MANAGERS = ADMINS
 
 DATABASES = {
-    'default': {
-        'ENGINE': default_dbengine, # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': default_dbname,                      # Or path to database file if using sqlite3.
-        # The following settings are not used with sqlite3:
-        'USER': default_dbuser,
-        'PASSWORD': default_dbpassword,
-        'HOST': default_dbhost,                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-        'PORT': default_dbport,                      # Set to empty string for default.
-	'DISABLE_SERVER_SIDE_CURSORS': True,
-    },
-    'read': {
-        'ENGINE': read_dbengine, 
-        'NAME': read_dbname, 
-        'USER': read_dbuser,
-        'PASSWORD': read_dbpassword,
-        'HOST': read_dbhost,
-        'PORT': read_dbport,
-    }
+	'default': {
+		'ENGINE': default_dbengine, # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+		'NAME': default_dbname,                      # Or path to database file if using sqlite3.
+		# The following settings are not used with sqlite3:
+		'USER': default_dbuser,
+		'PASSWORD': default_dbpassword,
+		'HOST': default_dbhost,                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+		'PORT': default_dbport,                      # Set to empty string for default.
+		'DISABLE_SERVER_SIDE_CURSORS': True,
+	},
 }
 
+
+DATABASES['read'] = {
+		'ENGINE': read_dbengine, 
+		'NAME': read_dbname, 
+		'USER': read_dbuser,
+		'PASSWORD': read_dbpassword,
+		'HOST': read_dbhost,
+		'PORT': read_dbport,
+	},
+
+DATABASES['cassandra'] = {
+		'ENGINE': 'django_cassandra_engine',
+		'NAME': 'switch',
+		'USER': 'user',
+		'PASSWORD': 'pass',
+		#'TEST_NAME': 'test_switch',
+		'HOST': 'cassandra-0-service',
+		'OPTIONS': {
+			'replication': {
+			'strategy_class': 'SimpleStrategy',
+			'replication_factor': 1
+			},
+			'connection': {
+				'consistency': ConsistencyLevel.LOCAL_ONE,
+				'retry_connect': True
+				# + All connection options for cassandra.cluster.Cluster()
+			},
+			'session': {
+				'default_timeout': 10,
+				'default_fetch_size': 10000
+				# + All options for cassandra.cluster.Session()
+			}
+		}
+	}
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
