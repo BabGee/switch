@@ -156,7 +156,7 @@ DATABASES['read'] = {
 	},
 
 
-#installed_apps = installed_apps + ['django_cassandra_engine']
+installed_apps = installed_apps + ['django_cassandra_engine']
 #DATABASES['cassandra'] = {
 #		'ENGINE': 'django_cassandra_engine',
 #		'NAME': 'switch',
