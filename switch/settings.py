@@ -322,6 +322,7 @@ INSTALLED_APPS = (
 )
 '''
 INSTALLED_APPS = [
+    'django_cassandra_engine',
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.auth',
