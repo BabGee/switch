@@ -65,7 +65,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
                                                 'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',
                                                 'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',
                                                 'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url','contact__product__notification__endpoint__request',
-						'contact__product__notification__code__channel__name')
+						'contact__product__notification__code__channel__name','contact__product__notification__code__mno__name')
 
 			lgr.info(f'1:Elapsed {elapsed()}')
 			#lgr.info('Outbound: %s' % outbound)
@@ -79,7 +79,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 
 				df = pd.DataFrame({'outbound_id':messages[:,0], 'recipient':messages[:,1], 'product_id':messages[:,2], 'batch':messages[:,3], 'ext_service_id':messages[:,5],'code':messages[:,6],\
 					'message':messages[:,7],'endpoint_account_id':messages[:,8],'endpoint_password':messages[:,9],'endpoint_username':messages[:,10],\
-					'endpoint_api_key':messages[:,11],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'channel':messages[:,16]})
+					'endpoint_api_key':messages[:,11],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'channel':messages[:,16],  'mno':messages[:,17]})
 
 				lgr.info(f'3:Elapsed {elapsed()}')
 				#lgr.info('DF: %s' % df)
@@ -129,28 +129,44 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 							if not batch: break
 							payload['recipients'] = batch
 							#lgr.info(f'{elapsed()} Producer Payload: {payload}')
-							kafka_producer.publish_message(
-									payload['endpoint_url'], 
-									None, json.dumps(payload) 
-									)
+
+							topic = app.topic(payload['endpoint_url'])
+							lgr.info(f'Topic: {topic}')
+							topic.send(value=payload)
+
+							#kafka_producer.publish_message(
+							#		payload['endpoint_url'], 
+							#		None, json.dumps(payload) 
+							#		)
 
 					elif len(group_df.shape)>1 :
 						lgr.info(f'Got Here (list of singles): {len(recipients)}')
 						for d in recipients:
 							payload['recipients'] = [d]       
 							#lgr.info(f'{elapsed()} Producer Payload: {payload}')
-							kafka_producer.publish_message(
-									payload['endpoint_url'], 
-									None, json.dumps(payload) 
-									)
+
+							topic = app.topic(payload['endpoint_url'])
+							lgr.info(f'Topic: {topic}')
+							topic.send(value=payload)
+
+							#kafka_producer.publish_message(
+							#		payload['endpoint_url'], 
+							#		None, json.dumps(payload) 
+							#		)
 					else:
 						lgr.info(f'Got Here (single): {recipients}')
 						payload['recipients'] = recipients
 						#lgr.info(f'{elapsed()} Producer Payload: {payload}')
-						kafka_producer.publish_message(
-								payload['endpoint_url'], 
-								None, json.dumps(payload) 
-								)
+
+						topic = app.topic(payload['endpoint_url'])
+						lgr.info(f'Topic: {topic}')
+						topic.send(value=payload)
+
+
+						#kafka_producer.publish_message(
+						#		payload['endpoint_url'], 
+						#		None, json.dumps(payload) 
+						#		)
 					#Control Speeds
 
 					lgr.info(f'4:Elapsed {elapsed()} Producer Sent')
