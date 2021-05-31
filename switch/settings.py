@@ -156,31 +156,31 @@ DATABASES['read'] = {
 	},
 
 
-installed_apps = installed_apps + ['django_cassandra_engine']
-#DATABASES['cassandra'] = {
-#		'ENGINE': 'django_cassandra_engine',
-#		'NAME': 'switch',
-#		'USER': 'user',
-#		'PASSWORD': 'pass',
-#		#'TEST_NAME': 'test_switch',
-#		'HOST': 'cassandra-0-service',
-#		'OPTIONS': {
-#			'replication': {
-#			'strategy_class': 'SimpleStrategy',
-#			'replication_factor': 1
-#			},
-#			'connection': {
-#				'consistency': ConsistencyLevel.LOCAL_ONE,
-#				'retry_connect': True
-#				# + All connection options for cassandra.cluster.Cluster()
-#			},
-#			'session': {
-#				'default_timeout': 10,
-#				'default_fetch_size': 10000
-#				# + All options for cassandra.cluster.Session()
-#			}
-#		}
-#	}
+#installed_apps = installed_apps + ['django_cassandra_engine']
+DATABASES['cassandra'] = {
+		'ENGINE': 'django_cassandra_engine',
+		'NAME': 'switch',
+		'USER': 'user',
+		'PASSWORD': 'pass',
+		#'TEST_NAME': 'test_switch',
+		'HOST': 'cassandra-0-service',
+		'OPTIONS': {
+			'replication': {
+			'strategy_class': 'SimpleStrategy',
+			'replication_factor': 1
+			},
+			'connection': {
+				'consistency': ConsistencyLevel.LOCAL_ONE,
+				'retry_connect': True
+				# + All connection options for cassandra.cluster.Cluster()
+			},
+			'session': {
+				'default_timeout': 10,
+				'default_fetch_size': 10000
+				# + All options for cassandra.cluster.Session()
+			}
+		}
+	}
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
