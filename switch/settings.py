@@ -164,6 +164,7 @@ DATABASES['cassandra'] = {
 		'PASSWORD': 'pass',
 		#'TEST_NAME': 'test_switch',
 		'HOST': 'cassandra-0-service',
+		'ATOMIC_REQUESTS': False,
 		'OPTIONS': {
 			'replication': {
 			'strategy_class': 'SimpleStrategy',
