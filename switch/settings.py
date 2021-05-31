@@ -1,6 +1,7 @@
 import os
 import datetime
 import psycopg2
+from cassandra import ConsistencyLevel
 
 # Django settings for switch project.
 #from django.conf.global_settings import TEMPLATE_CONTEXT_PROCESSORS
@@ -143,13 +144,39 @@ DATABASES = {
 		'DISABLE_SERVER_SIDE_CURSORS': True,
 	},
 	'read': {
-			'ENGINE': read_dbengine, 
-			'NAME': read_dbname, 
-			'USER': read_dbuser,
-			'PASSWORD': read_dbpassword,
-			'HOST': read_dbhost,
-			'PORT': read_dbport,
-		}
+		'ENGINE': read_dbengine, 
+		'NAME': read_dbname, 
+		'USER': read_dbuser,
+		'PASSWORD': read_dbpassword,
+		'HOST': read_dbhost,
+		'PORT': read_dbport,
+	},
+
+        'cassandra': {
+            'ENGINE': 'django_cassandra_engine',
+            'NAME': 'notify',
+            'USER': 'user',
+            'PASSWORD': 'pass',
+            #'TEST_NAME': 'test_notify',
+            'HOST': 'cassandra-0-service',
+            'OPTIONS': {
+                'replication': {
+                    'strategy_class': 'SimpleStrategy',
+                    'replication_factor': 1
+                },
+                'connection': {
+                    'consistency': ConsistencyLevel.LOCAL_ONE,
+                    'retry_connect': True
+                    # + All connection options for cassandra.cluster.Cluster()
+                },
+                'session': {
+                    'default_timeout': 10,
+                    'default_fetch_size': 10000
+                    # + All options for cassandra.cluster.Session()
+                }
+            }
+        }
+
 }
 
 
