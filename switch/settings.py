@@ -1,7 +1,6 @@
 import os
 import datetime
 import psycopg2
-from cassandra import ConsistencyLevel
 
 # Django settings for switch project.
 #from django.conf.global_settings import TEMPLATE_CONTEXT_PROCESSORS
