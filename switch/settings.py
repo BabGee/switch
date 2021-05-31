@@ -142,18 +142,15 @@ DATABASES = {
 		'PORT': default_dbport,                      # Set to empty string for default.
 		'DISABLE_SERVER_SIDE_CURSORS': True,
 	},
-}
-
-if read_dbname:
-	DATABASES['read'] = {
+	'read': {
 			'ENGINE': read_dbengine, 
 			'NAME': read_dbname, 
 			'USER': read_dbuser,
 			'PASSWORD': read_dbpassword,
 			'HOST': read_dbhost,
 			'PORT': read_dbport,
-		},
-
+		}
+}
 
 
 # Password validation
