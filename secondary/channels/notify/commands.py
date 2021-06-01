@@ -1,7 +1,8 @@
 import faust
 from faust.types import StreamT
 #from primary.core.async.faust import app
-from switch.faust import app
+from switch.faust import app as _faust
+from switch.spark import app as _spark
 import requests, json, ast
 
 
@@ -44,15 +45,96 @@ lgr = logging.getLogger(__name__)
 thread_pool = ThreadPoolExecutor(max_workers=16)
 
 
-@app.command()
+def _send_notification_log(topic_list, partition_rate=1000, trigger_rate=100):
+	try:
+		df = _spark \
+			.readStream \
+			.format("kafka") \
+			.option("subscribe", ','.join(topic_list)) \
+			.option("kafka.bootstrap.servers", "kafka-broker-0-service:9092,kafka-broker-1-service:9092") \
+			.option("startingOffsets", "latest") \
+			.option("maxRatePerPartition", partition_rate) \
+			.option("maxOffsetsPerTrigger", trigger_rate) \
+			.option("stopGracefullyOnShutdown", "true") \
+			.load()
+
+		df.printSchema()
+
+		print(df)
+
+		kafka_df = df \
+		   .selectExpr("cast(key as string) key", 
+				"cast(value as string) value",
+				"topic as topic",
+				"partition as partition",
+				"offset as offset",
+				"timestamp as date_created",
+				"timestampType as timestampType"
+				)
+		kafka_df.printSchema()
+		print(kafka_df)
+
+		schema = StructType([
+				    StructField("product_id", StringType(), True),
+				    StructField("batch", StringType(), True),
+				    StructField("ext_service_id", StringType(), True),
+				    StructField("code", StringType(), True),
+				    StructField("message", StringType(), True),
+				    StructField("endpoint_account_id", StringType(), True),
+				    StructField("endpoint_password", StringType(), True),
+				    StructField("endpoint_username", StringType(), True),
+				    StructField("endpoint_url", StringType(), True),
+				    StructField("channel", StringType(), True),
+				    StructField("recipients", ArrayType(ArrayType(StringType())), True),
+				    StructField("mno", StringType(), True),
+				    StructField("response_message", StringType(), True),
+				    StructField("response_code", StringType(), True),
+				    ])
+
+		service_table = kafka_df\
+			.select(from_json(col('value'), schema).alias("DF"),
+				"topic","partition","offset","date_created","timestampType")\
+			.select("DF.*","date_created")\
+			.withColumn("outbound_recipient", explode(col("recipients")))\
+			.withColumn("outbound_id", col("outbound_recipient").getItem(0))\
+			.withColumn("recipient", col("outbound_recipient").getItem(1))\
+			.withColumn("date_modified", col("date_created"))\
+			.withColumnRenamed("response_message", "state")\
+			.withColumnRenamed("response_code", "response")\
+			.select("product_id","code","message","channel","mno","state",
+				"response","date_created","date_modified","outbound_id","recipient")
+
+		service_table.printSchema()
+		print(service_table)
+
+
+		service_table.writeStream \
+		   .outputMode("append") \
+		   .format("console") \
+		   .start() \
+		   .awaitTermination()
+
+
+
+	except Exception as e: lgr.error(f'Send Notification Log Error: {e}')
+
+
+
+@_faust.command()
 async def send_notification_log():
 	"""This docstring is used as the command help in --help."""
 	lgr.info('SEND NOTIFICATION LOG SERVICE STARTING.........')
 	try:
 		print('SEND NOTIFICATION LOG SERVICE RUNNING')
+		notification_log = _faust.loop.run_in_executor(thread_pool, 
+						_send_notification_log, 
+						*[["integrator.apps.sdp.send_message",
+						"integrator.apps.kannel.send_message"], 
+						1000, 100])
+		await notification_log
+
 	except Exception as e: 
 		lgr.error(f'SEND NOTIFICATION LOG SERVICE ERROR: {e}')
-		break
 
 
 def _send_outbound_messages(is_bulk=True, limit_batch=100):
@@ -174,7 +256,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 
 
 
-@app.command()
+@_faust.command()
 async def notify_notifications():
 	"""This docstring is used as the command help in --help."""
 	lgr.info('NOTIFICATION SERVICE STARTING.........')
@@ -183,10 +265,10 @@ async def notify_notifications():
 			print('NOTIFICATION SERVICE RUNNING')
 			tasks = list()
 			#Transactional Notification
-			notification = app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[False, 60])
+			notification = _faust.loop.run_in_executor(thread_pool, _send_outbound_messages, *[False, 60])
 			tasks.append(notification)
 			#Bulk Notification
-			bulk_notification = app.loop.run_in_executor(thread_pool, _send_outbound_messages, *[True, 240])
+			bulk_notification = _faust.loop.run_in_executor(thread_pool, _send_outbound_messages, *[True, 240])
 			tasks.append(bulk_notification)
 			#Run Tasks
 			response = await asyncio.gather(*tasks)
