@@ -43,6 +43,18 @@ lgr = logging.getLogger(__name__)
 #thread_pool = ThreadPoolExecutor(max_workers=16) #Heavy on database
 thread_pool = ThreadPoolExecutor(max_workers=16)
 
+
+@app.command()
+async def send_notification_log():
+	"""This docstring is used as the command help in --help."""
+	lgr.info('SEND NOTIFICATION LOG SERVICE STARTING.........')
+	try:
+		print('SEND NOTIFICATION LOG SERVICE RUNNING')
+	except Exception as e: 
+		lgr.error(f'SEND NOTIFICATION LOG SERVICE ERROR: {e}')
+		break
+
+
 def _send_outbound_messages(is_bulk=True, limit_batch=100):
 	try:
 
@@ -183,3 +195,4 @@ async def notify_notifications():
 		except Exception as e: 
 			lgr.error(f'NOTIFICATION SERVICE ERROR: {e}')
 			break
+
