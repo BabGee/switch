@@ -2,9 +2,6 @@ import pyspark
 import socket
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import *
-from pyspark.sql.types import *
-
 
 sock_name = socket.gethostname()
 host = socket.gethostbyname(sock_name)

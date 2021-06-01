@@ -4,7 +4,8 @@ from faust.types import StreamT
 from switch.faust import app as _faust
 from switch.spark import app as _spark
 import requests, json, ast
-
+from pyspark.sql.functions import *
+from pyspark.sql.types import *
 
 from django.db import transaction
 from .models import *
