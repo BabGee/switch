@@ -4,7 +4,7 @@ from faust.types import StreamT
 from switch.faust import app as _faust
 from switch.cassandra import app as _cassandra
 import requests, json, ast
-
+from aiocassandra import aiosession
 
 from django.db import transaction
 from .models import *
@@ -54,8 +54,10 @@ async def sent_messages(messages):
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
 			lgr.info(f'RECEIVED Sent Message {message}')
-			query = "SELECT * FROM notify.outbound_notification WHERE product_id=%s"
-			result = await _cassandra.execute_async(query, [12345])
+			session = _cassandra
+			aiosession(session)
+			query = await session.prepare_future("SELECT * FROM notify.outbound_notification WHERE product_id=%s")
+			result = session.execute_future(query, [12345])
 			lgr.info(f'Sent Message Result {result}')
 			lgr.info(f'{elapsed()} Sent Message Task Completed')
 			#await asyncio.sleep(0.5)
@@ -68,10 +70,11 @@ async def delivery_status(messages):
 		try:
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
-
 			lgr.info(f'RECEIVED Delivery Status {len(message)}')
-			query = "SELECT * FROM notify.outbound_notification WHERE product_id=%s"
-			result = await _cassandra.execute_async(query, [12345])
+			session = _cassandra
+			aiosession(session)
+			query = await session.prepare_future("SELECT * FROM notify.outbound_notification WHERE product_id=%s")
+			result = session.execute_future(query, [12345])
 			lgr.info(f'Delivery Status Result {result}')
 			lgr.info(f'{elapsed()} Delivery Status Updated')
 			#await asyncio.sleep(0.5)
