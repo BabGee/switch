@@ -56,8 +56,8 @@ async def sent_messages(messages):
 			lgr.info(f'RECEIVED Sent Message {message}')
 			session = _cassandra
 			lgr.info(f'Sent Message Session 0 {session}')
-			aiosession(session)
-			lgr.info(f'Sent Message Session 1 {session}')
+			#aiosession(session) #Already patched
+			#lgr.info(f'Sent Message Session 1 {session}')
 			query = await session.prepare_future("SELECT * FROM notify.outbound_notification WHERE product_id=%s")
 			lgr.info(f'Sent Message Query {query}')
 			result = await session.execute_future(query, [12345])
@@ -76,8 +76,8 @@ async def delivery_status(messages):
 			lgr.info(f'RECEIVED Delivery Status {message}')
 			session = _cassandra
 			lgr.info(f'Delivery Status Session 0 {session}')
-			aiosession(session)
-			lgr.info(f'Delivery Status Session 1 {session}')
+			#aiosession(session) #Already patched
+			#lgr.info(f'Delivery Status Session 1 {session}')
 			query = await session.prepare_future("SELECT * FROM notify.outbound_notification WHERE product_id=%s")
 			lgr.info(f'Delivery Status Query {query}')
 			result = await session.execute_future(query, [12345])
