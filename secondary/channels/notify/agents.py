@@ -59,9 +59,7 @@ async def sent_messages(messages):
 			elapsed = lambda: time.perf_counter() - s
 			lgr.info(f'RECEIVED Sent Message {message}')
 
-			query = """INSERT INTO notify.outbound_notification (product_id, outbound_id, batch_id, 
-				channel, code, date_created, date_modified, message, mno, recipient, response, state) 
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+			query = "INSERT INTO notify.outbound_notification (product_id, outbound_id, batch_id, channel, code, date_created, date_modified, message, mno, recipient, response, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 				
 			prepared_query = await session.prepare_future(query)
 			timestamp = dateutil.parser.parse(message['timestamp'])
