@@ -57,8 +57,15 @@ async def sent_messages(messages):
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
 			lgr.info(f'RECEIVED Sent Message {message}')
-			query = "SELECT * FROM notify.outbound_notification WHERE product_id=1234"
-			prepared_query = await session.prepare_future(query)
+
+			query = """INSERT INTO outbound_notification 
+				(product_id, outbound_id, batch_id, channel, code, date_created, date_modified, 
+				message, mno, recipient, response, state)
+				VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+				
+			prepared_query = await session.prepare_future(query, (message['product_id'], message['outbound_id'], 
+				message['batch_id'], message['channel'], message['code'], message['timestamp'], message['timestamp'], 
+				message['message'], message.get('mno'), message['recipient'], message['response_code'], message['response_state']))
 			lgr.info(f'Sent Message Query {prepared_query}')
 			result = await session.execute_future(prepared_query)
 			lgr.info(f'Sent Message Result {result}')
