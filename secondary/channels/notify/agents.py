@@ -5,6 +5,7 @@ from switch.faust import app as _faust
 from switch.cassandra import app as _cassandra
 import requests, json, ast
 from aiocassandra import aiosession
+import dateutil.parser
 
 from django.db import transaction
 from .models import *
@@ -58,12 +59,15 @@ async def sent_messages(messages):
 			elapsed = lambda: time.perf_counter() - s
 			lgr.info(f'RECEIVED Sent Message {message}')
 
-			query = "INSERT INTO notify.outbound_notification (product_id, outbound_id, batch_id, channel, code, date_created, date_modified, message, mno, recipient, response, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+			query = """INSERT INTO notify.outbound_notification (product_id, outbound_id, batch_id, 
+				channel, code, date_created, date_modified, message, mno, recipient, response, state) 
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 				
 			prepared_query = await session.prepare_future(query)
-			prepared_query.bind((int(message['product_id']), int(message['outbound_id']), 
-				message['batch_id'], message['channel'], message['code'], message['timestamp'], message['timestamp'], 
-				message['message'], message.get('mno'), message['recipient'], message['response_code'], message['response_state'],))
+			timestamp = dateutil.parser.parse(message['timestamp'])
+			prepared_query.bind((int(message['product_id']), int(message['outbound_id']), message['batch_id'], 
+				message['channel'], message['code'], timestamp, timestamp, message['message'], 
+				message.get('mno'), message['recipient'], message['response_code'], message['response_state'],))
 			lgr.info(f'Sent Message Query {prepared_query}')
 			result = await session.execute_future(prepared_query)
 			lgr.info(f'Sent Message Result {result}')
