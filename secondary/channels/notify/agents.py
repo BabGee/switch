@@ -64,7 +64,7 @@ async def sent_messages(messages):
 				
 			prepared_query = await session.prepare_future(query, (message['product_id'], message['outbound_id'], 
 				message['batch_id'], message['channel'], message['code'], message['timestamp'], message['timestamp'], 
-				message['message'], message.get('mno'), message['recipient'], message['response_code'], message['response_state']))
+				message['message'], message.get('mno'), message['recipient'], message['response_code'], message['response_state'],))
 			lgr.info(f'Sent Message Query {prepared_query}')
 			result = await session.execute_future(prepared_query)
 			lgr.info(f'Sent Message Result {result}')
