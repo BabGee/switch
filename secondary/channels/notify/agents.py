@@ -1,7 +1,8 @@
 import faust
 from faust.types import StreamT
 #from primary.core.async.faust import app
-from switch.faust import app
+from switch.faust import app as _faust
+from switch.cassandra import app as _cassandra
 import requests, json, ast
 
 
@@ -40,34 +41,40 @@ from typing import (
 
 lgr = logging.getLogger(__name__)
 
-sent_messages_topic = app.topic('switch.secondary.channels.notify.sent_messages')
-delivery_status_topic = app.topic('switch.secondary.channels.notify.delivery_status')
+sent_messages_topic = _faust.topic('switch.secondary.channels.notify.sent_messages')
+delivery_status_topic = _faust.topic('switch.secondary.channels.notify.delivery_status')
 
 thread_pool = ThreadPoolExecutor(max_workers=4)
 
-@app.agent(sent_messages_topic, concurrency=1)
+@_faust.agent(sent_messages_topic, concurrency=1)
 async def sent_messages(messages):
-	async for message in messages.take(1000, within=1):
+	#async for message in messages.take(1000, within=1):
+	async for message in messages:
 		try:
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
-			lgr.info(f'RECEIVED Sent Messages {len(message)}')
-			lgr.info(f'Sent Messages {message}')
+			lgr.info(f'RECEIVED Sent Message {message}')
+			query = "SELECT * FROM notify.outbound_notification WHERE product_id=%s"
+			result = await _cassandra.execute_async(query, [12345])
+			lgr.info(f'Sent Message Result {result}')
 			lgr.info(f'{elapsed()} Sent Message Task Completed')
-			await asyncio.sleep(0.5)
+			#await asyncio.sleep(0.5)
 		except Exception as e: lgr.info(f'Error on Sent Messages: {e}')
 
-@app.agent(delivery_status_topic, concurrency=1)
+@_faust.agent(delivery_status_topic, concurrency=1)
 async def delivery_status(messages):
-	async for message in messages.take(1000, within=5):
+	#async for message in messages.take(1000, within=5):
+	async for message in messages:
 		try:
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
 
 			lgr.info(f'RECEIVED Delivery Status {len(message)}')
-			lgr.info(f'Delivery Status {message}')
+			query = "SELECT * FROM notify.outbound_notification WHERE product_id=%s"
+			result = await _cassandra.execute_async(query, [12345])
+			lgr.info(f'Delivery Status Result {result}')
 			lgr.info(f'{elapsed()} Delivery Status Updated')
-			await asyncio.sleep(0.5)
+			#await asyncio.sleep(0.5)
 		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
 
