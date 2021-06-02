@@ -61,7 +61,7 @@ async def sent_messages(messages):
 			query = "INSERT INTO notify.outbound_notification (product_id, outbound_id, batch_id, channel, code, date_created, date_modified, message, mno, recipient, response, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 				
 			prepared_query = await session.prepare_future(query)
-			prepared_query.bind((message['product_id'], message['outbound_id'], 
+			prepared_query.bind((int(message['product_id']), int(message['outbound_id']), 
 				message['batch_id'], message['channel'], message['code'], message['timestamp'], message['timestamp'], 
 				message['message'], message.get('mno'), message['recipient'], message['response_code'], message['response_state'],))
 			lgr.info(f'Sent Message Query {prepared_query}')
