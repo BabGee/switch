@@ -57,7 +57,7 @@ async def sent_messages(messages):
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
 			lgr.info(f'RECEIVED Sent Message {message}')
-			query = "SELECT * FROM notify.outbound_notification WHERE product_id=%s" %s (1234)
+			query = "SELECT * FROM notify.outbound_notification WHERE product_id=1234"
 			prepared_query = await session.prepare_future(query)
 			lgr.info(f'Sent Message Query {prepared_query}')
 			result = await session.execute_future(prepared_query)
@@ -74,7 +74,7 @@ async def delivery_status(messages):
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
 			lgr.info(f'RECEIVED Delivery Status {message}')
-			query = "SELECT * FROM notify.outbound_notification WHERE product_id=%s" %s (1234)
+			query = "SELECT * FROM notify.outbound_notification WHERE product_id=1234"
 			prepared_query = await session.prepare_future(query)
 			lgr.info(f'Delivery Status Query {prepared_query}')
 			result = await session.execute_future(prepared_query)
