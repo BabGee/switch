@@ -47,7 +47,7 @@ thread_pool = ThreadPoolExecutor(max_workers=4)
 
 @app.agent(sent_messages_topic, concurrency=1)
 async def sent_messages(messages):
-	async for message in messages.take(60, within=1):
+	async for message in messages.take(1000, within=1):
 		try:
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
@@ -57,16 +57,17 @@ async def sent_messages(messages):
 			await asyncio.sleep(0.5)
 		except Exception as e: lgr.info(f'Error on Sent Messages: {e}')
 
-#@app.agent(delivery_status_topic, concurrency=1)
-#async def delivery_status(messages):
-#	async for message in messages.take(60, within=5):
-#		try:
-#			s = time.perf_counter()
-#			elapsed = lambda: time.perf_counter() - s
-#
-#			lgr.info(f'RECEIVED Delivery Status {len(message)}')
-#			lgr.info(f'{elapsed()} Delivery Status Updated')
-#			await asyncio.sleep(0.5)
-#		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
+@app.agent(delivery_status_topic, concurrency=1)
+async def delivery_status(messages):
+	async for message in messages.take(1000, within=5):
+		try:
+			s = time.perf_counter()
+			elapsed = lambda: time.perf_counter() - s
+
+			lgr.info(f'RECEIVED Delivery Status {len(message)}')
+			lgr.info(f'Delivery Status {message}')
+			lgr.info(f'{elapsed()} Delivery Status Updated')
+			await asyncio.sleep(0.5)
+		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
 
