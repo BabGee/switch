@@ -57,7 +57,7 @@ async def sent_messages(messages):
 			session = _cassandra
 			aiosession(session)
 			query = await session.prepare_future("SELECT * FROM notify.outbound_notification WHERE product_id=%s")
-			result = session.execute_future(query, [12345])
+			result = await session.execute_future(query, [12345])
 			lgr.info(f'Sent Message Result {result}')
 			lgr.info(f'{elapsed()} Sent Message Task Completed')
 			#await asyncio.sleep(0.5)
@@ -74,7 +74,7 @@ async def delivery_status(messages):
 			session = _cassandra
 			aiosession(session)
 			query = await session.prepare_future("SELECT * FROM notify.outbound_notification WHERE product_id=%s")
-			result = session.execute_future(query, [12345])
+			result = await session.execute_future(query, [12345])
 			lgr.info(f'Delivery Status Result {result}')
 			lgr.info(f'{elapsed()} Delivery Status Updated')
 			#await asyncio.sleep(0.5)
