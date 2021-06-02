@@ -63,7 +63,7 @@ async def sent_messages(messages):
 			query = """INSERT INTO notify.outbound_notification (product_id, outbound_id, batch_id, 
 				channel, code, date_created, date_modified, message, mno, recipient, response, state) 
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-			prepared_query = await session.prepare_future(query).bind(dict(product_id=int(message['product_id']), outbound_id=int(message['outbound_id']), 
+			prepared_query = await session.prepare_future(query, dict(product_id=int(message['product_id']), outbound_id=int(message['outbound_id']), 
 				batch_id=message['batch_id'], channel=message['channel'], code=message['code'], date_created=timestamp, 
 				date_modified=timestamp, message=message['message'], mno=message.get('mno'), 
 				recipient=message['recipient'], response=message['response_code'], state=message['response_state']))
