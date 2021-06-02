@@ -211,7 +211,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 					outbound_id_list = group_df['outbound_id'].tolist()
 					recipient_list = group_df['recipient'].tolist()
 					recipients = tuple(zip(outbound_id_list, recipient_list))
-					payload = dict()    
+					payload = dict(timestamp=timezone.now().isoformat())    
 					for c in cols: payload[c] = str(group_df[c].unique()[0])
 					#lgr.info('MULTI: %s \n %s' % (group_df.shape,group_df.head()))
 					if batch_size>1 and len(group_df.shape)>1 and group_df.shape[0]>1:
