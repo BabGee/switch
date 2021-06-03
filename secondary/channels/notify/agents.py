@@ -68,7 +68,7 @@ async def sent_messages(messages):
 				batch_id=message['batch_id'], channel=message['channel'], code=message['code'], date_created=timestamp, 
 				date_modified=timestamp, message=message['message'], mno=message.get('mno'), 
 				recipient=message['recipient'], response=message['response_code'], state=message['response_state']))
-			lgr.info(f'Sent Message Query {prepared_query}')
+			lgr.info(f'Sent Message Query {bound}')
 			result = await session.execute_future(bound)
 			lgr.info(f'Sent Message Result {result}')
 			lgr.info(f'{elapsed()} Sent Message Task Completed')
@@ -83,11 +83,15 @@ async def delivery_status(messages):
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
 			lgr.info(f'RECEIVED Delivery Status {message}')
-			query = "SELECT * FROM notify.outbound_notification WHERE product_id=1234"
-			prepared_query = await session.prepare_future(query)
-			lgr.info(f'Delivery Status Query {prepared_query}')
-			result = await session.execute_future(prepared_query)
-			lgr.info(f'Delivery Status Result {result}')
+			#timestamp = dateutil.parser.parse(message['timestamp'])
+			#query = """UPDATE notify.outbound_notification SET  state=?, response=?, date_modified=? where product_id=? and outbound_id=?;"""
+			#prepared_query = await session.prepare_future(query)
+			#bound = prepared_query.bind((message['response_state'], message['response_code'], timestamp,  int(message['product_id']), int(message['outbound_id']),))
+			#lgr.info(f'Delivery StatusQuery {bound}')
+			#prepared_query = await session.prepare_future(query)
+			#lgr.info(f'Delivery Status Query {prepared_query}')
+			#result = await session.execute_future(bound)
+			#lgr.info(f'Delivery Status Result {result}')
 			lgr.info(f'{elapsed()} Delivery Status Updated')
 			#await asyncio.sleep(0.5)
 		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
