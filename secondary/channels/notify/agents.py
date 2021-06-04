@@ -43,7 +43,7 @@ from typing import (
 lgr = logging.getLogger(__name__)
 
 sent_messages_topic = _faust.topic('switch.secondary.channels.notify.sent_messages')
-delivery_status_topic = _faust.topic('switch.secondary.channels.notify.delivery_status')
+#delivery_status_topic = _faust.topic('switch.secondary.channels.notify.delivery_status')
 
 thread_pool = ThreadPoolExecutor(max_workers=4)
 #Cassandra Async Patching
@@ -75,25 +75,25 @@ async def sent_messages(messages):
 			#await asyncio.sleep(0.5)
 		except Exception as e: lgr.info(f'Error on Sent Messages: {e}')
 
-@_faust.agent(delivery_status_topic, concurrency=1)
-async def delivery_status(messages):
-	#async for message in messages.take(1000, within=5):
-	async for message in messages:
-		try:
-			s = time.perf_counter()
-			elapsed = lambda: time.perf_counter() - s
-			lgr.info(f'RECEIVED Delivery Status {message}')
-			#timestamp = dateutil.parser.parse(message['timestamp'])
-			#query = """UPDATE notify.outbound_notification SET  state=?, response=?, date_modified=? where product_id=? and outbound_id=?;"""
-			#prepared_query = await session.prepare_future(query)
-			#bound = prepared_query.bind((message['response_state'], message['response_code'], timestamp,  int(message['product_id']), int(message['outbound_id']),))
-			#lgr.info(f'Delivery StatusQuery {bound}')
-			#prepared_query = await session.prepare_future(query)
-			#lgr.info(f'Delivery Status Query {prepared_query}')
-			#result = await session.execute_future(bound)
-			#lgr.info(f'Delivery Status Result {result}')
-			lgr.info(f'{elapsed()} Delivery Status Updated')
-			#await asyncio.sleep(0.5)
-		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
+#@_faust.agent(delivery_status_topic, concurrency=1)
+#async def delivery_status(messages):
+#	#async for message in messages.take(1000, within=5):
+#	async for message in messages:
+#		try:
+#			s = time.perf_counter()
+#			elapsed = lambda: time.perf_counter() - s
+#			lgr.info(f'RECEIVED Delivery Status {message}')
+#			#timestamp = dateutil.parser.parse(message['timestamp'])
+#			#query = """UPDATE notify.outbound_notification SET  state=?, response=?, date_modified=? where product_id=? and outbound_id=?;"""
+#			#prepared_query = await session.prepare_future(query)
+#			#bound = prepared_query.bind((message['response_state'], message['response_code'], timestamp,  int(message['product_id']), int(message['outbound_id']),))
+#			#lgr.info(f'Delivery StatusQuery {bound}')
+#			#prepared_query = await session.prepare_future(query)
+#			#lgr.info(f'Delivery Status Query {prepared_query}')
+#			#result = await session.execute_future(bound)
+#			#lgr.info(f'Delivery Status Result {result}')
+#			lgr.info(f'{elapsed()} Delivery Status Updated')
+#			#await asyncio.sleep(0.5)
+#		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')
 
 
