@@ -60,7 +60,7 @@ async def sent_messages(messages):
 			lgr.info(f'RECEIVED Sent Message {message}')
 
 			timestamp = dateutil.parser.parse(message['timestamp'])
-			query = """INSERT INTO notify.outbound_notification (product_id, outbound_id, batch_id, 
+			query = """INSERT INTO notify.send_notification (product_id, outbound_id, batch_id, 
 				channel, code, date_created, date_modified, message, mno, recipient, response, state) 
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 			prepared_query = await session.prepare_future(query)
@@ -84,7 +84,7 @@ async def sent_messages(messages):
 #			elapsed = lambda: time.perf_counter() - s
 #			lgr.info(f'RECEIVED Delivery Status {message}')
 #			#timestamp = dateutil.parser.parse(message['timestamp'])
-#			#query = """UPDATE notify.outbound_notification SET  state=?, response=?, date_modified=? where product_id=? and outbound_id=?;"""
+#			#query = """UPDATE notify.send_notification SET  state=?, response=?, date_modified=? where product_id=? and outbound_id=?;"""
 #			#prepared_query = await session.prepare_future(query)
 #			#bound = prepared_query.bind((message['response_state'], message['response_code'], timestamp,  int(message['product_id']), int(message['outbound_id']),))
 #			#lgr.info(f'Delivery StatusQuery {bound}')
