@@ -525,6 +525,17 @@ class System(Wrappers):
 				if 'ext_product_id' in payload.keys():
 					remittance_product = remittance_product.filter(ext_product_id=payload['ext_product_id'])
 
+				#For remittances only/Filter with instittution/(Check custom softwares for implementation
+				#Not For payment notifications as the institution is not in the request but the numbers would identify the remittance)
+				#For payment notifications, the cart items would help tag payment to an institution.
+				#
+				if payload.get('institution_id'):
+					remittance_product = remittance_product.filter(institution__id=payload['institution_id'])
+				elif gateway_profile.insitution:
+					remittance_product = remittance_product.filter(institution=gateway_profile.institution)
+				else:
+					remittance_product = remittance_product.filter(institution=None)
+
 				if remittance_product.exists():
 
 					product = remittance_product.first()
