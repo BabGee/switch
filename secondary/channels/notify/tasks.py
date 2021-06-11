@@ -1227,7 +1227,7 @@ class System(Wrappers):
 					if ext_outbound_id is not None:
 						outbound.ext_outbound_id = ext_outbound_id
 
-					if new_contact.product.notification.code.channel.name == 'SMS':
+					if new_contact.product.notification.code.channel.name in ['SMS','WHATSAPP']:
 						msisdn = UPCWrappers().get_msisdn(payload)
 						if msisdn:
 							outbound.recipient = msisdn
@@ -1531,7 +1531,7 @@ class System(Wrappers):
 
 				outbound = Outbound(contact=new_contact, message=message, scheduled_send=timezone.now()+timezone.timedelta(seconds=5), state=state, sends=0)
 
-				if new_contact.product.notification.code.channel.name == 'SMS':
+				if new_contact.product.notification.code.channel.name in ['SMS','WHATSAPP']:
 					msisdn = UPCWrappers().get_msisdn(payload)
 					if msisdn:
 						outbound.recipient = msisdn
@@ -1958,7 +1958,7 @@ class System(Wrappers):
 				contact = Contact.objects.get(id=payload['contact_id'])
 				state = InBoundState.objects.get(name='CREATED')
 				inbound = Inbound(contact=contact,message=str(payload['message'][:3839]),state=state)
-				if contact.product.notification.code.channel.name == 'SMS':
+				if contact.product.notification.code.channel.name in ['SMS','WHATSAPP']:
 					msisdn = UPCWrappers().get_msisdn(payload)
 					if msisdn:
 						inbound.recipient = msisdn
@@ -2581,7 +2581,7 @@ def contact_outbound_bulk_logger(payload, contact_list, scheduled_send):
 			message_len =  payload['message_len'] if 'message_len' in payload.keys() else 1
 			outbound = Outbound(contact=contact,message=payload['message'],scheduled_send=scheduled_send,state=state, sends=0, message_len=message_len)
 			#Notification for bulk uses contact records only for recipient
-			if contact.product.notification.code.channel.name == 'SMS' and contact.gateway_profile.msisdn:
+			if contact.product.notification.code.channel.name in ['SMS','WHATSAPP'] and contact.gateway_profile.msisdn:
 				outbound.recipient = contact.gateway_profile.msisdn.phone_number
 			elif contact.product.notification.code.channel.name == 'EMAIL' and self.validateEmail(contact.gateway_profile.user.email):
 				outbound.recipient = contact.gateway_profile.user.email
