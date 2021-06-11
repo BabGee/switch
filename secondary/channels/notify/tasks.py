@@ -884,10 +884,11 @@ class System(Wrappers):
 
 			if institution:
 				#Filter to send an institution notification or otherwise a gateway if institution does not exist (gateway only has institution as None)
-				institution_notification_product = notification_product.filter(notification__code__institution=gateway_profile.institution)
-				gateway_notification_product = notification_product.filter(notification__code__institution=None, institution_allowed=True)
-				notification_product =  institution_notification_product if len(institution_notification_product) else gateway_notification_product
-
+				institution_notification_product = notification_product.filter(notification__code__institution=institution)
+				if institution_notification_product.exists(): notification_product = institution_notification_product
+				else:
+					gateway_notification_product = notification_product.filter(notification__code__institution=None, institution_allowed=True)
+					notification_product = gateway_notification_product
 			else:
 				notification_product = notification_product.filter(notification__code__institution=None)
 
