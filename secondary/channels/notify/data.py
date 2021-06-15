@@ -102,12 +102,17 @@ class List:
 			session = _cassandra
 			session.set_keyspace('notify')
 			session.row_factory = pandas_factory
-			session.default_fetch_size = 10000000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
+			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
 
 			query=f"select * from recipient_contact where contact_group_id=? and status=?"
+			_bound = dict(contact_group_id=int(payload['recipient_contact']), status=str('ACTIVE'))
+
+			if payload.get('q'): 
+				query = query+f" and recipient=?"
+				_bound['recipient'] = payload['q']
 
 			prepared_query = session.prepare(query)
-			bound = prepared_query.bind(dict(contact_group_id=int(payload['recipient_contact']), status=str('ACTIVE'))) 
+			bound = prepared_query.bind(_bound) 
 			rows = session.execute(bound)
 			df = rows._current_rows
 			lgr.info(f'Rows {df.head()}')
