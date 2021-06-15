@@ -96,7 +96,7 @@ class List:
 		ct = 0
 		push = {}
 
-		lgr.info('Started Recipient Contact')
+		lgr.info(f'Started Recipient Contact {payload}')
 
 		try:
 			session = _cassandra
