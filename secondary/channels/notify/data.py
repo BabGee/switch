@@ -126,7 +126,14 @@ class List:
 			lgr.info(f'Params {params}')
 			report_list  = df.astype(str).values.tolist()
 
-			lgr.info(f'Report List {report_list[:5]}')
+			if df.shape[0] > 150000:
+				report_list = report_list[:150000] #Query Limit to limit Data
+				ct = 150000
+			else:
+				ct = df.shape[0]
+
+			lgr.info('Count: %s' % ct)
+
 			paginator = Paginator(report_list, payload.get('limit',50))
 
 			try:
