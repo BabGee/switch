@@ -32,10 +32,14 @@ from django.core import serializers
 import numpy as np
 import pandas as pd
 #from django.db.models.functions import TruncDate, TruncDay, TruncHour, TruncMinute, TruncSecond
+from switch.cassandra import app as _cassandra
 
 from .models import *
 
 lgr = logging.getLogger('secondary.channels.notify')
+
+def pandas_factory(colnames, rows):
+    return pd.DataFrame(rows, columns=colnames)
 
 class DateTrunc(Func):
 	function = 'DATE_TRUNC'
@@ -76,6 +80,73 @@ class List:
 		except Exception as e:
 			lgr.info('Error on notifications: %s' % e)
 		return params,max_id,min_id,ct,push
+
+
+
+	def recipient_contact(self, payload, gateway_profile, profile_tz, data):
+		params = {}
+		params['rows'] = []
+		params['cols'] = []
+
+		params['data'] = []
+		params['lines'] = []
+
+		max_id = 0
+		min_id = 0
+		ct = 0
+		push = {}
+
+		lgr.info('Started Recipient Contact')
+
+		try:
+			session = _cassandra
+			session.set_keyspace('notify')
+			session.row_factory = pandas_factory
+			session.default_fetch_size = 10000000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
+
+			query=f"select * from recipient_contact where contact_group_id=? and status=?"
+
+			prepared_query = session.prepare(query)
+			bound = prepared_query.bind(dict(contact_group_id=int(payload['contact_group_id']), status=str('ACTIVE'))) 
+			rows = session.execute(bound)
+			df = rows._current_rows
+
+			dtype = {'float': 'number','int': 'number','datetime': 'datetime', 'object': 'string','datetime64[ns, UTC]':'datetime','float64':'number','int64':'number'}
+			for c in df.columns:
+				lgr.info(df[c].dtype)
+				if df[c].dtype in dtype.keys():
+					cols = {'label': c, 'type': 'string' }
+					for k,v in dtype.items(): 
+						if k == str(df[c].dtype):
+							cols = {'label': c, 'type': v }
+					params['cols'].append(cols)
+				else:
+					params['cols'].append({'label': c, 'type': 'string' })
+
+			report_list  = df.astype(str).values.tolist()
+			paginator = Paginator(report_list, payload.get('limit',50))
+
+			try:
+				page = int(payload.get('page', '1'))
+			except ValueError:
+				page = 1
+
+			try:
+				results = paginator.page(page)
+			except(EmptyPage, InvalidPage):
+				results = paginator.page(paginator.num_pages)
+
+
+			report_list = results.object_list
+
+
+			params['rows'] = report_list
+
+
+		except Exception as e:
+			lgr.info('Error on  Recipient Contact: %s' % e,exc_info=True)
+		return params,max_id,min_id,ct,push
+
 
 	def outbound_status_report(self, payload, gateway_profile, profile_tz, data):
 		params = {}
