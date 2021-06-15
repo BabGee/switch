@@ -107,7 +107,7 @@ class List:
 			query=f"select * from recipient_contact where contact_group_id=? and status=?"
 
 			prepared_query = session.prepare(query)
-			bound = prepared_query.bind(dict(contact_group_id=int(payload['contact_group_id']), status=str('ACTIVE'))) 
+			bound = prepared_query.bind(dict(contact_group_id=int(payload['recipient_contact']), status=str('ACTIVE'))) 
 			rows = session.execute(bound)
 			df = rows._current_rows
 
