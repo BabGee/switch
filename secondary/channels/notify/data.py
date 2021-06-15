@@ -110,7 +110,7 @@ class List:
 			bound = prepared_query.bind(dict(contact_group_id=int(payload['recipient_contact']), status=str('ACTIVE'))) 
 			rows = session.execute(bound)
 			df = rows._current_rows
-
+			lgr.info(f'Rows {df.head()}')
 			dtype = {'float': 'number','int': 'number','datetime': 'datetime', 'object': 'string','datetime64[ns, UTC]':'datetime','float64':'number','int64':'number'}
 			for c in df.columns:
 				lgr.info(df[c].dtype)
@@ -123,7 +123,10 @@ class List:
 				else:
 					params['cols'].append({'label': c, 'type': 'string' })
 
+			lgr.info(f'Params {params}')
 			report_list  = df.astype(str).values.tolist()
+
+			lgr.info(f'Report List {report_list[:5]}')
 			paginator = Paginator(report_list, payload.get('limit',50))
 
 			try:
