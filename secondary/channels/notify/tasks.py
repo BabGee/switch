@@ -1870,16 +1870,16 @@ class System(Wrappers):
 			lgr.info('Got Here 1')
 			session = _cassandra
 
-			lgr.info('Got Here 2')
+			lgr.info(f'Got Here 2 {session}')
 			session.set_keyspace('notify')
 
-			lgr.info('Got Here 3')
+			lgr.info(f'Got Here 3 {session}')
 			session.row_factory = pandas_factory
 
-			lgr.info('Got Here 4')
+			lgr.info(f'Got Here 4 {session}')
 			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
 
-			lgr.info('Got Here 5')
+			lgr.info(f'Got Here 5 {session}')
 			query=f"select * from recipient_contact where contact_group_id in ? and status=?"
 			#_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
 			lgr.info(f'{query}')
@@ -1910,7 +1910,7 @@ class System(Wrappers):
 
 		except Exception as e:
 			payload['response_status'] = '96'
-			lgr.info("Error on Log Contact Group Send: %s" % e)
+			lgr.info("Error on Log Recipient Contact Group Send: %s" % e)
 		return payload
 
 
