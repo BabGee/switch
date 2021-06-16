@@ -1863,15 +1863,23 @@ class System(Wrappers):
 				ext_outbound_id = payload['ext_outbound_id']
 			elif 'bridge__transaction_id' in payload.keys():
 				ext_outbound_id = payload['bridge__transaction_id']
-
+			lgr.info('Got Here 0')
 			def pandas_factory(colnames, rows):
 			    return pd.DataFrame(rows, columns=colnames)
 
+			lgr.info('Got Here 1')
 			session = _cassandra
+
+			lgr.info('Got Here 2')
 			session.set_keyspace('notify')
+
+			lgr.info('Got Here 3')
 			session.row_factory = pandas_factory
+
+			lgr.info('Got Here 4')
 			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
 
+			lgr.info('Got Here 5')
 			query=f"select * from recipient_contact where contact_group_id in ? and status=?"
 			#_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
 			lgr.info(f'{query}')
