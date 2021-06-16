@@ -1642,6 +1642,8 @@ class System(Wrappers):
 			lgr.info('Get Product Outbound Notification: %s' % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
+			def pandas_factory(colnames, rows):
+			    return pd.DataFrame(rows, columns=colnames)
 
 			session = _cassandra
 			session.set_keyspace('notify')
@@ -1652,9 +1654,13 @@ class System(Wrappers):
 			_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
 
 			prepared_query = session.prepare(query)
+			lgr.info(f'{prepared_query}')
 			bound = prepared_query.bind(_bound) 
+			lgr.info(f'{bound}')
 			rows = session.execute(bound)
+			lgr.info(f'{row}')
 			df = rows._current_rows
+			lgr.info(f'{df.head()}')
 			df = df[['recipient']]
 
 			notifications = dict()

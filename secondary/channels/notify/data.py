@@ -38,9 +38,6 @@ from .models import *
 
 lgr = logging.getLogger('secondary.channels.notify')
 
-def pandas_factory(colnames, rows):
-    return pd.DataFrame(rows, columns=colnames)
-
 class DateTrunc(Func):
 	function = 'DATE_TRUNC'
 	def __init__(self, trunc_type, field_expression, **extra): 
@@ -99,6 +96,9 @@ class List:
 		lgr.info(f'Started Recipient Contact {payload}')
 
 		try:
+			def pandas_factory(colnames, rows):
+			    return pd.DataFrame(rows, columns=colnames)
+
 			session = _cassandra
 			session.set_keyspace('notify')
 			session.row_factory = pandas_factory
