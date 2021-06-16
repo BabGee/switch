@@ -1871,16 +1871,16 @@ class System(Wrappers):
 			session = _cassandra
 
 			lgr.info(f'Got Here 2 {session}')
-			session.set_keyspace('notify')
+			#session.set_keyspace('notify')
 
-			lgr.info(f'Got Here 3 {session}')
+			#lgr.info(f'Got Here 3 {session}')
 			session.row_factory = pandas_factory
 
 			lgr.info(f'Got Here 4 {session}')
 			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
 
 			lgr.info(f'Got Here 5 {session}')
-			query=f"select * from recipient_contact where contact_group_id in ? and status=?"
+			query=f"select * from notify.recipient_contact where contact_group_id in ? and status=?"
 			#_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
 			lgr.info(f'{query}')
 			_bound = tuple(([int(a) for a in payload['contact_group_id'].split(',') if a], 'ACTIVE'))
