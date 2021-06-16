@@ -1883,7 +1883,7 @@ class System(Wrappers):
 			lgr.info(f'Rows: {rows}')
 			df = rows._current_rows
 			lgr.info(f'DF: {df.head()}')
-			df = df[['recipient']]
+			df_data = df[['recipient']]
 			lgr.info(f'Recipient Contact Captured Data: {df.shape[0]}')
 			if 'message' in payload.keys() and df.shape[0] and len(notifications):
 				outbound_log = self.batch_product_send(payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
