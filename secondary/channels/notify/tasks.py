@@ -51,15 +51,6 @@ from switch.cassandra import app as _cassandra
 import logging
 lgr = logging.getLogger('secondary.channels.notify')
 
-def pandas_factory(colnames, rows):
-	return pd.DataFrame(rows, columns=colnames)
-
-session = _cassandra
-session.set_keyspace('notify')
-session.row_factory = pandas_factory
-session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
-
-
 class Wrappers:
 	def batch_product_send(self, payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile):
 		profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
@@ -1649,10 +1640,18 @@ class System(Wrappers):
 		try:
 			lgr.info('Get Product Outbound Notification: %s' % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			def pandas_factory(colnames, rows):
+				return pd.DataFrame(rows, columns=colnames)
+
+			session = _cassandra
+			session.set_keyspace('notify')
+			session.row_factory = pandas_factory
+			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
+
 			query=f"select * from recipient_contact where contact_group_id in ? and status=?"
 			#_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
 			_bound = tuple(([int(a) for a in payload['contact_group_id'].split(',') if a], 'ACTIVE'))
-
 			prepared_query = session.prepare(query)
 			bound = prepared_query.bind(_bound) 
 			rows = session.execute(bound)
@@ -1862,6 +1861,14 @@ class System(Wrappers):
 				ext_outbound_id = payload['ext_outbound_id']
 			elif 'bridge__transaction_id' in payload.keys():
 				ext_outbound_id = payload['bridge__transaction_id']
+
+			def pandas_factory(colnames, rows):
+				return pd.DataFrame(rows, columns=colnames)
+
+			session = _cassandra
+			session.set_keyspace('notify')
+			session.row_factory = pandas_factory
+			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
 
 			query=f"select * from notify.recipient_contact where contact_group_id in ? and status=?"
 			#_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
