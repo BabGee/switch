@@ -1882,17 +1882,17 @@ class System(Wrappers):
 			lgr.info(f'Got Here 5 {session}')
 			query=f"select * from notify.recipient_contact where contact_group_id in ? and status=?"
 			#_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
-			lgr.info(f'{query}')
+			lgr.info(f'Query: {query}')
 			_bound = tuple(([int(a) for a in payload['contact_group_id'].split(',') if a], 'ACTIVE'))
-			lgr.info(f'{_bound}')
+			lgr.info(f'Bound: {_bound}')
 			prepared_query = session.prepare(query)
-			lgr.info(f'{prepared_query}')
+			lgr.info(f'Prepared: {prepared_query}')
 			bound = prepared_query.bind(_bound) 
-			lgr.info(f'{bound}')
+			lgr.info(f'Bound: {bound}')
 			rows = session.execute(bound)
-			lgr.info(f'{rows}')
+			lgr.info(f'Rows: {rows}')
 			df = rows._current_rows
-			lgr.info(f'{df.head()}')
+			lgr.info(f'DF: {df.head()}')
 			df = df[['recipient']]
 			lgr.info(f'Recipient Contact Captured Data: {df.shape[0]}')
 			if 'message' in payload.keys() and df.shape[0] and len(notifications):
