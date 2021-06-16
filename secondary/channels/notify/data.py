@@ -100,7 +100,6 @@ class List:
 				return pd.DataFrame(rows, columns=colnames)
 
 			session = _cassandra
-			session.set_keyspace('notify')
 			session.row_factory = pandas_factory
 			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
 
