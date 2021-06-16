@@ -32,7 +32,7 @@ from django.core import serializers
 import numpy as np
 import pandas as pd
 #from django.db.models.functions import TruncDate, TruncDay, TruncHour, TruncMinute, TruncSecond
-#from switch.cassandra import app as _cassandra
+from cassandra.cqlengine.connection import session as _cassandra
 
 from .models import *
 

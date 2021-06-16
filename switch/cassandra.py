@@ -13,6 +13,3 @@ def cassandra_init(**kwargs):
 	#connection.setup()
 	connection.setup(['cassandra-0-service'], "notify")
 
-def app_init():
-	cassandra_init()
-	return cql_cluster, cql_session
