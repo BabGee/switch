@@ -46,6 +46,7 @@ from collections import defaultdict
 from primary.core.administration.views import WebService
 from .models import *
 from switch.kafka import app as kafka_producer
+from switch.cassandra import app as _cassandra
 
 import logging
 lgr = logging.getLogger('secondary.channels.notify')
@@ -1633,6 +1634,66 @@ class System(Wrappers):
 		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Getting Message: %s" % e)
+		return payload
+
+
+	def recipient_contact_group_send_details(self, payload, node_info):
+		try:
+			lgr.info('Get Product Outbound Notification: %s' % payload)
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+
+			session = _cassandra
+			session.set_keyspace('notify')
+			session.row_factory = pandas_factory
+			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
+
+			query=f"select * from recipient_contact where contact_group_id in ? and status=?"
+			_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
+
+			prepared_query = session.prepare(query)
+			bound = prepared_query.bind(_bound) 
+			rows = session.execute(bound)
+			df = rows._current_rows
+			df = df[['recipient']]
+
+			notifications = dict()
+			notifications_preview = dict()
+			product_list = NotificationProduct.objects.filter(Q(notification__code__institution=gateway_profile.institution),\
+									Q(notification__code__alias__iexact=payload['alias']),
+									Q(notification__status__name='ACTIVE'), \
+									Q(notification__channel__id=payload['chid'])|Q(notification__channel=None),
+									 Q(service__name=payload['SERVICE'])).distinct('notification__code__mno__id')
+
+			#Service is meant to send to unique MNOs with same alias, hence returns one product per MNO (distinct MNO)
+			#lgr.info('Product List: %s' % product_list)
+			# Message Len
+
+			message = payload['message'].strip()
+			message = unescape(message)
+			message = smart_text(message)
+			message = escape(message)
+			notifications_preview['message'] = {'text':message,'scheduled_date':payload['scheduled_date'],'scheduled_time':payload['scheduled_time']}
+
+			if len(product_list):
+
+				for product in product_list:
+					ns,nsp = self.batch_product_notifications(payload, df, product, message, gateway_profile)
+					if ns: notifications.update(ns)
+					if nsp: notifications_preview.update(nsp)
+
+				payload['notifications_object'] = json.dumps(notifications)
+				payload['notifications_preview'] = json.dumps(notifications_preview)
+				payload['contact_group'] = '\n'.join(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))
+				payload['response'] = 'Contact Group Send Details Captured'
+				payload['response_status']= '00'
+			else:
+				payload['response'] = 'Notification Product not Found'
+				payload['response_status']= '25'
+
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Contact Group Send Details: %s" % e)
 		return payload
 
 
