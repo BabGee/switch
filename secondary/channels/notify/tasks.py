@@ -1655,13 +1655,9 @@ class System(Wrappers):
 			_bound = tuple(([int(a) for a in payload['contact_group_id'].split(',') if a], 'ACTIVE'))
 
 			prepared_query = session.prepare(query)
-			lgr.info(f'{prepared_query}')
 			bound = prepared_query.bind(_bound) 
-			lgr.info(f'{bound}')
 			rows = session.execute(bound)
-			lgr.info(f'{rows}')
 			df = rows._current_rows
-			lgr.info(f'{df.head()}')
 			df = df[['recipient']]
 
 			notifications = dict()
@@ -1844,6 +1840,64 @@ class System(Wrappers):
 		except Exception as e:
 			payload['response_status'] = '96'
 			lgr.info("Error on Notification Charges: %s" % e)
+		return payload
+
+
+	def log_recipient_contact_group_send(self, payload, node_info):
+		try:
+			lgr.info('Log Outbound Contact Group Send: %s' % payload)
+
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			date_string = payload['scheduled_date']+' '+payload['scheduled_time']
+			date_obj = datetime.strptime(date_string, '%d/%m/%Y %I:%M %p')
+		
+			lgr.info('Payload: %s' % payload)
+
+			notifications = json.loads(payload['notifications_object'])
+
+			lgr.info('Notifications: %s' % notifications)
+
+			ext_outbound_id = None
+			if "ext_outbound_id" in payload.keys():
+				ext_outbound_id = payload['ext_outbound_id']
+			elif 'bridge__transaction_id' in payload.keys():
+				ext_outbound_id = payload['bridge__transaction_id']
+
+			def pandas_factory(colnames, rows):
+			    return pd.DataFrame(rows, columns=colnames)
+
+			session = _cassandra
+			session.set_keyspace('notify')
+			session.row_factory = pandas_factory
+			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
+
+			query=f"select * from recipient_contact where contact_group_id in ? and status=?"
+			#_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
+			_bound = tuple(([int(a) for a in payload['contact_group_id'].split(',') if a], 'ACTIVE'))
+
+			prepared_query = session.prepare(query)
+			bound = prepared_query.bind(_bound) 
+			rows = session.execute(bound)
+			df = rows._current_rows
+			df = df[['recipient']]
+
+			if 'message' in payload.keys() and df.shape[0] and len(notifications):
+				outbound_log = self.batch_product_send(payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
+				lgr.info('Recipient Outbound Bulk Logger Completed Task')
+
+				payload['response'] = 'Outbound Message Processed'
+				payload['response_status']= '00'
+			elif 'message' not in payload.keys() and len(recipient_list):
+				payload['response'] = 'No Message to Send'
+				payload['response_status']= '00'
+			else:
+				payload['response'] = 'No Contact/Message to Send'
+				payload['response_status']= '00'
+
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Log Contact Group Send: %s" % e)
 		return payload
 
 
