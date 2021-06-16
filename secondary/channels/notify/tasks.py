@@ -51,6 +51,14 @@ from switch.cassandra import app as _cassandra
 import logging
 lgr = logging.getLogger('secondary.channels.notify')
 
+def pandas_factory(colnames, rows):
+	return pd.DataFrame(rows, columns=colnames)
+
+session = _cassandra
+session.set_keyspace('notify')
+session.row_factory = pandas_factory
+session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
+
 
 class Wrappers:
 	def batch_product_send(self, payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile):
@@ -1641,15 +1649,6 @@ class System(Wrappers):
 		try:
 			lgr.info('Get Product Outbound Notification: %s' % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-
-			def pandas_factory(colnames, rows):
-			    return pd.DataFrame(rows, columns=colnames)
-
-			session = _cassandra
-			session.set_keyspace('notify')
-			session.row_factory = pandas_factory
-			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
-
 			query=f"select * from recipient_contact where contact_group_id in ? and status=?"
 			#_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
 			_bound = tuple(([int(a) for a in payload['contact_group_id'].split(',') if a], 'ACTIVE'))
@@ -1863,23 +1862,7 @@ class System(Wrappers):
 				ext_outbound_id = payload['ext_outbound_id']
 			elif 'bridge__transaction_id' in payload.keys():
 				ext_outbound_id = payload['bridge__transaction_id']
-			lgr.info('Got Here 0')
-			def pandas_factory(colnames, rows):
-			    return pd.DataFrame(rows, columns=colnames)
 
-			lgr.info('Got Here 1')
-			session = _cassandra
-
-			lgr.info(f'Got Here 2 {session}')
-			#session.set_keyspace('notify')
-
-			#lgr.info(f'Got Here 3 {session}')
-			session.row_factory = pandas_factory
-
-			lgr.info(f'Got Here 4 {session}')
-			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
-
-			lgr.info(f'Got Here 5 {session}')
 			query=f"select * from notify.recipient_contact where contact_group_id in ? and status=?"
 			#_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
 			lgr.info(f'Query: {query}')
@@ -1888,7 +1871,7 @@ class System(Wrappers):
 			prepared_query = session.prepare(query)
 			lgr.info(f'Prepared: {prepared_query}')
 			bound = prepared_query.bind(_bound) 
-			lgr.info(f'Bound: {bound}')
+			lgr.info(f'Bound 2: {bound}')
 			rows = session.execute(bound)
 			lgr.info(f'Rows: {rows}')
 			df = rows._current_rows
