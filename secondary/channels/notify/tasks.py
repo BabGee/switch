@@ -1881,7 +1881,7 @@ class System(Wrappers):
 			rows = session.execute(bound)
 			df = rows._current_rows
 			df = df[['recipient']]
-
+			lgr.info(f'Recipient Contact Captured Data: {df.shape[0]}')
 			if 'message' in payload.keys() and df.shape[0] and len(notifications):
 				outbound_log = self.batch_product_send(payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
 				lgr.info('Recipient Outbound Bulk Logger Completed Task')
