@@ -103,7 +103,7 @@ class List:
 			session.row_factory = pandas_factory
 			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
 
-			query=f"select * from recipient_contact where contact_group_id=? and status=?"
+			query=f"select * from notify.recipient_contact where contact_group_id=? and status=?"
 			_bound = dict(contact_group_id=int(payload['recipient_contact']), status=str('ACTIVE'))
 
 			if payload.get('q'): 
