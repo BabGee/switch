@@ -40,7 +40,17 @@ os.environ["CELERY_LOADER"] = "django"
 from django.core.wsgi import get_wsgi_application
 from switch.cassandra import cassandra_init
 
-cassandra_init()
+
+try:
+	from uwsgidecorators import postfork
+except ImportError:
+	# We're not in a uWSGI context, no need to hook Cassandra session
+	# initialization to the postfork event.
+	pass
+else:
+	@postfork
+	def _cassandra_init(**kwargs):
+		cassandra_init(kwargs)
 
 
 application = get_wsgi_application()
