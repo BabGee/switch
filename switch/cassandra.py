@@ -1,8 +1,7 @@
-import cassandra
+from cassandra.cqlengine import connection
+from cassandra.cqlengine.connection import (
+    cluster as cql_cluster, session as cql_session)
 
-from cassandra.cluster import Cluster
-cluster = Cluster(['cassandra-0-service'])
+connection.setup(['cassandra-0-service'], "notify")
 
-session = cluster.connect()
-session.set_keyspace('notify')
 app = session
