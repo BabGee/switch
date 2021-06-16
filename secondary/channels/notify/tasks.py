@@ -1651,7 +1651,8 @@ class System(Wrappers):
 			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
 
 			query=f"select * from recipient_contact where contact_group_id in ? and status=?"
-			_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
+			#_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
+			_bound = tuple(([a for a in payload['contact_group_id'].split(',') if a], 'ACTIVE'))
 
 			prepared_query = session.prepare(query)
 			lgr.info(f'{prepared_query}')
