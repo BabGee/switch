@@ -1659,7 +1659,7 @@ class System(Wrappers):
 			bound = prepared_query.bind(_bound) 
 			lgr.info(f'{bound}')
 			rows = session.execute(bound)
-			lgr.info(f'{row}')
+			lgr.info(f'{rows}')
 			df = rows._current_rows
 			lgr.info(f'{df.head()}')
 			df = df[['recipient']]
