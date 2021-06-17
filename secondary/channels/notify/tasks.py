@@ -1648,9 +1648,11 @@ class System(Wrappers):
 			session.row_factory = pandas_factory
 			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
 
-			query=f"select * from switch.notify_recipient where contact_group_id in ? and status=?"
+			#query=f"select * from switch.notify_recipient where contact_group_id in ? and status=?"
+			query=f"select * from switch.notify_recipient where contact_group_id in ?"
 			#_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
-			_bound = tuple(([int(a) for a in payload['contact_group_id'].split(',') if a], 'ACTIVE'))
+			#_bound = tuple(([int(a) for a in payload['contact_group_id'].split(',') if a], 'ACTIVE'))
+			_bound = tuple(([int(a) for a in payload['contact_group_id'].split(',') if a],))
 			prepared_query = session.prepare(query)
 			bound = prepared_query.bind(_bound) 
 			rows = session.execute(bound)
@@ -1868,10 +1870,12 @@ class System(Wrappers):
 			session.row_factory = pandas_factory
 			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
 
-			query=f"select * from switch.notify_recipient where contact_group_id in ? and status=?"
+			#query=f"select * from switch.notify_recipient where contact_group_id in ? and status=?"
+			query=f"select * from switch.notify_recipient where contact_group_id in ?"
 			#_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
 			lgr.info(f'Query: {query}')
-			_bound = tuple(([int(a) for a in payload['contact_group_id'].split(',') if a], 'ACTIVE'))
+			#_bound = tuple(([int(a) for a in payload['contact_group_id'].split(',') if a], 'ACTIVE'))
+			_bound = tuple(([int(a) for a in payload['contact_group_id'].split(',') if a],))
 			lgr.info(f'Bound: {_bound}')
 			prepared_query = session.prepare(query)
 			lgr.info(f'Prepared: {prepared_query}')
