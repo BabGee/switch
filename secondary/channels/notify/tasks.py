@@ -46,7 +46,6 @@ from collections import defaultdict
 from primary.core.administration.views import WebService
 from .models import *
 from switch.kafka import app as kafka_producer
-from cassandra.cqlengine.connection import session as _cassandra
 
 import logging
 lgr = logging.getLogger('secondary.channels.notify')
@@ -1644,7 +1643,7 @@ class System(Wrappers):
 			def pandas_factory(colnames, rows):
 				return pd.DataFrame(rows, columns=colnames)
 
-			session = _cassandra
+			from cassandra.cqlengine.connection import session
 			session.row_factory = pandas_factory
 			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
 
@@ -1866,7 +1865,7 @@ class System(Wrappers):
 			def pandas_factory(colnames, rows):
 				return pd.DataFrame(rows, columns=colnames)
 
-			session = _cassandra
+			from cassandra.cqlengine.connection import session
 			session.row_factory = pandas_factory
 			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
 
