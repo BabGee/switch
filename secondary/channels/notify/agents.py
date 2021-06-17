@@ -2,7 +2,6 @@ import faust
 from faust.types import StreamT
 #from primary.core.async.faust import app
 from switch.faust import app as _faust
-from cassandra.cqlengine.connection import session as _cassandra
 import requests, json, ast
 from aiocassandra import aiosession
 import dateutil.parser
@@ -47,11 +46,11 @@ sent_messages_topic = _faust.topic('switch.secondary.channels.notify.sent_messag
 
 thread_pool = ThreadPoolExecutor(max_workers=4)
 #Cassandra Async Patching
-session = _cassandra
-aiosession(session)
 
 @_faust.agent(sent_messages_topic, concurrency=1)
 async def sent_messages(messages):
+	from cassandra.cqlengine.connection import session
+	aiosession(session)
 	#async for message in messages.take(1000, within=1):
 	async for message in messages:
 		try:

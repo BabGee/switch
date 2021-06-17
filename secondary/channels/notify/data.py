@@ -32,7 +32,6 @@ from django.core import serializers
 import numpy as np
 import pandas as pd
 #from django.db.models.functions import TruncDate, TruncDay, TruncHour, TruncMinute, TruncSecond
-from cassandra.cqlengine.connection import session as _cassandra
 
 from .models import *
 
@@ -99,7 +98,9 @@ class List:
 			def pandas_factory(colnames, rows):
 				return pd.DataFrame(rows, columns=colnames)
 
-			session = _cassandra
+			#Session required within task 
+			from cassandra.cqlengine.connection import session
+
 			session.row_factory = pandas_factory
 			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
 
