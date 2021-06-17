@@ -61,7 +61,7 @@ async def sent_messages(messages):
 
 			timestamp = dateutil.parser.parse(message['timestamp'])
 			date_created = timestamp.date()
-			query = """INSERT INTO notify.send_notification (product_id, outbound_id, batch_id, 
+			query = """INSERT INTO switch.notify_outbound (product_id, outbound_id, batch_id, 
 				channel, code, date_created, date_modified, message, mno, recipient, response, state) 
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 			prepared_query = await session.prepare_future(query)

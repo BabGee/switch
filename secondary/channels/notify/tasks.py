@@ -1648,7 +1648,7 @@ class System(Wrappers):
 			session.row_factory = pandas_factory
 			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
 
-			query=f"select * from notify.recipient_contact where contact_group_id in ? and status=?"
+			query=f"select * from switch.notify_recipient where contact_group_id in ? and status=?"
 			#_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
 			_bound = tuple(([int(a) for a in payload['contact_group_id'].split(',') if a], 'ACTIVE'))
 			prepared_query = session.prepare(query)
@@ -1868,7 +1868,7 @@ class System(Wrappers):
 			session.row_factory = pandas_factory
 			session.default_fetch_size = 150000 #needed for large queries, otherwise driver will do pagination. Default is 50000.
 
-			query=f"select * from notify.recipient_contact where contact_group_id in ? and status=?"
+			query=f"select * from switch.notify_recipient where contact_group_id in ? and status=?"
 			#_bound = dict(contact_group_id=[a for a in payload['contact_group_id'].split(',') if a], status=str('ACTIVE'))
 			lgr.info(f'Query: {query}')
 			_bound = tuple(([int(a) for a in payload['contact_group_id'].split(',') if a], 'ACTIVE'))

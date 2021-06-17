@@ -11,5 +11,5 @@ def cassandra_init(**kwargs):
 	if cql_session is not None:
 		cql_session.shutdown()
 	#connection.setup()
-	connection.setup(['cassandra-0-service'], "notify")
+	connection.setup(['cassandra-0-service'], "switch")
 
