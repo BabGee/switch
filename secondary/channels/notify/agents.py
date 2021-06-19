@@ -49,6 +49,7 @@ thread_pool = ThreadPoolExecutor(max_workers=4)
 
 @_faust.agent(sent_messages_topic, concurrency=1)
 async def sent_messages(messages):
+	#Session required within task 
 	from cassandra.cqlengine.connection import session
 	aiosession(session)
 	#async for message in messages.take(1000, within=1):
