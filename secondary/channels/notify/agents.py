@@ -43,12 +43,14 @@ lgr = logging.getLogger(__name__)
 sent_messages_topic = _faust.topic('switch.secondary.channels.notify.sent_messages')
 #delivery_status_topic = _faust.topic('switch.secondary.channels.notify.delivery_status')
 
+#Session required within task 
+from cassandra.cqlengine.connection import session
+#Cassandra Async Patching
+aiosession(session)
+
 @_faust.agent(sent_messages_topic, concurrency=16)
 async def sent_messages(messages):
-	#Session required within task 
-	from cassandra.cqlengine.connection import session
-	#Cassandra Async Patching
-	aiosession(session)
+
 	#async for message in messages.take(1000, within=1):
 	async for message in messages:
 		try:
