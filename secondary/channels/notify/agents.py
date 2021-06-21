@@ -11,7 +11,6 @@ from .models import *
 from django.db.models import Q,F
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from functools import reduce
-from concurrent.futures import ThreadPoolExecutor
 from switch.kafka import app as kafka_producer
 from mode import Service
 
@@ -44,13 +43,11 @@ lgr = logging.getLogger(__name__)
 sent_messages_topic = _faust.topic('switch.secondary.channels.notify.sent_messages')
 #delivery_status_topic = _faust.topic('switch.secondary.channels.notify.delivery_status')
 
-thread_pool = ThreadPoolExecutor(max_workers=4)
-#Cassandra Async Patching
-
-@_faust.agent(sent_messages_topic, concurrency=1)
+@_faust.agent(sent_messages_topic, concurrency=16)
 async def sent_messages(messages):
 	#Session required within task 
 	from cassandra.cqlengine.connection import session
+	#Cassandra Async Patching
 	aiosession(session)
 	#async for message in messages.take(1000, within=1):
 	async for message in messages:
