@@ -57,6 +57,10 @@ class MenuAdmin(admin.ModelAdmin):
 	search_fields = ('page_string','menu_description',)
 admin.site.register(Menu, MenuAdmin)
 
+class MenuKeywordAdmin(admin.ModelAdmin):
+	list_display = ('code_list', 'keyword', 'date_modified', 'date_created',)
+admin.site.register(MenuKeyword, MenuKeywordAdmin)
+	
 class MenuItemAdmin(admin.ModelAdmin):
 	list_display = ('menu_item', 'access_level_list', 'profile_status_list', 'item_level', 'item_order', 'menu', 'status',\
 			'failed_session_include','response_status','enrollment_type_included_list','enrollment_type_excluded_list',)

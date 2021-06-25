@@ -126,6 +126,8 @@ class MenuKeyword(models.Model):
 	keyword = models.CharField(max_length=128)
 	def __str__(self):
 		return u'%s %s %s' % (self.id, self.code_list(), self.keyword)
+	def code_list(self):
+		return "\n".join([a.code for a in self.code.all()])
 
 class MenuItem(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
