@@ -119,6 +119,14 @@ class Menu(models.Model):
 	def enrollment_type_excluded_list(self):
 		return "\n".join([a.name for a in self.enrollment_type_excluded.all()])
 
+class MenuKeyword(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	code = models.ManyToManyField(Code)
+	keyword = models.CharField(max_length=128)
+	def __str__(self):
+		return u'%s %s %s' % (self.id, self.code_list(), self.keyword)
+
 class MenuItem(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
