@@ -114,9 +114,11 @@ class VAS:
 
 				menuitems = menuitems.order_by('item_order').values('menu_item','item_level')
 				self.item_list = ['%s' % (item['menu_item']) for item in menuitems.filter(~Q(item_level=0))] #Escape 0 for back and main in navigator entry to avoid validation issues
-				this_item_list = ['%s%s' % (str(item['item_level'])+':' if item['item_level']>0 else '',item['menu_item']) for item in menuitems] #Zero 0 entries to not show number/item_level
-				menu_items = '\n'.join(this_item_list)
-				return  '\n%s' % menu_items
+				if self.channel.name == 'USSD':
+					this_item_list = ['%s%s' % (str(item['item_level'])+':' if item['item_level']>0 else '',item['menu_item']) for item in menuitems] #Zero 0 entries to not show number/item_level
+					menu_items = '\n'.join(this_item_list)
+					return  '\n%s' % menu_items
+				else: return ''
 			else:
 				return ''
 
@@ -134,7 +136,11 @@ class VAS:
 			except Exception as e: lgr.info('Error on Processing Page String: %s' % e)
 
 			menuitems = menuitems.filter(menu=self.menu[0])
-			page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
+			if self.channel.name == 'USSD':
+				page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
+			else:
+				_ = get_menu_items(menuitems)
+				page_string = self.payload['page_string']
 
 			if len(self.item_list)>0:
 				new_navigator.item_list = json.dumps(self.item_list)
@@ -215,6 +221,7 @@ class VAS:
 		#gs = goslate.Goslate()
 		#page_string = gs.translate(page_string, 'sw')
 		self.view_data["PAGE_STRING"] = page_string
+		self.view_data['PAGE_SELECT'] = json.dumps(dict([(i, item) for i,item in enumerate(self.item_list)]))
 		self.view_data["MNO_RESPONSE_SESSION_STATE"] = session_state
 		self.view_data["INPUT_TYPE"] = input_type
 		self.view_data["INPUT_MIN"] = input_min
