@@ -232,7 +232,7 @@ class VAS:
 		#gs = goslate.Goslate()
 		#page_string = gs.translate(page_string, 'sw')
 		self.view_data["PAGE_STRING"] = page_string
-		self.view_data['PAGE_SELECT'] = json.dumps(dict([(i, item) for i,item in enumerate(self.item_list)]))
+		self.view_data['PAGE_SELECT'] = json.dumps(dict([(i, item) for i,item in enumerate(self.item_list, 1)]))
 		self.view_data['ERROR_PREFIX'] = self.error_prefix
 		self.view_data["MNO_RESPONSE_SESSION_STATE"] = session_state
 		self.view_data["INPUT_TYPE"] = input_type
