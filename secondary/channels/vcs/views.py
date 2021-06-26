@@ -83,6 +83,7 @@ class VAS:
 		lgr = self.node_info.log
 		self.view_data = {}
 		self.item_list = []
+		self.error_prefix = []
 
 		menuitems = MenuItem.objects.filter(status__name='ENABLED')
 		if self.gateway_profile.exists():
@@ -179,12 +180,22 @@ class VAS:
 			#	message = error_prefix.split('|')
 			#	self.payload['error_prefix'] = message
 			#	page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
+
 			if error_prefix:
 				message = error_prefix.split('|')
-				if len(message)>1 and message[1].strip()=='REPLACE': page_string = '%s' % (message[0])
-				else: page_string = '%s %s%s' % (error_prefix, self.payload['page_string'], get_menu_items(menuitems))
+				self.error_prefix = message
+				if self.channel.name == 'USSD':
+					if len(message)>1 and message[1].strip()=='REPLACE': page_string = '%s' % (message[0])
+					else: page_string = '%s %s%s' % (error_prefix, self.payload['page_string'], get_menu_items(menuitems))
+				else:
+					_ = get_menu_items(menuitems)
+					page_string = self.payload['page_string']
 			else:
-				page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
+				if self.channel.name == 'USSD':
+					page_string = '%s%s' % (self.payload['page_string'], get_menu_items(menuitems))
+				else:
+					_ = get_menu_items(menuitems)
+					page_string = self.payload['page_string']
 
 			if len(self.item_list)>0:
 				new_navigator.item_list = json.dumps(self.item_list)
@@ -222,6 +233,7 @@ class VAS:
 		#page_string = gs.translate(page_string, 'sw')
 		self.view_data["PAGE_STRING"] = page_string
 		self.view_data['PAGE_SELECT'] = json.dumps(dict([(i, item) for i,item in enumerate(self.item_list)]))
+		self.view_data['ERROR_PREFIX'] = self.error_prefix
 		self.view_data["MNO_RESPONSE_SESSION_STATE"] = session_state
 		self.view_data["INPUT_TYPE"] = input_type
 		self.view_data["INPUT_MIN"] = input_min
