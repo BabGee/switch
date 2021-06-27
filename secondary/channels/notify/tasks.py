@@ -934,36 +934,37 @@ class System(Wrappers):
 
 
 			lgr.info('Notification Product: %s ' % notification_product)
+			def get_template():
+				if len(notification_product):
+					#Construct Message to send
+					if 'message' not in payload.keys():
+						if notification_template:
+							payload['notification_template_id'] = notification_template.id
+							message = notification_template.template_message
+							variables = re.findall("\[(.*?)\]", message)
+							for v in variables:
+								variable_key, variable_val = None, None
+								n = v.find("=")
+								if n >=0:
+									variable_key = v[:n]
+									variable_val = str(v[(n+1):]).strip()
+								else:
+									variable_key = v
+								message_item = ''
+								if variable_key in payload.keys():
+									message_item = payload[variable_key]
+									if variable_val is not None:
+										if '|' in variable_val:
+											prefix, suffix = variable_val.split('|')
+											message_item = '%s %s %s' % (prefix, message_item, suffix)
+										else:
+											message_item = '%s %s' % (variable_val, message_item)
+								message = message.replace('['+v+']',str(message_item).strip())
+							#Message after loop
+							payload['message'] = message
+						else:
+							payload['message'] = ''
 
-			if len(notification_product):
-				#Construct Message to send
-				if 'message' not in payload.keys():
-					if notification_template:
-						payload['notification_template_id'] = notification_template.id
-						message = notification_template.template_message
-						variables = re.findall("\[(.*?)\]", message)
-						for v in variables:
-							variable_key, variable_val = None, None
-							n = v.find("=")
-							if n >=0:
-								variable_key = v[:n]
-								variable_val = str(v[(n+1):]).strip()
-							else:
-								variable_key = v
-							message_item = ''
-							if variable_key in payload.keys():
-								message_item = payload[variable_key]
-								if variable_val is not None:
-									if '|' in variable_val:
-										prefix, suffix = variable_val.split('|')
-										message_item = '%s %s %s' % (prefix, message_item, suffix)
-									else:
-										message_item = '%s %s' % (variable_val, message_item)
-							message = message.replace('['+v+']',str(message_item).strip())
-						#Message after loop
-						payload['message'] = message
-					else:
-						payload['message'] = ''
 				payload['notification_product_id'] = notification_product[0].id
 				#lgr.info('Payload: %s' % payload)
 				if 'product_item_id' in payload.keys(): del payload['product_item_id'] #Avoid deduction of float
@@ -983,6 +984,7 @@ class System(Wrappers):
 
 				#Calculate price per SMS per each 160 characters
 				if notification_product[0].notification.code.channel.name == 'SMS':
+					_ = get_template()
 					payload['message'] = payload['message'].strip().format_map(payload_d)
 					message = payload['message']
 					message = unescape(message)
@@ -1008,6 +1010,7 @@ class System(Wrappers):
 											strip().format_map(payload_d)
 					payload['message'] = message
 				else:
+					_ = get_template()
 					payload['message'] = payload['message'].strip().format_map(payload_d)
 
 				#Finally
