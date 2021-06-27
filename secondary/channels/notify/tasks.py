@@ -934,31 +934,32 @@ class System(Wrappers):
 
 			lgr.info('Notification Product: %s ' % notification_product)
 			if len(notification_product):
-				def get_template():
+				def get_template(mapTags=True):
 					#Construct Message to send
 					if 'message' not in payload.keys():
 						if notification_template:
 							payload['notification_template_id'] = notification_template.id
 							message = notification_template.template_message
-							variables = re.findall("\[(.*?)\]", message)
-							for v in variables:
-								variable_key, variable_val = None, None
-								n = v.find("=")
-								if n >=0:
-									variable_key = v[:n]
-									variable_val = str(v[(n+1):]).strip()
-								else:
-									variable_key = v
-								message_item = ''
-								if variable_key in payload.keys():
-									message_item = payload[variable_key]
-									if variable_val is not None:
-										if '|' in variable_val:
-											prefix, suffix = variable_val.split('|')
-											message_item = '%s %s %s' % (prefix, message_item, suffix)
-										else:
-											message_item = '%s %s' % (variable_val, message_item)
-								message = message.replace('['+v+']',str(message_item).strip())
+							if mapTags:
+								variables = re.findall("\[(.*?)\]", message)
+								for v in variables:
+									variable_key, variable_val = None, None
+									n = v.find("=")
+									if n >=0:
+										variable_key = v[:n]
+										variable_val = str(v[(n+1):]).strip()
+									else:
+										variable_key = v
+									message_item = ''
+									if variable_key in payload.keys():
+										message_item = payload[variable_key]
+										if variable_val is not None:
+											if '|' in variable_val:
+												prefix, suffix = variable_val.split('|')
+												message_item = '%s %s %s' % (prefix, message_item, suffix)
+											else:
+												message_item = '%s %s' % (variable_val, message_item)
+									message = message.replace('['+v+']',str(message_item).strip())
 							#Message after loop
 							payload['message'] = message
 						else:
@@ -994,6 +995,7 @@ class System(Wrappers):
 					payload['message_len'] = len(messages)
 					float_amount = float_amount*len(messages)
 				elif notification_product[0].notification.code.channel.name == 'WHATSAPP':
+					_ = get_template(False)
 					message = json.loads(payload['message'])
 					if message.get('type') == 'interactive':
 						message['interactive']['body']['text'] = message['interactive']['body']['text'].\
