@@ -980,10 +980,10 @@ class System(Wrappers):
 
 				payload_d = defaultdict(lambda: "...")
 				payload_d.update(payload)
-				payload['message'] = payload['message'].strip().format_map(payload_d)
 
 				#Calculate price per SMS per each 160 characters
 				if notification_product[0].notification.code.channel.name == 'SMS':
+					payload['message'] = payload['message'].strip().format_map(payload_d)
 					message = payload['message']
 					message = unescape(message)
 					message = smart_text(message)
@@ -992,6 +992,23 @@ class System(Wrappers):
 					messages = [ message[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
 					payload['message_len'] = len(messages)
 					float_amount = float_amount*len(messages)
+				elif notification_product[0].notification.code.channel.name == 'WHATSAPP':
+					message = json.loads(message['message'])
+					if message.get('type') == 'interactive':
+						message['interactive']['body']['text'] = message['interactive']['body']['text'].\
+											strip().format_map(payload_d)
+					elif message.get('type') == 'text':
+						message['text']['body'] = message['text']['body'].\
+											strip().format_map(payload_d)
+					elif message.get('type') == 'image' and message['image'].get('caption'):
+						message['image']['caption'] = message['video']['caption'].\
+											strip().format_map(payload_d)
+					elif message.get('type') == 'video' and message['video'].get('caption'):
+						message['video']['caption'] = message['video']['caption'].\
+											strip().format_map(payload_d)
+					payload['message'] = message
+				else:
+					payload['message'] = payload['message'].strip().format_map(payload_d)
 
 				#Finally
 				payload['alias'] = notification_product[0].notification.code.alias
