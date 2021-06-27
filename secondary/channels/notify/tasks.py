@@ -330,6 +330,31 @@ class Wrappers:
 			return False
 
 class System(Wrappers):
+	def update_session_subscription(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			enrollment = Enrollment.objects.get(id=payload['enrollment_id'])
+
+			session_sub = SessionSubscription.objects.filter(gateway_profile=gateway_profile, enrollment=enrollment)
+
+			if len(session_sub):
+				session_subscription = session_sub.last()
+				session_subscription.last_access = timezone.now()
+			else:
+				session_subscription = SessionSubscription(gateway_profile=gateway_profile, enrollment=enrollment, 
+										last_access=timezone.now())
+
+			#Save either
+			session_subscription.save()
+
+			payload['response'] = 'Session Subscription Update'
+			payload['response_status'] = '00'
+
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on update session subscription: %s" % e)
+		return payload
+
 	def notification_template_details(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])

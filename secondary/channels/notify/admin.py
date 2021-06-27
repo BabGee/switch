@@ -119,5 +119,9 @@ class OutboundAdmin(admin.ModelAdmin):
 
 admin.site.register(Outbound, OutboundAdmin)
 
+class SessionSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('gateway_profile', 'enrollment','last_access',)
+admin.site.register(SessionSubscription, SessionSubscriptionAdmin)
+
 
 
