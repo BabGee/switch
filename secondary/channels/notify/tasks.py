@@ -932,10 +932,9 @@ class System(Wrappers):
 				notification_template = notification_template_list[0] if len(notification_template_list) else None
 
 
-
 			lgr.info('Notification Product: %s ' % notification_product)
-			def get_template():
-				if len(notification_product):
+			if len(notification_product):
+				def get_template():
 					#Construct Message to send
 					if 'message' not in payload.keys():
 						if notification_template:
