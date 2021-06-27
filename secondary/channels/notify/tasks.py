@@ -1009,7 +1009,7 @@ class System(Wrappers):
 					elif message.get('type') == 'video' and message['video'].get('caption'):
 						message['video']['caption'] = message['video']['caption'].\
 											strip().format_map(payload_d)
-					payload['message'] = message
+					payload['message'] = json.dumps(message)
 				else:
 					_ = get_template()
 					payload['message'] = payload['message'].strip().format_map(payload_d)
