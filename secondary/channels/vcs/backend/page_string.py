@@ -2395,76 +2395,79 @@ class PageString(ServiceCall, Wrappers):
 				else:
 					from secondary.channels.dsc.tasks import System as DSCSystem
 					lgr.info('DSC query')
+					if DataList.objects.filter(data_name=variable_key).exists():
+						payload['data_name'] = variable_key
+						if 'chid' not in payload.keys(): payload['chid'] = 4
 
-					payload['data_name'] = variable_key
-					if 'chid' not in payload.keys(): payload['chid'] = 4
+						if variable_val:
+							payload[str(variable_key)] = variable_val
 
-					if variable_val:
-						payload[str(variable_key)] = variable_val
+						gateway_profile = navigator.session.gateway_profile
+						if gateway_profile is None: #If profile is unexistent
+							gateway_profile_list = GatewayProfile.objects.filter(gateway =code[0].gateway,user__username='System@User', status__name__in=['ACTIVATED'])
+							if len(gateway_profile_list) > 0 and gateway_profile_list[0].user.is_active:
+								gateway_profile = gateway_profile_list[0]
 
-					gateway_profile = navigator.session.gateway_profile
-					if gateway_profile is None: #If profile is unexistent
-						gateway_profile_list = GatewayProfile.objects.filter(gateway =code[0].gateway,user__username='System@User', status__name__in=['ACTIVATED'])
-						if len(gateway_profile_list) > 0 and gateway_profile_list[0].user.is_active:
-							gateway_profile = gateway_profile_list[0]
+						payload['gateway_profile_id'] = gateway_profile.id
+						payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
 
-					payload['gateway_profile_id'] = gateway_profile.id
-					payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
+						params = payload.copy()
+						lgr.info('Request Payload: %s' % params)
 
-					params = payload.copy()
-					lgr.info('Request Payload: %s' % params)
+						params = DSCSystem().data_source(params, {})
+						lgr.info('Response Payload: %s' % params)
 
-					params = DSCSystem().data_source(params, {})
-					lgr.info('Response Payload: %s' % params)
+						item = ''
+						item_list = []
+						count = 1
+						if 'response_status' in params.keys() and params['response_status'] == '00':
 
-					item = ''
-					item_list = []
-					count = 1
-					if 'response_status' in params.keys() and params['response_status'] == '00':
+							data_source = params['response']
+		
+							lgr.info('Data Source : %s' % data_source)
+							if 'rows' in data_source.keys() and len(data_source['rows']):
+								lgr.info('Rows')
+								for i in data_source['rows']:
+									name = '%s' % (' '.join(i[1:]))
+									if navigator.session.channel.name == 'IVR':
+										item = '%s\nFor %s, press %s.' % (item, name, count)
+									elif navigator.session.channel.name == 'USSD':
+										item = '%s\n%s:%s' % (item, count, name)
 
-						data_source = params['response']
-	
-						lgr.info('Data Source : %s' % data_source)
-						if 'rows' in data_source.keys() and len(data_source['rows']):
-							lgr.info('Rows')
-							for i in data_source['rows']:
-								name = '%s' % (' '.join(i[1:]))
-								if navigator.session.channel.name == 'IVR':
-									item = '%s\nFor %s, press %s.' % (item, name, count)
-								elif navigator.session.channel.name == 'USSD':
-									item = '%s\n%s:%s' % (item, count, name)
+									item_list.append(i[0])
+									count+=1
 
-								item_list.append(i[0])
-								count+=1
+								navigator.item_list = json.dumps(item_list)
+								navigator.save()
 
-							navigator.item_list = json.dumps(item_list)
-							navigator.save()
+							elif 'data' in data_source.keys() and len(data_source['data']):
+								lgr.info('Data')
+								for i in data_source['data']:
+									name = '%s' % (i['name'])
+									if navigator.session.channel.name == 'IVR':
+										item = '%s\nFor %s, press %s.' % (item, name, count)
+									elif navigator.session.channel.name == 'USSD':
+										item = '%s\n%s:%s' % (item, count, name)
 
-						elif 'data' in data_source.keys() and len(data_source['data']):
-							lgr.info('Data')
-							for i in data_source['data']:
-								name = '%s' % (i['name'])
-								if navigator.session.channel.name == 'IVR':
-									item = '%s\nFor %s, press %s.' % (item, name, count)
-								elif navigator.session.channel.name == 'USSD':
-									item = '%s\n%s:%s' % (item, count, name)
+									item_list.append(i['id'])
+									count+=1
 
-								item_list.append(i['id'])
-								count+=1
+								navigator.item_list = json.dumps(item_list)
+								navigator.save()
 
-							navigator.item_list = json.dumps(item_list)
-							navigator.save()
+							elif 'lines' in data_source.keys() and len(data_source['lines']):
+								lgr.info('Lines')
+								lines = data_source['lines']
+								lgr.info('Lines: %s' % lines)
+								lines = lines[0]
+								lgr.info('Lines: %s' % lines)
+								item = '%s' % (' '.join(str(lines)))
 
-						elif 'lines' in data_source.keys() and len(data_source['lines']):
-							lgr.info('Lines')
-							lines = data_source['lines']
-							lgr.info('Lines: %s' % lines)
-							lines = lines[0]
-							lgr.info('Lines: %s' % lines)
-							item = '%s' % (' '.join(str(lines)))
-
-					lgr.info('Your List: %s' % item)
-					page_string = page_string.replace('['+v+']',item)
+						lgr.info('Your List: %s' % item)
+						page_string = page_string.replace('['+v+']',item)
+					else:
+						lgr.info(f'Unexistent variable: {variable_key}' )
+						if navigator.session.channel.name == 'USSD': page_string = page_string.replace('['+v+']','')
 
 		payload['page_string'] = page_string
 
