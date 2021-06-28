@@ -60,8 +60,8 @@ class ServiceCall:
 class Authorize:
 	def secure(self, payload, API_KEY):
 		new_payload = {}
-		payload = dict(map(lambda x:(str(x[0]).lower(), json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1]) ), payload.items()))
-		for key, value in payload.items():
+		_payload = dict(map(lambda x:(str(x[0]).lower(), json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1]) ), payload.items()))
+		for key, value in _payload.items():
 			if 'sec_hash' not in key and 'credentials' not in key:
 				try:value=json.loads(value, parse_float=Decimal);value=str(value) if isinstance(value,Decimal) else value #(BUG!!) JSON loads converts decimal places
 				except:pass
@@ -77,10 +77,10 @@ class Authorize:
 
 	def check_hash(self, payload, API_KEY):
 		lgr.info("Check Hash: %s" % base64.urlsafe_b64decode(API_KEY))
-		payload = dict(map(lambda x:(str(x[0]).lower(), json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1]) ), payload.items()))
-		secret = payload['sec_hash'].encode('utf-8')
+		_payload = dict(map(lambda x:(str(x[0]).lower(), json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1]) ), payload.items()))
+		secret = _payload['sec_hash'].encode('utf-8')
 		#remove sec_hash and hash_type	
-		sec_hash = self.secure(payload,API_KEY) 
+		sec_hash = self.secure(_payload,API_KEY) 
 
 		if base64.urlsafe_b64decode(secret) == base64.urlsafe_b64decode(sec_hash):
 			payload['response_status'] = '00'
