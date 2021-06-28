@@ -2393,7 +2393,7 @@ class PageString(ServiceCall, Wrappers):
 				elif variable_key in payload.keys():
 					page_string = page_string.replace('['+variable_key+']',str(payload[variable_key]))
 				else:
-					from secondary.channels.dsc.tasks import System as DSCSystem
+					from secondary.channels.dsc.tasks import System as DSCSystem, DataList
 					lgr.info('DSC query')
 					if DataList.objects.filter(data_name=variable_key).exists():
 						payload['data_name'] = variable_key
