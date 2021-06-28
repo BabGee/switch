@@ -3216,6 +3216,9 @@ class System(Wrappers):
 			lgr.info("Error on Login: %s" % e)
 		return payload
 
+class Registration(System):
+	pass
+
 class Trade(System):
 	pass
 
