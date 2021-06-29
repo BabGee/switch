@@ -3,10 +3,14 @@ import os
 from celery import Celery
 from celery.signals import worker_process_init, beat_init
 from django.conf import settings
-from switch.cassandra import cassandra_init
 
-worker_process_init.connect(cassandra_init)
-beat_init.connect(cassandra_init)
+try:
+	from switch.cassandra import cassandra_init
+
+	worker_process_init.connect(cassandra_init)
+	beat_init.connect(cassandra_init)
+except Exception as e:
+	print(f'Celery Cassandra Init Error {e}')
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'switch.settings')
