@@ -152,34 +152,34 @@ DB['read'] = {
 		'PORT': read_dbport,
 	}
 
-try:
-	from cassandra import ConsistencyLevel
-	DB['cassandra'] = {
-		    'ENGINE': 'django_cassandra_engine',
-		    'NAME': 'notify',
-		    'USER': 'user',
-		    'PASSWORD': 'pass',
-		    #'TEST_NAME': 'test_notify',
-		    'HOST': 'cassandra-0-service',
-		    'OPTIONS': {
-			'replication': {
-			    'strategy_class': 'SimpleStrategy',
-			    'replication_factor': 1
-			},
-			'connection': {
-			    'consistency': ConsistencyLevel.LOCAL_ONE,
-			    'retry_connect': True
-			    # + All connection options for cassandra.cluster.Cluster()
-			},
-			'session': {
-			    'default_timeout': 10,
-			    'default_fetch_size': 10000
-			    # + All options for cassandra.cluster.Session()
-			}
-		    }
-		}
-except Exception as e:
-	print(f'Error on Starting Cassandra DB {e}')
+#try:
+#	from cassandra import ConsistencyLevel
+#	DB['cassandra'] = {
+#		    'ENGINE': 'django_cassandra_engine',
+#		    'NAME': 'notify',
+#		    'USER': 'user',
+#		    'PASSWORD': 'pass',
+#		    #'TEST_NAME': 'test_notify',
+#		    'HOST': 'cassandra-0-service',
+#		    'OPTIONS': {
+#			'replication': {
+#			    'strategy_class': 'SimpleStrategy',
+#			    'replication_factor': 1
+#			},
+#			'connection': {
+#			    'consistency': ConsistencyLevel.LOCAL_ONE,
+#			    'retry_connect': True
+#			    # + All connection options for cassandra.cluster.Cluster()
+#			},
+#			'session': {
+#			    'default_timeout': 10,
+#			    'default_fetch_size': 10000
+#			    # + All options for cassandra.cluster.Session()
+#			}
+#		    }
+#		}
+#except Exception as e:
+#	print(f'Error on Starting Cassandra DB {e}')
 
 
 DATABASES = DB
@@ -325,7 +325,6 @@ INSTALLED_APPS = (
 )
 '''
 INSTALLED_APPS = [
-    'django_cassandra_engine',
     'django.contrib.admin',
     'django.contrib.admindocs',
     'django.contrib.auth',
