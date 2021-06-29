@@ -2461,7 +2461,9 @@ class PageString(ServiceCall, Wrappers):
 								lgr.info('Lines: %s' % lines)
 								lines = lines[0]
 								lgr.info('Lines: %s' % lines)
-								item = '%s' % (' '.join(str(lines)))
+
+								#item = '%s' % (' '.join(str(lines)))
+								item = '%s' % (' '.join(map(str, filter(None, lines))))
 
 						lgr.info('Your List: %s' % item)
 						page_string = page_string.replace('['+v+']',item)
