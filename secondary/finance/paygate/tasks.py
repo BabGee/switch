@@ -531,7 +531,7 @@ class System(Wrappers):
 				#
 				if payload.get('institution_id'):
 					remittance_product = remittance_product.filter(institution__id=payload['institution_id'])
-				elif gateway_profile.insitution:
+				elif gateway_profile.institution:
 					remittance_product = remittance_product.filter(institution=gateway_profile.institution)
 				else:
 					remittance_product = remittance_product.filter(institution=None)
@@ -2322,7 +2322,7 @@ def process_float_alert(fai):
 
 		'''
 		float_manager = FloatManager(float_type=fa.float_type, gateway=fa.gateway)
-		if fa.insitution is not None:
+		if fa.institution is not None:
 			float_manager = float_manager.filter(institution=fa.institution)
 
 		#Process_float_manager_alert
