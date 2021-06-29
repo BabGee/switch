@@ -13,4 +13,6 @@ try:
 			cql_session.shutdown()
 		#connection.setup()
 		connection.setup(['cassandra-0-service'], "switch")
-except Exception as e: print(f'Cassandra Error {e}')
+except Exception as e: 
+	cassandra_init = lambda x: None
+	print(f'Cassandra Error {e}')
