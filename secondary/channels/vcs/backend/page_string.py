@@ -2469,7 +2469,7 @@ class PageString(ServiceCall, Wrappers):
 						page_string = page_string.replace('['+v+']',item)
 					else:
 						lgr.info(f'Unexistent variable: {variable_key}' )
-						if navigator.session.channel.name == 'USSD': page_string = page_string.replace('['+v+']','')
+						#if navigator.session.channel.name == 'USSD': page_string = page_string.replace('['+v+']','')
 
 		payload['page_string'] = page_string
 
