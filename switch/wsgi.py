@@ -40,7 +40,7 @@ os.environ["CELERY_LOADER"] = "django"
 from switch.cassandra_app import cassandra_init
 
 try:cassandra_init()
-except Exception as e:print(f'Cassandra Init Error {e}')
+except Exception as e: print(f'Cassandra Init Error {e}')
 
 try:from uwsgidecorators import postfork
 except ImportError:pass
