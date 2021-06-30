@@ -37,18 +37,13 @@ os.environ["CELERY_LOADER"] = "django"
 # file. This includes Django's development server, if the WSGI_APPLICATION
 # setting points here.
 
-from django.core.wsgi import get_wsgi_application
 from switch.cassandra_app import cassandra_init
 
-cassandra_init()
-try:
-	from uwsgidecorators import postfork
-	print('uWSGI decorator PostFork loaded')
-except ImportError:
-	# We're not in a uWSGI context, no need to hook Cassandra session
-	# initialization to the postfork event.
-	pass
-	print('uWSGI decorator PostFork Failed')
+try:cassandra_init()
+except Exception as e:print(f'Cassandra Init Error {e}')
+
+try:from uwsgidecorators import postfork
+except ImportError:pass
 else:
 	print('uWSGI decorator PostFork Hooking')
 	@postfork
@@ -59,8 +54,7 @@ else:
 		except Exception as e:
 			print(f'Error uWSGI decorator PostFork Hooked {e}')
 
-
-
+from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()
 
 # Apply WSGI middleware here.
