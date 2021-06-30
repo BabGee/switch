@@ -1,7 +1,7 @@
 import faust
 from faust.types import StreamT
 #from primary.core.async.faust import app
-from switch.faust import app as _faust
+from switch.faust_app import app as _faust
 import requests, json, ast
 from aiocassandra import aiosession
 import dateutil.parser

@@ -1,7 +1,7 @@
 import faust
 from faust.types import StreamT
 #from primary.core.async.faust import app
-from switch.faust import app
+from switch.faust_app import app
 import requests, json
 from .views import Interface
 from .models import *
