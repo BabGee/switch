@@ -40,7 +40,7 @@ os.environ["CELERY_LOADER"] = "django"
 from django.core.wsgi import get_wsgi_application
 from switch.cassandra_app import cassandra_init
 
-
+cassandra_init()
 try:
 	from uwsgidecorators import postfork
 	print('uWSGI decorator PostFork loaded')
