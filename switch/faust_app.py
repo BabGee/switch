@@ -1,9 +1,4 @@
 import os, sys
-
-from switch.cassandra import cassandra_init
-
-cassandra_init()
-
 import faust
 # make sure the gevent event loop is used as early as possible.
 os.environ.setdefault('FAUST_LOOP', 'eventlet')
