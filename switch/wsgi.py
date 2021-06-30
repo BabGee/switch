@@ -43,13 +43,17 @@ from switch.cassandra_app import cassandra_init
 
 try:
 	from uwsgidecorators import postfork
+	print('uWSGI decorator PostFork loaded')
 except ImportError:
 	# We're not in a uWSGI context, no need to hook Cassandra session
 	# initialization to the postfork event.
 	pass
+	print('uWSGI decorator PostFork Failed')
 else:
+	print('uWSGI decorator PostFork Hooking')
 	@postfork
 	def _cassandra_init(**kwargs):
+		print('uWSGI decorator PostFork Hooked')
 		cassandra_init(kwargs)
 
 
