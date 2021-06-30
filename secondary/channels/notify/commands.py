@@ -13,7 +13,7 @@ from django.db.models import Q,F
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from functools import reduce
 from concurrent.futures import ThreadPoolExecutor
-from switch.kafka import app as kafka_producer
+from switch.kafka_app import app as kafka_producer
 from mode import Service
 
 from itertools import islice, chain
