@@ -6,7 +6,7 @@ if path not in sys.path:
     sys.path.append(path)
 print(path)
 
-from switch.cassandra_app import cassandra_init
+from switch.cassandra import cassandra_init
 
 cassandra_init()
 

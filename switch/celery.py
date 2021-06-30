@@ -5,7 +5,7 @@ from celery.signals import worker_process_init, beat_init
 from django.conf import settings
 
 try:
-	from switch.cassandra_app import cassandra_init
+	from switch.cassandra import cassandra_init
 
 	worker_process_init.connect(cassandra_init)
 	beat_init.connect(cassandra_init)

@@ -38,7 +38,7 @@ os.environ["CELERY_LOADER"] = "django"
 # setting points here.
 
 from django.core.wsgi import get_wsgi_application
-from switch.cassandra_app import cassandra_init
+from switch.cassandra import cassandra_init
 
 
 try:
