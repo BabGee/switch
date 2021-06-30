@@ -53,8 +53,12 @@ else:
 	print('uWSGI decorator PostFork Hooking')
 	@postfork
 	def _cassandra_init(**kwargs):
-		print('uWSGI decorator PostFork Hooked')
-		cassandra_init(kwargs)
+		try:
+			cassandra_init(kwargs)
+			print('uWSGI decorator PostFork Hooked')
+		except Exception as e:
+			print(f'Error uWSGI decorator PostFork Hooked {e}')
+
 
 
 application = get_wsgi_application()
