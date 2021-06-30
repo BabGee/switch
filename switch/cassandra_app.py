@@ -14,5 +14,5 @@ try:
 		#connection.setup()
 		connection.setup(['cassandra-0-service'], "switch")
 except Exception as e: 
-	cassandra_init = lambda **kwargs: None
 	print(f'Cassandra Error {e}')
+	cassandra_init = lambda **kwargs: None
