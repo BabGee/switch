@@ -119,16 +119,6 @@ class Menu(models.Model):
 	def enrollment_type_excluded_list(self):
 		return "\n".join([a.name for a in self.enrollment_type_excluded.all()])
 
-class MenuKeyword(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	code = models.ManyToManyField(Code)
-	keyword = models.CharField(max_length=128)
-	def __str__(self):
-		return u'%s %s %s' % (self.id, self.code_list(), self.keyword)
-	def code_list(self):
-		return "\n".join([a.code for a in self.code.all()])
-
 class MenuItem(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
@@ -153,6 +143,27 @@ class MenuItem(models.Model):
 		return "\n".join([a.name for a in self.enrollment_type_included.all()])
 	def enrollment_type_excluded_list(self):
 		return "\n".join([a.name for a in self.enrollment_type_excluded.all()])
+
+class MenuKeywordStatus(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __str__(self):
+		return u'%s' % (self.name)
+
+class MenuKeyword(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	code = models.ManyToManyField(Code)
+	keyword = models.CharField(max_length=128)
+	status = models.ForeignKey(MenuKeywordStatus, on_delete=models.CASCADE)
+	level = models.IntegerField()
+	group_select = models.IntegerField(null=True, blank=True)		
+	def __str__(self):
+		return u'%s %s %s' % (self.id, self.code_list(), self.keyword)
+	def code_list(self):
+		return "\n".join([a.code for a in self.code.all()])
 
 class Navigator(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
