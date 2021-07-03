@@ -65,9 +65,9 @@ class VAS:
 					self.menu = self.menu.filter(access_level__name='SYSTEM', code=self.code[0],profile_status=None)
 
 			elif self.payload['input'] in ['00','<BEG>','<SBEG>'] or len(self.navigator)<1 or (len(self.navigator) and self.navigator[0].menu.session_state.name == 'END'):#Main Menu Request|First call|Or if previous step had an END state
-				self.group_select=0
+				self.group_select=self.group_select if self.group_select else 0
 				self.nav_step = (self.navigator[0].nav_step + 1) if self.payload['input'] == '00' and len(self.navigator)>0 else 0
-				self.level = '0';self.nav = None; self.service = None
+				self.level = str(self.level) if self.level else '0';self.nav = None; self.service = None
 				#Initiate Session
 				self.session = Session(session_id=self.payload['sessionid'], channel=self.channel, reference=self.payload['msisdn'],status=SessionStatus.objects.get(name='CREATED'))
 				if self.gateway_profile.exists():
@@ -307,6 +307,12 @@ class VAS:
 		#Get User
 		self.gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.payload['msisdn']),Q(gateway =self.code[0].gateway),\
 									 ~Q(status__name__in=['DEACTIVATED','DELETED']))
+		#Get Keyword
+		self.keyword = MenuKeyword.objects.filter(code=self.code[0], keyword=self.payload['input'].strip(), status__name='ACTIVE')
+		if len(self.keyword):
+			keyword = self.keyword.first()
+			self.level = keyword.level
+			self.group_select = keyword.group_select
 
 		#Filter Level
 		#Levels should be String (if override has to check for None or '' as 0 values may validate for false and not show)
