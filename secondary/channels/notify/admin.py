@@ -125,7 +125,7 @@ admin.site.register(SessionSubscriptionStatus, SessionSubscriptionStatusAdmin)
 
 
 class SessionSubscriptionAdmin(admin.ModelAdmin):
-    list_display = ('gateway_profile', 'enrollment','last_access',)
+    list_display = ('gateway_profile', 'enrollment','last_access','status',)
 admin.site.register(SessionSubscription, SessionSubscriptionAdmin)
 
 
