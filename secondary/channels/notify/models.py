@@ -285,7 +285,7 @@ class SessionSubscription(models.Model):
 	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
 	enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
 	last_access = models.DateTimeField()
-	status = models.ForeignKey(SessionSubscriptionStatus, blank=True, null=True, on_delete=models.CASCADE)
+	status = models.ForeignKey(SessionSubscriptionStatus, on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s' % (self.gateway_profile)
 
