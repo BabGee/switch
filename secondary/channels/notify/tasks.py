@@ -334,14 +334,16 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			enrollment = Enrollment.objects.get(id=payload['enrollment_id'])
 
-			session_sub = SessionSubscription.objects.filter(gateway_profile=gateway_profile, enrollment=enrollment)
+			status = SessionSubscriptionStatus.objects.get(name='ACTIVE')
+			session_sub = SessionSubscription.objects.filter(gateway_profile=gateway_profile, enrollment=enrollment,
+									status=status)
 
 			if len(session_sub):
 				session_subscription = session_sub.last()
 				session_subscription.last_access = timezone.now()
 			else:
 				session_subscription = SessionSubscription(gateway_profile=gateway_profile, enrollment=enrollment, 
-										last_access=timezone.now())
+										last_access=timezone.now(), status=status)
 
 			#Save either
 			session_subscription.save()
