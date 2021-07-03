@@ -308,7 +308,7 @@ class VAS:
 		self.gateway_profile = GatewayProfile.objects.filter(Q(msisdn__phone_number=self.payload['msisdn']),Q(gateway =self.code[0].gateway),\
 									 ~Q(status__name__in=['DEACTIVATED','DELETED']))
 		#Get Keyword
-		self.keyword = MenuKeyword.objects.filter(code=self.code[0], keyword=self.payload['input'].strip(), status__name='ACTIVE')
+		self.keyword = MenuKeyword.objects.filter(code=self.code[0], keyword__icontains=self.payload['input'].strip(), status__name='ACTIVE')
 		if len(self.keyword):
 			keyword = self.keyword.first()
 			self.level = keyword.level
