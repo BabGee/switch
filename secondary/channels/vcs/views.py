@@ -313,6 +313,9 @@ class VAS:
 			keyword = self.keyword.first()
 			self.level = keyword.level
 			self.group_select = keyword.group_select
+		else:
+			self.level = '<INIT>'
+			self.group_select = '<INIT>'
 
 		#Filter Level
 		#Levels should be String (if override has to check for None or '' as 0 values may validate for false and not show)
