@@ -314,7 +314,7 @@ class VAS:
 			kwargs['level'] = keyword.level
 			kwargs['group_select'] = keyword.group_select
 
-		self.kwargs = kwargs
+		self.kwargs = kwargs.copy()
 
 		lgr.info(f'Kwargs {self.kwargs}')
 		#Filter Level
