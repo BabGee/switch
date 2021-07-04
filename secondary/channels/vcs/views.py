@@ -322,6 +322,8 @@ class VAS:
 
 		self.kwargs = kwargs
 
+		lgr.info(f'Kwargs {self.kwargs}')
+
 		#Create Menu
 		self.initialize('create_menu')
 		if self.payload['input'] == '0' and len(self.navigator)>0:#Go back to Previous Menu
@@ -341,6 +343,7 @@ class VAS:
 		#Filter & Validate Input
 		if self.nav and self.payload['input'] not in ['0','00','<BEG>','<SBEG>']:#Validate input but dont filter Back 0 and Main 00
 			try:
+				lgr.info(f'Self Nav {self.nav}')
 				allowed_input_list = self.nav.menu.input_variable.allowed_input_list
 				if ((len(self.payload['input'])>=int(self.nav.menu.input_variable.validate_min) and \
 				len(self.payload['input'])<=int(self.nav.menu.input_variable.validate_max))) and \
