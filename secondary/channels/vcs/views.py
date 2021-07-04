@@ -314,15 +314,15 @@ class VAS:
 			kwargs['level'] = keyword.level
 			kwargs['group_select'] = keyword.group_select
 
-
-		#Filter Level
-		#Levels should be String (if override has to check for None or '' as 0 values may validate for false and not show)
-		if 'level' in kwargs.keys():
-			self.level=str(kwargs['level'])
-
 		self.kwargs = kwargs
 
 		lgr.info(f'Kwargs {self.kwargs}')
+		#Filter Level
+		#Levels should be String (if override has to check for None or '' as 0 values may validate for false and not show)
+		if 'level' in self.kwargs.keys():
+			self.level=str(self.kwargs['level'])
+
+
 
 		#Create Menu
 		self.initialize('create_menu')
@@ -338,7 +338,7 @@ class VAS:
 		#	self.group_select=0
 		#elif 'group_select' in kwargs.keys():
 		#	self.group_select=kwargs['group_select']
-		if 'group_select' in kwargs.keys(): self.group_select = kwargs['group_select']
+		if 'group_select' in self.kwargs.keys(): self.group_select = self.kwargs['group_select']
 
 		#Filter & Validate Input
 		if self.nav and self.payload['input'] not in ['0','00','<BEG>','<SBEG>'] and not len(self.keyword):#Validate input but dont filter Back 0 and Main 00
