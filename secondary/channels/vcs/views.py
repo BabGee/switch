@@ -341,7 +341,7 @@ class VAS:
 		if 'group_select' in kwargs.keys(): self.group_select = kwargs['group_select']
 
 		#Filter & Validate Input
-		if self.nav and self.payload['input'] not in ['0','00','<BEG>','<SBEG>']:#Validate input but dont filter Back 0 and Main 00
+		if self.nav and self.payload['input'] not in ['0','00','<BEG>','<SBEG>'] and not len(self.keyword):#Validate input but dont filter Back 0 and Main 00
 			try:
 				lgr.info(f'Self Nav {self.nav}')
 				allowed_input_list = self.nav.menu.input_variable.allowed_input_list
