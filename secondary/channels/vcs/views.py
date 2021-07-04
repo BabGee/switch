@@ -53,7 +53,8 @@ class VAS:
 				if self.gateway_profile.exists():
 					self.navigator = self.navigator.filter(session__gateway_profile=self.gateway_profile[0])
 				self.nav = self.navigator[0]
-				self.level=str(int(self.nav.menu.level)+1); self.group_select=self.nav.menu.group_select
+				self.level= str(self.kwargs['level']) if 'level' in self.kwargs.keys() else str(int(self.nav.menu.level)+1)
+				self.group_select=self.kwargs['group_select'] if 'group_select' in self.kwargs.keys() else self.nav.menu.group_select
 				#self.level=int(self.nav.level)+1; self.group_select=self.nav.group_select
 				self.nav_step = self.nav.nav_step; self.service = self.nav.menu.service;
 				#Initiate Session
@@ -67,7 +68,8 @@ class VAS:
 			elif self.payload['input'] in ['00','<BEG>','<SBEG>'] or len(self.navigator)<1 or (len(self.navigator) and self.navigator[0].menu.session_state.name == 'END'):#Main Menu Request|First call|Or if previous step had an END state
 				self.group_select=self.kwargs['group_select'] if 'group_select' in self.kwargs.keys() else 0
 				self.nav_step = (self.navigator[0].nav_step + 1) if self.payload['input'] == '00' and len(self.navigator)>0 else 0
-				self.level = str(self.kwargs['level']) if 'level' in self.kwargs.keys() else '0';self.nav = None; self.service = None
+				self.level = str(self.kwargs['level']) if 'level' in self.kwargs.keys() else '0'
+				self.nav = None; self.service = None
 				#Initiate Session
 				self.session = Session(session_id=self.payload['sessionid'], channel=self.channel, reference=self.payload['msisdn'],status=SessionStatus.objects.get(name='CREATED'))
 				if self.gateway_profile.exists():
