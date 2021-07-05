@@ -25,6 +25,7 @@ import asyncio
 import random
 import logging
 import aiohttp
+import datetime
 from http.client import HTTPConnection  # py3
 from typing import (
     Any,
@@ -42,11 +43,6 @@ from typing import (
 
 lgr = logging.getLogger(__name__)
 
-#thread_pool = ThreadPoolExecutor(max_workers=16) #Heavy on database
-thread_pool = ThreadPoolExecutor(max_workers=16)
-
-
-
 @_faust.command()
 async def session_subscription_whatsapp_reminder():
 	"""This docstring is used as the command help in --help."""
@@ -54,6 +50,22 @@ async def session_subscription_whatsapp_reminder():
 	while 1:
 		try:
 			print('Session Subscription Running')
+
+
+			s = time.perf_counter()
+			elapsed = lambda: time.perf_counter() - s
+			def poll_query():
+				return Poll.objects.select_for_update(of=('self',)).filter(
+									status__name='PROCESSED', 
+									last_run__gte=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every")
+									).all
+
+			orig_poll = await sync_to_async(poll_query, thread_sensitive=True)()
+
+			lgr.info('Orig Poll: %s' % orig_poll)
+
+			break
+
 			tasks = list()
 
 			#Query for Session Subscription after the 22nd hour
