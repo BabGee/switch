@@ -49,8 +49,6 @@ lgr = logging.getLogger(__name__)
 async def session_subscription_whatsapp_reminder():
 	"""This docstring is used as the command help in --help."""
 	lgr.info('Session Subscription.........')
-
-	#Wrappers().background_service_call(service, gateway_profile, payload)
 	while 1:
 		try:
 			print('Session Subscription Running')
@@ -72,6 +70,8 @@ async def session_subscription_whatsapp_reminder():
 				lgr.info('Orig Poll: %s' % orig_poll)
 
 				lgr.info(f'2:Elapsed {elapsed()}')
+
+				#Wrappers().background_service_call(service, gateway_profile, payload)
 				for p in orig_poll:
 					lgr.info(f'Poll: {p}')
 
