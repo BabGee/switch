@@ -258,8 +258,7 @@ class Poll(models.Model):
 	frequency = models.ForeignKey(PollFrequency, on_delete=models.CASCADE)
 	last_run = models.DateTimeField(auto_now=True)
 	status = models.ForeignKey(PollStatus, on_delete=models.CASCADE)
-	institution = models.ForeignKey(Institution, null=True, blank=True, on_delete=models.CASCADE)
-	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
+	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s' % (self.name)
 
