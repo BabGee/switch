@@ -68,19 +68,21 @@ async def session_subscription_whatsapp_reminder():
 				orig_poll = await sync_to_async(poll_query, thread_sensitive=True)(status='PROCESSED', 
 								last_run=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every"))
 
-				lgr.info('Orig Poll: %s' % orig_poll)
-
-				lgr.info(f'2:Elapsed {elapsed()}')
+				lgr.info(f'{elapsed()}-Orig Poll: {orig_poll}')
 
 				for p in orig_poll:
 					lgr.info(f'Poll: {p}')
-					bg = await sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)((p.service, p.gateway_profile, p.request)
+					bg = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)((p.service, p.gateway_profile, p.request)
+					tasks.append(bg)
+
+				lgr.info(f'2:Elapsed {elapsed()}')
 				#orig_poll.update(status=PollStatus.objects.get(name='PROCESSING'))
-				orig_poll.update(last_run=timezone.now())
+				if tasks:
+					response = await asyncio.gather(*tasks)
+					orig_poll.update(last_run=timezone.now())
 				lgr.info(f'3:Elapsed {elapsed()}')
 			break
 
-			if tasks: response = await asyncio.gather(*tasks)
 			await asyncio.sleep(1.0)
 
 		except Exception as e: 
