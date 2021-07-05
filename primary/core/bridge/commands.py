@@ -72,7 +72,7 @@ async def session_subscription_whatsapp_reminder():
 
 				for p in orig_poll:
 					lgr.info(f'Poll: {p}')
-					bg = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)((p.service, p.gateway_profile, p.request)
+					bg = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)(p.service, p.gateway_profile, p.request)
 					tasks.append(bg)
 
 				lgr.info(f'2:Elapsed {elapsed()}')
