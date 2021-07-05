@@ -138,7 +138,7 @@ thread_pool = ThreadPoolExecutor(max_workers=16)
 #		lgr.error(f'SEND NOTIFICATION LOG SERVICE ERROR: {e}')
 
 
-async def _send_outbound_messages(is_bulk=True, limit_batch=100):
+def _send_outbound_messages(is_bulk=True, limit_batch=100):
 	try:
 
 		s = time.perf_counter()
