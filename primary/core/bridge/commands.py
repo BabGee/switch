@@ -46,7 +46,7 @@ from typing import (
 lgr = logging.getLogger(__name__)
 
 @_faust.command()
-async def session_subscription_whatsapp_reminder():
+async def poll_background_service():
 	"""This docstring is used as the command help in --help."""
 	lgr.info('Session Subscription.........')
 	def poll_query(status, last_run):
