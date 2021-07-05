@@ -126,7 +126,7 @@ class Wrappers:
 			status = TransactionStatus.objects.get(name='CREATED')
 			response_status = ResponseStatus.objects.get(response='DEFAULT')
 
-			channel = Channel.objects.get(id=int(payload['chid']))
+			channel = Channel.objects.get(id=int(payload['chid'])) if payload.get('chid') else Channel.objects.get(name='SWITCH')
 			currency_code = payload['currency'] if 'currency' in payload.keys() and payload['currency']!='' else None
 			currency = Currency.objects.get(code=currency_code) if currency_code is not None  else None
 			amount = payload['amount'] if 'amount' in payload.keys() and payload['amount']!='' else None
