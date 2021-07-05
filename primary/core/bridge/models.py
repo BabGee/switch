@@ -254,7 +254,7 @@ class Poll(models.Model):
 	name = models.CharField(max_length=45, unique=True)
 	description = models.CharField(max_length=100)
 	request = models.JSONField()
-	background_service = models.ForeignKey(BackgroundService, on_delete=models.CASCADE)
+	service = models.ForeignKey(BackgroundService, on_delete=models.CASCADE)
 	frequency = models.ForeignKey(PollFrequency, on_delete=models.CASCADE)
 	last_run = models.DateTimeField(auto_now=True)
 	status = models.ForeignKey(PollStatus, on_delete=models.CASCADE)
