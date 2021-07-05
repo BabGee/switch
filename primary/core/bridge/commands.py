@@ -81,7 +81,6 @@ async def session_subscription_whatsapp_reminder():
 					response = await asyncio.gather(*tasks)
 					orig_poll.update(last_run=timezone.now())
 				lgr.info(f'3:Elapsed {elapsed()}')
-			break
 
 			await asyncio.sleep(1.0)
 
