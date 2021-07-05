@@ -51,22 +51,22 @@ async def session_subscription_whatsapp_reminder():
 		try:
 			print('Session Subscription Running')
 
-
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
-			def poll_query():
-				return Poll.objects.select_for_update(of=('self',)).filter(
-									status__name='PROCESSED', 
-									last_run__gte=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every")
-									).all
-
-			orig_poll = await sync_to_async(poll_query, thread_sensitive=True)()
-
-			lgr.info('Orig Poll: %s' % orig_poll)
-
-			break
 
 			tasks = list()
+			with transaction.atomic():
+				def poll_query():
+					return Poll.objects.select_for_update(of=('self',)).filter(
+										status__name='PROCESSED', 
+										last_run__gte=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every")
+										).all
+
+				orig_poll = await sync_to_async(poll_query, thread_sensitive=True)()
+
+				lgr.info('Orig Poll: %s' % orig_poll)
+
+			break
 
 			#Query for Session Subscription after the 22nd hour
 			#Insert into Background Service Subscription Check every 30 minutes
