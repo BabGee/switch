@@ -67,10 +67,9 @@ async def session_subscription_whatsapp_reminder():
 
 				lgr.info('Orig Poll: %s' % orig_poll)
 				lgr.info(f'2:Elapsed {elapsed()}')
-				lgr.info(f'Orig Poll type: {type(orig_poll)}')
-
-				lgr.info(f'Orig Poll Call: {orig_poll()}')
-				for p in orig_poll:
+				poll = orig_poll()
+				lgr.info(f'Poll: {poll}')
+				for p in poll:
 					lgr.info(f'Poll: {p}')
 
 				lgr.info(f'3:Elapsed {elapsed()}')
