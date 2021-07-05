@@ -56,18 +56,18 @@ async def session_subscription_whatsapp_reminder():
 
 			tasks = list()
 			with transaction.atomic():
-				def poll_query():
+				def poll_query(status='PROCESSED', last_run=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every")):
 					return Poll.objects.select_for_update(of=('self',)).filter(
 										status__name='PROCESSED', 
-										last_run__lte=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every")
-										).all
+										last_run__lte=last_run
+										)
 
 				lgr.info(f'1:Elapsed {elapsed()}')
 				orig_poll = await sync_to_async(poll_query, thread_sensitive=True)()
 
 				lgr.info('Orig Poll: %s' % orig_poll)
 				lgr.info(f'2:Elapsed {elapsed()}')
-				poll = orig_poll()
+				poll = list(orig_poll())
 				orig_poll().update(status=PollStatus.objects.get(name='PROCESSING'))
 				lgr.info(f'Poll: {poll}')
 				for p in poll:
