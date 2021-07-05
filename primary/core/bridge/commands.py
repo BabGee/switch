@@ -67,13 +67,13 @@ async def session_subscription_whatsapp_reminder():
 								last_run=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every"))
 
 				lgr.info('Orig Poll: %s' % orig_poll)
+
 				lgr.info(f'2:Elapsed {elapsed()}')
-				poll = orig_poll
-				orig_poll.update(status=PollStatus.objects.get(name='PROCESSING'))
-				lgr.info(f'Poll: {poll}')
-				for p in poll:
+				for p in orig_poll:
 					lgr.info(f'Poll: {p}')
 
+				#orig_poll.update(status=PollStatus.objects.get(name='PROCESSING'))
+				orig_poll.update(last_run=timezone.now())
 				lgr.info(f'3:Elapsed {elapsed()}')
 			break
 
