@@ -9,8 +9,6 @@ from switch.faust_app import app as _faust
 
 from django.db import transaction
 from .models import *
-from primary.core.bridge import Wrappers as BridgeWrappers
-
 from django.db.models import Q,F
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from functools import reduce
@@ -71,6 +69,7 @@ async def session_subscription_whatsapp_reminder():
 
 				lgr.info(f'2:Elapsed {elapsed()}')
 
+				#from primary.core.bridge import Wrappers as BridgeWrappers
 				#Wrappers().background_service_call(service, gateway_profile, payload)
 				for p in orig_poll:
 					lgr.info(f'Poll: {p}')
