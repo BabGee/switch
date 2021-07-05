@@ -68,8 +68,8 @@ async def session_subscription_whatsapp_reminder():
 
 				lgr.info('Orig Poll: %s' % orig_poll)
 				lgr.info(f'2:Elapsed {elapsed()}')
-				poll = list(orig_poll())
-				orig_poll().update(status=PollStatus.objects.get(name='PROCESSING'))
+				poll = orig_poll
+				orig_poll.update(status=PollStatus.objects.get(name='PROCESSING'))
 				lgr.info(f'Poll: {poll}')
 				for p in poll:
 					lgr.info(f'Poll: {p}')
