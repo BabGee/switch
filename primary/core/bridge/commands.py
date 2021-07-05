@@ -60,7 +60,7 @@ async def session_subscription_whatsapp_reminder():
 			with transaction.atomic():
 				def poll_query(status, last_run):
 					return Poll.objects.select_for_update(of=('self',)).filter(
-												status__name=status, 
+												status__name='PROCESSED', 
 												last_run__lte=last_run
 												)
 				lgr.info(f'1:Elapsed {elapsed()}')
