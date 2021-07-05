@@ -9,6 +9,8 @@ from switch.faust_app import app as _faust
 
 from django.db import transaction
 from .models import *
+from primary.core.bridge import Wrappers as BridgeWrappers
+
 from django.db.models import Q,F
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from functools import reduce
@@ -47,6 +49,14 @@ lgr = logging.getLogger(__name__)
 async def session_subscription_whatsapp_reminder():
 	"""This docstring is used as the command help in --help."""
 	lgr.info('Session Subscription.........')
+
+	#Wrappers().background_service_call(service, gateway_profile, payload)
+	def poll_query(status, last_run):
+		return Poll.objects.select_for_update(of=('self',)).filter(
+									status__name=status, 
+									last_run__lte=last_run
+									)
+
 	while 1:
 		try:
 			print('Session Subscription Running')
@@ -56,12 +66,6 @@ async def session_subscription_whatsapp_reminder():
 
 			tasks = list()
 			with transaction.atomic():
-				def poll_query(status, last_run):
-					return Poll.objects.select_for_update(of=('self',)).filter(
-										status__name='PROCESSED', 
-										last_run__lte=last_run
-										)
-
 				lgr.info(f'1:Elapsed {elapsed()}')
 				orig_poll = await sync_to_async(poll_query, thread_sensitive=True)(status='PROCESSED', 
 								last_run=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every"))
