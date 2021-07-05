@@ -89,6 +89,18 @@ class BackgroundServiceAdmin(admin.ModelAdmin):
 			'service','details','cut_off_command','trigger_list',)
 admin.site.register(BackgroundService, BackgroundServiceAdmin)
 
+class PollFrequencyAdmin(admin.ModelAdmin):
+	list_display = ('name','description','run_every',)
+admin.site.register(PollFrequency, PollFrequencyAdmin)
+
+class PollStatusAdmin(admin.ModelAdmin):
+		list_display = ('name','description',)
+admin.site.register(PollStatus, PollStatusAdmin)
+
+class PollAdmin(admin.ModelAdmin):
+	list_display = ('name','description','request','background_service','frequency','last_run','status','institution','gateway',)
+admin.site.register(Poll, PollAdmin)
+ 
 class BackgroundServiceActivityAdmin(admin.ModelAdmin):
 	list_display = ('id','service','status','gateway_profile','request_old','request','channel',\
 			'response_status','transaction_reference','currency','amount','charges',\
