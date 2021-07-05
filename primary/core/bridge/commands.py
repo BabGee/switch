@@ -74,7 +74,7 @@ async def session_subscription_whatsapp_reminder():
 
 				for p in orig_poll:
 					lgr.info(f'Poll: {p}')
-					#Wrappers().background_service_call(service, gateway_profile, payload)
+					bg = await sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)((service, gateway_profile, payload)
 				#orig_poll.update(status=PollStatus.objects.get(name='PROCESSING'))
 				orig_poll.update(last_run=timezone.now())
 				lgr.info(f'3:Elapsed {elapsed()}')
