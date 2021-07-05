@@ -98,7 +98,7 @@ class PollStatusAdmin(admin.ModelAdmin):
 admin.site.register(PollStatus, PollStatusAdmin)
 
 class PollAdmin(admin.ModelAdmin):
-	list_display = ('name','description','request','background_service','frequency','last_run','status','gateway_profile',)
+	list_display = ('name','description','request','service','frequency','last_run','status','gateway_profile',)
 admin.site.register(Poll, PollAdmin)
  
 class BackgroundServiceActivityAdmin(admin.ModelAdmin):
