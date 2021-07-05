@@ -56,7 +56,7 @@ async def bridge_background_service_poll():
 								)
 	while 1:
 		try:
-			print('Session Subscription Running')
+			print('Poll Running')
 
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
@@ -64,7 +64,7 @@ async def bridge_background_service_poll():
 			tasks = list()
 			with transaction.atomic():
 
-				lgr.info(f'1:Elapsed {elapsed()}')
+				lgr.info(f'1:Poll-Elapsed {elapsed()}')
 				orig_poll = await sync_to_async(poll_query, thread_sensitive=True)(status='PROCESSED', 
 								last_run=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every"))
 
@@ -75,12 +75,12 @@ async def bridge_background_service_poll():
 					bg = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)(p.service, p.gateway_profile, p.request)
 					tasks.append(bg)
 
-				lgr.info(f'2:Elapsed {elapsed()}')
+				lgr.info(f'2:Poll-Elapsed {elapsed()}')
 				#orig_poll.update(status=PollStatus.objects.get(name='PROCESSING'))
 				if tasks:
 					response = await asyncio.gather(*tasks)
 					orig_poll.update(last_run=timezone.now())
-				lgr.info(f'3:Elapsed {elapsed()}')
+				lgr.info(f'3:Poll-Elapsed {elapsed()}')
 
 			await asyncio.sleep(1.0)
 
