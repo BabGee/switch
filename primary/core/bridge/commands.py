@@ -16,6 +16,8 @@ from concurrent.futures import ThreadPoolExecutor
 from switch.kafka_app import app as kafka_producer
 from mode import Service
 
+from primary.core.bridge.tasks import Wrappers as BridgeWrappers
+
 from itertools import islice, chain
 import pandas as pd
 import numpy as np
@@ -69,7 +71,6 @@ async def session_subscription_whatsapp_reminder():
 
 				lgr.info(f'2:Elapsed {elapsed()}')
 
-				#from primary.core.bridge import Wrappers as BridgeWrappers
 				#Wrappers().background_service_call(service, gateway_profile, payload)
 				for p in orig_poll:
 					lgr.info(f'Poll: {p}')
