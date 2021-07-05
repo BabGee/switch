@@ -65,21 +65,19 @@ async def session_subscription_whatsapp_reminder():
 				lgr.info(f'1:Elapsed {elapsed()}')
 				orig_poll = await sync_to_async(poll_query, thread_sensitive=True)()
 
+				for p in orig_poll:
+					lgr.info(f'Poll: {p}')
+
 				lgr.info(f'2:Elapsed {elapsed()}')
+
 				lgr.info('Orig Poll: %s' % orig_poll)
 
 				lgr.info(f'3:Elapsed {elapsed()}')
 			break
 
-			#Query for Session Subscription after the 22nd hour
-			#Insert into Background Service Subscription Check every 30 minutes
-
-			#Run Tasks
-			if tasks:
-				response = await asyncio.gather(*tasks)
-				#Control Speeds
-
+			if tasks: response = await asyncio.gather(*tasks)
 			await asyncio.sleep(1.0)
+
 		except Exception as e: 
 			lgr.error(f'Session Subscription Error: {e}')
 			break
