@@ -62,10 +62,13 @@ async def session_subscription_whatsapp_reminder():
 										last_run__gte=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every")
 										).all
 
+				lgr.info(f'1:Elapsed {elapsed()}')
 				orig_poll = await sync_to_async(poll_query, thread_sensitive=True)()
 
+				lgr.info(f'2:Elapsed {elapsed()}')
 				lgr.info('Orig Poll: %s' % orig_poll)
 
+				lgr.info(f'3:Elapsed {elapsed()}')
 			break
 
 			#Query for Session Subscription after the 22nd hour
