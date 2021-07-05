@@ -60,13 +60,14 @@ async def session_subscription_whatsapp_reminder():
 					return Poll.objects.select_for_update(of=('self',)).filter(
 										status__name='PROCESSED', 
 										last_run__gte=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every")
-										)
+										).all
 
 				lgr.info(f'1:Elapsed {elapsed()}')
-				orig_poll = await sync_to_async(poll_query, thread_sensitive=True)
+				orig_poll = await sync_to_async(poll_query, thread_sensitive=True)()
 
-				lgr.info(f'2:Elapsed {elapsed()}')
 				lgr.info('Orig Poll: %s' % orig_poll)
+				lgr.info(f'2:Elapsed {elapsed()}')
+				lgr.info(f'Orig Poll type: {type(orig_poll)}')
 
 				for p in orig_poll:
 					lgr.info(f'Poll: {p}')
