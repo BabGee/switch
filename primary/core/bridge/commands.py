@@ -59,7 +59,7 @@ async def session_subscription_whatsapp_reminder():
 				def poll_query():
 					return Poll.objects.select_for_update(of=('self',)).filter(
 										status__name='PROCESSED', 
-										last_run__gte=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every")
+										last_run__lte=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every")
 										).all
 
 				lgr.info(f'1:Elapsed {elapsed()}')
