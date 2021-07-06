@@ -383,7 +383,7 @@ class System(Wrappers):
 
 				payload['response'] = 'Outbound Message Processed'
 				payload['response_status']= '00'
-			elif not payload.get('message') and len(recipient_list):
+			elif not payload.get('message') and df_data.shape[0]:
 				payload['response'] = 'No Message to Send'
 				payload['response_status']= '00'
 			else:
