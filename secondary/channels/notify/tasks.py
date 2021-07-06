@@ -174,9 +174,6 @@ class Wrappers:
 		notifications = {}
 		notifications_preview = {}
 		lgr.info('Product: %s' % product)
-		chunks, chunk_size = len(message), 160  # SMS Unit is 160 characters (NB: IN FUTURE!!, pick message_len from DB - notification_product)
-		messages = [message[i:i + chunk_size] for i in range(0, chunks, chunk_size)]
-		message_len = len(messages)
 
 		contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
 		status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
@@ -193,12 +190,18 @@ class Wrappers:
 			df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,3}$)')
 			df_email = df_email[~df_email['email'].isnull()]
 			_recipient = df_email['email'].values
+			message_len = 1
 		elif product.notification.code.channel.name == 'WHATSAPP':
 			df_msisdn=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(:?[\d]*)$|(?:[\d]*)$)')
 			df_msisdn = df_msisdn[~df_msisdn['msisdn'].isnull()]
 			_recipient = df_msisdn['msisdn'].values
+			message_len = 1
 		else:
 			#For SMS
+			chunks, chunk_size = len(message), 160  # SMS Unit is 160 characters (NB: IN FUTURE!!, pick message_len from DB - notification_product)
+			messages = [message[i:i + chunk_size] for i in range(0, chunks, chunk_size)]
+			message_len = len(messages)
+
 			mno_prefix = MNOPrefix.objects.filter(mno=product.notification.code.mno).values_list('prefix', flat=True)
 
 			ccode=product.notification.code.mno.country.ccode
@@ -424,8 +427,8 @@ class System(Wrappers):
 			#Service is meant to send to unique MNOs with same alias, hence returns one product per MNO (distinct MNO)
 			#lgr.info('Product List: %s' % product_list)
 			# Message Len
-
-			notifications_preview['message'] = {'text': payload.get('message'),'scheduled_date':payload.get('scheduled_date'),'scheduled_time':payload.get('scheduled_time')}
+			message = payload.get('message')
+			notifications_preview['message'] = {'text': message, 'scheduled_date':payload.get('scheduled_date'),'scheduled_time':payload.get('scheduled_time')}
 
 			if len(product_list):
 
