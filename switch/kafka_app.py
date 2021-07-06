@@ -10,12 +10,9 @@ class ProducerServer(KafkaProducer):
 			value_bytes = bytes(value, encoding='utf-8')
 			self.send(topic_name, key=key_bytes, value=value_bytes)
 			self.flush()
-			print('Message published successfully.')
+			return 'Message published successfully.'
 		except Exception as ex:
-			print('Exception in publishing message')
-			print(ex)
-
-
+			return f'Exception in publishing message: {ex}'
 
 try:
 	app = ProducerServer(

@@ -56,7 +56,7 @@ async def bridge_background_service_poll():
 								)
 	while 1:
 		try:
-			print('Poll Running')
+			lgr.info('Poll Running')
 
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
