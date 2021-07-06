@@ -279,14 +279,28 @@ class SessionSubscriptionStatus(models.Model):
 	def __str__(self):
 		return u'%s' % (self.name)
 
+class SessionSubscriptionType(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
+	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+	service = models.ManyToManyField(Service, blank=True)
+	def __str__(self):
+		return u'%s' % (self.name)
+	def service_list(self):
+		return "\n".join([a.name for a in self.service.all()])
+
 class SessionSubscription(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
-	enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
+	session_subscription_type = models.ForeignKey(SessionSubscriptionType, on_delete=models.CASCADE)
 	last_access = models.DateTimeField()
 	status = models.ForeignKey(SessionSubscriptionStatus, on_delete=models.CASCADE)
+	recipient = models.CharField(max_length=200)
 	def __str__(self):
-		return u'%s' % (self.gateway_profile)
+		return u'%s %s' % (self.gateway_profile, self.recipient)
 
 

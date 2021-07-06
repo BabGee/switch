@@ -329,6 +329,66 @@ class Wrappers:
 			return False
 
 class System(Wrappers):
+	def session_subscription_details(self, payload, node_info):
+		try:
+			lgr.info('Get Product Outbound Notification: %s' % payload)
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			recipient_list = Recipient.objects.filter(subscribed=True,status__name='ACTIVE',\
+							contact_group__id__in=[a for a in payload['contact_group_id'].split(',') if a],\
+							contact_group__institution=gateway_profile.institution,\
+							contact_group__gateway=gateway_profile.gateway).values_list('recipient', flat=True)
+
+			#recipient_count = recipient.count()
+
+			recipient=np.asarray(recipient_list)
+			recipient = np.unique(recipient)
+
+			df = pd.DataFrame({'recipient': recipient})
+
+			notifications = dict()
+			notifications_preview = dict()
+			product_list = NotificationProduct.objects.filter(Q(notification__code__institution=gateway_profile.institution),\
+									Q(notification__code__alias__iexact=payload['alias']),
+									Q(notification__status__name='ACTIVE'), \
+									Q(notification__channel__id=payload['chid'])|Q(notification__channel=None),
+									 Q(service__name=payload['SERVICE'])).distinct('notification__code__mno__id')
+
+			#Service is meant to send to unique MNOs with same alias, hence returns one product per MNO (distinct MNO)
+			#lgr.info('Product List: %s' % product_list)
+			# Message Len
+
+			message = payload['message'].strip()
+			message = unescape(message)
+			message = smart_text(message)
+			message = escape(message)
+			notifications_preview['message'] = {'text':message,'scheduled_date':payload['scheduled_date'],'scheduled_time':payload['scheduled_time']}
+
+			if len(product_list):
+
+				for product in product_list:
+					ns,nsp = self.batch_product_notifications(payload, df, product, message, gateway_profile)
+					if ns: notifications.update(ns)
+					if nsp: notifications_preview.update(nsp)
+
+				payload['notifications_object'] = json.dumps(notifications)
+				payload['notifications_preview'] = json.dumps(notifications_preview)
+				payload['contact_group'] = '\n'.join(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))
+				payload['response'] = 'Session Subscription Details Captured'
+				payload['response_status']= '00'
+			else:
+				payload['response'] = 'Notification Product not Found'
+				payload['response_status']= '25'
+
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Session Subscription Details: %s" % e)
+		return payload
+
+
+
+
+
+
 	def update_session_subscription(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
