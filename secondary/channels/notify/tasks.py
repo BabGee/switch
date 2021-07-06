@@ -377,13 +377,13 @@ class System(Wrappers):
 			df_data  = pd.DataFrame({'recipient': recipient})
 
 			lgr.info(f'Recipient Contact Captured Data: {df_data.shape[0]}')
-			if 'message' in payload.keys() and df_data.shape[0] and len(notifications):
+			if payload.get('message') and df_data.shape[0] and len(notifications):
 				outbound_log = self.batch_product_send(payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
 				lgr.info('Recipient Outbound Bulk Logger Completed Task')
 
 				payload['response'] = 'Outbound Message Processed'
 				payload['response_status']= '00'
-			elif 'message' not in payload.keys() and len(recipient_list):
+			elif not payload.get('message') and len(recipient_list):
 				payload['response'] = 'No Message to Send'
 				payload['response_status']= '00'
 			else:
