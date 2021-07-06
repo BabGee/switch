@@ -235,7 +235,9 @@ class Wrappers:
 			unit_charge = (product.unit_credit_charge) #Pick the notification product cost
 			product_charge = (unit_charge*Decimal(_recipient_count)*message_len)
 
-			notifications[product.id] = {'float_amount': float(product_charge), 'float_product_type_id': product.notification.product_type.id, 'contact_id': new_contact.id, 'message_len':message_len }
+			notifications[product.id] = {'float_amount': float(product_charge), 'float_product_type_id': product.notification.product_type.id, 
+							'contact_id': new_contact.id, 'message_len':message_len }
+
 			if product.notification.code.institution:
 				notifications[product.id]['institution_id'] = product.notification.code.institution.id
 
@@ -1164,7 +1166,7 @@ class System(Wrappers):
 					elif message.get('type') == 'video' and message['video'].get('caption'):
 						message['video']['caption'] = message['video']['caption'].\
 											strip().format_map(payload_d)
-					payload['message'] = json.dumps(message)
+					if message: payload['message'] = json.dumps(message)
 				else:
 					_ = get_template()
 					payload['message'] = payload['message'].strip().format_map(payload_d)
