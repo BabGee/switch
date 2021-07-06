@@ -1144,7 +1144,7 @@ class System(Wrappers):
 					float_amount = float_amount*len(messages)
 				elif notification_product[0].notification.code.channel.name == 'WHATSAPP':
 					_ = get_template(False)
-					message = json.loads(payload['message'])
+					message = json.loads(payload['message']) if payload.get('message') else dict()
 					if message.get('type') == 'interactive':
 						message['interactive']['body']['text'] = message['interactive']['body']['text'].\
 											strip().format_map(payload_d)
