@@ -421,11 +421,7 @@ class System(Wrappers):
 			#lgr.info('Product List: %s' % product_list)
 			# Message Len
 
-			message = payload['message'].strip()
-			message = unescape(message)
-			message = smart_text(message)
-			message = escape(message)
-			notifications_preview['message'] = {'text':message,'scheduled_date':payload['scheduled_date'],'scheduled_time':payload['scheduled_time']}
+			notifications_preview['message'] = {'text': payload.get('message'),'scheduled_date':payload['scheduled_date'],'scheduled_time':payload['scheduled_time']}
 
 			if len(product_list):
 
