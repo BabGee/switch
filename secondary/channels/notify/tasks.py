@@ -61,16 +61,13 @@ class Wrappers:
 		for key, value in notifications.items():
 			contact = Contact.objects.get(id=value['contact_id'])
 			if contact.product.notification.code.channel.name == 'EMAIL':
-				lgr.info(df_data)
 				df_email=df_data['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,3}$)')
-
-				lgr.info(df_email)
 				df_email = df_email[~df_email['email'].isnull()]
-
-				lgr.info(df_email)
 				_recipient = df_email['email'].values
-
-				lgr.info(_recipient)
+			elif contact.product.notification.code.channel.name == 'WHATSAPP':
+				df_msisdn=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(:?[\d]*)$|(?:[\d]*)$)')
+				df_msisdn = df_msisdn[~df_msisdn['msisdn'].isnull()]
+				_recipient = df_msisdn['msisdn'].values
 			else:
 				mno = contact.product.notification.code.mno
 				mno_prefix = MNOPrefix.objects.filter(mno=mno).values_list('prefix', flat=True)
@@ -193,9 +190,13 @@ class Wrappers:
 			new_contact.subscribed=True
 			new_contact.save()
 		if product.notification.code.channel.name == 'EMAIL':
-			df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w]+\.[a-z]{2,3}$)')
+			df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,3}$)')
 			df_email = df_email[~df_email['email'].isnull()]
 			_recipient = df_email['email'].values
+		elif product.notification.code.channel.name == 'WHATSAPP':
+			df_msisdn=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(:?[\d]*)$|(?:[\d]*)$)')
+			df_msisdn = df_msisdn[~df_msisdn['msisdn'].isnull()]
+			_recipient = df_msisdn['msisdn'].values
 		else:
 			#For SMS
 			mno_prefix = MNOPrefix.objects.filter(mno=product.notification.code.mno).values_list('prefix', flat=True)
@@ -333,14 +334,20 @@ class System(Wrappers):
 		try:
 			lgr.info('Get Product Outbound Notification: %s' % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			recipient_list = Recipient.objects.filter(subscribed=True,status__name='ACTIVE',\
-							contact_group__id__in=[a for a in payload['contact_group_id'].split(',') if a],\
-							contact_group__institution=gateway_profile.institution,\
-							contact_group__gateway=gateway_profile.gateway).values_list('recipient', flat=True)
 
-			#recipient_count = recipient.count()
 
-			recipient=np.asarray(recipient_list)
+			session_subscription = SessionSubscription.objects.filter(status__name='ACTIVE',
+							enrollment__enrollment_type__product_item__institution=gateway_profile.institution)
+
+			if payload.get('session_subscription_type'):
+				session_subscription = session_subscription.filter(session_subscription_type__name=payload['session_subscription_type'])
+
+			if payload.get('product_item'):
+				session_subscription = session_subscription.filter(
+							enrollment__enrollment_type__product_item__name=payload['product_item'])
+
+			recipient=np.asarray(session_subscription.values_list('recipient', flat=True))
+
 			recipient = np.unique(recipient)
 
 			df = pd.DataFrame({'recipient': recipient})
