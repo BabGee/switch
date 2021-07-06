@@ -384,15 +384,12 @@ class System(Wrappers):
 			lgr.info("Error on Session Subscription Details: %s" % e)
 		return payload
 
-
-
-
-
-
 	def update_session_subscription(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			enrollment = Enrollment.objects.get(id=payload['enrollment_id'])
+
+			session_subscription_type_list = SessionSubscriptionType.objects.filter(service__name=payload['SERVICE'])
 
 			status = SessionSubscriptionStatus.objects.get(name='ACTIVE')
 			session_sub = SessionSubscription.objects.filter(gateway_profile=gateway_profile, enrollment=enrollment,
@@ -402,8 +399,14 @@ class System(Wrappers):
 				session_subscription = session_sub.last()
 				session_subscription.last_access = timezone.now()
 			else:
-				session_subscription = SessionSubscription(gateway_profile=gateway_profile, enrollment=enrollment, 
-										last_access=timezone.now(), status=status)
+				session_subscription_type = session_subscription_type_list.first()
+				session_subscription = SessionSubscription(gateway_profile=gateway_profile, 
+									session_subscription_type=session_subscription_type,
+									enrollment=enrollment, last_access=timezone.now(), status=status)
+
+				if session_subscription_type.channel.name in ['WHATSAPP','SMS']:
+					msisdn = UPCWrappers().get_msisdn(payload)
+					if msisdn: session_subscription.recipient = msisdn
 
 			#Save either
 			session_subscription.save()
