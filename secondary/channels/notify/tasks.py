@@ -192,7 +192,7 @@ class Wrappers:
 			_recipient = df_email['email'].values
 			message_len = 1
 		elif product.notification.code.channel.name == 'WHATSAPP':
-			df_msisdn=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(:?[\d]*)$|(?:[\d]*)$)')
+			df_msisdn=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(:?[\d]*)$|(?:[\d]*)$)')
 			df_msisdn = df_msisdn[~df_msisdn['msisdn'].isnull()]
 			_recipient = df_msisdn['msisdn'].values
 			message_len = 1
@@ -390,7 +390,7 @@ class System(Wrappers):
 
 		except Exception as e:
 			payload['response_status'] = '96'
-			lgr.info("Error on Log Recipient Contact Group Send: %s" % e)
+			lgr.info("Error on Session Subscription Send: %s" % e)
 		return payload
 
 
