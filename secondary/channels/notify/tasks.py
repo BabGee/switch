@@ -436,7 +436,6 @@ class System(Wrappers):
 
 				payload['notifications_object'] = json.dumps(notifications)
 				payload['notifications_preview'] = json.dumps(notifications_preview)
-				payload['contact_group'] = '\n'.join(ContactGroup.objects.filter(id__in=[a for a in payload['contact_group_id'].split(',') if a]).values_list('name', flat=True))
 				payload['response'] = 'Session Subscription Details Captured'
 				payload['response_status']= '00'
 			else:
