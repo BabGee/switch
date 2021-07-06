@@ -330,11 +330,68 @@ class Wrappers:
 			return False
 
 class System(Wrappers):
+	def session_subscription_send(self, payload, node_info):
+		try:
+			lgr.info('Log Outbound Contact Group Send: %s' % payload)
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			date_string = payload['scheduled_date']+' '+payload['scheduled_time']
+			date_obj = datetime.strptime(date_string, '%d/%m/%Y %I:%M %p')
+		
+			lgr.info('Payload: %s' % payload)
+
+			notifications = json.loads(payload['notifications_object'])
+
+			lgr.info('Notifications: %s' % notifications)
+
+			ext_outbound_id = None
+			if "ext_outbound_id" in payload.keys():
+				ext_outbound_id = payload['ext_outbound_id']
+			elif 'bridge__transaction_id' in payload.keys():
+				ext_outbound_id = payload['bridge__transaction_id']
+
+
+			session_subscription = SessionSubscription.objects.filter(status__name='ACTIVE',
+							enrollment__enrollment_type__product_item__institution=gateway_profile.institution)
+
+			if payload.get('session_subscription_type'):
+				session_subscription = session_subscription.filter(session_subscription_type__name=payload['session_subscription_type'])
+
+			if payload.get('product_item'):
+				session_subscription = session_subscription.filter(
+							enrollment__enrollment_type__product_item__name=payload['product_item'])
+
+			recipient=np.asarray(session_subscription.values_list('recipient', flat=True))
+
+			recipient = np.unique(recipient)
+
+			df_data  = pd.DataFrame({'recipient': recipient})
+
+			lgr.info(f'Recipient Contact Captured Data: {df_data.shape[0]}')
+			if 'message' in payload.keys() and df_data.shape[0] and len(notifications):
+				outbound_log = self.batch_product_send(payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
+				lgr.info('Recipient Outbound Bulk Logger Completed Task')
+
+				payload['response'] = 'Outbound Message Processed'
+				payload['response_status']= '00'
+			elif 'message' not in payload.keys() and len(recipient_list):
+				payload['response'] = 'No Message to Send'
+				payload['response_status']= '00'
+			else:
+				payload['response'] = 'No Contact/Message to Send'
+				payload['response_status']= '00'
+
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Log Recipient Contact Group Send: %s" % e)
+		return payload
+
+
+
 	def session_subscription_details(self, payload, node_info):
 		try:
 			lgr.info('Get Product Outbound Notification: %s' % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-
 
 			session_subscription = SessionSubscription.objects.filter(status__name='ACTIVE',
 							enrollment__enrollment_type__product_item__institution=gateway_profile.institution)
