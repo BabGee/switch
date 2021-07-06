@@ -335,8 +335,12 @@ class System(Wrappers):
 			lgr.info('Log Outbound Contact Group Send: %s' % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			date_string = payload['scheduled_date']+' '+payload['scheduled_time']
-			date_obj = datetime.strptime(date_string, '%d/%m/%Y %I:%M %p')
+			if payload.get('scheduled_date') and payload.get('scheduled_time'):
+				date_string = payload['scheduled_date']+' '+payload['scheduled_time']
+				date_obj = datetime.strptime(date_string, '%d/%m/%Y %I:%M %p')
+			else:
+				date_obj = datetime.now()
+
 		
 			lgr.info('Payload: %s' % payload)
 
@@ -421,7 +425,7 @@ class System(Wrappers):
 			#lgr.info('Product List: %s' % product_list)
 			# Message Len
 
-			notifications_preview['message'] = {'text': payload.get('message'),'scheduled_date':payload['scheduled_date'],'scheduled_time':payload['scheduled_time']}
+			notifications_preview['message'] = {'text': payload.get('message'),'scheduled_date':payload.get('scheduled_date'),'scheduled_time':payload.get('scheduled_time')}
 
 			if len(product_list):
 
