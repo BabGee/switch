@@ -362,7 +362,7 @@ class System(Wrappers):
 			session_subscription = SessionSubscription.objects.select_for_update(nowait=True).filter(status__name='ACTIVE', 
 							enrollment__expiry__gte=timezone.now(),
 							enrollment__enrollment_type__product_item__institution=gateway_profile.institution,
-							last_access__gte=timezone.now()-timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration')
+							last_access__gte=timezone.now()-timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration'),
 							sends=0)
 
 			if payload.get('session_subscription_type'):
