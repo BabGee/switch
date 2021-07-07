@@ -335,6 +335,7 @@ class Wrappers:
 			return False
 
 class System(Wrappers):
+	@transaction.atomic
 	def session_subscription_send(self, payload, node_info):
 		try:
 			lgr.info('Log Outbound Contact Group Send: %s' % payload)
@@ -358,22 +359,31 @@ class System(Wrappers):
 			elif 'bridge__transaction_id' in payload.keys():
 				ext_outbound_id = payload['bridge__transaction_id']
 
-			session_subscription = SessionSubscription.objects.filter(status__name='ACTIVE', 
-							enrollment__enrollment_type__product_item__institution=gateway_profile.institution)
+			session_subscription = SessionSubscription.objects.select_for_update(nowait=True).filter(status__name='ACTIVE', 
+							enrollment__expiry__gte=timezone.now(),
+							enrollment__enrollment_type__product_item__institution=gateway_profile.institution,
+							last_access__gte=timezone.now()-timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration')
+							sends=0)
 
 			if payload.get('session_subscription_type'):
 				session_subscription = session_subscription.filter(session_subscription_type__name=payload['session_subscription_type'])
 
-			#if payload.get('expiry_hours_max'):
-			#	session_subscription = session_subscription.filter(
-			#				last_access__lte=timezone.now()+timezone.timedelta(hours=1)*float(payload['expiry_hours_max'])
-			#				enrollment__enrollment_type__product_item__name=payload['product_item'])
+			if payload.get('expiry_hours_max'):
+				session_subscription = session_subscription.filter(
+							last_access__lte=timezone.now()-(
+								(timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration'))-(
+											timezone.timedelta(hours=1)*float(payload['expiry_hours_max'])
+									)
+								)
+							)
 
 			if payload.get('product_item'):
 				session_subscription = session_subscription.filter(
 							enrollment__enrollment_type__product_item__name=payload['product_item'])
-
+			
 			recipient=np.asarray(session_subscription.values_list('recipient', flat=True))
+			#Update query after numpy capture
+			session_subscription.update(sends=F('sends')+1)
 
 			recipient = np.unique(recipient)
 
@@ -473,7 +483,8 @@ class System(Wrappers):
 				session_subscription_type = session_subscription_type_list.first()
 				session_subscription = SessionSubscription(gateway_profile=gateway_profile, 
 									session_subscription_type=session_subscription_type,
-									enrollment=enrollment, last_access=timezone.now(), status=status)
+									enrollment=enrollment, last_access=timezone.now(), 
+									status=status, sends=0)
 
 				if session_subscription_type.channel.name in ['WHATSAPP','SMS']:
 					msisdn = UPCWrappers().get_msisdn(payload)

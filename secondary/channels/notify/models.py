@@ -301,6 +301,7 @@ class SessionSubscription(models.Model):
 	last_access = models.DateTimeField()
 	status = models.ForeignKey(SessionSubscriptionStatus, on_delete=models.CASCADE)
 	recipient = models.CharField(max_length=200)
+	sends = models.IntegerField()
 	def __str__(self):
 		return u'%s %s' % (self.gateway_profile, self.recipient)
 
