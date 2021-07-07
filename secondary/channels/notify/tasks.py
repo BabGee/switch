@@ -1203,7 +1203,7 @@ class System(Wrappers):
 				payload['float_amount'] = float_amount
 				payload['response'] = "Notification Captured : %s" % notification_product[0].id 
 				payload['response_status']= '00'
-
+				lgr.info(f'Payload: {payload}')
 			elif len(notification_product)<1 and 'notification_product_id' in payload.keys():
 				del payload['notification_product_id'] #Avoid send SMS
 				if 'product_item_id' in payload.keys(): del payload['product_item_id'] #Avoid deduction of float
@@ -1385,6 +1385,8 @@ class System(Wrappers):
 
 	def send_notification(self, payload, node_info):
 		try:
+
+			lgr.info(f'Payload: {payload}')
 			if 'notification_product_id' not in payload.keys():
 				payload['response'] = "Notification not found"
 				payload['response_status']= '25'
