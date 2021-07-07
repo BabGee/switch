@@ -345,7 +345,6 @@ class System(Wrappers):
 				date_obj = datetime.strptime(date_string, '%d/%m/%Y %I:%M %p')
 			else:
 				date_obj = datetime.now()
-
 		
 			lgr.info('Payload: %s' % payload)
 
@@ -359,12 +358,16 @@ class System(Wrappers):
 			elif 'bridge__transaction_id' in payload.keys():
 				ext_outbound_id = payload['bridge__transaction_id']
 
-
-			session_subscription = SessionSubscription.objects.filter(status__name='ACTIVE',
+			session_subscription = SessionSubscription.objects.filter(status__name='ACTIVE', 
 							enrollment__enrollment_type__product_item__institution=gateway_profile.institution)
 
 			if payload.get('session_subscription_type'):
 				session_subscription = session_subscription.filter(session_subscription_type__name=payload['session_subscription_type'])
+
+			#if payload.get('expiry_hours_max'):
+			#	session_subscription = session_subscription.filter(
+			#				last_access__lte=timezone.now()+timezone.timedelta(hours=1)*float(payload['expiry_hours_max'])
+			#				enrollment__enrollment_type__product_item__name=payload['product_item'])
 
 			if payload.get('product_item'):
 				session_subscription = session_subscription.filter(

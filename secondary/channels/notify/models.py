@@ -286,6 +286,7 @@ class SessionSubscriptionType(models.Model):
 	description = models.CharField(max_length=100)
 	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 	service = models.ManyToManyField(Service, blank=True)
+	session_expiration = models.IntegerField(help_text='In Seconds')
 	def __str__(self):
 		return u'%s' % (self.name)
 	def service_list(self):

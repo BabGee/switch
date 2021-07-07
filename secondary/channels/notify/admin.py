@@ -124,7 +124,7 @@ class SessionSubscriptionStatusAdmin(admin.ModelAdmin):
 admin.site.register(SessionSubscriptionStatus, SessionSubscriptionStatusAdmin)
 
 class SessionSubscriptionTypeAdmin(admin.ModelAdmin):
-	list_display = ('name','description','channel','service_list',)
+	list_display = ('name','description','channel','service_list','session_expiration',)
 admin.site.register(SessionSubscriptionType, SessionSubscriptionTypeAdmin)
 
 class SessionSubscriptionAdmin(admin.ModelAdmin):
