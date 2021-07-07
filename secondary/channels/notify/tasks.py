@@ -1180,6 +1180,7 @@ class System(Wrappers):
 				elif notification_product[0].notification.code.channel.name == 'WHATSAPP':
 					_ = get_template(False)
 					message = json.loads(payload['message']) if payload.get('message') else dict()
+					lgr.info(f'Whatsapp Message: {message}')
 					if message.get('type') == 'interactive':
 						message['interactive']['body']['text'] = message['interactive']['body']['text'].\
 											strip().format_map(payload_d)
