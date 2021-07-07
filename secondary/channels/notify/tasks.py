@@ -415,11 +415,23 @@ class System(Wrappers):
 			lgr.info('Get Product Outbound Notification: %s' % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
-			session_subscription = SessionSubscription.objects.filter(status__name='ACTIVE',
-							enrollment__enrollment_type__product_item__institution=gateway_profile.institution)
+			session_subscription = SessionSubscription.objects.filter(status__name='ACTIVE', 
+							enrollment__expiry__gte=timezone.now(),
+							enrollment__enrollment_type__product_item__institution=gateway_profile.institution,
+							last_access__gte=timezone.now()-timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration'),
+							sends=0)
 
 			if payload.get('session_subscription_type'):
 				session_subscription = session_subscription.filter(session_subscription_type__name=payload['session_subscription_type'])
+
+			if payload.get('expiry_hours_max'):
+				session_subscription = session_subscription.filter(
+							last_access__lte=timezone.now()-(
+								(timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration'))-(
+											timezone.timedelta(hours=1)*float(payload['expiry_hours_max'])
+									)
+								)
+							)
 
 			if payload.get('product_item'):
 				session_subscription = session_subscription.filter(
