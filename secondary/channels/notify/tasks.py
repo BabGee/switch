@@ -362,8 +362,7 @@ class System(Wrappers):
 			session_subscription = SessionSubscription.objects.select_for_update(nowait=True).filter(status__name='ACTIVE', 
 							enrollment__expiry__gte=timezone.now(),
 							enrollment__enrollment_type__product_item__institution=gateway_profile.institution,
-							last_access__gte=timezone.now()-timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration'),
-							sends=0)
+							last_access__gte=timezone.now()-timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration'))
 
 			if payload.get('session_subscription_type'):
 				session_subscription = session_subscription.filter(session_subscription_type__name=payload['session_subscription_type'])
@@ -418,8 +417,7 @@ class System(Wrappers):
 			session_subscription = SessionSubscription.objects.filter(status__name='ACTIVE', 
 							enrollment__expiry__gte=timezone.now(),
 							enrollment__enrollment_type__product_item__institution=gateway_profile.institution,
-							last_access__gte=timezone.now()-timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration'),
-							sends=0)
+							last_access__gte=timezone.now()-timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration'))
 
 			if payload.get('session_subscription_type'):
 				session_subscription = session_subscription.filter(session_subscription_type__name=payload['session_subscription_type'])
@@ -1180,7 +1178,6 @@ class System(Wrappers):
 				elif notification_product[0].notification.code.channel.name == 'WHATSAPP':
 					_ = get_template(False)
 					message = json.loads(payload['message']) if payload.get('message') else dict()
-					lgr.info(f'Whatsapp Message: {message}')
 					if message.get('type') == 'interactive':
 						message['interactive']['body']['text'] = message['interactive']['body']['text'].\
 											strip().format_map(payload_d)
@@ -1204,7 +1201,6 @@ class System(Wrappers):
 				payload['float_amount'] = float_amount
 				payload['response'] = "Notification Captured : %s" % notification_product[0].id 
 				payload['response_status']= '00'
-				lgr.info(f'Payload: {payload}')
 			elif len(notification_product)<1 and 'notification_product_id' in payload.keys():
 				del payload['notification_product_id'] #Avoid send SMS
 				if 'product_item_id' in payload.keys(): del payload['product_item_id'] #Avoid deduction of float
@@ -1386,8 +1382,6 @@ class System(Wrappers):
 
 	def send_notification(self, payload, node_info):
 		try:
-
-			lgr.info(f'Payload: {payload}')
 			if 'notification_product_id' not in payload.keys():
 				payload['response'] = "Notification not found"
 				payload['response_status']= '25'
