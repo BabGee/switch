@@ -360,8 +360,8 @@ class System(Wrappers):
 				ext_outbound_id = payload['bridge__transaction_id']
 
 			session_subscription = SessionSubscription.objects.select_for_update(nowait=True).filter(status__name='ACTIVE', 
-							expiry__gte=timezone.now(),
-							enrollment_type__product_item__institution=gateway_profile.institution,
+							enrollment__expiry__gte=timezone.now(),
+							enrollment__enrollment_type__product_item__institution=gateway_profile.institution,
 							last_access__gte=timezone.now()-timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration'))
 
 			if payload.get('session_subscription_type'):
@@ -415,8 +415,8 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			session_subscription = SessionSubscription.objects.filter(status__name='ACTIVE', 
-							expiry__gte=timezone.now(),
-							enrollment_type__product_item__institution=gateway_profile.institution,
+							enrollment__expiry__gte=timezone.now(),
+							enrollment__enrollment_type__product_item__institution=gateway_profile.institution,
 							last_access__gte=timezone.now()-timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration'))
 
 			if payload.get('session_subscription_type'):
@@ -483,12 +483,10 @@ class System(Wrappers):
 			session_subscription_type_list = SessionSubscriptionType.objects.filter(service__name=payload['SERVICE'])
 
 			status = SessionSubscriptionStatus.objects.get(name='ACTIVE')
-			session_sub = SessionSubscription.objects.filter(gateway_profile=gateway_profile, expiry__gte=timezone.now(),
-									enrollment_type=enrollment.enrollment_type,
-									status=status)
+			session_sub = SessionSubscription.objects.filter(gateway_profile=gateway_profile, expiry=enrollment.expiry,
+									enrollment_type=enrollment.enrollment_type,status=status)
 
 			if len(session_sub):
-				session_subscription.expiry = enrollment.expiry
 				session_subscription = session_sub.last()
 				session_subscription.last_access = timezone.now()
 			else:
