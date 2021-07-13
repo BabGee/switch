@@ -387,8 +387,11 @@ class Wrappers:
 						if dsf_list[0] in payload.keys() and getattr(model_class, dsf_list[1].split('__')[0], False):
 							try:duration_seconds_filter_data[dsf_list[1]] = pytz.timezone(gateway_profile.user.profile.timezone).localize(datetime.strptime(payload[dsf_list[0]], '%Y-%m-%d'))
 							except Exception as e: lgr.info('Error on duration seconds filter : %s' % e)
-						elif getattr(model_class, dsf_list[0].split('__')[0], False) and getattr(model_class, dsf_list[1].split('__')[0], False):
-							duration_seconds_filter_data[dsf_list[0]] = timezone.now()+timezone.timedelta(seconds=1)*F(dsf_list[1]) if dsf_list[1] not in ['',None] else None
+						elif getattr(model_class, dsf_list[0].split('__')[0], False) and getattr(model_class, dsf_list[1].split('__')[0].replace('-',''), False):
+							try:
+								if dsf_list[1][:1] == '-':duration_seconds_filter_data[dsf_list[0]] = timezone.now()-timezone.timedelta(seconds=1)*F(dsf_list[1][1:]) if dsf_list[1] not in ['',None] else None
+								else: duration_seconds_filter_data[dsf_list[0]] = timezone.now()+timezone.timedelta(seconds=1)*F(dsf_list[1]) if dsf_list[1] not in ['',None] else None
+							except Exception as e: lgr.info('Error on duration seconds filter : %s' % e)
 						elif getattr(model_class, dsf_list[0].split('__')[0], False):
 							try: duration_seconds_filter_data[dsf_list[0]] = timezone.now()+timezone.timedelta(seconds=float(dsf_list[1])) if dsf_list[1] not in ['',None] else None
 							except Exception as e: lgr.info('Error on duration seconds filter : %s' % e)
