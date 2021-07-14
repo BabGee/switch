@@ -142,6 +142,7 @@ class ContactGroup(models.Model):
 	institution = models.ForeignKey(Institution, blank=True, null=True, on_delete=models.CASCADE)
 	gateway = models.ForeignKey(Gateway, blank=True, null=True, on_delete=models.CASCADE)
 	status = models.ForeignKey(ContactGroupStatus, on_delete=models.CASCADE) 
+	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s' % (self.name)
 
