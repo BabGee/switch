@@ -380,6 +380,7 @@ class Wrappers:
 		return id_passport
 
 
+
 	def simple_get_msisdn(self, msisdn, payload={}):
 		lng = payload['lng'] if 'lng' in payload.keys() else 0.0
 		lat = payload['lat'] if 'lat' in payload.keys() else 0.0
@@ -436,6 +437,7 @@ class Wrappers:
 			msisdn = None
 
 		return msisdn
+
 
 
 	def get_msisdn(self, payload):
