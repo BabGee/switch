@@ -1462,7 +1462,7 @@ class System(Wrappers):
 					elif new_contact.product.notification.code.channel.name == 'EMAIL':
 						if 'email' in payload.keys() and self.validateEmail(payload["email"]):
 							outbound.recipient = payload['email']
-						else:
+						elif new_contact.gateway_profile.user.email:
 							outbound.recipient = new_contact.gateway_profile.user.email
 					elif new_contact.product.notification.code.channel.name == 'MQTT':
 						if 'pn_notification_id' in payload.keys() and payload['pn_notification_id'] not in ['',None]:
