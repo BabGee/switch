@@ -883,6 +883,9 @@ class System(Wrappers):
 				if 'passport_number' in payload.keys():
 					payload['original_passport_number'] = payload['passport_number']
 					del payload['passport_number']
+				if 'tax_pin' in payload.keys():
+					payload['original_tax_pin'] = payload['tax_pin']
+					del payload['tax_pin']
 				if 'first_name' in payload.keys():
 					payload['original_first_name'] = payload['first_name']
 					del payload['first_name']
