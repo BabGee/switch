@@ -502,29 +502,35 @@ class System(Wrappers):
 			try:
 				remittance_product = RemittanceProduct.objects.filter(Q(service__name=payload['SERVICE']),\
 							Q(remittance__gateway=gateway_profile.gateway)|Q(remittance__gateway=None))
-
+				lgr.info(f'Remittance Product {remittance_product}')
 				if 'currency' in payload.keys():
 					remittance_product = remittance_product.filter(Q(currency__code=payload['currency'])|Q(currency=None))
 
+				lgr.info(f'Remittance Product {remittance_product}')
 				if 'payment_method' in payload.keys():
 					remittance_product = remittance_product.filter(Q(payment_method__name=payload['payment_method'])\
 								|Q(payment_method=None))
 
+				lgr.info(f'Remittance Product {remittance_product}')
 				if 'ext_service_id' in payload.keys():
 					remittance_product = remittance_product.filter(remittance__ext_service_id=payload['ext_service_id'])
 
+				lgr.info(f'Remittance Product {remittance_product}')
 				if 'product_type_id' in payload.keys():
 					remittance_product = remittance_product.filter(Q(product_type__id=payload['product_type_id'])\
 								|Q(product_type=None))
 
+				lgr.info(f'Remittance Product {remittance_product}')
 				if 'product_item_id' in payload.keys():
 					product_item = ProductItem.objects.get(id=payload['product_item_id'])
 					remittance_product = remittance_product.filter(Q(product_type=product_item.product_type)\
 								|Q(product_type=None))
 
+				lgr.info(f'Remittance Product {remittance_product}')
 				if 'ext_product_id' in payload.keys():
 					remittance_product = remittance_product.filter(ext_product_id=payload['ext_product_id'])
 
+				lgr.info(f'Remittance Product {remittance_product}')
 				#For remittances only/Filter with instittution/(Check custom softwares for implementation
 				#Not For payment notifications as the institution is not in the request but the numbers would identify the remittance)
 				#For payment notifications, the cart items would help tag payment to an institution.
@@ -536,6 +542,7 @@ class System(Wrappers):
 				else:
 					remittance_product = remittance_product.filter(institution=None)
 
+				lgr.info(f'Remittance Product {remittance_product}')
 				if remittance_product.exists():
 
 					product = remittance_product.first()
