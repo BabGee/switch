@@ -73,7 +73,9 @@ class MenuKeywordAdmin(admin.ModelAdmin):
 admin.site.register(MenuKeyword, MenuKeywordAdmin)
 
 class NavigatorAdmin(admin.ModelAdmin):
-	list_display = ('id','session_hop', 'menu', 'item_list', 'nav_step', 'input_select','code','pin_auth','session','level','group_select','invalid','date_modified','date_created',)
+	list_display = ('id','session_hop', 'menu', 'item_list', 'nav_step', 'input_select','code',\
+			'pin_auth','session','level','group_select','invalid','date_modified',\
+			'date_created','session_state',)
 	list_filter = ('menu__code','menu__code__institution','menu__code__mno','menu__code__channel','menu__code__code_type',)
 	search_fields = ('menu__code__code','menu__page_string','item_list','nav_step','input_select','session__gateway_profile__msisdn__phone_number','session__reference',)
 admin.site.register(Navigator, NavigatorAdmin)

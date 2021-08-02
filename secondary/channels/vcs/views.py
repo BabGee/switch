@@ -48,8 +48,9 @@ class VAS:
 			if authenticated.exists() or self.pin_auth:
 				self.pin_auth = True
 				self.navigator = self.navigator.filter(pin_auth=True)
-			
-			if len(self.navigator) > 0 and self.payload['input'] not in ['00','<BEG>','<SBEG>'] and self.navigator[0].menu.session_state.name != 'END':#Not a Main Menu Request
+
+			#END affects menu's that use a page_string_response rather than page_string as page string response can take a state other than the main menu state
+			if len(self.navigator) > 0 and self.payload['input'] not in ['00','<BEG>','<SBEG>'] and self.navigator[0].session_state.name != 'END':#Not a Main Menu Request
 				if self.gateway_profile.exists():
 					self.navigator = self.navigator.filter(session__gateway_profile=self.gateway_profile[0])
 				self.nav = self.navigator[0]
@@ -65,7 +66,7 @@ class VAS:
 				else:
 					self.menu = self.menu.filter(access_level__name='SYSTEM', code=self.code[0],profile_status=None)
 
-			elif self.payload['input'] in ['00','<BEG>','<SBEG>'] or len(self.navigator)<1 or (len(self.navigator) and self.navigator[0].menu.session_state.name == 'END'):#Main Menu Request|First call|Or if previous step had an END state
+			elif self.payload['input'] in ['00','<BEG>','<SBEG>'] or len(self.navigator)<1 or (len(self.navigator) and self.navigator[0].session_state.name == 'END'):#Main Menu Request|First call|Or if previous step had an END state
 				self.group_select=self.kwargs['group_select'] if 'group_select' in self.kwargs.keys() else 0
 				self.nav_step = (self.navigator[0].nav_step + 1) if self.payload['input'] == '00' and len(self.navigator)>0 else 0
 				self.level = str(self.kwargs['level']) if 'level' in self.kwargs.keys() else '0'
@@ -127,7 +128,7 @@ class VAS:
 
 		if self.menu.exists():
 
-			new_navigator = Navigator(session=self.session, menu=self.menu[0], pin_auth=self.pin_auth, level=self.level, group_select=self.group_select, invalid=self.menu[0].invalid)
+			new_navigator = Navigator(session=self.session, menu=self.menu[0], pin_auth=self.pin_auth, level=self.level, group_select=self.group_select, invalid=self.menu[0].invalid, session_state=self.menu[0].session_state)
 			new_navigator.input_select = self.payload['input']
 
 			new_navigator.nav_step = self.nav_step
@@ -137,6 +138,9 @@ class VAS:
 			#Process Page String
 			try: self.payload =  PageString().pagestring(new_navigator, self.payload, self.code, self.node_info)
 			except Exception as e: lgr.info('Error on Processing Page String: %s' % e)
+
+			if self.payload.get('session_state'):
+				new_navigator.session_state = SessionState.objects.get(name=self.payload['session_state'])
 
 			menuitems = menuitems.filter(menu=self.menu[0])
 			if self.channel.name == 'USSD':
@@ -149,8 +153,7 @@ class VAS:
 				new_navigator.item_list = json.dumps(self.item_list)
 			new_navigator.save()
 
-
-			session_state = self.payload['session_state'] if 'session_state' in self.payload.keys() and  self.payload['session_state'] not in [None,''] else self.menu[0].session_state.name 
+			session_state = new_navigator.session_state.name
 			input_type = self.menu[0].input_variable.variable_type.variable
 			input_min = self.menu[0].input_variable.validate_min
 			input_max = self.menu[0].input_variable.validate_max
@@ -161,7 +164,7 @@ class VAS:
 			else:
 				error_prefix = self.nav.menu.error_prefix if self.nav.menu.error_prefix not in ['',None] else 'Invalid input!' 
 
-			new_navigator = Navigator(session=self.session, menu=self.nav.menu, pin_auth=self.pin_auth, level=self.level, group_select=self.group_select, invalid=True)
+			new_navigator = Navigator(session=self.session, menu=self.nav.menu, pin_auth=self.pin_auth, level=self.level, group_select=self.group_select, invalid=True, session_state=self.nav.menu.session_state)
 			new_navigator.input_select = self.nav.input_select
 
 			new_navigator.nav_step = self.nav_step
@@ -171,6 +174,9 @@ class VAS:
 			#Process Page String
 			try: self.payload =  PageString().pagestring(new_navigator, self.payload, self.code, self.node_info)
 			except Exception as e: lgr.info('Error on Processing Page String: %s' % e)
+
+			if self.payload.get('session_state'):
+				new_navigator.session_state = SessionState.objects.get(name=self.payload['session_state'])
 
 			menuitems = menuitems.filter(menu=self.nav.menu)
 
@@ -203,13 +209,15 @@ class VAS:
 				new_navigator.item_list = json.dumps(self.item_list)
 			new_navigator.save()
 
-			session_state = self.payload['session_state'] if 'session_state' in self.payload.keys() and  self.payload['session_state'] not in [None,''] else self.nav.menu.session_state.name 
+			#session_state = self.payload['session_state'] if 'session_state' in self.payload.keys() and  self.payload['session_state'] not in [None,''] else self.nav.menu.session_state.name 
+
+			session_state = new_navigator.session_state.name
 			input_type = self.nav.menu.input_variable.variable_type.variable
 			input_min = self.nav.menu.input_variable.validate_min
 			input_max = self.nav.menu.input_variable.validate_max
 
 		else:
-			new_navigator = Navigator(session=self.session, level=self.level, group_select=self.group_select)
+			new_navigator = Navigator(session=self.session, level=self.level, group_select=self.group_select, session_state=SessionState.objects.get(name='END'))
 			new_navigator.input_select = self.payload['input']
 
 			new_navigator.nav_step = self.nav_step
