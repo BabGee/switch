@@ -45,6 +45,7 @@ import pandas as pd
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core import serializers
+import importlib
 
 from secondary.channels.notify.mqtt import MqttServerClient
 from primary.core.bridge import tasks as bridgetasks
@@ -2179,7 +2180,6 @@ class Wrappers:
 						#lgr.info("Run Func: %s TimeOut: %s" % (func, d.node_system.timeout_time))
 						'''
 
-						import importlib
 						module =  importlib.import_module(node_to_call+'.data')
 						#module = __import__.import_module(node_to_call+'.tasks')
 						lgr.info('Module: %s' % module)
@@ -2363,6 +2363,7 @@ class System(Wrappers):
 			upload = FileUpload.objects.filter(trigger_service__name=payload['SERVICE'])
 
 			if upload.exists():
+				u = upload.first()
 				extension_chunks = str(filename).split('.')
 				extension = extension_chunks[len(extension_chunks) - 1]
 				try:
@@ -2371,16 +2372,38 @@ class System(Wrappers):
 					original_filename = filename.replace(extension, '')
 				activity_status = FileUploadActivityStatus.objects.get(name='CREATED')
 				channel = Channel.objects.get(id=payload['chid'])
-				activity = FileUploadActivity(name=original_filename[:45], file_upload=upload[0], status=activity_status, \
+				activity = FileUploadActivity(name=original_filename[:45], file_upload=u, status=activity_status, \
 								  gateway_profile=gateway_profile,
 								  details=self.transaction_payload(payload), channel=channel)
 				if 'description' in payload.keys():
 					activity.description = payload['description']
 
-				#with open(tmp_file, 'rb+') as f:
-				with open(tmp_file, 'r',encoding="utf8", errors='ignore') as f:
-					activity.file_path.save(filename, File(f), save=False)
-				f.close()
+
+				if u.command_function and u.node_system:
+						node_to_call = u.node_system.URL.lower()
+						class_name = 'File'
+
+						module =  importlib.import_module(node_to_call+'.data')
+						#module = __import__.import_module(node_to_call+'.tasks')
+						lgr.info('Module: %s' % module)
+						my_class = getattr(module, class_name)
+						lgr.info('My Class: %s' % my_class)
+						fn = my_class()
+						lgr.info("Call Class: %s" % fn)
+
+						func = getattr(fn, d.command_function)
+						profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
+						df = pd.read_excel(tmp_file, engine = 'openpyxl')
+						#responseParams = func(payload, node_info)
+						df = func(payload, gateway_profile, profile_tz, df)
+						lgr.info(f'Data Frame {df}')
+						
+				else:
+
+					#with open(tmp_file, 'rb+') as f:
+					with open(tmp_file, 'r',encoding="utf8", errors='ignore') as f:
+						activity.file_path.save(filename, File(f), save=False)
+					f.close()
 
 
 				activity.save()
