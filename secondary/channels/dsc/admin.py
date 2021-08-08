@@ -55,7 +55,7 @@ admin.site.register(DataList, DataListAdmin)
 
 class FileUploadAdmin(admin.ModelAdmin):
 	list_display = ('id','institution_list','gateway_list','access_level_list','trigger_service_list',\
-			'activity_service',)
+			'activity_service','node_system','command_function',)
 admin.site.register(FileUpload, FileUploadAdmin)
 
 class FileUploadActivityStatusStatusAdmin(admin.ModelAdmin):
