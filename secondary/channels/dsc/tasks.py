@@ -6,6 +6,7 @@ import json
 import logging
 import operator
 import time
+import io
 from datetime import datetime
 from decimal import Decimal, ROUND_DOWN
 from functools import reduce
@@ -2397,7 +2398,12 @@ class System(Wrappers):
 						#responseParams = func(payload, node_info)
 						df = func(payload, gateway_profile, profile_tz, df)
 						lgr.info(f'Data Frame {df}')
-						
+
+						b = io.StringIO()
+						valid.to_csv(b, index=False)
+						file_content = ContentFile(b.getvalue())
+
+						activity.file_path.save(filename+'.csv', file_content, save=False)
 				else:
 
 					#with open(tmp_file, 'rb+') as f:
