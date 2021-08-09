@@ -2396,9 +2396,9 @@ class System(Wrappers):
 						profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
 						df = pd.read_excel(tmp_file, engine = 'openpyxl')
 						#responseParams = func(payload, node_info)
-						df = func(payload, gateway_profile, profile_tz, df)
+						payload, df = func(payload, gateway_profile, profile_tz, df)
 						lgr.info(f'Data Frame {df}')
-
+						lgr.info(f'Payload {payload}')
 						b = io.StringIO()
 						valid.to_csv(b, index=False)
 						file_content = ContentFile(b.getvalue())
