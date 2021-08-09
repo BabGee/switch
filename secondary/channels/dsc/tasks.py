@@ -2392,7 +2392,7 @@ class System(Wrappers):
 						fn = my_class()
 						lgr.info("Call Class: %s" % fn)
 
-						func = getattr(fn, d.command_function)
+						func = getattr(fn, u.command_function)
 						profile_tz = pytz.timezone(gateway_profile.user.profile.timezone)
 						df = pd.read_excel(tmp_file, engine = 'openpyxl')
 						#responseParams = func(payload, node_info)
