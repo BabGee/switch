@@ -2400,7 +2400,7 @@ class System(Wrappers):
 						lgr.info(f'Data Frame {df}')
 						lgr.info(f'Payload {payload}')
 						b = io.StringIO()
-						valid.to_csv(b, index=False)
+						df.to_csv(b, index=False)
 						file_content = ContentFile(b.getvalue())
 
 						activity.file_path.save(filename+'.csv', file_content, save=False)
