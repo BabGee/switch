@@ -23,6 +23,7 @@ from django.conf import settings
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 from django.core.files import File
+from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.core.validators import validate_email
 from django.db import IntegrityError
