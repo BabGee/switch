@@ -7,7 +7,7 @@ from secondary.channels import iic
 
 #url(r'^admin/doc/', django.contrib.admindocs.urls),
 urlpatterns = [
-	url(r'^admin/', admin.site.urls),
+	url(r'^admin-0/', admin.site.urls),
 	url(r'^api/(?P<service_name>[\w\-\ ]{1,50})/$',  api_views.Interface().interface),
 	url(r'^api/',  api_views.default),
 	#url(r'^api/', include(api.urls)),
