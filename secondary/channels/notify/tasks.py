@@ -483,13 +483,13 @@ class System(Wrappers):
 			session_subscription_type_list = SessionSubscriptionType.objects.filter(service__name=payload['SERVICE'])
 
 			status = SessionSubscriptionStatus.objects.get(name='ACTIVE')
-			session_sub = SessionSubscription.objects.filter(gateway_profile=gateway_profile, expiry__gte=timezone.now(),
+			session_subscription_list = SessionSubscription.objects.filter(gateway_profile=gateway_profile, expiry__gte=timezone.now(),
 									enrollment_type=enrollment.enrollment_type,
 									status=status)
 
-			if len(session_sub):
+			if len(session_subscription_list):
+				session_subscription = session_subscription_list.last()
 				session_subscription.expiry = enrollment.expiry
-				session_subscription = session_sub.last()
 				session_subscription.last_access = timezone.now()
 			else:
 				session_subscription_type = session_subscription_type_list.first()
