@@ -464,6 +464,8 @@ class System(Wrappers):
 
 				payload['notifications_object'] = json.dumps(notifications)
 				payload['notifications_preview'] = json.dumps(notifications_preview)
+
+				lgr.info(f'Notifications Payload {payload}')
 				payload['response'] = 'Session Subscription Details Captured'
 				payload['response_status']= '00'
 			else:
