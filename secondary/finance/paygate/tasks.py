@@ -339,7 +339,8 @@ class System(Wrappers):
 				product = remittance_product.first()
 
 				#Capture existing purchase order in order to skip institution incoming service
-				purchase_order = PurchaseOrder.objects.filter(reference__iexact=reference, status__name='UNPAID', expiry__gte=timezone.now(), gateway_profile__gateway=gateway_profile.gateway)
+				#Capture all. Whether Paid or Unpaid, as long as it hasn't expired/Solves multiple payment requests issue where once paid, the unpaid ones match institution incoming service
+				purchase_order = PurchaseOrder.objects.filter(reference__iexact=reference, expiry__gte=timezone.now(), gateway_profile__gateway=gateway_profile.gateway)
 				lgr.info('Order: %s' % purchase_order)
 
 				if not purchase_order.exists():
