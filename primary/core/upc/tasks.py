@@ -67,9 +67,9 @@ class Wrappers:
 			payload['response_status'] = '63'
 			profile_error = True
 		elif session_gateway_profile.exists() and 'national_id' in payload.keys() and\
-		 all_gateway_profile.filter(Q(user__profile__national_id__iexact=payload['national_id'].replace(' ','').strip()),\
+		 all_gateway_profile.filter(Q(user__profile__national_id__iexact=str(payload['national_id']).replace(' ','').strip()),\
 		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway)).exists() and\
-		 all_gateway_profile.filter(Q(user__profile__national_id__iexact=payload['national_id'].replace(' ','').strip()),\
+		 all_gateway_profile.filter(Q(user__profile__national_id__iexact=str(payload['national_id']).replace(' ','').strip()),\
 		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))[0].user != session_gateway_profile[0].user:
 			#check update national_id profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
 			payload['response'] = 'Profile Error: National ID exists in another profile. Please contact us'
@@ -83,16 +83,16 @@ class Wrappers:
 			payload['response_status'] = '63'
 			profile_error = True
 		elif session_gateway_profile.exists() and 'passport_number' in payload.keys() and\
-		 all_gateway_profile.filter(Q(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip()),\
+		 all_gateway_profile.filter(Q(user__profile__passport_number__iexact=str(payload['passport_number']).replace(' ','').strip()),\
 		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway)).exists() and\
-		 all_gateway_profile.filter(Q(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip()),\
+		 all_gateway_profile.filter(Q(user__profile__passport_number__iexact=str(payload['passport_number']).replace(' ','').strip()),\
 		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))[0].user != session_gateway_profile[0].user:
 			#check update passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile and to match user profiles.
 			payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
 			payload['response_status'] = '63'
 			profile_error = True
 		elif session_gateway_profile.exists() == False and 'passport_number' in payload.keys() and\
-		 all_gateway_profile.filter(Q(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip()),\
+		 all_gateway_profile.filter(Q(user__profile__passport_number__iexact=str(payload['passport_number']).replace(' ','').strip()),\
 		 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway)).exists():
 			#check create passport_number profile is unique, else,fail. Additional gateway profiles to be added using existing gateway profile.
 			payload['response'] = 'Profile Error: Passport Number exists in another profile. Please contact us'
@@ -120,9 +120,9 @@ class Wrappers:
 
 			profile = Profile.objects.get(id=user.profile.id) #User is a OneToOne field
 			if 'middle_name' in payload.keys() and profile.middle_name in [None,""]: profile.middle_name = payload['middle_name']
-			if 'national_id' in payload.keys() and profile.national_id in [None,""]: profile.national_id = payload['national_id'].replace(' ','').strip()
+			if 'national_id' in payload.keys() and profile.national_id in [None,""]: profile.national_id = str(payload['national_id']).replace(' ','').strip()
 			if 'passport_number' in payload.keys() and profile.passport_number in [None,""]: 
-				profile.passport_number = payload['passport_number'].replace(' ','').strip()
+				profile.passport_number = str(payload['passport_number']).replace(' ','').strip()
 				if 'passport_expiry_date' in payload.keys() and profile.passport_expiry_date in [None,""]: 
 					try: profile.passport_expiry_date = datetime.strptime(payload['passport_expiry_date'], '%Y-%m-%d').date()
 					except Exception as e: lgr.info('Error on Passport Expiry Date: %s' % e)
@@ -172,9 +172,9 @@ class Wrappers:
 
 		profile = Profile.objects.get(id=user.profile.id) #User is a OneToOne field
 		if 'middle_name' in payload.keys(): profile.middle_name = payload['middle_name']
-		if 'national_id' in payload.keys(): profile.national_id = payload['national_id'].replace(' ','').strip()
+		if 'national_id' in payload.keys(): profile.national_id = str(payload['national_id']).replace(' ','').strip()
 		if 'passport_number' in payload.keys(): 
-			profile.passport_number = payload['passport_number'].replace(' ','').strip()
+			profile.passport_number = str(payload['passport_number']).replace(' ','').strip()
 			if 'passport_expiry_date' in payload.keys():
 				try: profile.passport_expiry_date = datetime.strptime(payload['passport_expiry_date'], '%Y-%m-%d').date()
 				except Exception as e: lgr.info('Error on Passport Expiry Date: %s' % e)
@@ -254,10 +254,10 @@ class Wrappers:
 			session_gateway_profile = all_gateway_profile.filter(Q(msisdn__phone_number=self.get_msisdn(payload)),\
 					 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 		elif 'national_id' in payload.keys() and payload['national_id'] not in ["",None,"None"]:
-			session_gateway_profile = all_gateway_profile.filter(Q(user__profile__national_id__iexact=payload['national_id'].replace(' ','').strip()),\
+			session_gateway_profile = all_gateway_profile.filter(Q(user__profile__national_id__iexact=str(payload['national_id']).replace(' ','').strip()),\
 					 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 		elif 'passport_number' in payload.keys() and payload['passport_number'] not in ["",None,"None"]:
-			session_gateway_profile = all_gateway_profile.filter(Q(user__profile__passport_number__iexact=payload['passport_number'].replace(' ','').strip()),\
+			session_gateway_profile = all_gateway_profile.filter(Q(user__profile__passport_number__iexact=str(payload['passport_number']).replace(' ','').strip()),\
 					 ~Q(status__name__in=['DEACTIVATED','DELETED']),Q(gateway=gateway_profile.gateway))
 		elif 'reference' in payload.keys() and (self.validateEmail(payload['reference']) or self.simple_get_msisdn(payload['reference'], payload)):
 			if self.validateEmail(payload["reference"]):
@@ -2669,9 +2669,9 @@ class System(Wrappers):
 				username = ''
 				email = ''
 				if 'national_id' in payload.keys():
-					username = createUsername(payload["national_id"].replace(' ','').strip())
+					username = createUsername(str(payload["national_id"]).replace(' ','').strip())
 				elif 'passport_number' in payload.keys():
-					username = createUsername(payload["passport_number"].replace(' ','').strip())
+					username = createUsername(str(payload["passport_number"]).replace(' ','').strip())
 				elif 'email' in payload.keys() and self.validateEmail(payload["email"].strip()):
 					username = createUsername(payload["email"].split('@')[0])
 					email = payload['email'].strip()
