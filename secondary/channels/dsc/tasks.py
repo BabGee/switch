@@ -2518,7 +2518,7 @@ def pre_process_file_upload(payload):
 		for row in df.itertuples():
 			payload = json.loads(u.details)
 			for i in range(len(df.columns)):
-				payload[df.columns[i]] = row[i+1]
+				payload[df.columns[i]] = str(row[i+1])
 
 			payload['chid'] = u.channel.id
 			payload['ip_address'] = '127.0.0.1'
