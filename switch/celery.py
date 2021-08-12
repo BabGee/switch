@@ -102,6 +102,7 @@ app.conf.task_routes = {
 		'primary.core.bridge.tasks.background_service_call': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
 		'primary.core.bridge.tasks.process_background_service_call': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
 		'primary.core.bridge.tasks.process_background_service': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
+		'primary.core.bridge.tasks.process_background_service_poll': {'queue': 'services','exchange': 'services','routing_key':'services','delivery_mode': 'transient'},
 
 		'secondary.channels.dsc.tasks.process_push_request': {'queue': 'push_request','exchange': 'push_request','routing_key':'push_request','delivery_mode': 'transient'},
 

@@ -542,6 +542,30 @@ def process_background_service_call(background):
 @app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
 @transaction.atomic
 @single_instance_task(60*10)
+def process_background_service_poll():
+	from celery.utils.log import get_task_logger
+	lgr = get_task_logger(__name__)
+	try:
+		orig_poll = Poll.objects.select_for_update(of=('self',)).filter(
+								status__name='PROCESSED', 
+								last_run__lte=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every")
+								)
+
+		lgr.info(f'Orig Poll: {orig_poll}')
+
+		for p in orig_poll:
+			lgr.info(f'Poll: {p}')
+			background_service_call.delay(p.service.name, p.gateway_profile.id, p.request)
+
+		#Update Runs
+		orig_poll.update(last_run=timezone.now())
+
+	except Exception as e:
+		lgr.info('Error on Processing Background Service Poll: %s' % e)
+
+@app.task(ignore_result=True, time_limit=1000, soft_time_limit=900)
+@transaction.atomic
+@single_instance_task(60*10)
 def process_background_service():
 	from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
