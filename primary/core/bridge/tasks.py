@@ -555,7 +555,7 @@ def process_background_service_poll():
 
 		for p in orig_poll:
 			lgr.info(f'Poll: {p}')
-			background_service_call.delay(p.service.name, p.gateway_profile.id, p.request)
+			service_call.delay(p.service.name, p.gateway_profile.id, p.request)
 
 		#Update Runs
 		orig_poll.update(last_run=timezone.now())
