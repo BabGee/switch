@@ -66,7 +66,8 @@ class Loggers:
 					msisdn = str(msisdn)
 				elif len(msisdn) >= 7 and len(msisdn) <=10 and msisdn[:1] == '0':
 					country_list = Country.objects.filter(mpoly__intersects=trans_point)
-					ip_point = g.geos(str(payload['ip_address']))
+					try:ip_point = g.geos(str(payload['ip_address']))
+					except: ip_point = None
 					if country_list.exists() and country_list[0].ccode:
 						msisdn = '+%s%s' % (country_list[0].ccode,msisdn[1:])
 					elif ip_point:
