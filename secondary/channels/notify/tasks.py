@@ -482,7 +482,7 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			session_subscription_list = SessionSubscription.objects.filter(gateway_profile=gateway_profile, expiry__gte=timezone.now(),
-									enrollment_type__service__name=payload['SERVICE'])
+									session_subscription_type__service__name=payload['SERVICE'])
 			session_subscription_list.update(status=SessionSubscriptionStatus.objects.get(name='INACTIVE'), last_access=timezone.now())
 
 			payload['response'] = 'Session Subscription Stopped'
@@ -498,7 +498,7 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			session_subscription_list = SessionSubscription.objects.filter(gateway_profile=gateway_profile, expiry__gte=timezone.now(),
-									enrollment_type__service__name=payload['SERVICE'])
+									session_subscription_type__service__name=payload['SERVICE'])
 			session_subscription_list.update(status=SessionSubscriptionStatus.objects.get(name='ACTIVE'), last_access=timezone.now())
 
 			payload['response'] = 'Session Subscription Renewed'
