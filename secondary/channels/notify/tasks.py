@@ -477,6 +477,38 @@ class System(Wrappers):
 			lgr.info("Error on Session Subscription Details: %s" % e)
 		return payload
 
+	def stop_session_subscription(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			session_subscription_list = SessionSubscription.objects.filter(gateway_profile=gateway_profile, expiry__gte=timezone.now(),
+									enrollment_type__service__name=payload['SERVICE'])
+			session_subscription_list.update(status=SessionSubscriptionStatus.objects.get(name='INACTIVE'), last_access=timezone.now())
+
+			payload['response'] = 'Session Subscription Stopped'
+			payload['response_status'] = '00'
+
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Stopping session subscription: %s" % e)
+		return payload
+
+	def renew_session_subscription(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+
+			session_subscription_list = SessionSubscription.objects.filter(gateway_profile=gateway_profile, expiry__gte=timezone.now(),
+									enrollment_type__service__name=payload['SERVICE'])
+			session_subscription_list.update(status=SessionSubscriptionStatus.objects.get(name='ACTIVE'), last_access=timezone.now())
+
+			payload['response'] = 'Session Subscription Renewed'
+			payload['response_status'] = '00'
+
+		except Exception as e:
+			payload['response_status'] = '96'
+			lgr.info("Error on Renewing session subscription: %s" % e)
+		return payload
+
 	def update_session_subscription(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
