@@ -129,7 +129,7 @@ class PurchaseOrder(models.Model):
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
 	outgoing_payment = models.ForeignKey(Outgoing, null=True, blank=True, on_delete=models.CASCADE)
 	def __str__(self):
-		return u'%s %s' % (self.reference, self.status.name)
+		return u'%s %s %s' % (self.id, self.reference, self.status.name)
 	def cart_item_list(self):
 		return "\n".join([a.product_item.name for a in self.cart_item.all()])
 

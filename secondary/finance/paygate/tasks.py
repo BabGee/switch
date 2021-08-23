@@ -335,6 +335,8 @@ class System(Wrappers):
 			if 'ext_product_id' in payload.keys():
 				remittance_product = remittance_product.filter(ext_product_id=payload['ext_product_id'])
 
+			lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
+
 			if remittance_product.exists():
 				product = remittance_product.first()
 
