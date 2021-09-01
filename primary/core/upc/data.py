@@ -5,7 +5,7 @@ import logging
 lgr = logging.getLogger('primary.core.upc')
 
 class Data:
-	def purchases_summary(self, payload, gateway_profile, profile_tz, data):
+	def get_points_awarded(self, payload, gateway_profile, profile_tz, data):
 		params = {}
 		params['cols'] = []
 
@@ -45,7 +45,7 @@ class Data:
 		params['rows'] = [item]       
 
 		return params,max_id,min_id,ct,push
-    
+
 	def get_successful_referrals(self, payload, gateway_profile, profile_tz, data):
 		params = {}
 		params['cols'] = []
@@ -65,7 +65,8 @@ class Data:
 
 		params['rows'] = [item]       
 
-		return params,max_id,min_id,ct,push
+		return params,max_id,min_id,ct,push    
+
     
 	def get_refferal_earnings(self, payload, gateway_profile, profile_tz, data):
 		params = {}
@@ -96,7 +97,29 @@ class Data:
 				  {"label": "selectValue", "type": "string"}, {"label": "description", "type": "string"},
 				  {"label": "color", "type": "string"}]
 
-
-		params['cols'].append({"label": 'January', "type": "string", "value": })
+		item = {}
+		item['count'] = 1000
+		params['cols'] = [item]
 
 		return params
+
+	def points_awarded(self, payload, gateway_profile, profile_tz, data):
+		params = {}
+		params['cols'] = []
+
+		params['data'] = []
+		params['lines'] = []
+
+		max_id = 0
+		min_id = 0
+		ct = 0
+		push = {}
+        
+		lgr.info('Started purchases_summary')
+        
+		item1 = [23, 56, 74, 65, 63]
+		item2 = [36, 34, 47, 55, 32]
+        
+		params['rows'] = [item1, item2]       
+
+		return params,max_id,min_id,ct,push    
