@@ -1,0 +1,277 @@
+{% extends 'iiceditor/base.html' %}
+{% block content %}
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"
+          rel="stylesheet"/>
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2-bootstrap.css" />
+
+
+    <ol class="breadcrumb">
+
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/">Gateways</a></li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/">{{ gateway.name }} </a></li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/">Page Groups</a>
+        <li class="breadcrumb-item"><a
+                href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/">{{ page_group.name }}</a>
+        </li>
+        <li class="breadcrumb-item"><a
+                href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/">Pages</a></li>
+        <li class="breadcrumb-item"><a
+                href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a>
+        </li>
+        <li class="breadcrumb-item "><a
+                href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">Page
+            Input Groups</a></li>
+        <li class="breadcrumb-item "><a
+                href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/">{{ page_input_group.name }}</a>
+        </li>
+        <li class="breadcrumb-item active"> Page Inputs</li>
+
+
+    </ol>
+
+
+
+    <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/order/">Order</a>
+
+    <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/create/">Add
+        New</a>
+    <ul>
+        {% for page_input in page_inputs %}
+            <li>
+                <h3 class="editable"
+                     data-type="text"
+                     data-name="page_input"
+                     data-pk="{{ page_input.pk }}"
+                     data-url="/iic_editor/page_inputs/">{{ page_input.page_input }}</h3>
+                <p>
+
+
+                    page <strong class="editable"
+                                 data-type="text"
+                                 data-name="page"
+                                 data-pk="{{ page_input.pk }}"
+                                 data-url="/iic_editor/page_inputs/">{{ page_input.page.pk }}</strong> |
+
+                    page input group <strong class="editable"
+                                 data-type="text"
+                                 data-name="page_input_group"
+                                 data-pk="{{ page_input.pk }}"
+                                 data-url="/iic_editor/page_inputs/">{{ page_input.page_input_group.pk }}</strong>
+                <br>
+                    <strong>{{ page_input.input_variable.variable_type }}</strong> |
+                    pk <strong>{{ page_input.pk }}</strong> |
+                    input_variable_pk <strong>{{ page_input.input_variable.pk }}</strong> |
+                    min  <strong>{{ page_input.input_variable.validate_min }}</strong> |
+                    max <strong>{{ page_input.input_variable.validate_max }}</strong> |
+                    name <strong class="editable"
+                                 data-type="text"
+                                 data-name="name"
+                                 data-pk="{{ page_input.input_variable.pk }}"
+                                 data-url="/iic_editor/input_variables/">{{ page_input.input_variable.name }}</strong> |
+                    default_value <strong class="editable"
+                                 data-type="text"
+                                 data-name="default_value"
+                                 data-pk="{{ page_input.input_variable.pk }}"
+                                 data-url="/iic_editor/input_variables/">{{ page_input.input_variable.default_value }}</strong> |
+
+                {% if page_input.input_variable.service.name == 'DATA SOURCE' %}
+                    DATA SOURCE
+                    <a href="/iic_editor/dsc/{{ page_input.input_variable.default_value }}/"><strong>Edit</strong></a> |
+                {% else %}
+                    service <strong>{{ page_input.input_variable.service.name }}</strong>
+                    <a href="/admin/iiceditor/iiceditor/4/{{page_input.input_variable.service.name }}">get_section</a>  |
+                {% endif %}
+
+                    level <strong class="editable"
+                                 data-type="text"
+                                 data-name="item_level"
+                                 data-pk="{{ page_input.pk }}"
+                                 data-url="/iic_editor/page_inputs/">{{ page_input.item_level }}</strong> |
+                    icon <strong>{{ page_input.icon }}</strong> |
+                    section_size <strong class="editable"
+                                 data-type="text"
+                                 data-name="section_size"
+                                 data-pk="{{ page_input.pk }}"
+                                 data-url="/iic_editor/page_inputs/">{{ page_input.section_size }}</strong>
+
+                  <br>
+                        Access Levels<br>
+                            <a href="#"
+                               class="page_input_access_level"
+                               data-type="checklist"
+                               data-pk="{{ page_input.pk }}"
+                               data-name="access_levels"
+                               data-value="{% for cat in page_input.access_level.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                               data-url="/iic_editor/page_inputs/"
+                               data-title="Select Access Levels"></a>
+
+                    <br>
+                    Gateways {% for cat in page_input.gateway.all %}{{ cat.name }},{% endfor %}
+{#                            <a href="#"#}
+{#                               class="page_input_gateway"#}
+{#                               data-type="checklist"#}
+{#                               data-pk="{{ page_input.pk }}"#}
+{#                               data-name="gateways"#}
+{#                               data-value="{% for cat in page_input.gateway.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"#}
+{#                               data-url="/iic_editor/page_inputs/"#}
+{#                               data-title="Select gateways"></a>#}
+{#                #}
+                <br>
+                    Channels {% for cat in page_input.channel.all %}{{ cat.name }},{% endfor %}
+
+
+                           <br>     Input Variable Usage Count : <strong>{{ page_input.input_variable.pageinput_set.count }}</strong>
+
+                    <br>
+                Triggers {{ page_input.trigger_list }}
+
+
+                                            <a data-url="/iic_editor/page_inputs/"
+                                               class="page_input_trigger"
+                                               href="#!"
+                                               data-type="select2"
+                                               data-pk="{{ page_input.pk }}"
+                                               data-name="trigger"
+                                               data-title="Triggers">X {% for trigger in page_input.trigger.all %}{{ trigger.name }}{% if not forloop.last %},{% endif %}{% endfor %}</a>
+
+
+                <br>
+                    <a target="_blank" href="/admin/iic/pageinput/{{ page_input.pk }}/change/">Edit</a> |
+                    <a target="_blank" href="/admin/iic/inputvariable/{{ page_input.input_variable.pk }}/change/">Edit Input Variable</a> |
+                    <a href="#" class="visibility-toggle" id="{{ page_input.pk }}">
+                        {% if page_input.page_input_status.name == 'ACTIVE' %}Hide{% else %}Show{% endif %}</a> |
+                    <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/{{ page_input.pk }}/copy/">Template </a>
+                </p>
+            </li>
+        {% empty %}
+            <li>No items</li>
+        {% endfor %}
+
+    </ul>
+
+
+{% endblock %}
+{% block script %}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.4/select2.js"></script>
+    <script type="text/javascript">
+
+        $.fn.editable.defaults.mode = 'inline';
+        $.fn.editableform.buttons = '' +
+            '<button type="submit" class="btn btn-info editable-submit"><i class="fa fa-fw fa-check"></i></button>' +
+            '<button type="button" class="btn editable-cancel"><i class="fa fa-fw fa-remove"></i></button>';
+
+        $.fn.editable.defaults.ajaxOptions = {
+            type: "POST",
+            beforeSend: function (xhr, settings) {
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+
+            }
+        };
+
+        $(document).ready(function () {
+            $('.editable').editable();
+            $('.page_input_access_level').editable({
+                source: [
+                    {value: 1, text: 'CUSTOMER'},
+                    {value: 3, text: 'SYSTEM'},
+                    {value: 7, text: 'MANAGER'},
+                    {value: 8, text: 'OPERATOR'},
+                    {value: 11, text: 'ADMINISTRATOR'},
+                    {value: 14, text: 'SUPERVISOR'},
+                    {value: 15, text: 'SUPER ADMINISTRATOR'},
+                    {value: 16, text: 'API USER'},
+                    {value: 17, text: 'SALES'},
+                    {value: 18, text: 'DELIVERY'},
+                    {value: 19, text: 'AGENT'},
+                    {value: 20, text: 'SUPER AGENT'}
+                ]
+            });
+            $('.page_input_trigger').editable({
+                {#inputclass: 'input-large',#}
+                select2: {
+                    tags: {{trigger_list|safe}}, // ['html', 'javascript', 'css', 'ajax']
+                    tokenSeparators: [",", " "]
+                }
+            });
+        });
+    </script>
+    <script type="text/javascript">
+        jQuery(document).ready(function () {
+            function toggleVisibility(page_input) {
+                var btn = $('#' + page_input);
+                $.ajax({
+                    url: '/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/' + page_input + '/',
+                    beforeSend: function (xhr, settings) {
+                        function getCookie(name) {
+                            var cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                var cookies = document.cookie.split(';');
+                                for (var i = 0; i < cookies.length; i++) {
+                                    var cookie = jQuery.trim(cookies[i]);
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+
+                        function csrfSafeMethod(method) {
+                            // these HTTP methods do not require CSRF protection
+                            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                        }
+
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                        }
+                        // todo btn.html('<img src="/static/loader.gif">');
+                    },
+                    data: {"action": 'toggle'},
+                    type: 'POST',
+                    success: function (data) {
+                        //console.log(data);
+                        btn.html(data.status);
+
+                    }
+                });
+            }
+
+            $('.visibility-toggle').on('click', function (e) {
+                e.preventDefault();//
+                toggleVisibility($(this).attr('id'))
+
+            });
+
+        });
+    </script>
+{% endblock %}

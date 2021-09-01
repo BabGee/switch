@@ -7,3 +7,12 @@
 [submodule "mipay"]
 	path = products/mipay
 	url = https://github.com/interintel-technologies/switch.products.mipay.git
+[submodule "products/mipay"]
+	path = products/mipay
+	url = https://github.com/interintel-technologies/switch.products.mipay.git
+[submodule "products/nenasasa"]
+	path = products/nenasasa
+	url = https://github.com/interintel-technologies/switch.products.nenasasa.git
+[submodule "products/nikobizz"]
+	path = products/nikobizz
+	url = https://github.com/interintel-technologies/switch.products.nikobizz.git

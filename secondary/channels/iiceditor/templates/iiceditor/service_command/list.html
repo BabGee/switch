@@ -1,0 +1,47 @@
+<ul id="list" class="list-group">
+
+  {% for service_command in service_commands %}
+    <li id="service_command-li-{{ service_command.pk }}" class="list-group-item {% if service_command.status.name == 'ENABLED' %}{% else %}list-group-item-danger{% endif %}">
+    <span class="grippy"></span>
+       <span class="badge badge-primary badge-pill">{{ service_command.level }} </span>
+        <strong>{{ service_command.node_system }}</strong>
+       {{ service_command.command_function }}
+
+        {% if service_command.trigger.exists %}
+            {% for trigger in service_command.trigger.all %}
+                <span class="badge badge-dark">{{ trigger.name }}</span>
+            {% endfor %}
+        {% endif %}
+
+    {% if service_command.node_system.name == 'NOTIFY'%}
+
+					{% if service_command.command_function == 'get_notification' or service_command.command_function == 'get_sms_notification' or service_command.command_function == 'get_email_notification' %}
+        <a target="_blank" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service_command.service.name }}/notify/">Notification</a>
+					{% endif %}
+
+    {% elif service_command.node_system.name == 'IIC' and service_command.command_function == 'get_section' %}
+
+        <a target="_blank" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service_command.service.name }}/iic/">Section</a>
+
+    {% elif service_command.node_system.name == 'IIC' and service_command.command_function == 'get_interface' %}
+
+        <a target="_blank" href="/iic_editor/gateways/{{ gateway.pk }}/{{ service_command.service.name }}/iic/">Interface</a>
+
+
+    {% endif %}
+
+
+
+    <span class="fa fa-code view-code"
+          data-node_system="{{service_command.node_system.pk}}"
+          data-service_command="{{ service_command.pk }}"></span>
+
+    <a href="/admin/bridge/servicecommand/{{ service_command.pk }}/change/" target="_blank">S</a>
+
+    </li>
+
+
+
+  {% endfor %}
+</ul>
+

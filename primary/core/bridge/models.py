@@ -465,3 +465,22 @@ class GatewayProfileChangeActivity(models.Model):
 		return u'%s %s' % (self.change, self.gateway_profile)
 
 
+class QuicksetupServices(models.Model):
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __str__(self):
+		return u'%s' % (self.name)
+    
+class NetworkProvider(models.Model):
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __str__(self):
+		return u'%s' % (self.name)    
+    
+class AccountType(models.Model):
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __str__(self):
+		return u'%s' % (self.name)
+    
+    

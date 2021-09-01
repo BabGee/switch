@@ -77,6 +77,7 @@ primary = [
 secondary = [
     'secondary.channels.vcs',
     'secondary.channels.iic',
+    'secondary.channels.iiceditor',
     'secondary.channels.dsc',
     'secondary.channels.notify',
     'secondary.erp.pos',

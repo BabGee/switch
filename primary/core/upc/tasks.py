@@ -170,6 +170,15 @@ class Wrappers:
 		if 'last_name' in payload.keys(): user.last_name = payload['last_name']
 		user.save()
 
+		if 'Network Provider' in payload.keys() and 'frequent number' in payload.keys() and 'airtime' in payload.keys() \
+        and 'payment_method' in payload.keys():
+			airtime_preferences = AirtimeQuickServicePreference(network_provider=payload['Network Provider'],\
+                                                         frequent_number=payload['frequent number'], \
+                                                         frequent_airtime=payload['airtime'], \
+                                                         payment_mode=payload['payment_method'])
+          
+			airtime_preferences.save()        
+        
 		profile = Profile.objects.get(id=user.profile.id) #User is a OneToOne field
 		if 'middle_name' in payload.keys(): profile.middle_name = payload['middle_name']
 		if 'national_id' in payload.keys(): profile.national_id = payload['national_id'].replace(' ','').strip()
@@ -1479,7 +1488,7 @@ class System(Wrappers):
 			lgr.info('Error on change MSISDN: %s' % e)
 			payload['response_status'] = '96'
 		return payload
-
+ 
 
 	def validate_institution(self, payload, node_info):
 		try:
@@ -2763,6 +2772,128 @@ class System(Wrappers):
 			lgr.info("Error on Creating User Profile: %s" % e,exc_info=True)
 		return payload
 
+	def create_user_social_profile(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			host = Host.objects.get(host=payload['gateway_host'], status__name='ENABLED')
+
+			profile_error = None
+			existing_gateway_profile, payload, profile_error = self.profile_capture(gateway_profile, payload, profile_error)
+			existing_gateway_profile, payload, profile_error = self.profile_state(existing_gateway_profile, payload, profile_error)
+
+			if profile_error: pass
+			elif existing_gateway_profile.exists(): pass
+
+			else:
+				def createUsername(original):
+					u = User.objects.filter(username__iexact=original)
+					if u.exists():
+						chars = string.ascii_letters + string.digits
+						rnd = random.SystemRandom()
+						append_char = ''.join(rnd.choice(chars) for i in range(1,6))
+						new_original = original+append_char
+						return createUsername(new_original)
+					else:
+						return original.lower()
+
+
+				username = ''
+				email = ''
+				if 'national_id' in payload.keys():
+					username = createUsername(payload["national_id"].replace(' ','').strip())
+				elif 'passport_number' in payload.keys():
+					username = createUsername(payload["passport_number"].replace(' ','').strip())
+				elif 'email' in payload.keys() and self.validateEmail(payload["email"].strip()):
+					username = createUsername(payload["email"].split('@')[0])
+					email = payload['email'].strip()
+				elif 'msisdn' in payload.keys() and self.get_msisdn(payload):
+					#username = '%s' % (time.time()*1000)
+					username = '%s' % self.get_msisdn(payload)
+					username = createUsername(username)
+
+				payload['username'] = username
+				username = username.lower()
+				user = User.objects.create_user(username, email,'')#username,email,password
+				lgr.info("Created User: %s" % user)
+
+				chars = string.ascii_letters + string.punctuation + string.digits
+				rnd = random.SystemRandom()
+				api_key = ''.join(rnd.choice(chars) for i in range(10))
+
+				#Create co-ordinates if dont exist
+				lng = payload['lng'] if 'lng' in payload.keys() else 0.0
+				lat = payload['lat'] if 'lat' in payload.keys() else 0.0
+				trans_point = Point(float(lng), float(lat))
+
+				profile_status = ProfileStatus.objects.get(name="REGISTERED")
+				profile = Profile(api_key=base64.urlsafe_b64encode(api_key.encode()).decode('utf-8'),timezone=gateway_profile.user.profile.timezone,\
+					language=gateway_profile.user.profile.language,geometry=trans_point,
+					user=user)
+				#profile.status = profile_status
+				profile.save()
+				user, payload = self.profile_update(user, payload)
+
+				create_gateway_profile = GatewayProfile(user=user, gateway=gateway_profile.gateway, status=profile_status)
+
+				if "msisdn" in payload.keys() and self.get_msisdn(payload):
+					msisdn = self.get_msisdn(payload)
+					try:msisdn = MSISDN.objects.get(phone_number=msisdn)
+					except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
+					if create_gateway_profile.msisdn in [None,'']:
+						create_gateway_profile.msisdn = msisdn
+				if "access_level_id" in payload.keys() and create_gateway_profile.institution in [None,'']:
+					access_level = AccessLevel.objects.get(id=payload["access_level_id"])
+					if 'institution_id' in payload.keys():
+						create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
+					elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
+						create_gateway_profile.institution = gateway_profile.institution 
+				elif "role_id" in payload.keys() and create_gateway_profile.institution in [None,'']:
+					role = Role.objects.get(id=payload["role_id"])
+					access_level = role.access_level
+					create_gateway_profile.role = role
+					if 'institution_id' in payload.keys():
+						create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
+					elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
+						create_gateway_profile.institution = gateway_profile.institution 
+				elif "access_level" in payload.keys() and create_gateway_profile.institution in [None,'']:
+					access_level = AccessLevel.objects.get(name=payload["access_level"])
+					if 'institution_id' in payload.keys():
+						create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
+					elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
+						create_gateway_profile.institution = gateway_profile.institution 
+				elif "role" in payload.keys() and create_gateway_profile.institution in [None,'']:
+					role = Role.objects.get(gateway=gateway_profile.gateway,name=payload["role"])
+					access_level = role.access_level
+					create_gateway_profile.role = role
+					if 'institution_id' in payload.keys():
+						create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
+					elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
+						create_gateway_profile.institution = gateway_profile.institution 
+
+				else:
+					access_level = AccessLevel.objects.get(name="CUSTOMER")
+
+				'''
+				if create_gateway_profile.access_level in [None,''] or (create_gateway_profile.access_level not in \
+				 [None,''] and create_gateway_profile.access_level.hierarchy>access_level.hierarchy):
+					create_gateway_profile.access_level = access_level
+				'''
+				if access_level.name == 'SYSTEM': create_gateway_profile.access_level = AccessLevel.objects.get(name="CUSTOMER")
+				else: create_gateway_profile.access_level = access_level
+				#if create_gateway_profile.created_by in [None,'']:create_gateway_profile.created_by = gateway_profile.user.profile 
+				create_gateway_profile.save()
+
+				payload["profile_id"] = create_gateway_profile.user.profile.id
+				payload['response'] = 'User Profile Created'
+				payload['response_status'] = '00'
+				payload['session_gateway_profile_id'] = create_gateway_profile.id
+
+		except Exception as e:
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+			lgr.info("Error on Creating User Profile: %s" % e,exc_info=True)
+		return payload    
+    
 	def get_gateway_profile(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
@@ -2909,13 +3040,13 @@ class System(Wrappers):
 
 			payload['oauth_token_verified'] = False
 
-			if 'facebook_access_token' in payload.keys():
+			if 'access_token' in payload.keys():
 				# verify token and retrieve profile from facebook
 				# requires pip install facebook-sdk==3.0.0
 				import facebook
-				access_token = payload['facebook_access_token']
+				access_token = payload['access_token']
 				graph = facebook.GraphAPI(access_token=access_token, version="3.0")
-				profile = graph.get_object(id='me', fields='name,email')
+				profile = graph.get_object(id='me', fields='name,email')                
 
 				payload['full_name'] = profile['name']
 				payload['email'] = profile['email']
@@ -2926,14 +3057,14 @@ class System(Wrappers):
 				payload['response'] = 'Social Profile Facebook Verified'
 
 
-			elif 'google_access_token' in payload.keys():
+			elif 'Register Google' in payload.keys():
 				# verify token and retrieve profile from google
 				# requires pip install google-auth==1.5.1
 				from google.oauth2 import id_token
 				from google.auth.transport import requests
 
 				# (Receive token by HTTPS POST)
-				access_token = payload['google_access_token']
+				access_token = payload['google_client_secret']
 				try:
 					# Specify the CLIENT_ID of the app that accesses the backend:
 					idinfo = id_token.verify_oauth2_token(access_token, requests.Request(), payload['google_client_id'])
@@ -2984,10 +3115,10 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 			if 'oauth_token_verified' in payload.keys() and payload['oauth_token_verified']:
-				# Only activate initial registrations
+				# Only activate initial registrations                
 				if session_gateway_profile.status.name == 'REGISTERED':
 					session_gateway_profile.status = ProfileStatus.objects.get(name='ACTIVATED')
-					session_gateway_profile.save()
+					session_gateway_profile.save()                   
 
 			else:
 				# invalid service command usage
@@ -3091,7 +3222,7 @@ class System(Wrappers):
 		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
-			lgr.info("Error on getting session gateway Profile: %s" % e)
+			lgr.info("Error on getting session ayway Profile: %s" % e)
 		return payload
 
 	def login(self, payload, node_info):

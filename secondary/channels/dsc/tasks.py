@@ -1711,7 +1711,83 @@ class Wrappers:
 		except Exception as e:
 			lgr.info('Error on purchases: %s' % e)
 		return params
+    
+	def get_points_redeemed(self, payload, gateway_profile, profile_tz, data):
+		params = {}
+		params['rows'] = []
+		params['cols'] = [{"label": "index", "type": "string"}, {"label": "name", "type": "string"},
+				  {"label": "image", "type": "string"}, {"label": "checked", "type": "string"},
+				  {"label": "selectValue", "type": "string"}, {"label": "description", "type": "string"},
+				  {"label": "color", "type": "string"}]
 
+
+		try:
+			order = PurchaseOrder.objects.using('read').filter(cart_item__product_item__institution=gateway_profile.institution). \
+			values('status__name', 'cart_item__currency__code'). \
+			annotate(status_count=Count('status__name'), total_amount=Sum('cart_item__total'))
+
+
+			for o in order:
+				item = {}
+				item['name'] = o['status__name']
+				item['description'] = '%s %s' % (o['cart_item__currency__code'], '{0:,.2f}'.format(o['total_amount']))
+				item['count'] = '%s' % '{0:,.2f}'.format(o['status_count'])
+				params['rows'].append(item)
+		except Exception as e:
+			lgr.info('Error on purchases: %s' % e)
+		return params
+    
+	def get_successful_referrals(self, payload, gateway_profile, profile_tz, data):
+		params = {}
+		params['rows'] = []
+		params['cols'] = [{"label": "index", "type": "string"}, {"label": "name", "type": "string"},
+				  {"label": "image", "type": "string"}, {"label": "checked", "type": "string"},
+				  {"label": "selectValue", "type": "string"}, {"label": "description", "type": "string"},
+				  {"label": "color", "type": "string"}]
+
+
+		try:
+			order = PurchaseOrder.objects.using('read').filter(cart_item__product_item__institution=gateway_profile.institution). \
+			values('status__name', 'cart_item__currency__code'). \
+			annotate(status_count=Count('status__name'), total_amount=Sum('cart_item__total'))
+
+
+			for o in order:
+				item = {}
+				item['name'] = o['status__name']
+				item['description'] = '%s' % ('{0:,.2f}'.format(o['total_amount']))
+				item['count'] = '%s' % '{0:,.2f}'.format(o['status_count'])
+				params['rows'].append(item)
+		except Exception as e:
+			lgr.info('Error on purchases: %s' % e)
+		return params     
+
+	def get_refferal_earnings(self, payload, gateway_profile, profile_tz, data):
+		params = {}
+		params['rows'] = []
+		params['cols'] = [{"label": "index", "type": "string"}, {"label": "name", "type": "string"},
+				  {"label": "image", "type": "string"}, {"label": "checked", "type": "string"},
+				  {"label": "selectValue", "type": "string"}, {"label": "description", "type": "string"},
+				  {"label": "color", "type": "string"}]
+
+
+		try:
+			order = PurchaseOrder.objects.using('read').filter(cart_item__product_item__institution=gateway_profile.institution). \
+			values('status__name', 'cart_item__currency__code'). \
+			annotate(status_count=Count('status__name'), total_amount=Sum('cart_item__total'))
+
+
+			for o in order:
+				item = {}
+				item['name'] = o['status__name']
+				item['description'] = '%s %s' % (o['cart_item__currency__code'], '{0:,.2f}'.format(o['total_amount']))
+				item['count'] = '%s' % '{0:,.2f}'.format(o['status_count'])
+				params['rows'].append(item)
+		except Exception as e:
+			lgr.info('Error on purchases: %s' % e)
+		return params
+    
+    
 	@transaction.atomic
 	def bid_ranking(self,payload,gateway_profile,profile_tz,data):
 
@@ -2196,7 +2272,7 @@ class Wrappers:
 						#responseParams = func(payload, node_info)
 						params,max_id,min_id,t_count,push[d.data_name] = func(payload, gateway_profile, profile_tz, d)
 
-						#lgr.info('After Call')
+						lgr.info('After Call: %s, %s, %s, %s, %s,' %(params, max_id, min_id, t_count, push))
 						'''
 						func = getattr(self, d.function.strip())
 						params,max_id,min_id,t_count,push[d.data_name] = func(payload, gateway_profile, profile_tz, d)
@@ -2295,6 +2371,7 @@ class Wrappers:
 		#lgr.info(2058)
 		#lgr.info(cols)
 		#lgr.info(rows)
+		lgr.info('Before Return Call: %s, %s, %s, %s, %s,' %(data,min_id,max_id,t_count, push))        
 		return cols,rows,lines,groups,data,min_id,max_id,t_count, push
 
 

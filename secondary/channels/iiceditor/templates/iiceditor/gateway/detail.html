@@ -1,0 +1,80 @@
+{% extends 'iiceditor/gateway/layout.html' %}
+{% block tab %}
+
+    <ol class="breadcrumb">
+
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/">Gateways</a></li>
+        {#<a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/"></a>#}
+        <li class="breadcrumb-item active">{{ gateway.name }}</li>
+    </ol>
+
+    <div class="row">
+
+        <div class="col-md-12">
+
+            <img src="{% if gateway.logo %}{{ gateway.logo.url }}{% endif %}"
+                 alt="Gateway Logo"
+                 class="img-thumbnail"
+                 style="max-width: 200px">
+
+
+            <div><strong>Name</strong> {{ gateway.name }} </div>
+            <div><strong>TagLine</strong> {{ gateway.tagline }} </div>
+
+            <div>
+                <strong>Default color</strong>
+                <span class="badge badge-pill badge-primary" style="background-color: {{ gateway.default_color }}">
+                Default Color
+            </span>
+
+            </div>
+            <div>
+                <strong>Primary color</strong>
+                <span class="badge badge-pill badge-primary" style="background-color: {{ gateway.primary_color }}">
+                Primary Color
+            </span>
+
+            </div>
+            <div>
+                <strong>Secondary color</strong>
+                <span class="badge badge-pill badge-primary" style="background-color: {{ gateway.secondary_color }}">
+                Secondary Color
+            </span>
+
+            </div>
+            <div>
+                <strong>Accent color</strong>
+                <span class="badge badge-pill badge-primary" style="background-color: {{ gateway.accent_color }}">
+                Accent Color
+            </span>
+
+            </div>
+
+            <div>
+                <strong>Hosts</strong>
+
+                <ul>
+                    {% for host in gateway.default_host.all %}
+                        <li>
+                            {{ host }}
+                            <a href="https://{{ host }}" target="_blank">Https</a>
+                            <a href="http://{{ host }}" target="_blank">Http</a>
+                        </li>
+                    {% endfor %}
+
+
+                </ul>
+
+            </div>
+
+
+
+        </div>
+
+        <a href="/admin/administration/gateway/{{ gateway.pk }}/change/">Edit</a>
+
+    </div>
+
+
+
+{% endblock %}

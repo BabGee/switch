@@ -1,0 +1,20 @@
+{% extends 'iiceditor/base.html' %}
+
+{% block content %}
+    
+    <ol class="breadcrumb">
+  <li class="breadcrumb-item active">Gateways</li>
+</ol>
+
+<ul>
+    {% for gateway in gateways %}
+
+            <li> <a href="{{ gateway.pk }}/">{{ gateway }}</a></li>
+{% empty %}
+        <li>No items</li>
+    {% endfor %}
+
+
+
+</ul>
+{% endblock %}

@@ -1,0 +1,408 @@
+{% extends 'iiceditor/base.html' %}
+{% block content %}
+    <h5>Create New Page Input</h5>
+
+    <h6>{{ page_input_group.name }}</h6>
+
+
+
+    <form method="POST" class="post-form d-none">{% csrf_token %}
+        <div class="form-group row">
+
+            <label>
+                Item Level <input type="number" name="item_level" value="0">
+            </label>
+
+        </div>
+        <div class="form-group row">
+            <label for="inputEmail3" class="col-sm-2 col-form-label">Choose Variable Type</label>
+            <div class="col-sm-10">
+
+                <select id="variable_type" name="input_variable_variable_type" class="form-control">
+
+                    {% for variable_type in variable_types %}
+                        <option value="{{ variable_type.name }}"
+                                data-pk="{{ variable_type.pk }}">{{ variable_type.name }}</option>
+                    {% endfor %}
+
+                    <option value="new">Create New</option>
+                </select>
+            </div>
+        </div>
+
+
+        <div id="otherServer">
+            <p>Server:
+                <input type="text" name="server_name"/>
+            </p>
+            <p>Port:
+                <input type="text" name="port_no"/>
+            </p>
+        </div>
+
+        <div class="form-group row" id="text_input">
+            <label for="inputPassword3" class="col-sm-2 col-form-label">Form Name</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" id="inputPassword3" placeholder="Enter form Name">
+            </div>
+        </div>
+
+
+        <!-- TEXT VIEW -->
+        <div class="form-group row" id="text_view">
+            <label for="text_view_input" class="col-sm-2 col-form-label">Display Text</label>
+            <div class="col-sm-10">
+                <input type="text" id="text_view_input" class="form-control" placeholder="Enter text to display">
+            </div>
+            <div class="col-sm-10">
+                S <input type="number" min="1" max="24" value="24">
+                M <input type="number" min="1" max="24" value="24">
+                L <input type="number" min="1" max="24" value="24">
+            </div>
+        </div>
+
+
+        <!-- SERVICE BUTTON -->
+        <div class="form-group row" id="service_button">
+            <label for="text_view_input" class="col-sm-2 col-form-label">Title</label>
+            <div class="col-sm-10">
+                <input name="page_input" type="text" id="service_button_title" class="form-control" placeholder="Label">
+            </div>
+
+            <label for="text_view_input" class="col-sm-2 col-form-label">Service</label>
+            <div class="col-sm-10">
+                <input name="input_variable_service" type="text" id="service_button_service" class="form-control"
+                       placeholder="Service">
+            </div>
+
+
+            <div class="col-sm-10">
+                S <input type="number" min="1" max="24" value="24">
+                M <input type="number" min="1" max="24" value="24">
+                L <input type="number" min="1" max="24" value="24">
+            </div>
+        </div>
+        <!-- END SERVICE BUTTON -->
+
+
+        <!-- DROPDOWN SELECT -->
+        <div class="form-group row" id="dropdown_select">
+
+            <label for="text_view_input" class="col-sm-2 col-form-label">Title</label>
+
+            <div class="col-sm-10">
+                <input name="page_input"
+                       type="text"
+                       id="dropdown_select_title"
+                       class="form-control"
+                       placeholder="Label">
+            </div>
+            <div class="col-sm-10">
+                        <input name="input_variable_default_value"
+                               type="text"
+                               id="dropdown_select_default_value"
+                               class="form-control"
+                               placeholder="Data Name">
+                    </div>
+
+            <div class="col-sm-10">
+                        <input name="input_variable_name"
+                               type="text"
+                               id="dropdown_select_name"
+                               class="form-control"
+                               placeholder="Name">
+                    </div>
+
+            <input name="input_variable_service"
+                   type="hidden"
+                   value="DATA SOURCE"
+                   id="dropdown_select_service"
+                   class="form-control">
+
+
+        </div>
+        <!-- END DROPDOWN SELECT -->
+
+
+        <!-- PASSWORD INPUT -->
+        <!--
+                SUBMIT
+        DATE
+        HYPERLINK
+        TEXT AREA
+        NUMBER INPUT
+        IMAGE INPUT
+        LIST SELECT
+        TIME
+        GROUPED SELECT
+        DROPDOWN SELECT
+        IMAGE ELEMENT
+        GROUPED MULTI SELECT
+        TOGGLE INPUT
+        MSISDN INPUT
+        STATIC DROPDOWN SELECT
+        FILE INPUT
+        CVC INPUT
+        CC INPUT
+        CC EXPIRATION
+        STATIC RADIO GROUP
+        SLIDESHOW ELEMENT
+        SERVICE BUTTON
+        SUMMARY BOXES
+        COLOR INPUT
+        EMAIL INPUT
+        MARKUP ELEMENT
+        SHOP PRODUCTS MENU
+        SHOP PRODUCTS SECTION
+        SHOPPING CART
+        SHOPPING CART BTN
+        PRODUCT ITEM IMAGES
+        REMOVE SUBMIT
+        TEXT INPUT
+        INPUT SUBMIT
+        PAYMENT OPTIONS
+        LOCATION PICKER
+        ITEM SUBMIT
+        POS CART
+        POS CART BUTTON -->
+
+        <div class="form-group row">
+            <div class="col-sm-10">
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+
+
+    </form>
+
+    <elements-editor></elements-editor>
+
+{% endblock %}
+{% block script %}
+ <script src="https://unpkg.com/@webcomponents/webcomponentsjs@next/webcomponents-loader.js"></script>
+    <script type="module">
+    import {LitElement, html} from 'https://unpkg.com/@polymer/lit-element@latest/lit-element.js?module';
+
+    class Editor extends LitElement {
+
+      static get properties() {
+          return {
+              variableTypes:Array,
+
+        }
+      }
+
+
+      _render({variableTypes,module,model}) {
+
+        return html`
+            <select on-change="${(e) => this._onVariableTypeChange(e)}">
+                <option>-----</option>
+                ${variableTypes.map((i) => html`
+                <option  value=${i.name} id=${i.id} selected?="${i['selected']}" >${i['name']}</option>`)}
+            </select>
+
+            <div id=editor>
+
+            <element-editor></element-editor>
+
+
+            </div>
+
+
+
+       `;
+      }
+
+      constructor(){
+          super();
+          this.variableTypes = [
+              {% for variable_type in variable_types %}
+                  {'id':"{{ variable_type.id }}",'name':"{{ variable_type.name }}"},
+              {% endfor %}
+          ];
+      }
+
+      _onVariableTypeChange(e) {
+          // console.log(e);
+          let select = e.currentTarget;
+
+          let option = select.options[select.selectedIndex];
+          console.log(option);
+            //var text = e.options[e.selectedIndex].text;
+          // let field = option;
+
+        }
+
+    }
+
+    customElements.define('elements-editor', Editor);
+
+
+    class ElementEditor extends LitElement {
+
+      static get properties() {
+          return {
+              variableTypes:Array,
+              input_variable_id:Number,
+              item_level:Number,
+              input_variable_name:String,
+              input_variable_variable_type:String,
+              input_variable_validate_min:String,
+              input_variable_validate_max:String,
+              input_variable_default_value:String,
+              input_variable_service:String,
+              page_input:String,
+
+        }
+      }
+
+
+      _render({variableTypes,module,model}) {
+
+        return html`<div>
+
+    <p>
+        <label for="id_page_input">Page input:</label>
+        <input type="text" name="page_input" required id="id_page_input"
+               maxlength="200"/>
+    </p>
+    <p>
+        <label for="id_item_level">Item level:</label>
+        <input type="number" name="item_level" id="id_item_level"/>
+    </p>
+    <p>
+        <label for="id_input_variable_id">Input variable id:</label>
+        <input type="number" name="input_variable_id"
+               id="id_input_variable_id"/>
+    </p>
+    <p>
+        <label for="id_input_variable_name">Input variable name:</label>
+        <input type="text" name="input_variable_name"
+               id="id_input_variable_name"
+               maxlength="45"/>
+    </p>
+    <p>
+        <label for="id_input_variable_variable_type">Element:</label>
+        <input type="text"
+               name="input_variable_variable_type"
+               id="id_input_variable_variable_type"
+               maxlength="45"/>
+    </p>
+    <p>
+        <label for="id_input_variable_validate_min">Input variable validate min:</label>
+        <input type="text" name="input_variable_validate_min"
+               value="1"
+               id="id_input_variable_validate_min"
+               maxlength="45"/>
+    </p>
+    <p>
+
+        <label for="id_input_variable_validate_max">Input variable validate max:</label>
+        <input type="text"
+               name="input_variable_validate_max"
+               value="100"
+               id="id_input_variable_validate_max"
+               maxlength="45"/>
+    </p>
+    <p>
+        <label for="id_input_variable_default_value">Input variable default value:</label>
+        <input type="text"
+               name="input_variable_default_value"
+               id="id_input_variable_default_value"
+               maxlength="12800"/>
+    </p>
+    <p>
+        <label for="id_input_variable_service">Input variable service:</label>
+        <input type="text"
+               name="input_variable_service"
+               id="id_input_variable_service"
+               maxlength="50"/>
+    </p>
+    <div class="form-group row">
+        <div class="col-sm-10">
+            <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+    </div>
+
+</div>
+       `;
+      }
+
+      constructor(){
+          super();
+
+      }
+
+      _onVariableTypeChange(e) {
+          // console.log(e);
+          let select = e.currentTarget;
+
+          let option = select.options[select.selectedIndex];
+          console.log(option);
+            //var text = e.options[e.selectedIndex].text;
+          // let field = option;
+
+        }
+
+    }
+
+    customElements.define('element-editor', ElementEditor);
+
+
+
+    </script>
+
+    <script nomodule type="text/javascript">
+        $(document).ready(function () {
+            toggleFields(); // call this first so we start out with the correct visibility depending on the selected form values
+            // this will call our toggleFields function every time the selection value of our other field changes
+            $("#variable_type").change(function () {
+                toggleFields();
+            });
+
+        });
+
+
+        function hideExcept(x) {
+            var elements = [
+                'dropdown_select', 'service_button', 'text_input', 'otherServer', 'text_view'
+            ];
+            for (var i = 0; i < elements.length; i++) {
+                var id = '#' + elements[i];
+
+                if (elements[i] == x) {
+                    $(id).show();
+                } else {
+                    $(id).hide();
+                }
+
+            }
+
+        }
+
+        // this toggles the visibility of other server
+        function toggleFields() {
+            var selection = $("#variable_type").val();
+
+            if (selection === "new") {
+                hideExcept("otherServer");
+
+            }else if (selection === 'TEXT VIEW') {
+                hideExcept('text_view');
+
+            }else if (selection === 'TEXT INPUT') {
+                hideExcept("text_input");
+
+            }else if (selection === 'SERVICE BUTTON') {
+                hideExcept("service_button");
+
+            }else if (selection === 'DROPDOWN SELECT') {
+                hideExcept("dropdown_select");
+            }else {
+                hideExcept(undefined);
+            }
+        }
+
+    </script>
+{% endblock %}

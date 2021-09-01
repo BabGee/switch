@@ -1,0 +1,87 @@
+{% extends 'iiceditor/base.html' %}
+{% block content %}
+
+    <ol class="breadcrumb">
+
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/">Gateways</a></li>
+        {#<a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/"></a>#}
+        <li class="breadcrumb-item active">{{ gateway.name }}</li>
+    </ol>
+
+    <div class="row">
+
+        <div class="col-md-1">
+
+            <img src="{% if gateway.logo %}{{ gateway.logo.url }}{% endif %}"
+                 alt="Gateway Logo"
+                 class="img-thumbnail"
+                 style="max-width: 100px">
+
+        </div>
+        <div class="col-md-11">
+            <h4> {{ gateway.name }} </h4>
+            <h2> {{ gateway.tagline }} </h2>
+
+            <span class="badge badge-pill badge-primary" style="background-color: {{ gateway.default_color }}">
+                Default Color
+            </span>
+            <span class="badge badge-pill badge-primary" style="background-color: {{ gateway.primary_color }}">
+                Primary Color
+            </span>
+            <span class="badge badge-pill badge-primary" style="background-color: {{ gateway.secondary_color }}">
+                Secondary Color
+            </span>
+            <span class="badge badge-pill badge-primary" style="background-color: {{ gateway.accent_color }}">
+                Accent Color
+            </span>
+
+
+        </div>
+
+    </div>
+
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link " href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/">Details</a>
+        </li>
+
+
+
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
+               aria-expanded="false">Channels</a>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/HOME/interface/">Iic</a>
+                <a class="dropdown-item" href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/vcs/">Vcs</a>
+                <a class="dropdown-item" href="#">Something else here</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#">Separated link</a>
+            </div>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link " href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/gateway_profiles/">Profiles</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/institutions/">Institutions</a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/roles/">Roles</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link disabled" href="#">Disabled</a>
+        </li>
+    </ul>
+
+    {% block tab %}
+
+    {% endblock %}
+
+    <hr>
+    <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/LANDING PAGE/page_groups/">LANDING PAGE Page Groups</a>
+    <br>
+    <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/HOME/page_groups/">HOME Page Groups</a>
+
+
+{% endblock %}

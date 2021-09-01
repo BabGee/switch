@@ -1,0 +1,157 @@
+{% extends 'iiceditor/base.html' %}
+{% block content %}
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"
+          rel="stylesheet"/>
+
+    <ol class="breadcrumb">
+
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/">Gateways</a></li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/">{{ gateway.name }} </a></li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/">Page Groups</a>
+        <li class="breadcrumb-item "><a
+                href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/">{{ page_group.name }}</a>
+        </li>
+        <li class="breadcrumb-item active">Pages</li>
+
+
+    </ol>
+
+    <br>
+    <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/create/">Add New</a>
+    <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/order/">Reorder Pages</a>
+    <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/create_role/">Create Role Right</a>
+    <div class="row">
+        <div class="col-md-6">
+            <h4>Pages</h4>
+            <ul>
+                {% for page in pages %}
+
+                    <li>
+                        <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a>
+                        <a target="_blank" href="/admin/iic/page/{{ page.pk }}/change/">Edit</a>
+                        <p>
+                            pk <strong>{{ page.pk }}</strong> |
+                            <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">
+                                Page Input Groups <strong>##</strong></a>|
+                            <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/create/">
+                                New</a>|
+                        
+                            page_inputs <strong> {{ page.pageinput_set.count }} </strong> |
+                            level <strong>{{ page.item_level }}</strong>
+                            <br>
+                        Access Levels<br>
+                            <a href="#"
+                               class="page_access_level"
+                               data-type="checklist"
+                               data-pk="{{ page.pk }}"
+                               data-name="access_levels"
+                               data-value="{% for cat in page.access_level.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                               data-url="/iic_editor/pages/"
+                               data-title="Select Access Levels"></a>
+                        <br>
+                        Role Rights<br>
+                            <a href="#"
+                               class="page_role_right"
+                               data-type="checklist"
+                               data-pk="{{ page.pk }}"
+                               data-name="role_rights"
+                               data-value="{% for cat in page.roleright_set.all %}{{ cat.pk }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                               data-url="/iic_editor/pages/"
+                               data-title="Select Role Rights"></a>
+                        <br>
+
+                            <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/copy/">Use
+                                as Template </a>
+                        </p>
+                    </li>
+                {% empty %}
+                    <li>No items</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <h4>Blank Pages</h4>
+            <ul>
+                {% for page in blank_pages %}
+                    <li>
+                        <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a>
+                        <a target="_blank" href="/admin/iic/page/{{ page.pk }}/change/">Edit</a>
+                        <p>
+                            pk <strong>{{ page.pk }}</strong> |
+                            <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">
+                                Page Input Groups <strong>##</strong></a>|
+                            page_inputs <strong> {{ page.pageinput_set.count }} </strong> |
+                            level <strong>{{ page.item_level }}</strong>
+                            <br>
+                            <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/copy/">Use
+                                as Template </a>
+                        </p>
+                    </li>
+                {% empty %}
+                    <li>No items</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+{% endblock %}
+{% block script %}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+    <script type="text/javascript">
+
+        $.fn.editable.defaults.mode = 'inline';
+        $.fn.editableform.buttons = '' +
+            '<button type="submit" class="btn btn-info editable-submit"><i class="fa fa-fw fa-check"></i></button>' +
+            '<button type="button" class="btn editable-cancel"><i class="fa fa-fw fa-remove"></i></button>';
+
+        $.fn.editable.defaults.ajaxOptions = {
+            type: "POST",
+            beforeSend: function (xhr, settings) {
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+
+            }
+        };
+
+        $(document).ready(function () {
+            $('.page_access_level').editable({
+                source: [
+                    {% for access_level in all_access_levels %}
+                    {value: {{ access_level.pk }}, text: '{{ access_level.name }}'},
+                    {% endfor %}
+                ]
+            });
+
+            $('.page_role_right').editable({
+                source: [
+                    {% for role_right in all_role_rights %}
+                    {value: {{ role_right.pk }}, text: '{{ role_right.name }}'},
+                    {% endfor %}
+                ]
+            });
+        });
+    </script>
+{% endblock %}

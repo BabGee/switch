@@ -89,3 +89,6 @@ class SessionAdmin(admin.ModelAdmin):
 	list_filter = ('channel','status__name',)
 admin.site.register(Session, SessionAdmin)
 
+class AirtimeQuickServicePreferenceAdmin(admin.ModelAdmin):
+	list_display = ('id','network_provider','frequent_number','frequent_airtime','payment_mode')
+admin.site.register(AirtimeQuickServicePreference, AirtimeQuickServicePreferenceAdmin)
