@@ -436,7 +436,7 @@ class System(Wrappers):
 			lgr.info('Session Subscription: %s' % session_subscription)
 			if payload.get('expiry_hours_max'):
 				session_subscription = session_subscription.filter(
-							last_access__lte=timezone.now()-(timezone.timedelta(hours=1)*float(payload['expiry_hours_max']))
+							expiry__lte=timezone.now()-(timezone.timedelta(hours=1)*float(payload['expiry_hours_max']))
 							)
 
 			lgr.info('Session Subscription: %s' % session_subscription)
