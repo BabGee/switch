@@ -369,9 +369,14 @@ class System(Wrappers):
 
 			if payload.get('expiry_hours_max'):
 				session_subscription = session_subscription.filter(
+							expiry__lte=timezone.now()-(timezone.timedelta(hours=1)*float(payload['expiry_hours_max']))
+							)
+
+			if payload.get('session_expiry_hours_max'):
+				session_subscription = session_subscription.filter(
 							last_access__lte=timezone.now()-(
 								(timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration'))-(
-											timezone.timedelta(hours=1)*float(payload['expiry_hours_max'])
+											timezone.timedelta(hours=1)*float(payload['session_expiry_hours_max'])
 									)
 								)
 							)
@@ -424,9 +429,14 @@ class System(Wrappers):
 
 			if payload.get('expiry_hours_max'):
 				session_subscription = session_subscription.filter(
+							last_access__lte=timezone.now()-(timezone.timedelta(hours=1)*float(payload['expiry_hours_max']))
+							)
+
+			if payload.get('session_expiry_hours_max'):
+				session_subscription = session_subscription.filter(
 							last_access__lte=timezone.now()-(
 								(timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration'))-(
-											timezone.timedelta(hours=1)*float(payload['expiry_hours_max'])
+											timezone.timedelta(hours=1)*float(payload['session_expiry_hours_max'])
 									)
 								)
 							)
