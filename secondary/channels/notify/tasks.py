@@ -364,14 +364,17 @@ class System(Wrappers):
 							enrollment_type__product_item__institution=gateway_profile.institution,
 							last_access__gte=timezone.now()-timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration'))
 
+			lgr.info('Session Subscription: %s' % session_subscription)
 			if payload.get('session_subscription_type'):
 				session_subscription = session_subscription.filter(session_subscription_type__name=payload['session_subscription_type'])
 
+			lgr.info('Session Subscription: %s' % session_subscription)
 			if payload.get('expiry_hours_max'):
 				session_subscription = session_subscription.filter(
 							expiry__lte=timezone.now()-(timezone.timedelta(hours=1)*float(payload['expiry_hours_max']))
 							)
 
+			lgr.info('Session Subscription: %s' % session_subscription)
 			if payload.get('session_expiry_hours_max'):
 				session_subscription = session_subscription.filter(
 							last_access__lte=timezone.now()-(
@@ -381,10 +384,12 @@ class System(Wrappers):
 								)
 							)
 
+			lgr.info('Session Subscription: %s' % session_subscription)
 			if payload.get('product_item'):
 				session_subscription = session_subscription.filter(
 							enrollment__enrollment_type__product_item__name=payload['product_item'])
-			
+
+			lgr.info('Session Subscription: %s' % session_subscription)
 			recipient=np.asarray(session_subscription.values_list('recipient', flat=True))
 			#Update query after numpy capture
 			session_subscription.update(sends=F('sends')+1)
@@ -424,14 +429,17 @@ class System(Wrappers):
 							enrollment_type__product_item__institution=gateway_profile.institution,
 							last_access__gte=timezone.now()-timezone.timedelta(seconds=1)*F('session_subscription_type__session_expiration'))
 
+			lgr.info('Session Subscription: %s' % session_subscription)
 			if payload.get('session_subscription_type'):
 				session_subscription = session_subscription.filter(session_subscription_type__name=payload['session_subscription_type'])
 
+			lgr.info('Session Subscription: %s' % session_subscription)
 			if payload.get('expiry_hours_max'):
 				session_subscription = session_subscription.filter(
 							last_access__lte=timezone.now()-(timezone.timedelta(hours=1)*float(payload['expiry_hours_max']))
 							)
 
+			lgr.info('Session Subscription: %s' % session_subscription)
 			if payload.get('session_expiry_hours_max'):
 				session_subscription = session_subscription.filter(
 							last_access__lte=timezone.now()-(
@@ -441,10 +449,12 @@ class System(Wrappers):
 								)
 							)
 
+			lgr.info('Session Subscription: %s' % session_subscription)
 			if payload.get('product_item'):
 				session_subscription = session_subscription.filter(
 							enrollment__enrollment_type__product_item__name=payload['product_item'])
 
+			lgr.info('Session Subscription: %s' % session_subscription)
 			recipient=np.asarray(session_subscription.values_list('recipient', flat=True))
 
 			recipient = np.unique(recipient)
