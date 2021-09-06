@@ -536,28 +536,25 @@ class System(Wrappers):
 
 			session_subscription_type_list = SessionSubscriptionType.objects.filter(service__name=payload['SERVICE'])
 
-			status = SessionSubscriptionStatus.objects.get(name='ACTIVE')
+			active_status = SessionSubscriptionStatus.objects.get(name='ACTIVE')
+			inactive_status = SessionSubscriptionStatus.objects.get(name='INACTIVE')
+
+			#Revisit to add more filter options to allow deactivation of previous subscriptions unique to an institution. (Add Product Item to subscriptionType to filter)
+			#If a longer subscription exists, can pick the longer subscription
 			session_subscription_list = SessionSubscription.objects.filter(gateway_profile=gateway_profile, expiry__gte=timezone.now(),
-									enrollment_type=enrollment.enrollment_type,
-									status=status)
+									status=active_status).update(status=inactive_status)
 
-			if len(session_subscription_list):
-				session_subscription = session_subscription_list.last()
-				session_subscription.expiry = enrollment.expiry
-				session_subscription.last_access = timezone.now()
-			else:
-				session_subscription_type = session_subscription_type_list.first()
-				session_subscription = SessionSubscription(gateway_profile=gateway_profile,expiry=enrollment.expiry,
-									enrollment_type=enrollment.enrollment_type,
-									session_subscription_type=session_subscription_type,
-									last_access=timezone.now(), 
-									status=status, sends=0)
+			session_subscription_type = session_subscription_type_list.first()
+			session_subscription = SessionSubscription(gateway_profile=gateway_profile,expiry=enrollment.expiry,
+								enrollment_type=enrollment.enrollment_type,
+								session_subscription_type=session_subscription_type,
+								last_access=timezone.now(), 
+								status=active_status, sends=0)
 
-				if session_subscription_type.channel.name in ['WHATSAPP','SMS']:
-					msisdn = UPCWrappers().get_msisdn(payload)
-					if msisdn: session_subscription.recipient = msisdn
+			if session_subscription_type.channel.name in ['WHATSAPP','SMS']:
+				msisdn = UPCWrappers().get_msisdn(payload)
+				if msisdn: session_subscription.recipient = msisdn
 
-			#Save either
 			session_subscription.save()
 
 			payload['response'] = 'Session Subscription Update'
