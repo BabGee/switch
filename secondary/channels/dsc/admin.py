@@ -67,6 +67,16 @@ class FileUploadActivityAdmin(admin.ModelAdmin):
 			'status','gateway_profile','details','channel','date_created',)
 admin.site.register(FileUploadActivity, FileUploadActivityAdmin)
 
+class FileListTypeAdmin(admin.ModelAdmin):
+	list_display = ('name', 'description')
+admin.site.register(FileListType, FileListTypeAdmin)
+
+class FileListAdmin(admin.ModelAdmin):
+	list_display = ('id', 'name', 'file','description', 'file_list_type',\
+			 'level', 'access_level_list', 'institution_list','gateway_list',)
+	list_filter = ('file_list_type', 'access_level', 'institution', 'gateway',)
+admin.site.register(FileList, FileListAdmin)
+
 class ImageListTypeAdmin(admin.ModelAdmin):
 	list_display = ('name', 'description')
 admin.site.register(ImageListType, ImageListTypeAdmin)

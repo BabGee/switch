@@ -223,6 +223,37 @@ class FileUploadActivity(models.Model):
 	def __str__(self):
 		return u'%s %s' % (self.id, self.name)
 
+class FileListType(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	def __str__(self):
+		return u'%s' % (self.name)
+
+class FileList(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=100, blank=True, null=True)
+	file = models.FileField(upload_to='dsc_filelist_file/', max_length=200)
+	description = models.CharField(max_length=512, blank=True, null=True)
+	file_list_type = models.ForeignKey(FileListType, on_delete=models.CASCADE)
+	level = models.IntegerField(default=0)
+	access_level = models.ManyToManyField(AccessLevel, blank=True)
+	institution = models.ManyToManyField(Institution, blank=True)
+	channel = models.ManyToManyField(Channel, blank=True)
+	gateway = models.ManyToManyField(Gateway, blank=True)
+	def __str__(self):
+		return u'%s' % (self.name)
+	def institution_list(self):
+		return "\n".join([a.name for a in self.institution.all()])
+	def gateway_list(self):
+		return "\n".join([a.name for a in self.gateway.all()])
+	def access_level_list(self):
+		return "\n".join([a.name for a in self.access_level.all()])
+	def channel_list(self):
+		return "\n".join([a.name for a in self.channel.all()])
+
 class ImageListType(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
