@@ -635,7 +635,8 @@ class System(Wrappers):
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 
 			status = ContactGroupStatus.objects.get(name='ACTIVE')
-			contact_group = ContactGroup(name=payload['contact_group_name'].strip(), \
+			channel = Channel.objects.get(name=payload['channel'])
+			contact_group = ContactGroup(name=payload['contact_group_name'].strip(), channel=channel, \
 					description=payload['contact_group_description'], status=status,\
 					institution=gateway_profile.institution,gateway=gateway_profile.gateway)
 
