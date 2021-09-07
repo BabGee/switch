@@ -185,7 +185,10 @@ class FileUpload(models.Model):
 	gateway = models.ManyToManyField(Gateway, blank=True)
 	access_level = models.ManyToManyField(AccessLevel, blank=True)
 	trigger_service = models.ManyToManyField(Service)
-	activity_service = models.ForeignKey(Service, related_name='dsc_fileupload_activity_service', on_delete=models.CASCADE)
+	activity_service = models.ForeignKey(Service, blank=True, null=True, 
+						related_name='dsc_fileupload_activity_service', 
+						on_delete=models.CASCADE)
+	activity_topic = models.CharField(max_length=640, blank=True, null=True)
 	node_system = models.ForeignKey(NodeSystem, blank=True, null=True, on_delete=models.CASCADE)
 	command_function = models.CharField(max_length=100, blank=True, null=True)
 	def __str__(self):
