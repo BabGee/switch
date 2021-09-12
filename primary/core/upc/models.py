@@ -95,19 +95,8 @@ class Profile(models.Model):
 	pn = models.BooleanField('Push Notification', default=False, help_text="Push Notification")
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
 	def __str__(self):
-		return '%s %s %s %s %s' % (self.user.username, self.user.first_name, self.user.last_name, self.national_id, self.user.email)
-
-    
-
-class AirtimeQuickServicePreference(models.Model):
-	network_provider = models.CharField(max_length=45)
-	frequent_number = models.CharField(max_length=100)
-	frequent_airtime = models.IntegerField()
-	payment_mode = models.CharField(max_length=100)    
-	def __str__(self):
-		return u'%s' % (self.frequent_number)     
-    
-    
+		return '%s %s %s %s %s' % (self.user.username, self.user.first_name, self.user.last_name, self.national_id, self.user.email)  
+     
     
 class GatewayProfile(models.Model):#Enforce one gateway profile per gateway per user
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -126,7 +115,6 @@ class GatewayProfile(models.Model):#Enforce one gateway profile per gateway per 
 	activation_device_id = models.CharField(max_length=200, blank=True, null=True)
 	email_activation_code = models.CharField(max_length=45, blank=True, null=True)
 	allowed_host = models.ManyToManyField(Host, blank=True)
-	airtime_preference = models.OneToOneField(AirtimeQuickServicePreference, blank=True, null=True, on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s %s %s %s %s %s' % (self.id, self.user.first_name, self.user.last_name, self.msisdn,self.gateway, self.access_level)
 	def allowed_host_list(self):
