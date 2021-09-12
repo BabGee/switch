@@ -36,8 +36,8 @@ class Data:
         
 		lgr.info('Started points_awarded')
         
-		item1 = [23, 56, 74, 65, 63]
-		item2 = [36, 34, 47, 55, 32]
+		item1 = {"January": 23, "February": 78}
+		item2 = {"March": 43, "April": 27}
         
 		params['rows'] = [item1, item2]       
 

@@ -2959,6 +2959,14 @@ class System(Wrappers):
 			lgr.info("Error on getting session gateway Profile: %s" % e)
 		return payload
 
+	def strip_msisdn(self, payload, node_info):
+		payload['stripped_msisdn'] = payload['msisdn'].strip('+')
+		payload['response_status'] = '00'
+		payload['response'] = 'MSISDN stripped'
+		return payload        
+        
+    
+    
 	def get_msisdn_profile(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
