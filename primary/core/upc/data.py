@@ -19,7 +19,7 @@ class Data:
 		ct = 0
 		push = {}
         
-		lgr.info('Started purchases_summary')
+		lgr.info('Started get_points_awarded')
         
 		item = {}
 		item['count'] = 1500
@@ -171,7 +171,7 @@ class Data:
         
 		lgr.info('Started get_referrals_distribution')
 
-		item = ['60', '70', '40', '90']
+		item = ['160', '300', '90', '150']
       
 		params['rows'] = [item]       
 
