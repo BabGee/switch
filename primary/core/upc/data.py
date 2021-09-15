@@ -96,7 +96,7 @@ class Data:
 	def points_awarded(self, payload, gateway_profile, profile_tz, data):
 		params = {}
 		params['rows'] = []
-		params['cols'] = [{"label": "Event", "type": "string"}, {"label": "Points awarded", "type": "string"},
+		params['cols'] = [{"label": "Event", "type": "string", "search_fields":True}, {"label": "Points awarded", "type": "string"},
 				  {"label": "Awarded date", "type": "string"}, {"label": "Expiry date", "type": "string"},
 				  {"label": "Amount spent", "type": "string"}, {"label": "Points earned", "type": "string"},
 				  {"label": "Available", "type": "string"}]
@@ -111,11 +111,11 @@ class Data:
 
 		lgr.info('Started points_awarded')
 
-		item1 = ['Order 307', '2500', '29-08-2021', '30-08-2022', '25000', '250', '250']
-		item2 = ['Order 308', '500', '31-08-2021', '2-09-2022', '2000', '50', '50']
-		item3 = ['Order 309', '1200', '31-08-2021', '2-09-2022', '2800', '500', '500']
-		item4 = ['Order 310', '1500', '31-08-2021', '2-09-2022', '1800', '250', '250']
-		item5 = ['Order 311', '580', '1-09-2021', '3-09-2022', '2800', '800', '8000']        
+		item1 = ['Order 307', '300', '29-08-2021', '30-08-2022', '3000', '300', '250']
+		item2 = ['Order 308', '500', '31-08-2021', '2-09-2022', '5000', '5000', '100']
+		item3 = ['Order 309', '100', '31-08-2021', '2-09-2022', '1000', '100', '50']
+		item4 = ['Order 310', '250', '31-08-2021', '2-09-2022', '2500', '250', '250']
+		item5 = ['Order 311', '350', '1-09-2021', '3-09-2022', '3500', '350', '80']        
       
 		params['rows'] = [item1, item2, item3, item4, item5]
        
