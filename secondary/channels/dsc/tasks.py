@@ -2662,9 +2662,9 @@ def process_file_upload():
 	#from celery.utils.log import get_task_logger
 	lgr = get_task_logger(__name__)
 	try:
-		upload = FileUploadActivity.objects.select_for_update().filter(status__name='CREATED', \
-									   date_modified__lte=timezone.now() - timezone.timedelta(
-										   seconds=10))
+		upload = FileUploadActivity.objects.select_for_update().filter(Q(status__name='CREATED'),
+							Q(date_modified__lte=timezone.now() - timezone.timedelta(seconds=10)),
+							~Q(activity_service=None))
 		tasks = []
 		for u in upload:
 			try:
