@@ -2664,7 +2664,7 @@ def process_file_upload():
 	try:
 		upload = FileUploadActivity.objects.select_for_update().filter(Q(status__name='CREATED'),
 							Q(date_modified__lte=timezone.now() - timezone.timedelta(seconds=10)),
-							~Q(activity_service=None))
+							~Q(file_upload__activity_service=None))
 		tasks = []
 		for u in upload:
 			try:
