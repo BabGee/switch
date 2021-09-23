@@ -2692,7 +2692,7 @@ def process_file_upload():
 
 		file_tasks = group(*tasks)()
 	except Exception as e:
-		lgr.info('Error on process file upload')
+		lgr.info(f'Error on process file upload {e}')
 
 
 def push_update(k, v):
