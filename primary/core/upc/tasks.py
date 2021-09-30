@@ -540,9 +540,11 @@ class System(Wrappers):
 
 	def login_verification(self, payload, node_info):
 		try:
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			email_msisdn = payload['email_msisdn'].strip()
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])           
+			email_msisdn = payload['email'].strip()
+			lgr.info("Payload:%s" % payload)            
 			def device_verification(gateway_profile, payload):
+				lgr.info("Gateway Profile(login_verification): %s" % gateway_profile)                
 				gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile=gateway_profile, \
 						gateway_profile__gateway=gateway_profile.gateway, activation_device_id = payload['fingerprint'],\
 						channel__id=payload['chid'])
@@ -602,7 +604,7 @@ class System(Wrappers):
 	def login_activation(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			email_msisdn = payload['email_msisdn'].strip()
+			email_msisdn = payload['email'].strip()
 			def device_activation(gateway_profile, payload):
 				gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile=gateway_profile, \
 						gateway_profile__gateway=gateway_profile.gateway, channel__id=payload['chid'])
@@ -670,8 +672,7 @@ class System(Wrappers):
 	def login_validation(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			email_msisdn = payload['email_msisdn'].strip()
-			lgr.info('GatewayProfile: %s' % gateway_profile)
+			email_msisdn = payload['email'].strip()
 			def device_validation(gateway_profile, payload):
 				gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile=gateway_profile, \
 						gateway_profile__gateway=gateway_profile.gateway, channel__id=payload['chid'])
@@ -1992,64 +1993,17 @@ class System(Wrappers):
 			payload['response_status'] = '96'
 
 		return payload
-
-	def set_social_auth_password(self, payload, node_info):
-		try:
-
-
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-
-			password = payload['password']
-			confirm_password = payload['password']
-			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-
-			error = ''
-
-			password_policy = PasswordPolicy.objects.get(gateway=gateway_profile.gateway)
-
-			if confirm_password and password != confirm_password: error += "Passwords did not Match, " 
-
-			password_history = UserPasswordHistory.objects.filter(user=session_gateway_profile.user).order_by('-date_created')[:password_policy.old_password_count]
-			if password_history.exists():
-				for ph in password_history:
-					if check_password(password, ph.password): 
-						error += 'New Password not allowed to match previous %s passwords, ' % password_policy.old_password_count
-						break
-			if len(password) >= password_policy.min_characters is None: error += 'More than %s Characters Required, ' % password_policy.min_characters
-			if len(password) <= password_policy.max_characters is None: error += 'Less than %s Characters Required, ' % password_policy.max_characters
-			#digit = r'%s' % '\d'
-			for c in password_policy.password_complexity.all():
-				regex = r'%s' % c.regex
-				lgr.info('Regex: %s' % regex)
-				if re.search(regex, password) is None: error += '%s, ' % c.validation_response
-			if error == '':
-				session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-				session_gateway_profile.user.set_password(password)
-				session_gateway_profile.user.is_active = True
-				session_gateway_profile.user.save()
-				#add password history
-				UserPasswordHistory(user=session_gateway_profile.user,password=session_gateway_profile.user.password).save()
-				payload['response'] = 'Password Set'
-				payload['response_status'] = '00'
-			else:
-				payload['response'] = 'Requires('+error+')'
-				payload['response_status'] = '30'
-		except Exception as e:
-			lgr.info('Error on Setting Password: %s' % e)
-			payload['response_status'] = '96'
-
-		return payload    
+  
     
 	def set_password(self, payload, node_info):
 		try:
 
 
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-
 			password = payload['password']
 			confirm_password = payload['confirm_password'] if 'confirm_password' in payload.keys() else None
+			lgr.info('Payload(set_password): %s' % payload)            
 			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-
 			error = ''
 
 			password_policy = PasswordPolicy.objects.get(gateway=gateway_profile.gateway)
@@ -2827,6 +2781,7 @@ class System(Wrappers):
 	def get_profile(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
+			lgr.info("Gateway Profile (get_profile): %s" % gateway_profile)            
 
 			profile_error = None
 			session_gateway_profile, payload, profile_error = self.profile_capture(gateway_profile, payload, profile_error)
@@ -2902,8 +2857,7 @@ class System(Wrappers):
 
 	def get_update_profile(self, payload, node_info):
 		try:
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])           
 			profile_error = None
 			session_gateway_profile, payload, profile_error = self.profile_capture(gateway_profile, payload, profile_error)
 			session_gateway_profile, payload, profile_error = self.profile_state(session_gateway_profile, payload, profile_error)
@@ -2913,7 +2867,7 @@ class System(Wrappers):
 				payload['session_gateway_profile_id'] = session_gateway_profile[0].id
 				user, payload = self.profile_update(session_gateway_profile[0].user, payload)
 
-				payload['username'] = user.username 
+				payload['username'] = user.username             
 				if user.first_name: payload['first_name'] = user.first_name
 				if user.last_name: payload['last_name'] = user.last_name
 				if user.profile.middle_name: payload['middle_name'] = user.profile.middle_name
@@ -2942,17 +2896,17 @@ class System(Wrappers):
 					#session_gateway_profile[0].access_level = access_level
 					session_gateway_profile[0].save()
 
-				if user.email and self.validateEmail(user.email): payload['email'] = user.email
+				if user.email and self.validateEmail(user.email): payload['email'] = user.email                  
 				elif 'email' in payload.keys(): del payload['email']
 
 				payload['response_status'] = '00'
 				payload['response'] = 'Session Profile Captured'               
-				payload['trigger'] = 'profile_found %s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+# 				payload['trigger'] = 'profile_found %s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 			else:
 				payload = self.create_user_profile(payload, node_info)
 				if 'response_status' in payload.keys() and payload['response_status'] == '00':
 					payload['response'] = 'Session Profile Captured'
-					payload['trigger'] = 'email_not_registered %s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')                    
+# 					payload['trigger'] = 'email_not_registered %s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')                    
 		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
@@ -2993,7 +2947,7 @@ class System(Wrappers):
 				try:
 					# Specify the CLIENT_ID of the app that accesses the backend:
 					idinfo = id_token.verify_oauth2_token(access_token, requests.Request(), payload['google_client_id'])
-					lgr.info("ID INFO: %s" % idinfo)
+# 					lgr.info("ID INFO: %s" % idinfo)
 					# Or, if multiple clients access the backend server:
 					# idinfo = id_token.verify_oauth2_token(token, requests.Request())
 					# if idinfo['aud'] not in [CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]:
@@ -3238,14 +3192,6 @@ class System(Wrappers):
 						details['status'] = authorized_gateway_profile.status.name
 						details['access_level'] = authorized_gateway_profile.access_level.name
 
-				elif len(password_history) == 0:
-					payload['trigger'] = 'active_password%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-
-					details['api_key'] = authorized_gateway_profile.user.profile.api_key
-					details['status'] = authorized_gateway_profile.status.name
-					details['access_level'] = authorized_gateway_profile.access_level.name                        
-					lgr.info('Details: %s' % details)
-                    
 				elif authorized_by_pin:
 
 					payload['trigger'] = 'pin_authentication%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
@@ -3254,8 +3200,17 @@ class System(Wrappers):
 					details['status'] = authorized_gateway_profile.status.name
 					details['access_level'] = authorized_gateway_profile.access_level.name
 
+				elif payload.get('oauth_token_verified', False):
+					lgr.info('Oauth token Verified')                   
+					payload['trigger'] = 'verified_token%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
+					lgr.info('Payload: %s' % payload)                     
+
+					details['api_key'] = authorized_gateway_profile.user.profile.api_key
+					details['status'] = authorized_gateway_profile.status.name
+					details['access_level'] = authorized_gateway_profile.access_level.name                    
+                    
 				else:
-					payload['trigger'] = 'expired_password%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					payload['trigger'] = 'expired_password%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')               
 
 				payload['response'] = details
 				payload['session_gateway_profile_id'] = authorized_gateway_profile.id #Authenticating Gateway Profile id replace not to clash with parent service
