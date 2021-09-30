@@ -3202,7 +3202,7 @@ class System(Wrappers):
 
 				elif payload.get('oauth_token_verified', False):
 					lgr.info('Oauth token Verified')                   
-					payload['trigger'] = 'verified_token%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
+					payload['trigger'] = 'active_password%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
 					lgr.info('Payload: %s' % payload)                     
 
 					details['api_key'] = authorized_gateway_profile.user.profile.api_key
