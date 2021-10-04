@@ -2901,12 +2901,10 @@ class System(Wrappers):
 
 				payload['response_status'] = '00'
 				payload['response'] = 'Session Profile Captured'               
-# 				payload['trigger'] = 'profile_found %s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 			else:
 				payload = self.create_user_profile(payload, node_info)
 				if 'response_status' in payload.keys() and payload['response_status'] == '00':
-					payload['response'] = 'Session Profile Captured'
-# 					payload['trigger'] = 'email_not_registered %s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')                    
+					payload['response'] = 'Session Profile Captured'                   
 		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
@@ -2928,7 +2926,8 @@ class System(Wrappers):
 				graph = facebook.GraphAPI(access_token=access_token, version="3.0")
 				profile = graph.get_object(id='me', fields='name,email')                
 
-				payload['full_name'] = profile['name']
+#				lgr.info("PROFILE: %s" % profile)                               
+				payload['full_names'] = profile['name']
 				payload['email'] = profile['email']
 				# update token verified flag
 				payload['oauth_token_verified'] = True
@@ -2967,7 +2966,7 @@ class System(Wrappers):
 # 					payload['full_names'] = idinfo['name']
 					payload['first_name'] = idinfo['given_name']                    
 					payload['last_name'] = idinfo['family_name']
-# 					payload['photo'] = idinfo['picture']
+					payload['photo'] = idinfo['picture']
 					payload['email'] = idinfo['email']                    
 
 					# update token verified flag
@@ -3202,7 +3201,7 @@ class System(Wrappers):
 
 				elif payload.get('oauth_token_verified', False):
 					lgr.info('Oauth token Verified')                   
-					payload['trigger'] = 'active_password%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
+					payload['trigger'] = 'verified_token%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
 					lgr.info('Payload: %s' % payload)                     
 
 					details['api_key'] = authorized_gateway_profile.user.profile.api_key
