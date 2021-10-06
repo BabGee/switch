@@ -176,18 +176,18 @@ class Session(models.Model):
 		return u'%s %s %s' % (self.session_id, self.gateway_profile, self.reference)
 
     
-class LoyaltyPointManager(models.Model):
-	date_modified = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	gateway_profile = models.ForeignKey(GatewayProfile, null=True, blank=True, on_delete=models.CASCADE)
-	amount = models.DecimalField(max_digits=19, decimal_places=2)
-	credit =models.DecimalField(max_digits=19, decimal_places=2)
-	minimum = models.DecimalField(max_digits=19,default=0, decimal_places=2)
-	maximum = models.DecimalField(max_digits=19,default=0, decimal_places=2)  
-	points_earned = models.DecimalField(max_digits=19, decimal_places=2,blank=True)
-	point_amount= models.DecimalField(max_digits=19, decimal_places=2,blank=True)
-	balance_bf = models.DecimalField(max_digits=25, decimal_places=2,blank=True)
-	updated = models.BooleanField(default=False, help_text="True for the record")
+# class LoyaltyPointManager(models.Model):
+# 	date_modified = models.DateTimeField(auto_now=True)
+# 	date_created = models.DateTimeField(auto_now_add=True)
+# 	gateway_profile = models.ForeignKey(GatewayProfile, null=True, blank=True, on_delete=models.CASCADE)
+# 	amount = models.DecimalField(max_digits=19, decimal_places=2)
+# 	credit =models.DecimalField(max_digits=19, decimal_places=2)
+# 	minimum = models.DecimalField(max_digits=19,default=0, decimal_places=2)
+# 	maximum = models.DecimalField(max_digits=19,default=0, decimal_places=2)  
+# 	points_earned = models.DecimalField(max_digits=19, decimal_places=2,blank=True)
+# 	point_amount= models.DecimalField(max_digits=19, decimal_places=2,blank=True)
+# 	balance_bf = models.DecimalField(max_digits=25, decimal_places=2,blank=True)
+# 	updated = models.BooleanField(default=False, help_text="True for the record")
 
-	def __str__(self):
-		return u'%s' % (self.gateway_profile)
+# 	def __str__(self):
+# 		return u'%s' % (self.gateway_profile)

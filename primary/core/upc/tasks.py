@@ -2903,6 +2903,7 @@ class System(Wrappers):
 				payload['response'] = 'Session Profile Captured'               
 			else:
 				payload = self.create_user_profile(payload, node_info)
+				payload['trigger'] = 'no_profile%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')               
 				if 'response_status' in payload.keys() and payload['response_status'] == '00':
 					payload['response'] = 'Session Profile Captured'                   
 		except Exception as e:
