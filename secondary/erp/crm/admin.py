@@ -110,7 +110,8 @@ admin.site.register(NominationStatus, NominationStatusAdmin)
 
 class NominationAdmin(admin.ModelAdmin):
 		list_display = ('id','profile', 'account_alias', 'account_record',\
-				'institution','product_type','status')
+				'currency', 'amount','request',\
+				'product_item','status')
 admin.site.register(Nomination, NominationAdmin)
 
 class RecurrentServiceStatusAdmin(admin.ModelAdmin):
@@ -118,7 +119,7 @@ class RecurrentServiceStatusAdmin(admin.ModelAdmin):
 admin.site.register(RecurrentServiceStatus, RecurrentServiceStatusAdmin)
 
 class RecurrentServiceAdmin(admin.ModelAdmin):
-		list_display = ('nomination','enrollment','currency','amount','request','service',\
+		list_display = ('nomination','service',\
 				'request_auth','scheduled_send','scheduled_days','expiry',\
 				'status')
 admin.site.register(RecurrentService, RecurrentServiceAdmin)

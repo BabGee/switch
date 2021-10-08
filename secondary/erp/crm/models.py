@@ -260,14 +260,16 @@ class NominationStatus(models.Model):
 class Nomination(models.Model):
 	date_modified = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
-	profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
 	account_alias = models.CharField(max_length=200, null=True, blank=True)
 	account_record = models.CharField(max_length=50)
-	institution = models.ForeignKey(Institution, on_delete=models.CASCADE)
-	product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
+	currency = models.ForeignKey(Currency, null=True, blank=True, on_delete=models.CASCADE)
+	amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
+	request = models.JSONField(null=True, blank=True)
+	product_item = models.ForeignKey(ProductItem, on_delete=models.CASCADE)
 	status = models.ForeignKey(NominationStatus, on_delete=models.CASCADE)
 	def __str__(self):
-		return u'%s %s' % (self.profile, self.account_record)
+		return u'%s %s' % (self.gateway_profile, self.account_record)
 
 class RecurrentServiceStatus(models.Model):
 	name = models.CharField(max_length=45, unique=True)
@@ -281,10 +283,6 @@ class RecurrentService(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
 	date_created = models.DateTimeField(auto_now_add=True)
 	nomination = models.ForeignKey(Nomination, null=True, blank=True, on_delete=models.CASCADE)
-	enrollment = models.ForeignKey(Enrollment, null=True, blank=True, on_delete=models.CASCADE)
-	currency = models.ForeignKey(Currency, null=True, blank=True, on_delete=models.CASCADE)
-	amount = models.DecimalField(max_digits=19, decimal_places=2, null=True, blank=True)
-	request = models.CharField(max_length=1920)
 	service = models.ForeignKey(Service, on_delete=models.CASCADE)#Tip: If failure, reverse service to notify
 	request_auth = models.BooleanField(default=False) #If True, Bill automatically, false, request for auth
 	scheduled_send = models.DateTimeField()
