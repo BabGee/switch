@@ -109,7 +109,7 @@ class NominationStatusAdmin(admin.ModelAdmin):
 admin.site.register(NominationStatus, NominationStatusAdmin)
 
 class NominationAdmin(admin.ModelAdmin):
-		list_display = ('id','profile', 'account_alias', 'account_record',\
+		list_display = ('id','gateway_profile', 'account_alias', 'account_record',\
 				'currency', 'amount','request',\
 				'product_item','status')
 admin.site.register(Nomination, NominationAdmin)
