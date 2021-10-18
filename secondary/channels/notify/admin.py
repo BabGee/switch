@@ -57,6 +57,7 @@ admin.site.register(ContactGroupStatus, ContactGroupStatusAdmin)
 
 class ContactGroupAdmin(admin.ModelAdmin):
 	list_display = ('id','name', 'description','institution','gateway','status','channel',)
+	list_filter = ('institution','gateway','status','channel',)
 admin.site.register(ContactGroup, ContactGroupAdmin)
 
 class RecipientAdmin(admin.ModelAdmin):
