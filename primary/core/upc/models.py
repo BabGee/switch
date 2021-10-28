@@ -191,23 +191,3 @@ class Session(models.Model):
 
 # 	def __str__(self):
 # 		return u'%s' % (self.gateway_profile)
-
-class BookingIndustry(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	icon = models.ForeignKey(Icon, null=True, blank=True, on_delete=models.CASCADE)    
-    
-	def __str__(self):
-		return u'%s' % (self.name)
-
-
-class BookingIndustrySpecialization(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-    
-	def __str__(self):
-		return u'%s' % (self.name)

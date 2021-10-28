@@ -90,7 +90,11 @@ secondary = [
     'secondary.finance.paygate',
 	]
 
-installed_apps = primary + secondary + installed_apps
+products = [
+    'products.nikobizz.services.booking'
+]
+
+installed_apps = primary + secondary + products + installed_apps
 
 
 timezone='Africa/Nairobi'
