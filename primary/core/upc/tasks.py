@@ -2911,19 +2911,20 @@ class System(Wrappers):
 			payload['response_status'] = '96'
 			lgr.info("Error on getting session gateway Profile: %s" % e)
 		return payload
-
+    
+    
 	def get_social_profile(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			if 'oauth_token_verified' in payload.keys():del payload['oauth_token_verified']
 
 			payload['oauth_token_verified'] = False
-			lgr.info("PAYLOAD KEYS(SOCIAL): %s" % payload.keys())
-			if 'authresponse' in payload.keys():
+			lgr.info("PAYLOAD(SOCIAL): %s" % payload)
+			if 'facebook' in payload.keys():
 				# verify token and retrieve profile from facebook
 				# requires pip install facebook-sdk==3.0.0
 				import facebook
-				access_token = payload['authresponse']['accessToken']
+				access_token = payload['facebook']['authResponse']['accessToken']
 				graph = facebook.GraphAPI(access_token=access_token, version="3.0")
 				profile = graph.get_object(id='me', fields='name,email')                
 
@@ -2936,14 +2937,14 @@ class System(Wrappers):
 				payload['response'] = 'Social Profile Facebook Verified'
 
 
-			elif 'accesstoken' in payload.keys():
+			elif 'google' in payload.keys():
 				# verify token and retrieve profile from google
 				# requires pip install google-auth==1.5.1
 				from google.oauth2 import id_token
 				from google.auth.transport import requests
 
 				# (Receive token by HTTPS POST)
-				access_token = payload['accesstoken']
+				access_token = payload['google']['accessToken']
 				try:
 					# Specify the CLIENT_ID of the app that accesses the backend:
 					idinfo = id_token.verify_oauth2_token(access_token, requests.Request(), payload['google_client_id'])
@@ -2990,87 +2991,7 @@ class System(Wrappers):
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on Verifying Social Profile: %s" % e)
-		return payload    
-    
-# 	def get_social_profile(self, payload, node_info):
-# 		try:
-# 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-# 			if 'oauth_token_verified' in payload.keys():del payload['oauth_token_verified']
-
-# 			payload['oauth_token_verified'] = False
-# 			lgr.info("PAYLOAD(SOCIAL): %s" % payload)
-# 			if 'facebook' in payload.keys():
-# 				# verify token and retrieve profile from facebook
-# 				# requires pip install facebook-sdk==3.0.0
-# 				import facebook
-# 				access_token = payload['facebook']['authResponse']['accessToken']
-# 				graph = facebook.GraphAPI(access_token=access_token, version="3.0")
-# 				profile = graph.get_object(id='me', fields='name,email')                
-
-# #				lgr.info("PROFILE: %s" % profile)                               
-# 				payload['full_names'] = profile['name']
-# 				payload['email'] = profile['email']
-# 				# update token verified flag
-# 				payload['oauth_token_verified'] = True
-# 				payload['response_status'] = '00'
-# 				payload['response'] = 'Social Profile Facebook Verified'
-
-
-# 			elif 'google' in payload.keys():
-# 				# verify token and retrieve profile from google
-# 				# requires pip install google-auth==1.5.1
-# 				from google.oauth2 import id_token
-# 				from google.auth.transport import requests
-
-# 				# (Receive token by HTTPS POST)
-# 				access_token = payload['google']['accessToken']
-# 				try:
-# 					# Specify the CLIENT_ID of the app that accesses the backend:
-# 					idinfo = id_token.verify_oauth2_token(access_token, requests.Request(), payload['google_client_id'])
-# # 					lgr.info("ID INFO: %s" % idinfo)
-# 					# Or, if multiple clients access the backend server:
-# 					# idinfo = id_token.verify_oauth2_token(token, requests.Request())
-# 					# if idinfo['aud'] not in [CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]:
-# 					#     raise ValueError('Could not verify audience.')
-
-# 					if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
-# 						raise ValueError('Wrong issuer.')
-
-# 					# If auth request is from a G Suite domain:
-# 					# if idinfo['hd'] != GSUITE_DOMAIN_NAME:
-# 					#     raise ValueError('Wrong hosted domain.')
-
-# 					# ID token is valid. Get the user's Google Account ID from the decoded token.
-# 					userid = idinfo['sub']
-# 					lgr.info("USER ID: %s" % userid)
-# 					payload['username'] = idinfo['sub']                    
-# # 					payload['full_names'] = idinfo['name']
-# 					payload['first_name'] = idinfo['given_name']                    
-# 					payload['last_name'] = idinfo['family_name']
-# 					payload['photo'] = idinfo['picture']
-# 					payload['email'] = idinfo['email']                    
-
-# 					# update token verified flag
-# 					payload['oauth_token_verified'] = True
-# 					payload['response_status'] = '00'
-# 					payload['response'] = 'Social Profile Google Verified'
-
-
-# 				except ValueError:
-# 					# Invalid token
-# 					raise 
-
-
-# 			else:
-# 				# Error. no token passed
-# 				payload['response'] = 'No Auth Token Provided'
-# 				payload['response_status'] = 25
-
-# 		except Exception as e:
-# 			payload['response'] = str(e)
-# 			payload['response_status'] = '96'
-# 			lgr.info("Error on Verifying Social Profile: %s" % e)
-# 		return payload
+		return payload
 
 
 	def update_gateway_profile(self, payload, node_info):
