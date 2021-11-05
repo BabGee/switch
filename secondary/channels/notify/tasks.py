@@ -198,7 +198,7 @@ class Wrappers:
 			message_len = 1
 		else:
 			#For SMS
-			chunks, chunk_size = len(message), 160  # SMS Unit is 160 characters (NB: IN FUTURE!!, pick message_len from DB - notification_product)
+			chunks, chunk_size = len(message), 160	# SMS Unit is 160 characters (NB: IN FUTURE!!, pick message_len from DB - notification_product)
 			messages = [message[i:i + chunk_size] for i in range(0, chunks, chunk_size)]
 			message_len = len(messages)
 
@@ -856,7 +856,7 @@ class System(Wrappers):
 		try:
 			lgr.info("Add Recipient: %s" % payload)
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			if 'recipient' in payload.keys() and (  UPCWrappers().simple_get_msisdn(str(payload['recipient']).strip()) or UPCWrappers.validateEmail(None,str(payload['recipient']).strip()) ):
+			if 'recipient' in payload.keys() and (	UPCWrappers().simple_get_msisdn(str(payload['recipient']).strip()) or UPCWrappers.validateEmail(None,str(payload['recipient']).strip()) ):
 				status = ContactStatus.objects.get(name='ACTIVE')
 				contact_group = ContactGroup.objects.get(id=str(payload['contact_group_id']).strip())
 				if not Recipient.objects.filter(recipient=str(payload['recipient']).strip(),contact_group=contact_group).exists():
@@ -1333,7 +1333,7 @@ class System(Wrappers):
 				#Filter to send an institution notification or otherwise a gateway if institution does not exist (gateway only has institution as None)
 				institution_notification_product = notification_product.filter(notification__code__institution__id=payload['institution_id'])
 				gateway_notification_product = notification_product.filter(notification__code__institution=None, institution_allowed=True)
-				notification_product =  institution_notification_product if len(institution_notification_product) else gateway_notification_product
+				notification_product =	institution_notification_product if len(institution_notification_product) else gateway_notification_product
 			else:
 				notification_product = notification_product.filter(notification__code__institution=None)
 
@@ -1916,6 +1916,7 @@ class System(Wrappers):
 			bound = prepared_query.bind(_bound) 
 			rows = session.execute(bound)
 			df = rows._current_rows
+			df = df[df['status']=='ACTIVE']
 			df = df[['recipient']]
 
 			notifications = dict()
@@ -2144,6 +2145,7 @@ class System(Wrappers):
 			rows = session.execute(bound)
 			lgr.info(f'Rows: {rows}')
 			df = rows._current_rows
+			df = df[df['status']=='ACTIVE']
 			lgr.info(f'DF: {df.head()}')
 			df_data = df[['recipient']]
 			lgr.info(f'Recipient Contact Captured Data: {df.shape[0]}')
@@ -2591,7 +2593,7 @@ def get_delivery_status():
 	try:
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 60}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
-		#data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 125}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:7321/data/request/', timeout=5)['response']['data']
+		#data = WebService().post_request({"module":"sdp", "function":"dtsvc",	"limit":10000, "min_duration": {"seconds": 125}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:7321/data/request/', timeout=5)['response']['data']
 		data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 125}, "max_duration": {"seconds": 120}}, 'https://integrator.interintel.co/data/request/', timeout=5)['response']['data']
 
 		if data:
@@ -2614,7 +2616,7 @@ def get_delivery_status_test():
 	try:
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"getSmsDeliveryStatusResponse",  "limit":10000, "min_duration": {"seconds": 60}, "max_duration": {"seconds": 0}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
 		#df = pd.DataFrame(WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":10000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/')['response']['data'])
-		#data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":20000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/', timeout=5)['response']['data']
+		#data = WebService().post_request({"module":"sdp", "function":"dtsvc",	"limit":20000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'http://192.168.137.28:732/data/request/', timeout=5)['response']['data']
 		data = WebService().post_request({"module":"sdp", "function":"dtsvc",  "limit":20000, "min_duration": {"seconds": 123}, "max_duration": {"seconds": 120}}, 'https://integrator.interintel.co/data/request/', timeout=5)['response']['data']
 
 		if data:
@@ -3187,9 +3189,9 @@ def _send_outbound_sms_messages_list(is_bulk, limit_batch):
 		lgr.info('Orig Outbound: %s' % orig_outbound)
 
 		outbound = orig_outbound[:limit_batch].values_list('id','recipient','contact__product__id','contact__product__notification__endpoint__batch','ext_outbound_id',\
-                                                'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',\
-                                                'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',\
-                                                'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url')
+						'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',\
+						'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',\
+						'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url')
 	
 		lgr.info('Outbound: %s' % outbound)
 		if len(outbound):
