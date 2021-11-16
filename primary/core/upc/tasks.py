@@ -29,6 +29,10 @@ from django.contrib.auth.hashers import check_password
 from django.db import transaction
 from primary.core.bridge.models import *
 
+from products.nikobizz.models import *
+
+from products.nikobizz.services._booking.models import *
+
 import logging
 lgr = logging.getLogger('primary.core.upc')
 
@@ -2832,7 +2836,7 @@ class System(Wrappers):
 		return payload
 
 	def strip_msisdn(self, payload, node_info):
-		payload['stripped_msisdn'] = payload['msisdn'].strip('+')
+		payload['stripped_msisdn'] = '+254790111111'.strip('+')
 		payload['response'] = 'MSISDN stripped'
 		payload['response_status'] = '00'        
 		return payload        
@@ -3223,6 +3227,54 @@ class System(Wrappers):
 			lgr.info("Error on Login: %s" % e)
 		return payload
 
+	def create_booking_industry_profile(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])            
+			id_industry = payload['select_industry']
+			id_industry += 1          
+			booking_industry = BookingIndustry.objects.filter(id=id_industry).first()
+			lgr.info("Booking Industry: %s" % booking_industry)
+			BookingIndustryProfile(gateway_profile=gateway_profile, booking_industry=booking_industry).save()
+			payload['response_status'] = '00'
+			payload['response'] = 'Booking Industry Profile Created'            
+		except Exception as e:
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+			lgr.info("Error on Creating Booking industry Profile: %s" % e)
+		return payload    
+
+    
+	def generate_subdomain(self, payload, node_info):
+
+		try:
+			lgr.info('PAYLOAD: %s' %payload)
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			subdomain = Subdomain.objects.get(subdomain='nikobizz.nikobizz.com')
+			subdomain.pk=None
+
+			if 'institution_id' in payload.keys():
+				institution_id = payload['institution_id']
+				institution = Institution.objects.get(id=institution_id)
+
+			else:
+				institution = gateway_profile.institution
+
+			# institution.name.split()                
+			subdomain.subdomain = (institution.name + '.' + gateway_profile.gateway.name + '-' + 'nikobizz.com').lower()
+			subdomain.institution_id = institution.id
+			subdomain.save()
+
+			payload['subdomain'] = subdomain.subdomain
+			payload['response'] = 'Subdomain Created'
+			payload['response_status'] = '00'
+
+		except Exception as e:
+			lgr.info('Error Creating Subdomain: %s' % e,exc_info=True)
+			payload['response_status'] = '96'
+		return payload    
+    
+    
+    
 class Registration(System):
 	pass
 

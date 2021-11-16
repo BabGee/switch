@@ -2,6 +2,10 @@ from primary.core.upc.models import *
 
 from secondary.channels.notify import *
 
+from products.nikobizz.models import *
+
+from django.db.models import Sum
+
 import logging
 
 lgr = logging.getLogger('primary.core.upc')
@@ -22,8 +26,12 @@ class Data:
 		lgr.info('Started get_points_awarded')
         
 		item = {}
-		item['count'] = 1500
-        
+#		item['count'] = 1500
+		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+		institution = gateway_profile.institution
+		total_points = PointsEarned.objects.filter(customer__institution=institution).aggregate(Sum('points_earned'))
+		item['count'] = total_points['points_earned__sum']    
+    
 		params['rows'] = [item]       
 
 		return params,max_id,min_id,ct,push
