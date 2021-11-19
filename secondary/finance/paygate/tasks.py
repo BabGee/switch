@@ -101,7 +101,7 @@ class Wrappers:
 	def response_payload(self, payload):
 		#lgr.info('Response Payload: %s' % payload)
 		try:
-			payload = payload if isinstance(payload, dict)  else json.loads(payload)
+			payload = payload if isinstance(payload, dict)	else json.loads(payload)
 			new_payload, transaction, count = {}, None, 1
 			for k, v in dict(payload).items():
 				key = k.lower()
@@ -726,21 +726,15 @@ class System(Wrappers):
 				float_type = float_type.filter(product_type__name=payload['product_type'])
 			else:
 				float_type = float_type.filter(product_type=None)
-
-
+			lgr.info('Float Type: %s' % float_type)
 			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				float_balance = FloatManager.objects.select_for_update().filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-id')
-
 				if 'institution_id' in payload.keys():
-					#float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
-					float_balance = float_balance.filter(Q(institution__id=payload['institution_id']))
+					float_balance = FloatManager.objects.select_for_update().filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])).order_by('-id')
 				else:
-					float_balance = float_balance.filter(institution=None)
+					float_balance = FloatManager.objects.select_for_update().filter(float_type=float_type[0],gateway=gateway_profile.gateway, institution=None).order_by('-id')
 
+				lgr.info('Float Balance: %s' % float_balance)
 				# Crediting Requires the institution_id to be expilicitly specified in the payload
-				institution = Institution.objects.get(id=payload['institution_id'])
-				gateway = gateway_profile.gateway
-
 				charge = Decimal(0)
 				charge_list = FloatCharge.objects.filter(Q(float_type=float_type[0], min_amount__lte=Decimal(payload['float_amount']),\
 						max_amount__gt=Decimal(payload['float_amount']),credit=False),\
@@ -776,18 +770,30 @@ class System(Wrappers):
 					#Last Balance Check
 					float_balance.filter(id=float_balance[:1][0].id).update(updated=True)
 					balance_bf = Decimal(float_balance[0].balance_bf) + (Decimal(payload['float_amount']) - charge)
+					lgr.info("New Balance Brought Forward: %s" % balance_bf)
+					institution = float_balance[0].institution
+					gateway = float_balance[0].gateway
+
+					float_record = FloatManager(credit=True,\
+						float_amount=Decimal(payload['float_amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
+						charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
+						balance_bf=balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN),\
+						float_type=float_type[0], gateway=gateway)
+
+					float_record.institution = institution
 				else:
 					balance_bf = (Decimal(payload['float_amount']) - charge)
+					lgr.info("New Balance Brought Forward: %s" % balance_bf)
+					institution =  Institutions.objects.get(id=payload['institution_id']) if payload.get('institution_id') else None
+					gateway = gateway_profile.gateway
 
-				lgr.info("New Balance Brought Forward: %s" % balance_bf)
+					float_record = FloatManager(credit=True,\
+						float_amount=Decimal(payload['float_amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
+						charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
+						balance_bf=balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN),\
+						float_type=float_type[0], gateway=gateway)
 
-				float_record = FloatManager(credit=True,\
-					float_amount=Decimal(payload['float_amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
-					charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
-					balance_bf=balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN),\
-					float_type=float_type[0], gateway=gateway)
-
-				float_record.institution = institution
+					float_record.institution = institution
 				
 				if 'ext_outbound_id' in payload.keys() and payload['ext_outbound_id'] not in [None,""]:
 					float_record.ext_outbound_id = payload['ext_outbound_id']
@@ -1523,10 +1529,10 @@ class System(Wrappers):
 
 				#check float exists
 				if float_balance.exists() and Decimal(float_balance[0].balance_bf) >= Decimal(payload['float_amount']):
-		       			payload['response_status'] = '00'
+					payload['response_status'] = '00'
 
 				elif int(payload['float_amount']) == 0:
-		       			payload['response_status'] = '00'
+					payload['response_status'] = '00'
 
 				else:
 					lgr.info("No Float")
@@ -1648,10 +1654,10 @@ class System(Wrappers):
 
 				#check float exists
 				if float_balance.exists() and Decimal(float_balance[0].balance_bf) >= Decimal(payload['float_amount']):
-		       			payload['response_status'] = '00'
+					payload['response_status'] = '00'
 
 				elif int(payload['float_amount']) == 0:
-		       			payload['response_status'] = '00'
+					payload['response_status'] = '00'
 
 				else:
 					lgr.info("No Float")
@@ -2308,7 +2314,7 @@ def process_incoming_payments():
 				gateway_profile_list = GatewayProfile.objects.filter(gateway=c.institution_incoming_service.gateway,user__username='System@User', status__name__in=['ACTIVATED'])
 				if len(gateway_profile_list) > 0 and gateway_profile_list[0].user.is_active:
 					#payload['gateway_profile_id'] = gateway_profile_list[0].id
-	    				#payload = json.dumps(payload, cls=DjangoJSONEncoder)
+					#payload = json.dumps(payload, cls=DjangoJSONEncoder)
 
 					bridgetasks.background_service_call.delay(service.name, gateway_profile_list[0].id, payload)
 					'''
