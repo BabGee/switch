@@ -187,7 +187,7 @@ async def bridge_background_service():
 
 				#processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
 				for b in background:
-					lgr.info(f'Background: {p}')
+					lgr.info(f'Background: {b}')
 					bg = _faust.loop.run_in_executor(thread_pool, process_bridge_background_service_call, *[b, True])
 					tasks.append(bg)
 
