@@ -279,48 +279,48 @@ class Outbound(models.Model):
 
 '''
 
-class OutboundSentDelivered(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	timestamp = models.DateTimeField()
-	batch_id = models.CharField(max_length=256)
-	outbound = models.ForeignKey(Outbound, blank=True, null=True, on_delete=models.CASCADE)
-	recipient = models.CharField(max_length=200, blank=True, null=True)
-	state = models.ForeignKey(OutBoundState, on_delete=models.CASCADE) #Sent/Delivered or Undelivered
-	response =  models.CharField(max_length=200, blank=True, null=True)
-	product = models.ForeignKey(NotificationProduct, on_delete=models.CASCADE)
-	message = models.TextField()
-	def __str__(self):
-		return u'%s %s %s' % (self.batch_id, self.outbound, self.product)
-
-
-class OutboundFailed(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	timestamp = models.DateTimeField()
-	batch_id = models.CharField(max_length=256)
-	outbound = models.ForeignKey(Outbound, blank=True, null=True, on_delete=models.CASCADE)
-	recipient = models.CharField(max_length=200, blank=True, null=True)
-	state = models.ForeignKey(OutBoundState, on_delete=models.CASCADE) #Sent/Delivered or Undelivered
-	response =  models.CharField(max_length=200, blank=True, null=True)
-	product = models.ForeignKey(NotificationProduct, on_delete=models.CASCADE)
-	message = models.TextField()
-	def __str__(self):
-		return u'%s %s %s' % (self.batch_id, self.outbound, self.product)
-
-class OutboundSent(models.Model):
-	date_modified  = models.DateTimeField(auto_now=True)
-	date_created = models.DateTimeField(auto_now_add=True)
-	timestamp = models.DateTimeField()
-	batch_id = models.CharField(max_length=256)
-	outbound = models.ForeignKey(Outbound, blank=True, null=True, on_delete=models.CASCADE)
-	recipient = models.CharField(max_length=200, blank=True, null=True)
-	state = models.ForeignKey(OutBoundState, on_delete=models.CASCADE) #Sent/Delivered or Undelivered
-	response =  models.CharField(max_length=200, blank=True, null=True)
-	product = models.ForeignKey(NotificationProduct, on_delete=models.CASCADE)
-	message = models.TextField()
-	def __str__(self):
-		return u'%s %s %s' % (self.batch_id, self.outbound, self.product)
+#class OutboundSentDelivered(models.Model):
+#	date_modified  = models.DateTimeField(auto_now=True)
+#	date_created = models.DateTimeField(auto_now_add=True)
+#	timestamp = models.DateTimeField()
+#	batch_id = models.CharField(max_length=256)
+#	outbound = models.ForeignKey(Outbound, blank=True, null=True, on_delete=models.CASCADE)
+#	recipient = models.CharField(max_length=200, blank=True, null=True)
+#	state = models.ForeignKey(OutBoundState, on_delete=models.CASCADE) #Sent/Delivered or Undelivered
+#	response =  models.CharField(max_length=200, blank=True, null=True)
+#	product = models.ForeignKey(NotificationProduct, on_delete=models.CASCADE)
+#	message = models.TextField()
+#	def __str__(self):
+#		return u'%s %s %s' % (self.batch_id, self.outbound, self.product)
+#
+#
+#class OutboundFailed(models.Model):
+#	date_modified  = models.DateTimeField(auto_now=True)
+#	date_created = models.DateTimeField(auto_now_add=True)
+#	timestamp = models.DateTimeField()
+#	batch_id = models.CharField(max_length=256)
+#	outbound = models.ForeignKey(Outbound, blank=True, null=True, on_delete=models.CASCADE)
+#	recipient = models.CharField(max_length=200, blank=True, null=True)
+#	state = models.ForeignKey(OutBoundState, on_delete=models.CASCADE) #Sent/Delivered or Undelivered
+#	response =  models.CharField(max_length=200, blank=True, null=True)
+#	product = models.ForeignKey(NotificationProduct, on_delete=models.CASCADE)
+#	message = models.TextField()
+#	def __str__(self):
+#		return u'%s %s %s' % (self.batch_id, self.outbound, self.product)
+#
+#class OutboundSent(models.Model):
+#	date_modified  = models.DateTimeField(auto_now=True)
+#	date_created = models.DateTimeField(auto_now_add=True)
+#	timestamp = models.DateTimeField()
+#	batch_id = models.CharField(max_length=256)
+#	outbound = models.ForeignKey(Outbound, blank=True, null=True, on_delete=models.CASCADE)
+#	recipient = models.CharField(max_length=200, blank=True, null=True)
+#	state = models.ForeignKey(OutBoundState, on_delete=models.CASCADE) #Sent/Delivered or Undelivered
+#	response =  models.CharField(max_length=200, blank=True, null=True)
+#	product = models.ForeignKey(NotificationProduct, on_delete=models.CASCADE)
+#	message = models.TextField()
+#	def __str__(self):
+#		return u'%s %s %s' % (self.batch_id, self.outbound, self.product)
 
 
 
