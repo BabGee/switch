@@ -16,9 +16,6 @@ from .models import *
 import logging
 lgr = logging.getLogger('secondary.finance.crc')
 	
-from keyczar import keyczar
-location = '/opt/kz'
-crypter = keyczar.Crypter.Read(location)
 
 class Wrapper:
 	mask_card = lambda self, q: "%s%s%s" % (q[:4],"".join(['*' for v in range(len(q)-8)]),q[len(q)-4:]) #Show's first 4 digits and used to preview card
@@ -84,7 +81,8 @@ class System(Wrapper):
 			accountNumber = str(payload['card_accountnumber']).replace(' ','')
 			pan = self.mask_pan(accountNumber)
 
-			token = crypter.Encrypt(accountNumber)
+			#token = crypter.Encrypt(accountNumber)
+			token = None
 
 			cvNumber = str(payload['card_cvnumber']) if 'card_cvnumber' in payload.keys() else ''
 
