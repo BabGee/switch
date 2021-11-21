@@ -45,7 +45,7 @@ from typing import (
 )
 
 lgr = logging.getLogger(__name__)
-thread_pool = ThreadPoolExecutor(max_workers=1)
+thread_pool = ThreadPoolExecutor(max_workers=16)
 
 @_faust.command()
 async def bridge_background_service_poll():
@@ -192,7 +192,9 @@ async def bridge_background_service():
 				processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
 				for b in background:
 					lgr.info(f'Background: {b}')
-					bg = _faust.loop.run_in_executor(thread_pool, process_bridge_background_service_call, *[b, True])
+					#bg = _faust.loop.run_in_executor(thread_pool, process_bridge_background_service_call, *[b, True])
+					bg = sync_to_async(process_bridge_background_service_call, thread_sensitive=True)(b, True)
+
 					tasks.append(bg)
 
 				lgr.info(f'2:Background-Elapsed {elapsed()}')
