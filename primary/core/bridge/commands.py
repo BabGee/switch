@@ -166,11 +166,11 @@ async def bridge_background_service():
 	"""
 	lgr.info('Bridge Background Service.........')
 
-	def background_query(response, status, scheduled_send):
-		return BackgroundServiceActivity.objects.select_for_update(of=('self',)).filter(response_status__response=response,\
-								status__name=status,
-								scheduled_send__lte=scheduled_send,
-                                                                date_created__date=timezone.now().date())
+	#def background_query(response, status, scheduled_send):
+	#	return BackgroundServiceActivity.objects.select_for_update(of=('self',)).filter(response_status__response=response,\
+	#							status__name=status,
+	#							scheduled_send__lte=scheduled_send,
+	#							 date_created__date=timezone.now().date())
 	while 1:
 		try:
 			lgr.info('Background Running')
@@ -180,8 +180,12 @@ async def bridge_background_service():
 			tasks = list()
 			with transaction.atomic():
 				lgr.info(f'1:Background-Elapsed {elapsed()}')
-				orig_background = await sync_to_async(background_query, thread_sensitive=True)(response='DEFAULT', status='CREATED', scheduled_send=timezone.now()) 
-				#orig_background = await sync_to_async(background_query, thread_sensitive=True)(response='00', status='PROCESSED', scheduled_send=timezone.now()) 
+				#orig_background = await sync_to_async(background_query, thread_sensitive=True)(response='DEFAULT', status='CREATED', scheduled_send=timezone.now()) 
+				##orig_background = await sync_to_async(background_query, thread_sensitive=True)(response='00', status='PROCESSED', scheduled_send=timezone.now()) 
+				orig_background = BackgroundServiceActivity.objects.select_for_update().filter(response_status__response='DEFAULT',\
+														status__name='CREATED', 
+														scheduled_send__lte=timezone.now())
+
 				lgr.info(f'{elapsed()}-Orig Background: {orig_background}')
 				background = list(orig_background.values_list('id',flat=True)[:100])
 
