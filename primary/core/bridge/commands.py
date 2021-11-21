@@ -119,41 +119,41 @@ def process_bridge_background_service_call(activity_id, status):
 		payload = dict(map(lambda x:(str(x[0]).lower(),json.dumps(x[1]) if isinstance(x[1], dict) else str(x[1])), payload.items()))
 
 		lgr.info('\n\n\n\n\t########\Request: %s\n\n' % payload)
-		#payload = ServiceCall().api_service_call(service, gateway_profile, payload)
+		payload = ServiceCall().api_service_call(service, gateway_profile, payload)
 
-		#lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
+		lgr.info('\n\n\n\n\t########\tResponse: %s\n\n' % payload)
 
-		#i.transaction_reference = '%s,%s' % (i.transaction_reference, payload['transaction_reference']) if 'transaction_reference' in payload.keys() else i.transaction_reference
-		#i.current_command = ServiceCommand.objects.get(id=payload['action_id']) if 'action_id' in payload.keys() else None
+		i.transaction_reference = '%s,%s' % (i.transaction_reference, payload['transaction_reference']) if 'transaction_reference' in payload.keys() else i.transaction_reference
+		i.current_command = ServiceCommand.objects.get(id=payload['action_id']) if 'action_id' in payload.keys() else None
 
-		##if 'last_response' in payload.keys():i.message = BridgeWrappers().response_payload(payload['last_response'])[:3839]
-		#if 'last_response' in payload.keys():i.message = str(payload['last_response'])[:3839]
+		#if 'last_response' in payload.keys():i.message = BridgeWrappers().response_payload(payload['last_response'])[:3839]
+		if 'last_response' in payload.keys():i.message = str(payload['last_response'])[:3839]
 
-		#if 'response_status' in payload.keys():
-		#	i.status = TransactionStatus.objects.get(name='PROCESSED')
-		#	i.response_status = ResponseStatus.objects.get(response=payload['response_status'])
-		#else:
-		#	payload['response_status'] = '20'
-		#	i.status = TransactionStatus.objects.get(name='FAILED')
-		#	i.response_status = ResponseStatus.objects.get(response='20')
+		if 'response_status' in payload.keys():
+			i.status = TransactionStatus.objects.get(name='PROCESSED')
+			i.response_status = ResponseStatus.objects.get(response=payload['response_status'])
+		else:
+			payload['response_status'] = '20'
+			i.status = TransactionStatus.objects.get(name='FAILED')
+			i.response_status = ResponseStatus.objects.get(response='20')
 
-		##Set for failed retries in every 6 hours within 24 hours
-		#if payload['response_status'] != '00':
-		#	if i.service.retry:
-		#		#Update Service Cut-off to service from BG service
-		#		try: servicecutoff = i.service.servicecutoff #Not working
-		#		except ServiceCutOff.DoesNotExist: servicecutoff = None
-		#		if servicecutoff and servicecutoff.cut_off_command and i.current_command and i.current_command.level > servicecutoff.cut_off_command.level:
-		#			pass
-		#		elif  i.sends > i.service.retry.max_retry:
-		#			pass
-		#		else:
-		#			i.status = TransactionStatus.objects.get(name='CREATED')
-		#			i.response_status = ResponseStatus.objects.get(response='DEFAULT')
-		#			retry_in = (i.service.retry.max_retry_hours)/(i.service.retry.max_retry)
-		#			i.scheduled_send = timezone.now()+timezone.timedelta(hours=float(retry_in))
+		#Set for failed retries in every 6 hours within 24 hours
+		if payload['response_status'] != '00':
+			if i.service.retry:
+				#Update Service Cut-off to service from BG service
+				try: servicecutoff = i.service.servicecutoff #Not working
+				except ServiceCutOff.DoesNotExist: servicecutoff = None
+				if servicecutoff and servicecutoff.cut_off_command and i.current_command and i.current_command.level > servicecutoff.cut_off_command.level:
+					pass
+				elif  i.sends > i.service.retry.max_retry:
+					pass
+				else:
+					i.status = TransactionStatus.objects.get(name='CREATED')
+					i.response_status = ResponseStatus.objects.get(response='DEFAULT')
+					retry_in = (i.service.retry.max_retry_hours)/(i.service.retry.max_retry)
+					i.scheduled_send = timezone.now()+timezone.timedelta(hours=float(retry_in))
 
-		#i.save()
+		i.save()
 
 	except Exception as e:
 		lgr.info('Unable to process bridge background service call: %s' % e)
@@ -180,12 +180,12 @@ async def bridge_background_service():
 			tasks = list()
 			with transaction.atomic():
 				lgr.info(f'1:Background-Elapsed {elapsed()}')
-				#orig_background = await sync_to_async(background_query, thread_sensitive=True)(response='DEFAULT', status='CREATED', scheduled_send=timezone.now()) 
-				orig_background = await sync_to_async(background_query, thread_sensitive=True)(response='00', status='PROCESSED', scheduled_send=timezone.now()) 
+				orig_background = await sync_to_async(background_query, thread_sensitive=True)(response='DEFAULT', status='CREATED', scheduled_send=timezone.now()) 
+				#orig_background = await sync_to_async(background_query, thread_sensitive=True)(response='00', status='PROCESSED', scheduled_send=timezone.now()) 
 				lgr.info(f'{elapsed()}-Orig Background: {orig_background}')
 				background = list(orig_background.values_list('id',flat=True)[:100])
 
-				#processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
+				processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
 				for b in background:
 					lgr.info(f'Background: {b}')
 					bg = _faust.loop.run_in_executor(thread_pool, process_bridge_background_service_call, *[b, True])
