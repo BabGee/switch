@@ -45,7 +45,7 @@ from typing import (
 )
 
 lgr = logging.getLogger(__name__)
-thread_pool = ThreadPoolExecutor(max_workers=16)
+#thread_pool = ThreadPoolExecutor(max_workers=16)
 
 @_faust.command()
 async def bridge_background_service_poll():
