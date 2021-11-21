@@ -45,7 +45,7 @@ from typing import (
 )
 
 lgr = logging.getLogger(__name__)
-#thread_pool = ThreadPoolExecutor(max_workers=16)
+thread_pool = ThreadPoolExecutor(max_workers=16)
 
 @_faust.command()
 async def bridge_background_service_poll():
@@ -179,28 +179,28 @@ async def bridge_background_service():
 
 			tasks = list()
 			with transaction.atomic():
-				lgr.info(f'1:Background-Elapsed {elapsed()}')
-				#orig_background = await sync_to_async(background_query, thread_sensitive=True)(response='DEFAULT', status='CREATED', scheduled_send=timezone.now()) 
-				##orig_background = await sync_to_async(background_query, thread_sensitive=True)(response='00', status='PROCESSED', scheduled_send=timezone.now()) 
-				orig_background = BackgroundServiceActivity.objects.select_for_update().filter(response_status__response='DEFAULT',\
-														status__name='CREATED', 
-														scheduled_send__lte=timezone.now())
+			    lgr.info(f'1:Background-Elapsed {elapsed()}')
+			    #orig_background = await sync_to_async(background_query, thread_sensitive=True)(response='DEFAULT', status='CREATED', scheduled_send=timezone.now()) 
+			    ##orig_background = await sync_to_async(background_query, thread_sensitive=True)(response='00', status='PROCESSED', scheduled_send=timezone.now()) 
+			    orig_background = BackgroundServiceActivity.objects.select_for_update().filter(response_status__response='DEFAULT',\
+													    status__name='CREATED', 
+													    scheduled_send__lte=timezone.now())
 
-				lgr.info(f'{elapsed()}-Orig Background: {orig_background}')
-				background = list(orig_background.values_list('id',flat=True)[:100])
+			    lgr.info(f'{elapsed()}-Orig Background: {orig_background}')
+			    background = list(orig_background.values_list('id',flat=True)[:100])
 
-				processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
-				for b in background:
-					lgr.info(f'Background: {b}')
-					#bg = _faust.loop.run_in_executor(thread_pool, process_bridge_background_service_call, *[b, True])
-					bg = sync_to_async(process_bridge_background_service_call, thread_sensitive=True)(b, True)
+			    processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
+			    for b in background:
+				    lgr.info(f'Background: {b}')
+				    bg = _faust.loop.run_in_executor(thread_pool, process_bridge_background_service_call, *[b, True])
+				    #bg = sync_to_async(process_bridge_background_service_call, thread_sensitive=True)(b, True)
 
-					tasks.append(bg)
+				    tasks.append(bg)
+			#End Atomic Transaction
+			lgr.info(f'2:Background-Elapsed {elapsed()}')
+			if tasks: response = await asyncio.gather(*tasks)
 
-				lgr.info(f'2:Background-Elapsed {elapsed()}')
-				if tasks: response = await asyncio.gather(*tasks)
-
-				lgr.info(f'3:Background-Elapsed {elapsed()}')
+			lgr.info(f'3:Background-Elapsed {elapsed()}')
 			await asyncio.sleep(1.0)
 		except Exception as e: 
 			lgr.error(f'Bridge Background Service: {e}')
