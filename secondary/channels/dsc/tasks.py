@@ -2407,8 +2407,8 @@ class System(Wrappers):
 						activity.file_path.save(filename+'.csv', file_content, save=False)
 				else:
 
-					#with open(tmp_file, 'rb+') as f:
 					with open(tmp_file, 'r',encoding="utf8", errors='ignore') as f:
+					with open(tmp_file, 'wrb+') as f:
 						activity.file_path.save(filename, File(f), save=False)
 					f.close()
 
