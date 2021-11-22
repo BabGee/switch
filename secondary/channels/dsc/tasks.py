@@ -2408,7 +2408,7 @@ class System(Wrappers):
 				else:
 
 					#with open(tmp_file, 'rb+') as f:
-					with open(tmp_file, 'r',encoding="utf8", errors='ignore') as f:
+					with open(tmp_file, 'rb+',encoding="utf8", errors='ignore') as f:
 						activity.file_path.save(filename, File(f), save=False)
 					f.close()
 
