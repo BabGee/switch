@@ -2410,7 +2410,9 @@ class System(Wrappers):
                                         #with open(tmp_file, 'wrb+') as f:
                                         with open(tmp_file, 'r',encoding="utf8", errors='ignore') as f:
                                                 lgr.info(f'Got File Content: {f}')
-                                                activity.file_path.save(filename, File(f), save=False)
+
+                                                #activity.file_path.save(filename, File(f), save=False)
+                                                activity.file_path.save(filename, File(f))
                                         f.close()
 
 
