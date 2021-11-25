@@ -2892,8 +2892,9 @@ class System(Wrappers):
 				payload['response_status'] = '00'
 				payload['response'] = 'Session Profile Captured'
 
-			else:
+			else:          
 				payload = self.create_user_profile(payload, node_info)
+				payload['trigger'] = 'not_registered%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')             
 				if 'response_status' in payload.keys() and payload['response_status'] == '00':
 					payload['response'] = 'Session Profile Captured'
 		except Exception as e:
@@ -2908,8 +2909,8 @@ class System(Wrappers):
 			if 'oauth_token_verified' in payload.keys():del payload['oauth_token_verified']
 
 			payload['oauth_token_verified'] = False
-
-			if 'facebook_access_token' in payload.keys():
+            
+			if 'facebook' in payload.keys():
 				# verify token and retrieve profile from facebook
 				# requires pip install facebook-sdk==3.0.0
 				import facebook
@@ -2926,26 +2927,20 @@ class System(Wrappers):
 				payload['response'] = 'Social Profile Facebook Verified'
 
 
-			elif 'google_access_token' in payload.keys():
+			elif 'google' in payload.keys():
 				# verify token and retrieve profile from google
-				# requires pip install google-auth==1.5.1
-				from google.oauth2 import id_token
-				from google.auth.transport import requests
-
+				lgr.info("Hello from google social")                
+				from social_auth.backends import get_backend
+				from social_auth.backends.google import GOOGLEAPIS_PROFILE, googleapis_profile
+				lgr.info("Hello from google social past imports") 
+                
 				# (Receive token by HTTPS POST)
-				access_token = payload['google_access_token']
+				access_token = payload['accessToken']
+				provider = payload['google']
+				backend = get_backend(provider, node_info)                
 				try:
-					# Specify the CLIENT_ID of the app that accesses the backend:
-					idinfo = id_token.verify_oauth2_token(access_token, requests.Request(), payload['google_client_id'])
-
-					# Or, if multiple clients access the backend server:
-					# idinfo = id_token.verify_oauth2_token(token, requests.Request())
-					# if idinfo['aud'] not in [CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]:
-					#     raise ValueError('Could not verify audience.')
-
-					if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
-						raise ValueError('Wrong issuer.')
-
+					idinfo = googleapis_profile(GOOGLEAPIS_PROFILE, access_token)
+					lgr.info("ID_INFO: %s" % idinfo)
 					# If auth request is from a G Suite domain:
 					# if idinfo['hd'] != GSUITE_DOMAIN_NAME:
 					#     raise ValueError('Wrong hosted domain.')
