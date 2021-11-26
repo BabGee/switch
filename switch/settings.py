@@ -78,6 +78,7 @@ primary = [
 secondary = [
     'secondary.channels.vcs',
     'secondary.channels.iic',
+    'secondary.channels.iiceditor',
     'secondary.channels.dsc',
     'secondary.channels.notify',
     'secondary.erp.pos',
@@ -89,6 +90,7 @@ secondary = [
     'secondary.finance.crc',
     'secondary.finance.paygate',
 	]
+
 
 installed_apps = primary + secondary + installed_apps
 
@@ -491,4 +493,8 @@ else:
 	        }
 
 
-
+AUTHENTICATION_BACKENDS = [
+    'social_core.backends.facebook.FacebookOAuth2',
+    'social_core.backends.google.googleoauth2',
+    'django.contrib.auth.backends.ModelBackend',
+]
