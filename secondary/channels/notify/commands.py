@@ -25,7 +25,7 @@ import asyncio
 import random
 import logging
 import aiohttp
-from http.client import HTTPConnection  # py3
+from http.client import HTTPConnection	# py3
 from typing import (
     Any,
     Callable,
@@ -157,9 +157,9 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 			#lgr.info('Orig Outbound: %s' % orig_outbound)
 
 			outbound = orig_outbound[:limit_batch].values_list('id','recipient','contact__product__id','contact__product__notification__endpoint__batch','ext_outbound_id',
-                                                'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',
-                                                'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',
-                                                'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url','contact__product__notification__endpoint__request',
+						'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',
+						'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',
+						'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url','contact__product__notification__endpoint__request',
 						'contact__product__notification__code__channel__name','contact__product__notification__code__mno__name')
 
 			lgr.info(f'1:Elapsed {elapsed()}')
@@ -174,7 +174,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 
 				df = pd.DataFrame({'outbound_id':messages[:,0], 'recipient':messages[:,1], 'product_id':messages[:,2], 'batch':messages[:,3], 'ext_service_id':messages[:,5],'code':messages[:,6],\
 					'message':messages[:,7],'endpoint_account_id':messages[:,8],'endpoint_password':messages[:,9],'endpoint_username':messages[:,10],\
-					'endpoint_api_key':messages[:,11],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'channel':messages[:,16],  'mno':messages[:,17]})
+					'endpoint_api_key':messages[:,11],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'endpoint_request':messages[:,15], 'channel':messages[:,16],  'mno':messages[:,17]})
 
 				lgr.info(f'3:Elapsed {elapsed()}')
 				#lgr.info('DF: %s' % df)
@@ -182,18 +182,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 				df = df.dropna(axis='columns',how='all')
 
 				#lgr.info(f'DF 0 {df}')
-
-				#if 'endpoint_request' in df.columns: 
-				#	#df['endpoint_request'] = df['endpoint_request'].to_json()
-				#	df['endpoint_request'] = pd.json_normalize(df['endpoint_request'])
-				#	##df['endpoint_request'] = df['endpoint_request'].astype(str)
-				#	##if not df['endpoint_request'].empty:
-				#	#df['endpoint_request']= df['endpoint_request'].fillna({i: {} for i in df.index})
-				#	##df['endpoint_request'] = df['endpoint_request'].apply(ast.literal_eval)
-				#	#lgr.info(f'DF 1 {df}')
-				#	#df = df.join(pd.json_normalize(df['endpoint_request']))
-				#	#lgr.info(f'DF 2 {df}')
-				#	#df.drop(columns=['endpoint_request'], inplace=True)
+				if 'endpoint_request' in df.columns: df['endpoint_request']= df['endpoint_request'].apply(lambda x: json.dumps(x))
 
 				#lgr.info(f'DF 3 {df}')
 				cols = df.columns.tolist()
@@ -213,7 +202,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 					outbound_id_list = group_df['outbound_id'].tolist()
 					recipient_list = group_df['recipient'].tolist()
 					recipients = tuple(zip(outbound_id_list, recipient_list))
-					payload = dict(timestamp=timezone.now().isoformat())    
+					payload = dict(timestamp=timezone.now().isoformat())	
 					for c in cols: payload[c] = str(group_df[c].unique()[0])
 					#lgr.info('MULTI: %s \n %s' % (group_df.shape,group_df.head()))
 					#if batch_size>1 and len(group_df.shape)>1 and group_df.shape[0]>1:
@@ -237,7 +226,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 					elif len(group_df.shape)>1 :
 						lgr.info(f'Got Here (list of singles): {len(recipients)}')
 						for d in recipients:
-							payload['recipients'] = [d]       
+							payload['recipients'] = [d]	  
 							#lgr.info(f'{elapsed()} Producer Payload: {payload}')
 							response = kafka_producer.publish_message(
 									payload['endpoint_url'], 
