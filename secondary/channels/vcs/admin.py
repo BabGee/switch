@@ -11,12 +11,20 @@ class MNOPrefixAdmin(admin.ModelAdmin):
 	list_display = ('mno','prefix','description','date_modified','date_created',)
 admin.site.register(MNOPrefix, MNOPrefixAdmin)
 '''
+
+
+class ChannelEndpointAdmin(admin.ModelAdmin):
+	list_display = ('name','description','request','url','account_id','username','password','api_key', 'batch',\
+			'credential',)
+admin.site.register(ChannelEndpoint, ChannelEndpointAdmin)
+
+
 class CodeTypeAdmin(admin.ModelAdmin):
 	list_display = ('name', 'description', 'date_modified', 'date_created',)
 admin.site.register(CodeType, CodeTypeAdmin)
 
 class CodeAdmin(admin.ModelAdmin):
-	list_display = ('id','code','mno','institution','channel','code_type','description','gateway','alias',)
+	list_display = ('id','code','mno','institution','channel','code_type','description','gateway','alias','endpoint',)
 	list_filter = ('institution','gateway','mno','channel','code_type',)
 	search_fields = ('code','description',)
 admin.site.register(Code, CodeAdmin)

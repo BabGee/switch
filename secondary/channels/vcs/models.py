@@ -1,6 +1,21 @@
 from django.db import models
 from secondary.erp.crm.models import *
 
+class ChannelEndpoint(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	name = models.CharField(max_length=45, unique=True)
+	description = models.CharField(max_length=100)
+	request = models.JSONField(max_length=1920, null=True, blank=True)
+	url = models.CharField(max_length=640)
+	account_id = models.CharField(max_length=128)
+	username = models.CharField(max_length=128)
+	password = models.CharField(max_length=256)
+	api_key = models.CharField(max_length=256,blank=True, null=True)
+	batch = models.SmallIntegerField(default=1)
+	credential = models.ForeignKey(Credential, blank=True, null=True, on_delete=models.CASCADE)
+	def __str__(self):
+		return u'%s' % (self.name)
 
 class CodeType(models.Model):
 	name = models.CharField(max_length=45, unique=True)
@@ -21,6 +36,7 @@ class Code(models.Model):
 	description = models.CharField(max_length=100)
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
 	alias = models.CharField(max_length=45, blank=True, null=True)
+	endpoint = models.ForeignKey(ChannelEndpoint, null=True, blank=True, on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s %s %s %s' % (self.id, self.code, self.mno, self.institution)
 
