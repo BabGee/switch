@@ -121,7 +121,7 @@ class VAS:
 				if self.channel.name == 'USSD':
 					this_item_list = ['%s%s' % (str(item['item_level'])+':' if item['item_level']>0 else '',item['menu_item']) for item in menuitems] #Zero 0 entries to not show number/item_level
 					menu_items = '\n'.join(this_item_list)
-					return  '\n%s' % menu_items
+					return	'\n%s' % menu_items
 				else: return ''
 			else:
 				return ''
@@ -249,6 +249,11 @@ class VAS:
 		self.view_data["INPUT_MIN"] = input_min
 		self.view_data["INPUT_MAX"] = input_max
 
+		endpoint = self.code.first().endpoint
+		self.view_data["ENDPOINT"] = { 'request': endpoint.request, 'url': endpoint.url, 'account_id': endpoint.account_id, 
+                                                'username': endpoint.username, 'password': endpoint.password, 'api_key': endpoint.api_key}
+
+
 	def create_menu(self, **kwargs):
 		lgr = self.node_info.log
 		#if exists, get navigator & max of nav_step order_by(nav_step)[1], add nav_step + 1
@@ -295,7 +300,7 @@ class VAS:
 			else:
 				lgr.info('\n\n\tCreate Code:  6\n\n\n')
 
-                        #Capture access_point created from shortcut or such
+			#Capture access_point created from shortcut or such
 			self.payload['access_point'] = self.access_point
 			lgr.info('Payload: %s' % self.payload)
 		#Inject input if still missing (for all channels)
