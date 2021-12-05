@@ -250,8 +250,9 @@ class VAS:
 		self.view_data["INPUT_MAX"] = input_max
 
 		endpoint = self.code.first().endpoint
-		self.view_data["ENDPOINT"] = { 'request': endpoint.request, 'url': endpoint.url, 'account_id': endpoint.account_id, 
-                                                'username': endpoint.username, 'password': endpoint.password, 'api_key': endpoint.api_key}
+		if endpoint:
+		    self.view_data["ENDPOINT"] = { 'request': endpoint.request, 'url': endpoint.url, 'account_id': endpoint.account_id, 
+						'username': endpoint.username, 'password': endpoint.password, 'api_key': endpoint.api_key}
 
 
 	def create_menu(self, **kwargs):
