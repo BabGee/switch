@@ -14,8 +14,7 @@ admin.site.register(MNOPrefix, MNOPrefixAdmin)
 
 
 class ChannelEndpointAdmin(admin.ModelAdmin):
-	list_display = ('name','description','request','url','account_id','username','password','api_key', 'batch',\
-			'credential',)
+	list_display = ('name','description','request','url','account_id','username','password','api_key', 'batch',)
 admin.site.register(ChannelEndpoint, ChannelEndpointAdmin)
 
 

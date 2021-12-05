@@ -13,7 +13,6 @@ class ChannelEndpoint(models.Model):
 	password = models.CharField(max_length=256)
 	api_key = models.CharField(max_length=256,blank=True, null=True)
 	batch = models.SmallIntegerField(default=1)
-	credential = models.ForeignKey(Credential, blank=True, null=True, on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s' % (self.name)
 
