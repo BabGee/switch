@@ -26,11 +26,11 @@ class Data:
 		lgr.info('Started get_points_awarded')
         
 		item = {}
-#		item['count'] = 1500
-		gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-		institution = gateway_profile.institution
-		total_points = PointsEarned.objects.filter(customer__institution=institution).aggregate(Sum('points_earned'))
-		item['count'] = total_points['points_earned__sum']    
+		item['count'] = 1500
+		# gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+		# institution = gateway_profile.institution
+		# total_points = PointsEarned.objects.filter(customer__institution=institution).aggregate(Sum('points_earned'))
+		# item['count'] = total_points['points_earned__sum']    
     
 		params['rows'] = [item]       
 
@@ -166,8 +166,8 @@ class Data:
 	def get_referrals_distribution(self, payload, gateway_profile, profile_tz, data):
 		params = {}
 		params['rows'] = []        
-		params['cols'] = [{"label": "SMS", "type": "string"}, {"label": "Whatsapp", "type": "string"},
-				  {"label": "Twitter", "type": "string"}, {"label": "Facebook", "type": "string"}]
+		params['cols'] = [{"label": "PEDIATRICIAN", "type": "string"}, {"label": "EYE CHECKUP", "type": "string"},
+				  {"label": "DENTIST", "type": "string"}, {"label": "OTHERS", "type": "string"}]
 
 		params['data'] = []
 		params['lines'] = []
@@ -183,4 +183,60 @@ class Data:
       
 		params['rows'] = [item]       
 
+		return params,max_id,min_id,ct,push  
+    
+    
+	def get_gender_distribution(self, payload, gateway_profile, profile_tz, data):
+		params = {}
+		params['rows'] = []        
+		params['cols'] = [{"label": "MALE", "type": "string"}, {"label": "FEMALE", "type": "string"}]
+
+		params['data'] = []
+		params['lines'] = []
+
+		max_id = 0
+		min_id = 0
+		ct = 0
+		push = {}
+        
+		lgr.info('Started get_gender_distribution')
+
+		item = ['160', '300']
+      
+		params['rows'] = [item]       
+
 		return params,max_id,min_id,ct,push    
+    
+    
+	def get_payments(self, payload, gateway_profile, profile_tz, data):
+		params = {}
+		params['rows'] = []
+		params['cols'] = [{"label": "DAYS", "type": "string"}, {"label": "PAYMENTS", "type": "string"}]
+
+		params['data'] = []
+		params['lines'] = []
+
+		max_id = 0
+		min_id = 0
+		ct = 0
+		push = {}
+
+		lgr.info('Started points_awarded')
+
+		item1 = ['1', '70']
+		item2 = ['2', '80']
+		item3 = ['3', '150']
+		item4 = ['4', '180'] 
+		item5 = ['5', '120']
+		item6 = ['6', '90']  
+		item7 = ['7', '150']
+		item8 = ['8', '130']
+		item9 = ['9', '200']
+		item10 = ['10', '180'] 
+		item11 = ['11', '190']
+		item12 = ['12', '210']        
+      
+		params['rows'] = [item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12]
+       
+		return params,max_id,min_id,ct,push
+    
