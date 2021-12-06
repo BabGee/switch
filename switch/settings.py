@@ -72,7 +72,7 @@ primary = [
     'primary.core.api',
     'primary.core.upc',
     'primary.core.bridge',
-    'social_django',
+    # 'social_django',
 	]
 
 secondary = [
