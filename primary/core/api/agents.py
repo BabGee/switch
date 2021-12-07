@@ -1,12 +1,21 @@
 import faust
 from faust.types import StreamT
 #from primary.core.async.faust import app
-from switch.faust_app import app
-import requests, json
-from .views import Interface
-from .models import *
-from django.test import RequestFactory
+from switch.faust_app import app as _faust
+import requests, json, ast
+from aiocassandra import aiosession
+import dateutil.parser
 
+from django.db import transaction
+from .models import *
+from django.db.models import Q,F
+from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
+from functools import reduce
+from mode import Service
+
+from primary.core.api.views import ServiceCall
+
+from itertools import islice, chain
 import pandas as pd
 import numpy as np
 import time
@@ -32,41 +41,37 @@ from typing import (
 
 lgr = logging.getLogger(__name__)
 
-'''
-#request_factory = RequestFactory(**{"SERVER_NAME": "localhost", "wsgi.url_scheme":"https"}).
-request_factory = RequestFactory(**{"SERVER_NAME": "localhost"})
+service_call_topic = app.topic('primary.core.upc.api.service_call')
+
+@_faust.agent(service_call_topic)
+async def iterrate(stream):
+    async for event in stream.events():
+        try:
+            lgr.info(f'RECEIVED Service Call {event}')
+            value = event.value
+            offset = event.message.offset
+            headers = event.headers
+            lgr.info(f'Value: {value} | Offset {offset} | Headers: {headers}')
+            lgr.info(f'{elapsed()} Service Call Task Completed')
+        except Exception as e: lgr.info(f'Error on Service Call: {e}')
 
 
-class _Interface(faust.Record):
-    payload: dict 
-    service_name: str
+#@_faust.agent(service_call_topic, concurrency=16)
+#async def service_call(messages):
+#	async for message in messages:
+#		try:
+#			s = time.perf_counter()
+#			elapsed = lambda: time.perf_counter() - s
+#			lgr.info(f'RECEIVED Service Call {message}')
+#                        params = dict()
+#                        gateway_profile 
+#                        service = message['SERVICE']
+#        		payload = await sync_to_async(ServiceCall().api_service_call, 
+#                                                                thread_sensitive=True)(service, gateway_profile, params)
+#
+#			lgr.info(f'Service Call Result {payload}')
+#			lgr.info(f'{elapsed()} Service Call Task Completed')
+#			#await asyncio.sleep(0.5)
+#		except Exception as e: lgr.info(f'Error on Service Call: {e}')
 
-
-class TransformedInterface(faust.Record):
-    request: dict 
-    service_name: str
-    response: dict
-
-api_topic = app.topic('primary.core.upc.api.interface', value_type=_Interface)
-
-transformed_api_topic = app.topic('primary.core.upc.api.transformedinterface', value_type=TransformedInterface)
-
-@app.agent(api_topic)
-async def _interface(_requests):
-	async for _request in _requests:
-		try:
-			request = await sync_to_async(request_factory.post)(f'/api/{_request.service_name}/', json.dumps(_request.payload), content_type='application/json')
-			response = await sync_to_async(Interface().interface)(request, _request.service_name)
-			transformed = TransformedInterface(
-						    request=_request.payload,
-						    service_name=_request.service_name,
-						    response=response.content
-						    #response=json.loads(response.content)
-						)
-
-			await transformed_api_topic.send(value=transformed)   
-			#lgr.info(f'Interface Request: {_request.service_name}')
-		except Exception as e:
-			lgr.info(f'Error in _interface request {e}')
-'''
 
