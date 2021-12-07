@@ -240,3 +240,30 @@ class Data:
        
 		return params,max_id,min_id,ct,push
     
+    
+	def get_upcoming_appointments(self, payload, gateway_profile, profile_tz, data):
+		params = {}
+		params['rows'] = []
+		params['cols'] = [{"label": "Upcoming Appointment", "type": "string"}, {"label": "Last Appointment", "type": "string"}, {"label": "Total Visits", "type": "string"}, {"label": "Reason", "type": "string"}]      
+               
+		params['data'] = []
+		params['lines'] = []
+		params['groups'] = [{
+          age: 23,
+          name: "Nathan Machoka",
+          gender: "Male",
+          image: "src/themes/dsv1.0/img/mastercard.svg"
+        }]        
+
+		max_id = 0
+		min_id = 0
+		ct = 0
+		push = {}
+
+		lgr.info('Started get_upcoming_appointments')     
+      
+		params['rows'] = ["Today, "+new Date().toDateString(), new Date().toDateString(), '1', "Eye Problem"]
+       
+		return params,max_id,min_id,ct,push    
+    
+       
