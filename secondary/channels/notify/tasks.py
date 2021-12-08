@@ -109,7 +109,7 @@ class Wrappers:
 			#_recipient_count = _recipient.size
 			allowed_columns = list(set(df.columns).intersection(set(['message','recipient','message_len'])))
 			df[allowed_columns]
-			lgr.info('\n\n\n\n\n\n\t DF Data:' % df.head())
+			lgr.info('\n\n\n\n\n\n\t DF Data: %s' % df.head())
 			_recipient_count = df.shape[0]
 
 
