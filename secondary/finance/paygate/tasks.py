@@ -398,7 +398,9 @@ class System(Wrappers):
 				ext_inbound_id = payload['ext_inbound_id'] if 'ext_inbound_id' in payload.keys() else payload['bridge__transaction_id']
 
 
-				last_incoming  = Incoming.objects.select_for_update().filter(remittance_product=product).order_by('-id')
+                                #Avoid Race condition in transactions inserts to ensure unique entries for ext_inbound_id
+				last_incoming  = Incoming.objects.select_for_update().filter(remittance_product=product, 
+                                                                        date_created__gte=timezone.now()-timezone.timedelta(minutes=10) ).order_by('-id')
 				if len(last_incoming): last_incoming.filter(id=last_incoming.first().id).update(updated=True)
 
 				f_incoming = last_incoming.filter(ext_inbound_id=ext_inbound_id)
