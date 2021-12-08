@@ -54,7 +54,7 @@ async def paygate_process_incoming():
 	lgr.info('Paygate Incoming.........')
 	def incoming_query(state, response):
 		return Incoming.objects.select_for_update(of=('self',)).filter(state__name=state,
-									response_status__response='DEFAULT')
+									response_status__response=response)
 
 	while 1:
 		try:
