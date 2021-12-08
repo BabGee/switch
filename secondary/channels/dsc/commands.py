@@ -28,7 +28,7 @@ import random
 import logging
 import aiohttp
 import datetime
-from http.client import HTTPConnection  # py3
+from http.client import HTTPConnection	# py3
 from typing import (
     Any,
     Callable,
@@ -50,8 +50,8 @@ async def dsc_file_upload():
 	"""This docstring is used as the command help in --help."""
 	lgr.info('File Upload.........')
 	def upload_query(status, last_run):
-                return FileUploadActivity.objects.select_for_update(of=('self',)).filter(Q(status__name=status),
-                                                        ~Q(file_upload__activity_service=None))
+		return FileUploadActivity.objects.select_for_update(of=('self',)).filter(Q(status__name=status),
+							~Q(file_upload__activity_service=None))
 	while 1:
 		try:
 			lgr.info('File Upload Running')
@@ -63,12 +63,12 @@ async def dsc_file_upload():
 				orig_file_upload = await sync_to_async(upload_query, thread_sensitive=True)(status='CREATED')
 				lgr.info(f'{elapsed()}-Orig File Upload: {orig_file_upload}')
 				for f in orig_file_upload:
-                                    lgr.info(f'File Upload: {f}')
-                                    fu = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)(f.file_upload.activity_service, f.gateway_profile, f.details)
+				    lgr.info(f'File Upload: {f}')
+				    fu = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)(f.file_upload.activity_service, f.gateway_profile, f.details)
 
 				    tasks.append(fu)
-                                #Mark Activities as processed
-                                orig_file_upload.update(status=FileUploadActivityStatus.objects.get(name='PROCESSED'))
+				#Mark Activities as processed
+				orig_file_upload.update(status=FileUploadActivityStatus.objects.get(name='PROCESSED'))
 			#End Atomic Transaction
 			lgr.info(f'2:File Upload-Elapsed {elapsed()}')
 			if tasks: response = await asyncio.gather(*tasks)
