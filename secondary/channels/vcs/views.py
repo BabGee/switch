@@ -129,7 +129,7 @@ class VAS:
 		if self.menu.exists():
 
 			new_navigator = Navigator(session=self.session, menu=self.menu[0], pin_auth=self.pin_auth, level=self.level, group_select=self.group_select, invalid=self.menu[0].invalid, session_state=self.menu[0].session_state)
-			new_navigator.input_select = self.payload['input']
+                        new_navigator.input_select = self.payload['input'][:200]
 
 			new_navigator.nav_step = self.nav_step
 			new_navigator.code = self.code[0]
@@ -218,7 +218,7 @@ class VAS:
 
 		else:
 			new_navigator = Navigator(session=self.session, level=self.level, group_select=self.group_select, session_state=SessionState.objects.get(name='END'))
-			new_navigator.input_select = self.payload['input']
+                        new_navigator.input_select = self.payload['input'][:200]
 
 			new_navigator.nav_step = self.nav_step
 			new_navigator.code = self.code[0]

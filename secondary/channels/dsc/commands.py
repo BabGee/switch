@@ -46,45 +46,35 @@ from typing import (
 lgr = logging.getLogger(__name__)
 
 @_faust.command()
-async def dsc_file_upload_activity():
+async def dsc_file_upload():
 	"""This docstring is used as the command help in --help."""
-	lgr.info('Session Subscription.........')
-	def poll_query(status, last_run):
-		return Poll.objects.select_for_update(of=('self',)).filter(
-								status__name=status, 
-								last_run__lte=last_run
-								)
+	lgr.info('File Upload.........')
+	def upload_query(status, last_run):
+                return FileUploadActivity.objects.select_for_update(of=('self',)).filter(Q(status__name=status),
+                                                        ~Q(file_upload__activity_service=None))
 	while 1:
 		try:
-			lgr.info('Poll Running')
-
+			lgr.info('File Upload Running')
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
-
 			tasks = list()
 			with transaction.atomic():
+				lgr.info(f'1:File Upload-Elapsed {elapsed()}')
+				orig_file_upload = await sync_to_async(upload_query, thread_sensitive=True)(status='CREATED')
+				lgr.info(f'{elapsed()}-Orig File Upload: {orig_file_upload}')
+				for f in orig_file_upload:
+                                    lgr.info(f'File Upload: {f}')
+                                    fu = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)(f.file_upload.activity_service, f.gateway_profile, f.details)
 
-				lgr.info(f'1:Poll-Elapsed {elapsed()}')
-				orig_poll = await sync_to_async(poll_query, thread_sensitive=True)(status='PROCESSED', 
-								last_run=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every"))
-
-				lgr.info(f'{elapsed()}-Orig Poll: {orig_poll}')
-
-				for p in orig_poll:
-					lgr.info(f'Poll: {p}')
-					bg = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)(p.service, p.gateway_profile, p.request)
-					tasks.append(bg)
-
-				lgr.info(f'2:Poll-Elapsed {elapsed()}')
-				#orig_poll.update(status=PollStatus.objects.get(name='PROCESSING'))
-				if tasks:
-					response = await asyncio.gather(*tasks)
-					orig_poll.update(last_run=timezone.now())
-				lgr.info(f'3:Poll-Elapsed {elapsed()}')
-
+				    tasks.append(fu)
+                                #Mark Activities as processed
+                                orig_file_upload.update(status=FileUploadActivityStatus.objects.get(name='PROCESSED'))
+			#End Atomic Transaction
+			lgr.info(f'2:File Upload-Elapsed {elapsed()}')
+			if tasks: response = await asyncio.gather(*tasks)
+			lgr.info(f'3:File Upload-Elapsed {elapsed()}')
 			await asyncio.sleep(1.0)
-
 		except Exception as e: 
-			lgr.error(f'Session Subscription Error: {e}')
+			lgr.error(f'File Upload Error: {e}')
 			break
 
