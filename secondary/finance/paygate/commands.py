@@ -76,6 +76,12 @@ async def paygate_process_incoming():
 					lgr.info(f'Incoming: {i}')
 					gateway_institution_notification = i.remittance_product.gatewayinstitutionnotification
 					payload = i.request
+
+					payload['amount'] = str(i.amount)
+					payload['reference'] = i.reference
+					if i.currency is not None:
+					    payload['currency'] = i.currency.code
+
 					lgr.info('Started Processing Gateway Institution Notification: %s | %s' % (gateway_institution_notification, payload))
 					notification_key_list = gateway_institution_notification.notification_service.notification_key.all().values_list('key', flat=True)
 
