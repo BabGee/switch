@@ -339,37 +339,47 @@ class System(Wrappers):
 
 			if remittance_product.exists():
 				product = remittance_product.first()
-				#Capture all. Whether Paid or Unpaid, as long as it hasn't expired/Solves multiple payment requests issue where once paid, the unpaid ones match institution incoming service
-				purchase_order = PurchaseOrder.objects.filter(reference__iexact=reference, expiry__gte=timezone.now(), gateway_profile__gateway=gateway_profile.gateway)
-				lgr.info('Order: %s' % purchase_order)
 
-				if not purchase_order.exists():
-					######### Institution Incoming Service ###############
+				try: 
+				    gateway_institution_notification = product.gatewayinstitutionnotification
+				    response_status = ResponseStatus.objects.get(response='DEFAULT')
+				    state = IncomingState.objects.get(name="CREATED")
+				except: 
+				    gateway_institution_notification = None
+				    response_status = ResponseStatus.objects.get(response='00')
+				    state = IncomingState.objects.get(name="DELIVERED")
 
-					#keyword = reference[:4] #Add regex to get Keyword in future
-					keyword = ''.join(re.findall(r'(^[A-Za-z]+)(?<=[\S])|(?<=[\d])', reference)).lower()  #Add Intent Classification Model to get Keyword/intent in future
-					lgr.info('Keyword: %s' % keyword)
-					institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(remittance_product=product)|Q(remittance_product=None),\
-										Q(keyword__iexact=keyword)|Q(keyword='')|Q(keyword__isnull=True))
+				    #Capture all. Whether Paid or Unpaid, as long as it hasn't expired/Solves multiple payment requests issue where once paid, the unpaid ones match institution incoming service
+				    purchase_order = PurchaseOrder.objects.filter(reference__iexact=reference, expiry__gte=timezone.now(), gateway_profile__gateway=gateway_profile.gateway)
+				    lgr.info('Order: %s' % purchase_order)
 
-					lgr.info('Keyword: %s' % institution_incoming_service_list)
-					if len(institution_incoming_service_list):
-						if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
-							amount = Decimal(payload['amount'])
-							institution_incoming_service_list = institution_incoming_service_list.filter(Q(min_amount__gte=amount)|Q(min_amount__isnull=True),\
-																	Q(max_amount__lte=amount)|Q(max_amount__isnull=True))
+				    if not purchase_order.exists():
+					    ######### Institution Incoming Service ###############
 
-						if institution_incoming_service_list.count() == 1:
-							lgr.info('Keyword Found')
-							institution_incoming_service = institution_incoming_service_list.last()
-						else:
-							lgr.info('Multi Keyword Found') #Take the one with an empty keyword
-							_institution_incoming_service_list = institution_incoming_service_list.filter(Q(keyword__in=[''])|Q(keyword__isnull=True))
-							institution_incoming_service = _institution_incoming_service_list.first() if _institution_incoming_service_list.exists() else institution_incoming_service_list.last()
+					    #keyword = reference[:4] #Add regex to get Keyword in future
+					    keyword = ''.join(re.findall(r'(^[A-Za-z]+)(?<=[\S])|(?<=[\d])', reference)).lower()  #Add Intent Classification Model to get Keyword/intent in future
+					    lgr.info('Keyword: %s' % keyword)
+					    institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(remittance_product=product)|Q(remittance_product=None),\
+										    Q(keyword__iexact=keyword)|Q(keyword='')|Q(keyword__isnull=True))
 
-						lgr.info('Institution Service: %s' % institution_incoming_service)
+					    lgr.info('Keyword: %s' % institution_incoming_service_list)
+					    if len(institution_incoming_service_list):
+						    if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
+							    amount = Decimal(payload['amount'])
+							    institution_incoming_service_list = institution_incoming_service_list.filter(Q(min_amount__gte=amount)|Q(min_amount__isnull=True),\
+																	    Q(max_amount__lte=amount)|Q(max_amount__isnull=True))
 
-					######### Institution Incoming Service ###############
+						    if institution_incoming_service_list.count() == 1:
+							    lgr.info('Keyword Found')
+							    institution_incoming_service = institution_incoming_service_list.last()
+						    else:
+							    lgr.info('Multi Keyword Found') #Take the one with an empty keyword
+							    _institution_incoming_service_list = institution_incoming_service_list.filter(Q(keyword__in=[''])|Q(keyword__isnull=True))
+							    institution_incoming_service = _institution_incoming_service_list.first() if _institution_incoming_service_list.exists() else institution_incoming_service_list.last()
+
+						    lgr.info('Institution Service: %s' % institution_incoming_service)
+
+					    ######### Institution Incoming Service ###############
 
 				# Capture remittance product institution
 
@@ -382,25 +392,11 @@ class System(Wrappers):
 				try: institution_notification = product.institutionnotification
 				except: institution_notification = None
 
-				try: 
-				    gateway_institution_notification = product.gatewayinstitutionnotification
-
-				    #log paygate incoming
-				    response_status = ResponseStatus.objects.get(response='DEFAULT')
-				    state = IncomingState.objects.get(name="CREATED")
-
-				except: 
-				    gateway_institution_notification = None
-				    #log paygate incoming
-				    response_status = ResponseStatus.objects.get(response='00')
-				    state = IncomingState.objects.get(name="DELIVERED")
-
 				ext_inbound_id = payload['ext_inbound_id'] if 'ext_inbound_id' in payload.keys() else payload['bridge__transaction_id']
 
-
-                                #Avoid Race condition in transactions inserts to ensure unique entries for ext_inbound_id
+				#Avoid Race condition in transactions inserts to ensure unique entries for ext_inbound_id
 				last_incoming  = Incoming.objects.select_for_update().filter(remittance_product=product, 
-                                                                        date_created__gte=timezone.now()-timezone.timedelta(minutes=10) ).order_by('-id')
+									date_created__gte=timezone.now()-timezone.timedelta(minutes=1) ).order_by('-id')
 				if len(last_incoming): last_incoming.filter(id=last_incoming.first().id).update(updated=True)
 
 				f_incoming = last_incoming.filter(ext_inbound_id=ext_inbound_id)
@@ -435,15 +431,7 @@ class System(Wrappers):
 						except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
 						incoming.msisdn = msisdn
 
-					#if gateway_institution_notification:
-					#	incoming.response_status = ResponseStatus.objects.get(response='00')
-					#	incoming.state = IncomingState.objects.get(name="DELIVERED")
-
 					incoming.save()
-
-					#if gateway_institution_notification:
-					#	process_gateway_institution_notification.delay(gateway_institution_notification.id, payload)
-
 
 					if product.credit_account: payload['trigger'] = 'credit_account%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 					if product.notification: payload['trigger'] = 'notification%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
