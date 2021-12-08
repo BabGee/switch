@@ -67,10 +67,8 @@ async def paygate_process_incoming():
 			with transaction.atomic():
 
 				lgr.info(f'1:Incoming-Elapsed {elapsed()}')
-				#orig_incoming = await sync_to_async(incoming_query, thread_sensitive=True)(state='CREATED', 
-				#									    response='DEFAULT')
-				orig_incoming = await sync_to_async(incoming_query, thread_sensitive=True)(state='PROCESSED', 
-													    response='00')
+				orig_incoming = await sync_to_async(incoming_query, thread_sensitive=True)(state='CREATED', 
+													    response='DEFAULT')
 
 				lgr.info(f'{elapsed()}-Orig Incoming: {orig_incoming}')
 
@@ -93,10 +91,10 @@ async def paygate_process_incoming():
 					##for missing in missing_keys:
 					##	params[missing] = ''
 				       
-					#bg = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)(gateway_institution_notification.notification_service.service,
-					#										    gateway_institution_notification.gateway_profile, params)
+					bg = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)(gateway_institution_notification.notification_service.service,
+															    gateway_institution_notification.gateway_profile, params)
 
-					#tasks.append(bg)
+					tasks.append(bg)
 
 				lgr.info(f'2:Incoming-Elapsed {elapsed()}')
 				if tasks:
