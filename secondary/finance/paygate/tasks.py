@@ -434,11 +434,14 @@ class System(Wrappers):
 						incoming.msisdn = msisdn
 
 					if gateway_institution_notification:
-						process_gateway_institution_notification.delay(gateway_institution_notification.id, payload)
 						incoming.response_status = ResponseStatus.objects.get(response='00')
 						incoming.state = IncomingState.objects.get(name="DELIVERED")
 
 					incoming.save()
+
+					if gateway_institution_notification:
+						process_gateway_institution_notification.delay(gateway_institution_notification.id, payload)
+
 
 					if product.credit_account: payload['trigger'] = 'credit_account%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 					if product.notification: payload['trigger'] = 'notification%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
