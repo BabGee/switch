@@ -53,7 +53,7 @@ async def paygate_process_incoming():
 	"""
 	lgr.info('Paygate Incoming.........')
 	def incoming_query(state, response):
-		return Incoming.objects.select_for_update(of=('self',)).filter(state__name=status,
+		return Incoming.objects.select_for_update(of=('self',)).filter(state__name=state,
 									response_status__response='DEFAULT')
 
 	while 1:
@@ -101,7 +101,7 @@ async def paygate_process_incoming():
 				lgr.info(f'2:Incoming-Elapsed {elapsed()}')
 				if tasks:
 					response = await asyncio.gather(*tasks)
-					orig_incoming.update(status=IncomingState.objects.get(name='PROCESSED'), response_status=ResponseStatus.objects.get(response='00'))
+					orig_incoming.update(state=IncomingState.objects.get(name='PROCESSED'), response_status=ResponseStatus.objects.get(response='00'))
 				lgr.info(f'3:Incoming-Elapsed {elapsed()}')
 
 			await asyncio.sleep(1.0)
