@@ -112,6 +112,5 @@ async def paygate_process_incoming():
 
 		except Exception as e: 
 			lgr.error(f'Paygate Incoming Error: {e}')
-			break
 
 

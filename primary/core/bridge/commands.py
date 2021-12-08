@@ -203,5 +203,4 @@ async def bridge_background_service():
 			await asyncio.sleep(1.0)
 		except Exception as e: 
 			lgr.error(f'Bridge Background Service: {e}')
-			break
 
