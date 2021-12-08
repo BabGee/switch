@@ -399,7 +399,7 @@ class System(Wrappers):
 
 
 				last_incoming  = Incoming.objects.select_for_update().filter(remittance_product=product).order_by('-id')
-				if len(last_incoming): last_incoming.filter(id=last_incoming.last().id).update(updated=True)
+				if len(last_incoming): last_incoming.filter(id=last_incoming.first().id).update(updated=True)
 
 				f_incoming = last_incoming.filter(ext_inbound_id=ext_inbound_id)
 				if len(f_incoming):
