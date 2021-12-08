@@ -400,7 +400,7 @@ class System(Wrappers):
 				if len(last_incoming): last_incoming.filter(id=last_incoming.first().id).update(updated=True)
 
 				#Check if transaction exists
-				if Incoming.objects.filter(remittance_product=product,ext_inbound_id=ext_inbound_id).exist():
+				if Incoming.objects.filter(remittance_product=product,ext_inbound_id=ext_inbound_id).exists():
 					payload['response_status'] = '94'
 					payload['response'] = 'External Inbound ID Exists'
 				else:
