@@ -382,12 +382,18 @@ class System(Wrappers):
 				try: institution_notification = product.institutionnotification
 				except: institution_notification = None
 
-				try: gateway_institution_notification = product.gatewayinstitutionnotification
-				except: gateway_institution_notification = None
+				try: 
+				    gateway_institution_notification = product.gatewayinstitutionnotification
 
-				#log paygate incoming
-				response_status = ResponseStatus.objects.get(response='DEFAULT')
-				state = IncomingState.objects.get(name="CREATED")
+				    #log paygate incoming
+				    response_status = ResponseStatus.objects.get(response='DEFAULT')
+				    state = IncomingState.objects.get(name="CREATED")
+
+				except: 
+				    gateway_institution_notification = None
+				    #log paygate incoming
+				    response_status = ResponseStatus.objects.get(response='00')
+				    state = IncomingState.objects.get(name="DELIVERED")
 
 				ext_inbound_id = payload['ext_inbound_id'] if 'ext_inbound_id' in payload.keys() else payload['bridge__transaction_id']
 
@@ -421,17 +427,18 @@ class System(Wrappers):
 					if institution_notification:
 						incoming.institution_notification = institution_notification
 
-
 					msisdn = UPCWrappers().get_msisdn(payload)
 					if msisdn is not None:
 						try:msisdn = MSISDN.objects.get(phone_number=msisdn)
 						except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
 						incoming.msisdn = msisdn
 
-					incoming.save()
-
 					if gateway_institution_notification:
 						process_gateway_institution_notification.delay(gateway_institution_notification.id, payload)
+						incoming.response_status = ResponseStatus.objects.get(response='00')
+						incoming.state = IncomingState.objects.get(name="DELIVERED")
+
+					incoming.save()
 
 					if product.credit_account: payload['trigger'] = 'credit_account%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 					if product.notification: payload['trigger'] = 'notification%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
