@@ -243,17 +243,32 @@ class Data:
     
 	def get_upcoming_appointments(self, payload, gateway_profile, profile_tz, data):
 		params = {}
-		params['rows'] = []
-		params['cols'] = [{"label": "Upcoming Appointment", "type": "string"}, {"label": "Last Appointment", "type": "string"}, {"label": "Total Visits", "type": "string"}, {"label": "Reason", "type": "string"}]      
+		params["rows"] = []
+		params["cols"] = [
+            {
+               "label":"Time",
+               "type":"string",
+               "value":"id"
+            },
+            {
+               "label":"Patient Name",
+               "type":"string",
+               "value":"name"
+            },
+            {
+               "label":"Appointed to",
+               "type":"string",
+               "value":"description"
+            },
+            {
+               "label":"Department",
+               "type":"file",
+               "value":"image"
+            }
+         ]      
                
 		params['data'] = []
-		params['lines'] = []
-		params['groups'] = [{
-          age: 23,
-          name: "Nathan Machoka",
-          gender: "Male",
-          image: "src/themes/dsv1.0/img/mastercard.svg"
-        }]        
+		params['lines'] = []       
 
 		max_id = 0
 		min_id = 0
@@ -262,8 +277,71 @@ class Data:
 
 		lgr.info('Started get_upcoming_appointments')     
       
-		params['rows'] = ["Today, "+new Date().toDateString(), new Date().toDateString(), '1', "Eye Problem"]
+		params["rows"] = [
+            [
+               {
+                  "from":1638622447680,
+                  "to":1638622447680
+               },
+               "Customize messages",
+               "mpesa",
+               "src/themes/dsv1.0/img/mastercard.svg"
+            ],
+            [
+               {
+                  "from":1638439899572,
+                  "to":1638439899572
+               },
+               "Reach contact groups",
+               "mpesa",
+               "src/themes/dsv1.0/img/mpesa.svg"
+            ],
+            [
+               {
+                  "from":1638439899572,
+                  "to":1638439899572
+               },
+               "Purchase Float",
+               "mpesa",
+               "src/themes/dsv1.0/img/paypal.svg"
+            ]]
        
 		return params,max_id,min_id,ct,push    
+
     
-       
+	def get_next_client(self, payload, gateway_profile, profile_tz, data):
+		params = {}
+		params['rows'] = []        
+		params['cols'] = [
+         {'type': 'string', 'value': 'contact_group__id', 'label': 'Upcoming Appointment'},
+         {'type': 'string', 'value': 'contact_group__name', 'label': 'Last Appointment'},
+         {'type': 'string', 'value': 'contact_group__description', 'label': 'Total Visits'},
+         {'type': 'number', 'value': 'Contact Count', 'label': 'Reason'},
+       ]
+
+		params['data'] = []
+		params['lines'] = []
+        
+        
+		# groups = [{
+		# age: 23,
+		# name: "Nathan Machoka",
+		# gender: "Male",
+		# image: "src/themes/dsv1.0/img/mastercard.svg"
+		# }]
+
+		max_id = 0
+		min_id = 0
+		ct = 0
+		push = {}
+        
+		lgr.info('Started get_next_client')
+
+
+		item = ["29-08-2021", "29-08-2021", '1', "Eye Problem"]    
+		params['rows'] = [item]       
+
+		return params,max_id,min_id,ct,push    
+    
+    
+    
