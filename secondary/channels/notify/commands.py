@@ -146,7 +146,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 		with transaction.atomic():
 			#.order_by('contact__product__priority').select_related('contact','template','state').all
 			#|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60))\
-			orig_outbound = Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name__in=['SMS','WHATSAPP']),~Q(recipient=None),
+			orig_outbound = Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name__in=['SMS','WHATSAPP','EMAIL']),~Q(recipient=None),
 					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk),
 					Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),
 					contact__product__trading_box__close_time__gte=timezone.localtime().time())),
@@ -160,7 +160,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 						'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',
 						'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',
 						'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url','contact__product__notification__endpoint__request',
-						'contact__product__notification__code__channel__name','contact__product__notification__code__mno__name')
+						'contact__product__notification__code__channel__name','contact__product__notification__code__mno__name','heading')
 
 			lgr.info(f'1:Elapsed {elapsed()}')
 			#lgr.info('Outbound: %s' % outbound)
@@ -174,7 +174,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 
 				df = pd.DataFrame({'outbound_id':messages[:,0], 'recipient':messages[:,1], 'product_id':messages[:,2], 'batch':messages[:,3], 'ext_service_id':messages[:,5],'code':messages[:,6],\
 					'message':messages[:,7],'endpoint_account_id':messages[:,8],'endpoint_password':messages[:,9],'endpoint_username':messages[:,10],\
-					'endpoint_api_key':messages[:,11],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'endpoint_request':messages[:,15], 'channel':messages[:,16],  'mno':messages[:,17]})
+					'endpoint_api_key':messages[:,11],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'endpoint_request':messages[:,15], 'channel':messages[:,16],  'mno':messages[:,17],  'heading':messages[:,18]})
 
 				lgr.info(f'3:Elapsed {elapsed()}')
 				#lgr.info('DF: %s' % df)
