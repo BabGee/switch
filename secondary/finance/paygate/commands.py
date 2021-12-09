@@ -53,8 +53,8 @@ async def paygate_process_incoming():
 	"""
 	lgr.info('Paygate Incoming.........')
 	def incoming_query(state, response):
-		return Incoming.objects.select_for_update(of=('self',)).filter(state__name=state,
-									response_status__response=response)
+		return Incoming.objects.select_for_update(of=('self',)).filter(state__name=state, response_status__response=response,
+                                                                    date_modified__lte=timezone.now()-timezone.timedelta(seconds=2))
 
 	while 1:
 		try:
