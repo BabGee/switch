@@ -29,6 +29,10 @@ from django.contrib.auth.hashers import check_password
 from django.db import transaction
 from primary.core.bridge.models import *
 
+from products.nikobizz.models import *
+
+from products.nikobizz.services._booking.models import *
+
 import logging
 lgr = logging.getLogger('primary.core.upc')
 
@@ -168,8 +172,8 @@ class Wrappers:
 		if 'email' in payload.keys() and self.validateEmail(payload["email"]):user.email = payload["email"]
 		if 'first_name' in payload.keys(): user.first_name = payload['first_name']
 		if 'last_name' in payload.keys(): user.last_name = payload['last_name']
-		user.save()
-
+		user.save()       
+        
 		profile = Profile.objects.get(id=user.profile.id) #User is a OneToOne field
 		if 'middle_name' in payload.keys(): profile.middle_name = payload['middle_name']
 		if 'national_id' in payload.keys(): profile.national_id = str(payload['national_id']).replace(' ','').strip()
@@ -540,9 +544,11 @@ class System(Wrappers):
 
 	def login_verification(self, payload, node_info):
 		try:
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			email_msisdn = payload['email_msisdn'].strip()
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])           
+			email_msisdn = payload['email'].strip()
+			lgr.info("Payload:%s" % payload)            
 			def device_verification(gateway_profile, payload):
+				lgr.info("Gateway Profile(login_verification): %s" % gateway_profile)                
 				gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile=gateway_profile, \
 						gateway_profile__gateway=gateway_profile.gateway, activation_device_id = payload['fingerprint'],\
 						channel__id=payload['chid'])
@@ -602,7 +608,7 @@ class System(Wrappers):
 	def login_activation(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			email_msisdn = payload['email_msisdn'].strip()
+			email_msisdn = payload['email'].strip()
 			def device_activation(gateway_profile, payload):
 				gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile=gateway_profile, \
 						gateway_profile__gateway=gateway_profile.gateway, channel__id=payload['chid'])
@@ -670,8 +676,7 @@ class System(Wrappers):
 	def login_validation(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			email_msisdn = payload['email_msisdn'].strip()
-			lgr.info('GatewayProfile: %s' % gateway_profile)
+			email_msisdn = payload['email'].strip()
 			def device_validation(gateway_profile, payload):
 				gateway_profile_device_list = GatewayProfileDevice.objects.filter(gateway_profile=gateway_profile, \
 						gateway_profile__gateway=gateway_profile.gateway, channel__id=payload['chid'])
@@ -1019,10 +1024,10 @@ class System(Wrappers):
 				gateway_profile_list = GatewayProfile.objects.filter(user__email__iexact=payload['email'], gateway=gateway_profile.gateway)
 				if gateway_profile_list.exists():
 					payload['response'] = 'Profile Found'
-					payload['response_status'] = '00'
-				else:
+					payload['response_status'] = '00'                   
+				else:                     
 					payload['response'] = 'Email not Registered'
-					payload['response_status'] = '96'
+					payload['response_status'] = '96'                      
 			else:
 				payload['response'] = 'Invalid Email or Not Found'
 				payload['response_status'] = '96'
@@ -1479,7 +1484,7 @@ class System(Wrappers):
 			lgr.info('Error on change MSISDN: %s' % e)
 			payload['response_status'] = '96'
 		return payload
-
+ 
 
 	def validate_institution(self, payload, node_info):
 		try:
@@ -1992,17 +1997,17 @@ class System(Wrappers):
 			payload['response_status'] = '96'
 
 		return payload
-
+  
+    
 	def set_password(self, payload, node_info):
 		try:
 
 
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-
 			password = payload['password']
 			confirm_password = payload['confirm_password'] if 'confirm_password' in payload.keys() else None
+			lgr.info('Payload(set_password): %s' % payload)            
 			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-
 			error = ''
 
 			password_policy = PasswordPolicy.objects.get(gateway=gateway_profile.gateway)
@@ -2652,7 +2657,7 @@ class System(Wrappers):
 
 				payload['response'] = 'Profile Error: Gateway Profile Exists'
 				payload['response_status'] = '63'
-
+                
 			else:
 				def createUsername(original):
 					u = User.objects.filter(username__iexact=original)
@@ -2763,6 +2768,7 @@ class System(Wrappers):
 			lgr.info("Error on Creating User Profile: %s" % e,exc_info=True)
 		return payload
 
+    
 	def get_gateway_profile(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
@@ -2779,6 +2785,7 @@ class System(Wrappers):
 	def get_profile(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
+			lgr.info("Gateway Profile (get_profile): %s" % gateway_profile)            
 
 			profile_error = None
 			session_gateway_profile, payload, profile_error = self.profile_capture(gateway_profile, payload, profile_error)
@@ -2828,6 +2835,14 @@ class System(Wrappers):
 			lgr.info("Error on getting session gateway Profile: %s" % e)
 		return payload
 
+	def strip_msisdn(self, payload, node_info):
+		payload['stripped_msisdn'] = '+254790111111'.strip('+')
+		payload['response'] = 'MSISDN stripped'
+		payload['response_status'] = '00'        
+		return payload        
+        
+    
+    
 	def get_msisdn_profile(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.using('read').get(id=payload['gateway_profile_id'])
@@ -2846,8 +2861,7 @@ class System(Wrappers):
 
 	def get_update_profile(self, payload, node_info):
 		try:
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])           
 			profile_error = None
 			session_gateway_profile, payload, profile_error = self.profile_capture(gateway_profile, payload, profile_error)
 			session_gateway_profile, payload, profile_error = self.profile_state(session_gateway_profile, payload, profile_error)
@@ -2857,7 +2871,7 @@ class System(Wrappers):
 				payload['session_gateway_profile_id'] = session_gateway_profile[0].id
 				user, payload = self.profile_update(session_gateway_profile[0].user, payload)
 
-				payload['username'] = user.username 
+				payload['username'] = user.username             
 				if user.first_name: payload['first_name'] = user.first_name
 				if user.last_name: payload['last_name'] = user.last_name
 				if user.profile.middle_name: payload['middle_name'] = user.profile.middle_name
@@ -2886,7 +2900,7 @@ class System(Wrappers):
 					#session_gateway_profile[0].access_level = access_level
 					session_gateway_profile[0].save()
 
-				if user.email and self.validateEmail(user.email): payload['email'] = user.email
+				if user.email and self.validateEmail(user.email): payload['email'] = user.email                  
 				elif 'email' in payload.keys(): del payload['email']
 
 				payload['response_status'] = '00'
@@ -2895,31 +2909,33 @@ class System(Wrappers):
 			else:          
 				payload = self.create_user_profile(payload, node_info)
 				payload['trigger'] = 'not_registered%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')             
-				if 'response_status' in payload.keys() and payload['response_status'] == '00':
-					payload['response'] = 'Session Profile Captured'
+				payload['response'] = 'Session Profile Captured'               
+                                
 		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on getting session gateway Profile: %s" % e)
 		return payload
-
+    
+    
 	def get_social_profile(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
 			if 'oauth_token_verified' in payload.keys():del payload['oauth_token_verified']
 
 			payload['oauth_token_verified'] = False
-            
+
+			lgr.info("PAYLOAD(SOCIAL): %s" % payload)
 			if 'facebook' in payload.keys():
 				# verify token and retrieve profile from facebook
 				import facebook
-				access_token = payload['facebook_access_token']
+				access_token = payload['facebook']['authResponse']['accessToken']
 				graph = facebook.GraphAPI(access_token=access_token, version="3.0")
-				profile = graph.get_object(id='me', fields='name,email')
+				profile = graph.get_object(id='me', fields='name,email')                
 
-				payload['full_name'] = profile['name']
+#				lgr.info("PROFILE: %s" % profile)                               
+				payload['full_names'] = profile['name']
 				payload['email'] = profile['email']
-
 				# update token verified flag
 				payload['oauth_token_verified'] = True
 				payload['response_status'] = '00'
@@ -2947,7 +2963,6 @@ class System(Wrappers):
 					payload['response_status'] = '00'
 					payload['response'] = 'Social Profile Google Verified'
 
-
 				except ValueError:
 					# Invalid token
 					raise 
@@ -2962,29 +2977,6 @@ class System(Wrappers):
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on Verifying Social Profile: %s" % e)
-		return payload
-
-
-	def set_registered_social_profile_activated(self, payload, node_info):
-		try:
-			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
-			if 'oauth_token_verified' in payload.keys() and payload['oauth_token_verified']:
-				# Only activate initial registrations
-				if session_gateway_profile.status.name == 'REGISTERED':
-					session_gateway_profile.status = ProfileStatus.objects.get(name='ACTIVATED')
-					session_gateway_profile.save()
-
-			else:
-				# invalid service command usage
-				payload['response_status'] = '00'
-
-			payload['response'] = 'Profile Activated'
-			payload['response_status'] = '00'
-
-		except Exception as e:
-			lgr.info('Error on Validating One Time Pin: %s' % e)
-			payload['response_status'] = '96'
 		return payload
 
 
@@ -3077,7 +3069,7 @@ class System(Wrappers):
 		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
-			lgr.info("Error on getting session gateway Profile: %s" % e)
+			lgr.info("Error on getting session ayway Profile: %s" % e)
 		return payload
 
 	def login(self, payload, node_info):
@@ -3093,7 +3085,8 @@ class System(Wrappers):
 				if 'email' in payload.keys() and self.validateEmail(payload['email']):
 					lgr.info('Login with Valid Email')
 					gateway_login_profile = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,user__email__iexact=payload['email'].strip())
-
+					lgr.info('Gateway Login Profile %s' %gateway_login_profile)
+                    
 				elif 'username' in payload.keys() and self.validateEmail(payload['username']):
 					lgr.info('Login with Username as Valid Email')
 					gateway_login_profile = GatewayProfile.objects.filter(gateway=gateway_profile.gateway,user__email__iexact=payload['username'].strip())
@@ -3117,6 +3110,7 @@ class System(Wrappers):
 							payload.get('oauth_token_verified', False) or # Social auth will provide an email, is unique
 							p.user.check_password(payload['password']) ): # or a password
 						authorized_gateway_profile = p
+						lgr.info('Authorized Gateway Profile: %s' % authorized_gateway_profile)                        
 						break
 
 			elif 'sec' in payload.keys() and 'gpid' in payload.keys():
@@ -3169,8 +3163,10 @@ class System(Wrappers):
 			if authorized_gateway_profile is not None and authorized_gateway_profile.status.name not in ['DELETED']:
 
 				password_policy = PasswordPolicy.objects.get(gateway=gateway_profile.gateway)
+				lgr.info('Password Policy: %s' % password_policy)                
 				#User Password History Exists for users created with a function that introduces it. Manual Creations would lack this hence can't log into portal
 				password_history = UserPasswordHistory.objects.filter(user=authorized_gateway_profile.user).order_by('-date_created')[:1]
+				lgr.info('Password History: %s' % password_history)                
 				if len(password_history):
 					password_history = password_history[0]
 
@@ -3192,16 +3188,14 @@ class System(Wrappers):
 					details['access_level'] = authorized_gateway_profile.access_level.name
                     
 				elif payload.get('oauth_token_verified', False):
-
 					payload['trigger'] = 'verified%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
 
 					details['api_key'] = authorized_gateway_profile.user.profile.api_key
 					details['status'] = authorized_gateway_profile.status.name
 					details['access_level'] = authorized_gateway_profile.access_level.name                    
                     
-
 				else:
-					payload['trigger'] = 'expired_password%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+					payload['trigger'] = 'expired_password%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')               
 
 				payload['response'] = details
 				payload['session_gateway_profile_id'] = authorized_gateway_profile.id #Authenticating Gateway Profile id replace not to clash with parent service
@@ -3213,6 +3207,54 @@ class System(Wrappers):
 			lgr.info("Error on Login: %s" % e)
 		return payload
 
+	def create_booking_industry_profile(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])            
+			id_industry = payload['select_industry']
+			id_industry += 1          
+			booking_industry = BookingIndustry.objects.filter(id=id_industry).first()
+			lgr.info("Booking Industry: %s" % booking_industry)
+			BookingIndustryProfile(gateway_profile=gateway_profile, booking_industry=booking_industry).save()
+			payload['response_status'] = '00'
+			payload['response'] = 'Booking Industry Profile Created'            
+		except Exception as e:
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+			lgr.info("Error on Creating Booking industry Profile: %s" % e)
+		return payload    
+
+    
+	def generate_subdomain(self, payload, node_info):
+
+		try:
+			lgr.info('PAYLOAD: %s' %payload)
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			subdomain = Subdomain.objects.get(subdomain='nikobizz.nikobizz.com')
+			subdomain.pk=None
+
+			if 'institution_id' in payload.keys():
+				institution_id = payload['institution_id']
+				institution = Institution.objects.get(id=institution_id)
+
+			else:
+				institution = gateway_profile.institution
+
+			# institution.name.split()                
+			subdomain.subdomain = (institution.name + '.' + gateway_profile.gateway.name + '-' + 'nikobizz.com').lower()
+			subdomain.institution_id = institution.id
+			subdomain.save()
+
+			payload['subdomain'] = subdomain.subdomain
+			payload['response'] = 'Subdomain Created'
+			payload['response_status'] = '00'
+
+		except Exception as e:
+			lgr.info('Error Creating Subdomain: %s' % e,exc_info=True)
+			payload['response_status'] = '96'
+		return payload    
+    
+    
+    
 class Registration(System):
 	pass
 

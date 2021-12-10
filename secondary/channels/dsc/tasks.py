@@ -1711,7 +1711,8 @@ class Wrappers:
 		except Exception as e:
 			lgr.info('Error on purchases: %s' % e)
 		return params
-
+    
+    
 	@transaction.atomic
 	def bid_ranking(self,payload,gateway_profile,profile_tz,data):
 
@@ -2196,7 +2197,7 @@ class Wrappers:
 						#responseParams = func(payload, node_info)
 						params,max_id,min_id,t_count,push[d.data_name] = func(payload, gateway_profile, profile_tz, d)
 
-						#lgr.info('After Call')
+						lgr.info('After Call: %s, %s, %s, %s, %s,' %(params, max_id, min_id, t_count, push))
 						'''
 						func = getattr(self, d.function.strip())
 						params,max_id,min_id,t_count,push[d.data_name] = func(payload, gateway_profile, profile_tz, d)
@@ -2295,6 +2296,7 @@ class Wrappers:
 		#lgr.info(2058)
 		#lgr.info(cols)
 		#lgr.info(rows)
+		lgr.info('Before Return Call: %s, %s, %s, %s, %s,' %(data,min_id,max_id,t_count, push))        
 		return cols,rows,lines,groups,data,min_id,max_id,t_count, push
 
 

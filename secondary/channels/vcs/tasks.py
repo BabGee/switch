@@ -108,6 +108,7 @@ class System(Wrappers):
 		#
 		#
 		#Get code
+		lgr.info('GOT HERE')        
 		view_data = VAS().menu_input(payload, node_info)
 	
 		#view_data["PAGE_STRING"] = 'VCS MENU'

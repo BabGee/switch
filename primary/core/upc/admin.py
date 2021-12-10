@@ -88,4 +88,3 @@ class SessionAdmin(admin.ModelAdmin):
 	search_fields = ('gateway_profile__msisdn__phone_number','reference',)
 	list_filter = ('channel','status__name',)
 admin.site.register(Session, SessionAdmin)
-

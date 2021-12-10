@@ -1,0 +1,153 @@
+{% extends 'iiceditor/base.html' %}
+{% block content %}
+
+        <ol class="breadcrumb">
+
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/">Gateways</a></li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/">{{ gateway.name }} </a> </li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/">Page Groups</a>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/">{{ page_group.name }}</a></li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/">Pages</a></li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a> </li>
+        <li class="breadcrumb-item "><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">Page Input Groups</a> </li>
+        <li class="breadcrumb-item "> <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/">{{ page_input_group.name }}</a> </li>
+        <li class="breadcrumb-item active"> Page Inputs Order </li>
+
+
+    </ol>
+
+    <h3>Re-Order Page Inputs</h3>
+
+    <style>
+        #list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+        }
+
+        #list > li {
+            cursor: move;
+            margin: 1px;
+            padding: 5px 20px;
+            font-size: 20px;
+            background-color: #ccc;
+        }
+
+        .ghost {
+            opacity: .4;
+        }
+
+    </style>
+
+    <ul id="list">
+        {% for page_input in page_inputs %}
+            <li id="page_input-li-{{ page_input.pk }}">
+                {{ page_input }}
+               current level <strong>{{ page_input.item_level }}</strong>
+               new level <strong style="color: red;" class="new-level-label">{{ page_input.item_level }}</strong>
+            </li>
+        {% empty %}
+            <li>No items</li>
+        {% endfor %}
+
+    </ul>
+
+    <form method="POST" id="order" >{% csrf_token %}
+        {{ form }}
+
+        <button type="submit" class="save btn btn-default">Save</button>
+    </form>
+
+    <script type="text/javascript">
+
+        function sortable(rootEl, onUpdate) {
+            var dragEl;
+
+
+            [].slice.call(rootEl.children).forEach(function (itemEl) {
+                itemEl.draggable = true;
+            });
+
+
+            function _onDragOver(evt) {
+                evt.preventDefault();
+                evt.dataTransfer.dropEffect = 'move';
+
+                var target = evt.target;
+                if (target && target !== dragEl && target.nodeName === 'LI') {
+                    // Сортируем
+                    rootEl.insertBefore(dragEl, target.nextSibling || target);
+                }
+            }
+
+
+            function _onDragEnd(evt) {
+                evt.preventDefault();
+
+                dragEl.classList.remove('ghost');
+                rootEl.removeEventListener('dragover', _onDragOver, false);
+                rootEl.removeEventListener('dragend', _onDragEnd, false);
+
+
+                onUpdate(dragEl);
+            }
+
+
+            rootEl.addEventListener('dragstart', function (evt) {
+                dragEl = evt.target;
+
+
+                evt.dataTransfer.effectAllowed = 'move';
+                evt.dataTransfer.setData('Text', dragEl.textContent);
+
+
+                rootEl.addEventListener('dragover', _onDragOver, false);
+                rootEl.addEventListener('dragend', _onDragEnd, false);
+
+                setTimeout(function () {
+                    dragEl.classList.add('ghost');
+                }, 0)
+            }, false);
+        }
+
+        var sortList = document.getElementById('list');
+
+        sortable(sortList, function (item) {
+           // console.log(item);
+
+            [].slice.call(sortList.children).forEach(function (itemEl,index) {
+                var newLevelLabel = itemEl.querySelector('.new-level-label');
+                newLevelLabel.innerHTML = index+'';
+
+            });
+
+        });
+
+        var orderForm = document.getElementById('order');
+        orderForm.onsubmit = function(event) {
+            //event.preventDefault();
+            // [ {page:,level:}]
+            var configs = [];
+            [].slice.call(sortList.children).forEach(function (itemEl,index) {
+                console.log(itemEl);
+                var config = {
+                    'page_input': itemEl.id.split('-')[2],
+                    'level': index
+                };
+                configs.push(config);
+            });
+           // console.log(configs);
+            var order_config = JSON.stringify(configs);
+           // console.log(order_config);
+            var configHiddenInput = document.getElementById('id_config');
+            configHiddenInput.value = order_config;
+           // console.log(configHiddenInput.value);
+
+        }
+
+    </script>
+
+{% endblock %}

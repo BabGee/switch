@@ -1,0 +1,74 @@
+{% extends 'iiceditor/base.html' %}
+{% block content %}
+
+
+    <ol class="breadcrumb">
+
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/">Gateways</a></li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/">{{ gateway.name }} </a> </li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/">Page Groups</a>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/">{{ page_group.name }}</a></li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/">Pages</a></li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a> </li>
+        <li class="breadcrumb-item active"> Page Input Groups </li>
+
+
+    </ol>
+
+
+    <a  href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/order/">Order
+        Page Input Groups</a>
+
+    <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/create/">Add
+        New</a>
+
+    <div class="row">
+    <div class="col-md-6">
+
+    <h4>Page Input Groups</h4>
+    <ul>
+        {% for page_input_group in page_input_groups %}
+
+            <li>
+                 <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/">{{ page_input_group.name }}</a>
+                 <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/create">New Input</a>
+
+                <strong> {{ page_input_group.pk }}</strong> |
+                {{ page_input_group.item_level }} |
+                {{ page_input_group.input_variable }} |
+                {{ page_input_group.section_size }} |
+                {{ page_input_group.auto_submit }} |
+                {{ page_input_group.icon.name }}
+                <a href="/admin/iic/pageinputgroup/{{ page_input_group.pk }}/change/" target="_blank">Edit</a>
+            </li>
+        {% empty %}
+            <li>No items</li>
+        {% endfor %}
+    </ul>
+
+    </div>
+    <div class="col-md-6">
+
+    <h4>Blank Page Input Groups</h4>
+    <ul>
+        {% for page_input_group in blank_page_input_groups %}
+
+            <li>
+                <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/">{{ page_input_group.name }}</a>
+                <strong> {{ page_input_group.pk }}</strong> |
+
+                {{ page_input_group.item_level }} |
+                {{ page_input_group.input_variable }} |
+                {{ page_input_group.section_size }} |
+                {{ page_input_group.auto_submit }} |
+                {{ page_input_group.icon.name }}
+                <a href="/admin/iic/pageinputgroup/{{ page_input_group.pk }}/change/" target="_blank">Edit</a>
+            </li>
+        {% empty %}
+            <li>No items</li>
+        {% endfor %}
+    </ul>
+    </div>
+    </div>
+
+{% endblock %}

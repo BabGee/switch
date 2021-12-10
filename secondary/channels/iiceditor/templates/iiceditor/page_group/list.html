@@ -1,0 +1,33 @@
+{% extends 'iiceditor/base.html' %}
+{% block content %}
+
+
+    <ol class="breadcrumb">
+
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/">Gateways</a></li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/">{{ gateway.name }} </a> </li>
+{#        <li class="breadcrumb-item active"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/page_groups/">Page Groups</a>#}
+        <li class="breadcrumb-item active">Page Groups</li>
+
+
+    </ol>
+
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/create/">Add Page</a></li>
+    </ol>
+
+    
+    <ul>
+        {% for page_group in page_groups %}
+
+            <li>
+                <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/">{{ page_group }}</a>
+                <a href="/admin/iic/pagegroup/{{ page_group.pk }}/change/" target="_blank">Edit</a>
+            </li>
+        {% empty %}
+            <li>No items</li>
+        {% endfor %}
+
+
+    </ul>
+{% endblock %}

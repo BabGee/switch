@@ -1,0 +1,466 @@
+{% extends 'iiceditor/base.html' %}
+{% block content %}
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css"
+          rel="stylesheet"/>
+    <ol class="breadcrumb">
+
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/">Gateways</a></li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/">{{ gateway.name }} </a></li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/">Page
+            Groups</a>
+        <li class="breadcrumb-item"><a
+                href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/">{{ page_group.name }}</a>
+        </li>
+        <li class="breadcrumb-item"><a
+                href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/">Pages</a>
+        </li>
+        <li class="breadcrumb-item"><a
+                href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/">{{ page.name }}</a>
+        </li>
+        <li class="breadcrumb-item"><a
+                href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/">Page
+            Input Groups</a></li>
+        <li class="breadcrumb-item active"> {{ page_input_group.name }} </li>
+
+
+    </ol>
+
+    <style>
+        #list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+        }
+
+        #list > li {
+            cursor: move;
+            margin: 1px;
+            padding: 5px 20px;
+            font-size: 20px;
+            background-color: #ccc;
+        }
+
+        .ghost {
+            opacity: .4;
+        }
+
+    </style>
+
+    <h4 class="editable"
+         data-type="text"
+         data-name="name"
+         data-pk="{{ page_input_group.pk }}"
+         data-url="/iic_editor/page_input_groups/">{{ page_input_group.name }}</h4>
+    <p>
+        pk : <strong>{{ page_input_group.pk }}</strong> <br>
+        item_level : <strong>{{ page_input_group.item_level }}</strong> <br>
+        icon : <strong>{{ page_input_group.icon }}</strong> <br>
+        <strong>Input Variable</strong> <a target="_blank"
+            href="/admin/iic/inputvariable/{{ page_input_group.input_variable.pk }}/change/">Edit</a> <br>
+
+        input var name : <strong>{{ page_input_group.input_variable.name }}</strong> <br>
+        variable_type : <strong>{{ page_input_group.input_variable.variable_type }}</strong> <br>
+        service : <strong class="editable"
+                                 data-type="text"
+                                 data-name="service"
+                                 data-pk="{{ page_input_group.input_variable.pk }}"
+                                 data-url="/iic_editor/input_variables/">{{ page_input_group.input_variable.service }}</strong><br>
+
+
+
+        bind_position : <strong>{{ page_input_group.bind_position.name }}</strong><br>
+
+        <a target="_blank"
+           href="/admin/bridge/servicecommand/?o=3&q=&service__id__exact={{ page_input_group.input_variable.service.pk }}">View
+            Service Commands</a>
+        <a target="_blank"
+           href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ page_input_group.input_variable.service.name }}">View Service
+            Pages</a>
+
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-primary"
+                id="view-s-commands"
+                data-service="{{ page_input_group.input_variable.service.pk }}"
+                data-toggle="modal" data-target="#serviceComandsModal">
+            View Service Commands
+        </button>
+
+        <br>
+
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-primary" id="copy-service-commands">
+            Copy Service Commands from
+        </button>
+        <input type="text" id="copy-service" class=".typeahead" placeholder="Service">
+
+        <br>
+        <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/">View
+            Page Inputs</a>
+        <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/{{ page.pk }}/page_input_groups/{{ page_input_group.pk }}/page_inputs/order/">Order
+            Page Inputs</a>
+    </p>
+
+    <!-- Modal -->
+    <div class="modal fade" id="serviceComandsModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"
+                        id="exampleModalLabel">{{ page_input_group.input_variable.service.name }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modal-body">
+
+                </div>
+                <div class="modal-footer">
+
+                    <form class="form-inline my-2 my-lg-0">
+
+                        <select id="node_system" class="form-control mr-sm-2">
+                            {% for node_system in node_systems %}
+                                <option value="{{ node_system.pk }}">{{ node_system }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <input class="form-control mr-sm-2"
+                               type="text"
+                               id="command_function"
+                               placeholder="Command Function">
+
+                        <button class="btn btn-outline-success my-2 my-sm-0" id="add-command">Add </button>
+                    </form>
+
+                    {#        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>#}
+                    <button type="button" class="btn btn-primary" id="save-order">Save Order Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+{% endblock %}
+{% comment %}
+script looks exactly like
+secondary/channels/iic/templates/iic/service/detail.html
+{% endcomment %}
+{% block script %}
+        <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+    <script type="text/javascript">
+
+     $.fn.editable.defaults.mode = 'inline';
+        $.fn.editableform.buttons = '' +
+            '<button type="submit" class="btn btn-info editable-submit"><i class="fa fa-fw fa-check"></i></button>' +
+            '<button type="button" class="btn editable-cancel"><i class="fa fa-fw fa-remove"></i></button>';
+
+        $.fn.editable.defaults.ajaxOptions = {
+            type: "POST",
+            beforeSend: function (xhr, settings) {
+                function getCookie(name) {
+                    var cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        var cookies = document.cookie.split(';');
+                        for (var i = 0; i < cookies.length; i++) {
+                            var cookie = jQuery.trim(cookies[i]);
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                function csrfSafeMethod(method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                }
+
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+
+            }
+        };
+
+        jQuery(document).ready(function () {
+            function copyServiceCommands(service) {
+                $.ajax({
+                    url: '/iic_editor/services/{{ page_input_group.input_variable.service.pk }}/service_commands/from/',
+                    beforeSend: function (xhr, settings) {
+                        function getCookie(name) {
+                            var cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                var cookies = document.cookie.split(';');
+                                for (var i = 0; i < cookies.length; i++) {
+                                    var cookie = jQuery.trim(cookies[i]);
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+
+                        function csrfSafeMethod(method) {
+                            // these HTTP methods do not require CSRF protection
+                            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                        }
+
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                        }
+                        // todo btn.html('<img src="/static/loader.gif">');
+                    },
+                    data: {'from': service},
+                    type: 'POST',
+                    success: function (data) {
+                        //console.log(data);
+                        $('#copy-service').val('');
+                    }
+                });
+            }
+
+
+            // Drag and drop sorting
+            function sortable(rootEl, onUpdate) {
+                var dragEl;
+
+                [].slice.call(rootEl.children).forEach(function (itemEl) {
+                    itemEl.draggable = true;
+                });
+
+                function _onDragOver(evt) {
+                    evt.preventDefault();
+                    evt.dataTransfer.dropEffect = 'move';
+
+                    var target = evt.target;
+                    if (target && target !== dragEl && target.nodeName === 'LI') {
+                        rootEl.insertBefore(dragEl, target.nextSibling || target);
+                    }
+                }
+
+
+                function _onDragEnd(evt) {
+                    evt.preventDefault();
+
+                    dragEl.classList.remove('ghost');
+                    rootEl.removeEventListener('dragover', _onDragOver, false);
+                    rootEl.removeEventListener('dragend', _onDragEnd, false);
+
+
+                    onUpdate(dragEl);
+                }
+
+
+                rootEl.addEventListener('dragstart', function (evt) {
+                    dragEl = evt.target;
+
+
+                    evt.dataTransfer.effectAllowed = 'move';
+                    evt.dataTransfer.setData('Text', dragEl.textContent);
+
+
+                    rootEl.addEventListener('dragover', _onDragOver, false);
+                    rootEl.addEventListener('dragend', _onDragEnd, false);
+
+                    setTimeout(function () {
+                        dragEl.classList.add('ghost');
+                    }, 0)
+                }, false);
+            }
+
+
+            function serviceCommands(service) {
+
+                $.ajax({
+                    url: '/iic_editor/services/' + service + '/service_commands/',
+                    beforeSend: function (xhr, settings) {
+                        function getCookie(name) {
+                            var cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                var cookies = document.cookie.split(';');
+                                for (var i = 0; i < cookies.length; i++) {
+                                    var cookie = jQuery.trim(cookies[i]);
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+
+                        function csrfSafeMethod(method) {
+                            // these HTTP methods do not require CSRF protection
+                            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                        }
+
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                        }
+                        // todo btn.html('<img src="/static/loader.gif">');
+                    },
+                    data: {},
+                    type: 'GET',
+                    success: function (data) {
+                        //console.log(data);
+                        $('#modal-body').html(data);
+
+
+                        var sortList = document.getElementById('list');
+
+                        sortable(sortList, function (item) {
+                            console.log(item);
+
+                        });
+
+
+                    }
+                });
+            }
+
+            $('#view-s-commands').on('click', function (e) {
+                // e.preventDefault();//
+                var service = $(this).data('service');
+                serviceCommands(service);
+
+            });
+
+            $('#copy-service-commands').on('click', function (e) {
+                // e.preventDefault();//
+                var service = $('#copy-service').val();
+                if (service) copyServiceCommands(service);
+
+            });
+
+            var addCommand = document.getElementById('add-command');
+            addCommand.addEventListener('click', function (event) {
+                event.preventDefault();
+
+                var e = document.getElementById('node_system');
+
+                $.ajax({
+                    url: '/iic_editor/services/{{ page_input_group.input_variable.service.pk }}/service_commands/',
+                    beforeSend: function (xhr, settings) {
+                        function getCookie(name) {
+                            var cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                var cookies = document.cookie.split(';');
+                                for (var i = 0; i < cookies.length; i++) {
+                                    var cookie = jQuery.trim(cookies[i]);
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+
+                        function csrfSafeMethod(method) {
+                            // these HTTP methods do not require CSRF protection
+                            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                        }
+
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                        }
+                        // todo btn.html('<img src="/static/loader.gif">');
+                    },
+                    data: {
+                        'command_function': document.getElementById('command_function').value,
+                        'node_system':e.options [e.selectedIndex] .value
+                    },
+                    type: 'POST',
+                    success: function (data) {
+                        console.log(data);
+                        // $('#copy-service').val('');
+                    }
+                });
+
+
+            });
+
+
+            var orderSave = document.getElementById('save-order');
+            orderSave.addEventListener('click', function (event) {
+                var sortList = document.getElementById('list');
+
+                var configs = [];
+                [].slice.call(sortList.children).forEach(function (itemEl, index) {
+                    console.log(itemEl);
+                    var config = {
+                        'service_command': itemEl.id.split('-')[2],
+                        'level': index
+                    };
+                    configs.push(config);
+                });
+                // console.log(configs);
+                var order_config = JSON.stringify(configs);
+
+                $.ajax({
+                    url: '/iic_editor/services/{{ page_input_group.input_variable.service.pk }}/service_commands/order/',
+                    beforeSend: function (xhr, settings) {
+                        function getCookie(name) {
+                            var cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                var cookies = document.cookie.split(';');
+                                for (var i = 0; i < cookies.length; i++) {
+                                    var cookie = jQuery.trim(cookies[i]);
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+
+                        function csrfSafeMethod(method) {
+                            // these HTTP methods do not require CSRF protection
+                            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                        }
+
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                        }
+                        // todo btn.html('<img src="/static/loader.gif">');
+                    },
+                    data: {'config': order_config},
+                    type: 'POST',
+                    success: function (data) {
+                        console.log(data);
+                        // $('#copy-service').val('');
+                    }
+                });
+
+
+            });
+
+
+
+            /* inline service edit */
+
+
+
+            $('.editable').editable();
+
+
+
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'iiceditor/base.html' %}
+{% block content %}
+
+    <ol class="breadcrumb">
+
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/">Gateways</a></li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/">{{ gateway.name }} </a> </li>
+        <li class="breadcrumb-item"><a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/">Page Groups</a>
+        <li class="breadcrumb-item active">{{ page_group.name }}</li>
+
+
+    </ol>
+
+    <h4>{{ page_group.name }}</h4>
+
+    <p>
+        pk : <strong>{{ page_group.pk }}</strong> <br>
+        item_level : <strong>{{ page_group.item_level }}</strong> <br>
+        icon : <strong>{{ page_group.icon }}</strong> <br>
+
+        <strong>Gateways</strong>
+        {% for gateway in page.gateway.all %}
+            {{ gateway.name }} |
+        {% empty %}
+            All Gateways
+        {% endfor %} <br>
+
+
+        <br>
+        <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/{{ service }}/page_groups/{{ page_group.pk }}/pages/">View Pages</a>
+        <a href="/admin/iiceditor/iiceditor/{{ gateway.pk }}/page_groups/{{ page_group.pk }}/pages/order/">Reorder Pages</a>
+        <a href="/admin/iic/pagegroup/{{ page_group.pk }}/change/">Edit</a>
+
+    </p>
+
+{% endblock %}
