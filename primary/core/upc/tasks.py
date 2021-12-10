@@ -2912,7 +2912,6 @@ class System(Wrappers):
             
 			if 'facebook' in payload.keys():
 				# verify token and retrieve profile from facebook
-				# requires pip install facebook-sdk==3.0.0
 				import facebook
 				access_token = payload['facebook_access_token']
 				graph = facebook.GraphAPI(access_token=access_token, version="3.0")
@@ -2928,28 +2927,20 @@ class System(Wrappers):
 
 
 			elif 'google' in payload.keys():
-				# verify token and retrieve profile from google
-				lgr.info("Hello from google social")                
-				from social_auth.backends import get_backend
-				from social_auth.backends.google import GOOGLEAPIS_PROFILE, googleapis_profile
-				lgr.info("Hello from google social past imports") 
+				# verify token and retrieve profile from google               
+				from allauth.socialaccount.models import SocialToken, SocialApp
                 
-				# (Receive token by HTTPS POST)
-				access_token = payload['accessToken']
-				provider = payload['google']
-				backend = get_backend(provider, node_info)                
+				# (Receive token from payload)
+				access_token = payload['google']['accessToken']
 				try:
-					idinfo = googleapis_profile(GOOGLEAPIS_PROFILE, access_token)
-					lgr.info("ID_INFO: %s" % idinfo)
-					# If auth request is from a G Suite domain:
-					# if idinfo['hd'] != GSUITE_DOMAIN_NAME:
-					#     raise ValueError('Wrong hosted domain.')
-
-					# ID token is valid. Get the user's Google Account ID from the decoded token.
-					userid = idinfo['sub']
-
-					payload['full_name'] = ''
-					payload['email'] = idinfo['email']
+                    
+					app = SocialApp.objects.get(provider='google')
+					token = SocialToken(app=app, token=access_token)
+					payload['email'] = payload['google']['email']
+					payload['first_name'] = payload['google']['firstName']
+					payload['last_name'] = payload['google']['lastName']                    
+					payload['photo'] = payload['google']['imageUrl']               
+                
 
 					# update token verified flag
 					payload['oauth_token_verified'] = True
@@ -3199,6 +3190,15 @@ class System(Wrappers):
 					details['api_key'] = authorized_gateway_profile.user.profile.api_key
 					details['status'] = authorized_gateway_profile.status.name
 					details['access_level'] = authorized_gateway_profile.access_level.name
+                    
+				elif payload.get('oauth_token_verified', False):
+
+					payload['trigger'] = 'verified%s' % (',' + payload['trigger'] if 'trigger' in payload.keys() else '')
+
+					details['api_key'] = authorized_gateway_profile.user.profile.api_key
+					details['status'] = authorized_gateway_profile.status.name
+					details['access_level'] = authorized_gateway_profile.access_level.name                    
+                    
 
 				else:
 					payload['trigger'] = 'expired_password%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')

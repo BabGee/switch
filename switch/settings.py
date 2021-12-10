@@ -72,7 +72,6 @@ primary = [
     'primary.core.api',
     'primary.core.upc',
     'primary.core.bridge',
-    # 'social_django',
 	]
 
 secondary = [
@@ -494,7 +493,8 @@ else:
 
 
 AUTHENTICATION_BACKENDS = [
-    'social_core.backends.facebook.FacebookOAuth2',
-    'social_core.backends.google.googleoauth2',
     'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend'
 ]
+
+SITE_ID = 2
