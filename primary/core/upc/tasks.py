@@ -2942,44 +2942,25 @@ class System(Wrappers):
 
 
 			elif 'google' in payload.keys():
-				# verify token and retrieve profile from google
-				# requires pip install google-auth==1.5.1
-				from google.oauth2 import id_token
-				from google.auth.transport import requests
-
-				# (Receive token by HTTPS POST)
+				# verify token and retrieve profile from google               
+				from allauth.socialaccount.models import SocialToken, SocialApp
+                
+				# (Receive token from payload)
 				access_token = payload['google']['accessToken']
 				try:
-					# Specify the CLIENT_ID of the app that accesses the backend:
-					idinfo = id_token.verify_oauth2_token(access_token, requests.Request(), payload['google_client_id'])
-# 					lgr.info("ID INFO: %s" % idinfo)
-					# Or, if multiple clients access the backend server:
-					# idinfo = id_token.verify_oauth2_token(token, requests.Request())
-					# if idinfo['aud'] not in [CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]:
-					#     raise ValueError('Could not verify audience.')
-
-					if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
-						raise ValueError('Wrong issuer.')
-
-					# If auth request is from a G Suite domain:
-					# if idinfo['hd'] != GSUITE_DOMAIN_NAME:
-					#     raise ValueError('Wrong hosted domain.')
-
-					# ID token is valid. Get the user's Google Account ID from the decoded token.
-					userid = idinfo['sub']
-					lgr.info("USER ID: %s" % userid)
-					payload['username'] = idinfo['sub']                    
-# 					payload['full_names'] = idinfo['name']
-					payload['first_name'] = idinfo['given_name']                    
-					payload['last_name'] = idinfo['family_name']
-					payload['photo'] = idinfo['picture']
-					payload['email'] = idinfo['email']                    
+                    
+					app = SocialApp.objects.get(provider='google')
+					token = SocialToken(app=app, token=access_token)
+					payload['email'] = payload['google']['email']
+					payload['first_name'] = payload['google']['firstName']
+					payload['last_name'] = payload['google']['lastName']                    
+					payload['photo'] = payload['google']['imageUrl']               
+                
 
 					# update token verified flag
 					payload['oauth_token_verified'] = True
 					payload['response_status'] = '00'
 					payload['response'] = 'Social Profile Google Verified'
-
 
 				except ValueError:
 					# Invalid token
