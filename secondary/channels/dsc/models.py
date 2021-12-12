@@ -221,7 +221,8 @@ class FileUploadActivity(models.Model):
 	file_upload = models.ForeignKey(FileUpload, on_delete=models.CASCADE)
 	status = models.ForeignKey(FileUploadActivityStatus, on_delete=models.CASCADE)
 	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
-	details = models.CharField(max_length=1920)
+	#details = models.CharField(max_length=1920)
+	details = models.JSONField()
 	channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
 	def __str__(self):
 		return u'%s %s' % (self.id, self.name)
