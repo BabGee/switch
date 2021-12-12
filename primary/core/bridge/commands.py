@@ -170,7 +170,7 @@ async def bridge_background_service():
 		return BackgroundServiceActivity.objects.select_for_update(of=('self',)).filter(response_status__response=response,\
 								status__name=status,
 								scheduled_send__lte=scheduled_send,
-								 date_created__date=timezone.now().date())
+							        date_modified__gte=timezone.now()-timezone.timedelta(hours=24))
 	while 1:
 		try:
 			lgr.info('Background Running')
