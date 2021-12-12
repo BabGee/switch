@@ -2380,7 +2380,6 @@ class System(Wrappers):
                                 if 'description' in payload.keys():
                                         activity.description = payload['description']
 
-
                                 if u.command_function and u.node_system:
                                                 node_to_call = u.node_system.URL.lower()
                                                 class_name = 'File'
@@ -2404,15 +2403,25 @@ class System(Wrappers):
                                                 _df.to_csv(b, index=False)
                                                 file_content = ContentFile(b.getvalue())
 
-                                                activity.file_path.save(filename+'.csv', file_content, save=False)
+                                                activity.file_path.save(original_filename+'.csv', file_content, save=False)
+                                                #Record Original File
+                                                with open(tmp_file, 'r',encoding="utf8", errors='ignore') as f:
+                                                        lgr.info(f'Got File Content: {f}')
+                                                        tempfile= File(f)
+                                                        lgr.info(f'Temp File: {tempfile}')
+                                                        activity.original_file_path.save(filename, tempfile, save=False)
+                                                tempfile.closed
+                                                f.closed
                                 else:
-
                                         #with open(tmp_file, 'wrb+') as f:
                                         with open(tmp_file, 'r',encoding="utf8", errors='ignore') as f:
                                                 lgr.info(f'Got File Content: {f}')
                                                 tempfile= File(f)
                                                 lgr.info(f'Temp File: {tempfile}')
-                                                activity.file_path.save(filename, tempfile, save=False)
+                                                activity.file_path.save(original_filename+extension, tempfile, save=False)
+
+                                                #Record Original File
+                                                activity.original_file_path.save(filename, tempfile, save=False)
                                         tempfile.closed
                                         f.closed
 

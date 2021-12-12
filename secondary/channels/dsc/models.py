@@ -217,7 +217,7 @@ class FileUploadActivity(models.Model):
 	name = models.CharField(max_length=45)
 	description = models.CharField(max_length=100, blank=True, null=True)
 	file_path = models.FileField(upload_to='dsc_fileuploadactivity/', max_length=200, null=True,blank=True)
-	processed_file_path = models.FileField(upload_to='dsc_fileuploadactivity/', max_length=200, null=True,blank=True)
+	original_file_path = models.FileField(upload_to='dsc_fileuploadactivity/', max_length=200, null=True,blank=True)
 	file_upload = models.ForeignKey(FileUpload, on_delete=models.CASCADE)
 	status = models.ForeignKey(FileUploadActivityStatus, on_delete=models.CASCADE)
 	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE)
