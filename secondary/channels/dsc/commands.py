@@ -49,7 +49,7 @@ lgr = logging.getLogger(__name__)
 async def dsc_file_upload():
 	"""This docstring is used as the command help in --help."""
 	lgr.info('File Upload.........')
-	def upload_query(status, last_run):
+	def upload_query(status):
 		return FileUploadActivity.objects.select_for_update(of=('self',)).filter(Q(status__name=status),
 							~Q(file_upload__activity_service=None))
 	while 1:
