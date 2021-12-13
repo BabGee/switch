@@ -2418,10 +2418,11 @@ class System(Wrappers):
                                                 lgr.info(f'Got File Content: {f}')
                                                 tempfile= File(f)
                                                 lgr.info(f'Temp File: {tempfile}')
-                                                #activity.file_path.save(original_filename+'.'+extension, tempfile, save=False)
-                                                activity.file_path.save(filename, tempfile, save=False)
                                                 #Record Original File
                                                 activity.original_file_path.save(filename, tempfile, save=False)
+
+                                                #activity.file_path.save(original_filename+'.'+extension, tempfile, save=False)
+                                                activity.file_path.save(filename, tempfile, save=False)
                                         tempfile.closed
                                         f.closed
 

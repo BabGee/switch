@@ -396,7 +396,7 @@ class System(Wrappers):
 
 				#Avoid Race condition in transactions inserts to ensure unique entries for ext_inbound_id
 				last_incoming  = Incoming.objects.select_for_update().filter(remittance_product=product, 
-									date_created__gte=timezone.now()-timezone.timedelta(minutes=1) ).order_by('-id')
+									date_created__gte=timezone.now()-timezone.timedelta(hours=24) ).order_by('-id')
 				if len(last_incoming): last_incoming.filter(id=last_incoming.first().id).update(updated=True)
 
 				#Check if transaction exists
