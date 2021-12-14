@@ -100,7 +100,7 @@ class Wrappers:
                                         break
                         count = count + 1
 
-                return json.dumps(new_payload)
+                return new_payload
 
         def mcsk_survey_summary(self, payload, gateway_profile, profile_tz, data):
                 params = {}
