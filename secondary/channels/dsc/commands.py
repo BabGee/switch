@@ -104,7 +104,7 @@ async def dsc_file_upload():
 				processing = orig_file_upload.filter(id__in=activity).update(status=FileUploadActivityStatus.objects.get(name='PROCESSING'), date_modified=timezone.now())
 
 				for a in activity:
-				    lgr.info(f'File Upload: {f}')
+				    lgr.info(f'File Upload: {a}')
 				    fu = _faust.loop.run_in_executor(thread_pool, process_file_upload, *[a, True])
 
 				    tasks.append(fu)
