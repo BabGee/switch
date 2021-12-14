@@ -99,7 +99,7 @@ async def dsc_file_upload():
 				lgr.info(f'1:File Upload-Elapsed {elapsed()}')
 				orig_file_upload = await sync_to_async(upload_query, thread_sensitive=True)(status='CREATED')
 				lgr.info(f'{elapsed()}-Orig File Upload: {orig_file_upload}')
-				activity = list(orig_background.values_list('id',flat=True)[:5])
+				activity = list(orig_file_upload.values_list('id',flat=True)[:5])
 
 				processing = orig_file_upload.filter(id__in=activity).update(status=FileUploadActivityStatus.objects.get(name='PROCESSING'), date_modified=timezone.now())
 
