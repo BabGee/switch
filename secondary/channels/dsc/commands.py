@@ -65,15 +65,23 @@ def process_file_upload(activity_id, status):
 		lgr.info('Data Frame Columns: %s' % columns)
 
 		service = u.file_upload.activity_service
+		topic = u.file_upload.activity_topic
 		gateway_profile = u.gateway_profile
 
-		for r in zip(*df.to_dict("list").values()):
-			payload = dict(zip(columns, r))
+		if service: 
+		    for r in zip(*df.to_dict("list").values()):
+			    payload = dict(zip(columns, r))
 
-			lgr.info(f'1: Elapsed {elapsed()} File Upload  - {payload}')
-			response = BridgeWrappers().background_service_call(service, gateway_profile, payload)
+			    lgr.info(f'1: Elapsed {elapsed()} File Upload  - {payload}')
+			    response = BridgeWrappers().background_service_call(service, gateway_profile, payload)
+		else:
+		    for r in zip(*df.to_dict("list").values()):
+			    payload = dict(zip(columns, r))
 
-			lgr.info(f'2: Elapsed {elapsed()} File Upload - {response}')
+			    lgr.info(f'1: Elapsed {elapsed()} File Upload  - {payload}')
+			    response = kafka_producer.publish_message(topic, None, json.dumps(payload) )
+
+		lgr.info(f'2: Elapsed {elapsed()} File Upload - {response}')
 
 		u.status=FileUploadActivityStatus.objects.get(name='PROCESSED')
 		u.save()
@@ -87,7 +95,7 @@ async def dsc_file_upload():
 	lgr.info('File Upload.........')
 	def upload_query(status):
 		return FileUploadActivity.objects.select_for_update(of=('self',)).filter(Q(status__name=status),
-							~Q(file_upload__activity_service=None))
+							Q(~Q(file_upload__activity_service=None)|~Q(file_upload__activity_topic=None)))
 	while 1:
 		try:
 			lgr.info('File Upload Running')
