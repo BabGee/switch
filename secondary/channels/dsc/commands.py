@@ -77,6 +77,7 @@ def process_file_upload(activity_id, status):
 		else:
 		    for r in zip(*df.to_dict("list").values()):
 			    payload = dict(zip(columns, r))
+			    payload.update(u.details)
 
 			    lgr.info(f'1: Elapsed {elapsed()} File Upload  - {payload}')
 			    response = kafka_producer.publish_message(topic, None, json.dumps(payload) )

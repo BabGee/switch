@@ -40,6 +40,7 @@ from typing import (
 
 lgr = logging.getLogger(__name__)
 
+add_recipient_topic = _faust.topic('switch.secondary.channels.notify.add_recipient')
 sent_messages_topic = _faust.topic('switch.secondary.channels.notify.sent_messages')
 #delivery_status_topic = _faust.topic('switch.secondary.channels.notify.delivery_status')
 
@@ -47,6 +48,32 @@ sent_messages_topic = _faust.topic('switch.secondary.channels.notify.sent_messag
 from cassandra.cqlengine.connection import session
 #Cassandra Async Patching
 aiosession(session)
+
+@_faust.agent(add_recipient_topic, concurrency=16)
+async def add_recipient(messages):
+	async for message in messages:
+		try:
+			s = time.perf_counter()
+			elapsed = lambda: time.perf_counter() - s
+			lgr.info(f'RECEIVED Recipient {message}')
+
+			#timestamp = dateutil.parser.parse(message['timestamp'])
+			#date_created = timestamp.date()
+			#query = """INSERT INTO switch.notify_recipient (product_id, outbound_id, batch_id, 
+			#	channel, code, date_created, date_modified, message, mno, recipient, response, state) 
+			#	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+			#prepared_query = await session.prepare_future(query)
+			#bound = prepared_query.bind(dict(product_id=int(message['product_id']), outbound_id=int(message['outbound_id']), 
+			#	batch_id=message['batch_id'], channel=message['channel'], code=message['code'], date_created=date_created, 
+			#	date_modified=timestamp, message=message['message'], mno=message.get('mno'), 
+			#	recipient=message['recipient'], response=message['response_code'], state=message['response_state']))
+			#lgr.info(f'Sent Message Query {bound}')
+			#result = await session.execute_future(bound)
+			lgr.info(f'Add Recipient Result {result}')
+			lgr.info(f'{elapsed()} Add Recipient Task Completed')
+			#await asyncio.sleep(0.5)
+		except Exception as e: lgr.info(f'Error on Add Recipient: {e}')
+
 
 @_faust.agent(sent_messages_topic, concurrency=16)
 async def sent_messages(messages):
