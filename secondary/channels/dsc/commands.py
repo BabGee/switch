@@ -71,6 +71,7 @@ def process_file_upload(activity_id, status):
 		if service: 
 		    for r in zip(*df.to_dict("list").values()):
 			    payload = dict(zip(columns, r))
+			    payload.update(u.details)
 
 			    lgr.info(f'1: Elapsed {elapsed()} File Upload  - {payload}')
 			    response = BridgeWrappers().background_service_call(service, gateway_profile, payload)
