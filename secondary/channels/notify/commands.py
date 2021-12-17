@@ -46,6 +46,44 @@ lgr = logging.getLogger(__name__)
 thread_pool = ThreadPoolExecutor(max_workers=16)
 
 
+@_faust.command()
+async def notify_outbound_sent():
+	"""This docstring is used as the command help in --help.
+	This service processes transactions in the background service activity table hence requires a threadpool
+	"""
+	lgr.info('Notify Outbound Sent.........')
+	def outbound_sent_query(state):
+		return OutboundSent.objects.select_for_update(of=('self','outbound',)).filter(state=state,\
+								date_modified__gte=timezone.now()-timezone.timedelta(hours=24))
+
+	def outbound_update(id_list, state, response):
+		return Outbound.objects.select_for_update(of=('self',)).filter(id__in=id_list).update(state=OutBoundState.objects.get(name=state), 
+												    response=response, date_modified=timezone.now())
+
+	while 1:
+		try:
+			lgr.info('Outbound Sent Running')
+			s = time.perf_counter()
+			elapsed = lambda: time.perf_counter() - s
+
+			tasks = list()
+			with transaction.atomic():
+			    lgr.info(f'Outbound Sent-Elapsed {elapsed()}')
+			    orig_outbound_sent = await sync_to_async(outbound_sent_query, thread_sensitive=True)(state='PROCESSING') 
+
+			    outbound_sent_status = orig_outbound_sent.values('state__name','response').distinct()
+
+			for o in outbound_sent_status:
+			    lgr.info(f'{elapsed()}-Orig Outbound Sent Status: {o}')
+			    outbound = orig_outbound_sent.filter(state=o['state_name'], response=o['response']).values_list('outbound__id',flat=True)[:1000]
+			    orig_outbound = await sync_to_async(outbound_update, thread_sensitive=True)(state=o['state__name'], response=o['response']) 
+			    lgr.info(f'{elapsed()}-Orig Outbound: {orig_outbound}')
+
+			lgr.info(f'{elapsed()}-Processed: {processed}')
+			await asyncio.sleep(1.0)
+		except Exception as e: 
+			lgr.error(f'Notify Outbound Sent: {e}')
+
 #def _send_notification_log(topic_list, partition_rate=1000, trigger_rate=100):
 #	try:
 #		df = _spark \
