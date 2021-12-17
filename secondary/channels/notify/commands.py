@@ -9,7 +9,7 @@ from switch.faust_app import app as _faust
 
 from django.db import transaction
 from .models import *
-from django.db.models import Q,F
+from django.db.models import Q, F, Count, Sum
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from functools import reduce
 from concurrent.futures import ThreadPoolExecutor
@@ -71,7 +71,7 @@ async def notify_outbound_sent():
 				lgr.info(f'Outbound Sent-Elapsed {elapsed()}')
 				orig_outbound_sent = await sync_to_async(outbound_sent_query, thread_sensitive=True)(state='PROCESSING') 
 
-				outbound_sent_status = orig_outbound_sent.values('state__name','response').distinct()
+				outbound_sent_status = orig_outbound_sent.values('state__name','response').annotate(Count('state__name'), Count('response'))
 
 				for o in outbound_sent_status:
 					lgr.info(f'{elapsed()}-Orig Outbound Sent Status: {o}')
