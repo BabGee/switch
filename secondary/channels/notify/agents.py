@@ -86,7 +86,7 @@ async def sent_messages(messages):
 			lgr.info(f'RECEIVED Sent Message {message}')
 
 			timestamp = dateutil.parser.parse(message['timestamp'])
-			date_created = timestamp.date()
+			#date_created = timestamp.date()
 			#query = """INSERT INTO switch.notify_outbound (product_id, outbound_id, batch_id, 
 			#	channel, code, date_created, date_modified, message, mno, recipient, response, state) 
 			#	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
@@ -126,7 +126,7 @@ async def delivery_status(messages):
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
 			lgr.info(f'RECEIVED Delivery Status {message}')
-			#timestamp = dateutil.parser.parse(message['timestamp'])
+			timestamp = dateutil.parser.parse(message['timestamp'])
 			#query = """UPDATE notify.send_notification SET  state=?, response=?, date_modified=? where product_id=? and outbound_id=?;"""
 			#prepared_query = await session.prepare_future(query)
 			#bound = prepared_query.bind((message['response_state'], message['response_code'], timestamp,  int(message['product_id']), int(message['outbound_id']),))
@@ -134,7 +134,26 @@ async def delivery_status(messages):
 			#prepared_query = await session.prepare_future(query)
 			#lgr.info(f'Delivery Status Query {prepared_query}')
 			#result = await session.execute_future(bound)
-			#lgr.info(f'Delivery Status Result {result}')
+			def outbound_sent_delivered_insert(message):
+			    outbound_sent_delivered = OutboundSentDelivered()
+			    outbound_sent_delivered.timestamp = timestamp
+			    outbound_sent_delivered.batch_id = message['batch_id']
+
+			    outbound_sent = OutboundSent.objects.filter(batch_id=message['batch_id'])
+			    outbound_sent_delivered.outbound_sent = outbound_sent.last() if len(outbound_sent) else None
+
+			    outbound_sent_delivered.recipient = message['recipient']
+			    outbound_sent_delivered.state = OutBoundState.objects.get(name=message['response_state'])
+			    outbound_sent_delivered.response = message['response_code']
+			    outbound_sent_delivered.product_id = message['product_id']
+			    outbound_sent_delivered.message = message['message']
+
+			    return outbound_sent_delivered.save
+
+			result = await sync_to_async(outbound_sent_delivered_insert, thread_sensitive=True)(message)
+
+
+			lgr.info(f'Delivery Status Result {result}')
 			lgr.info(f'{elapsed()} Delivery Status Updated')
 			#await asyncio.sleep(0.5)
 		except Exception as e: lgr.info(f'Error on Delivery Status: {e}')

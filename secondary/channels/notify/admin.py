@@ -104,16 +104,16 @@ class OutboundAdmin(admin.ModelAdmin):
 			'template','scheduled_send','state','sends',\
 			'ext_outbound_id','inst_notified','inst_num_tries','attachment_list',\
 			'recipient','response','contact_group','pn','pn_ack','message_len', 'batch_id',
-                        'date_modified','date_created',)
+			'date_modified','date_created',)
 
 		list_filter = ('contact__product','state','contact__subscribed','contact__status',
-                        'contact__product__notification__code__mno',
-                        'contact__product__notification__code__institution',
-                        'contact__product__notification__code__gateway',)
+			'contact__product__notification__code__mno',
+			'contact__product__notification__code__institution',
+			'contact__product__notification__code__gateway',)
 
 		search_fields = ('id','recipient','contact__gateway_profile__msisdn__phone_number',
-                        'contact__gateway_profile__user__email',
-                        'contact__gateway_profile__user__username','message',)
+			'contact__gateway_profile__user__email',
+			'contact__gateway_profile__user__username','message',)
 
 		def suit_row_attributes(self, obj, request):
 			css_class = {
@@ -130,8 +130,12 @@ admin.site.register(Outbound, OutboundAdmin)
 
 class OutboundSentAdmin(admin.ModelAdmin):
 	list_display = ('timestamp','batch_id','outbound','recipient','state','response','product','message',
-                        'date_modified','date_created')
+			'date_modified','date_created')
 admin.site.register(OutboundSent, OutboundSentAdmin)
+
+class OutboundSentDeliveredAdmin(admin.ModelAdmin):
+	list_display = ('timestamp','batch_id','outbound_sent','recipient','state','response','date_modified','date_created')
+admin.site.register(OutboundSentDelivered, OutboundSentDeliveredAdmin)
 
 class SessionSubscriptionStatusAdmin(admin.ModelAdmin):
 	list_display = ('name','description')

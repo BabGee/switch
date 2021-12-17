@@ -273,26 +273,11 @@ class Outbound(models.Model):
 		return "\n".join([a.name for a in self.attachment.all()])
 
 '''
-                          timestamp              batch_id outbound_id     recipient response_state                                      response_code product_id          code                                            message   channel        mno
-0  2021-11-18T20:30:26.566183+00:00  25472033682571595197    71595197  254720336825           SENT                                            SUCCESS        131     KARENCLUB  Dear SAMUEL KARANJA, Account 6697-C has been d...       SMS  Safaricom
-1  2021-11-19T03:33:27.897992+00:00  25472576544171595202    71595202  254725765441         FAILED  {"messages":[{"id":"gBEGJUcldlRBAgmZylQfTkgpd0...        442  254790111111  {"type": "interactive", "interactive": {"type"...  WHATSAPP        NaN
-
+			  timestamp		 batch_id outbound_id	  recipient response_state					response_code product_id	  code						  message   channel	   mno
+0  2021-11-18T20:30:26.566183+00:00  25472033682571595197    71595197  254720336825	      SENT					      SUCCESS	     131     KARENCLUB	Dear SAMUEL KARANJA, Account 6697-C has been d...	SMS  Safaricom
+1  2021-11-19T03:33:27.897992+00:00  25472576544171595202    71595202  254725765441	    FAILED  {"messages":[{"id":"gBEGJUcldlRBAgmZylQfTkgpd0...	     442  254790111111	{"type": "interactive", "interactive": {"type"...  WHATSAPP	   NaN
+{'timestamp': '2021-12-14T17:42:26.117653+00:00', 'batch_id': '25472220125471675824', 'recipient': '254722201254', 'response_state': 'DELIVERED', 'response_code': 'DeliveredToTerminal'}
 '''
-
-#class OutboundSentDelivered(models.Model):
-#	date_modified  = models.DateTimeField(auto_now=True)
-#	date_created = models.DateTimeField(auto_now_add=True)
-#	timestamp = models.DateTimeField()
-#	batch_id = models.CharField(max_length=256)
-#	outbound = models.ForeignKey(Outbound, blank=True, null=True, on_delete=models.CASCADE)
-#	recipient = models.CharField(max_length=200, blank=True, null=True)
-#	state = models.ForeignKey(OutBoundState, on_delete=models.CASCADE) #Sent/Delivered or Undelivered
-#	response =  models.CharField(max_length=200, blank=True, null=True)
-#	product = models.ForeignKey(NotificationProduct, on_delete=models.CASCADE)
-#	message = models.TextField()
-#	def __str__(self):
-#		return u'%s %s %s' % (self.batch_id, self.outbound, self.product)
-
 
 class OutboundSent(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
@@ -302,13 +287,23 @@ class OutboundSent(models.Model):
 	outbound = models.ForeignKey(Outbound, blank=True, null=True, on_delete=models.CASCADE)
 	recipient = models.CharField(max_length=200, blank=True, null=True)
 	state = models.ForeignKey(OutBoundState, on_delete=models.CASCADE) #Sent/Delivered or Undelivered
-	response =  models.TextField(blank=True, null=True)
+	response =  models.TextField()
 	product = models.ForeignKey(NotificationProduct, on_delete=models.CASCADE)
 	message = models.TextField()
 	def __str__(self):
 		return u'%s %s %s' % (self.batch_id, self.outbound, self.product)
 
-
+class OutboundSentDelivered(models.Model):
+	date_modified  = models.DateTimeField(auto_now=True)
+	date_created = models.DateTimeField(auto_now_add=True)
+	timestamp = models.DateTimeField()
+	batch_id = models.CharField(max_length=256)
+	outbound_sent = ForeignKey(OutboundSent, blank=True, null=True, on_delete=models.CASCADE)
+	recipient = models.CharField(max_length=200, blank=True, null=True)
+	state = models.ForeignKey(OutBoundState, on_delete=models.CASCADE) #Sent/Delivered or Undelivered
+	response =  models.TextField(blank=True, null=True)
+	def __str__(self):
+		return u'%s %s %s' % (self.batch_id, self.state, self.response)
 
 class SessionSubscriptionStatus(models.Model):
 	date_modified  = models.DateTimeField(auto_now=True)
