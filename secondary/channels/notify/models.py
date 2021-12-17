@@ -298,7 +298,7 @@ class OutboundSentDelivered(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	timestamp = models.DateTimeField()
 	batch_id = models.CharField(max_length=256)
-	outbound_sent = ForeignKey(OutboundSent, blank=True, null=True, on_delete=models.CASCADE)
+	outbound_sent = models.ForeignKey(OutboundSent, blank=True, null=True, on_delete=models.CASCADE)
 	recipient = models.CharField(max_length=200, blank=True, null=True)
 	state = models.ForeignKey(OutBoundState, on_delete=models.CASCADE) #Sent/Delivered or Undelivered
 	response =  models.TextField(blank=True, null=True)
