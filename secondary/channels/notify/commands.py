@@ -53,7 +53,7 @@ async def notify_outbound_sent():
 	"""
 	lgr.info('Notify Outbound Sent.........')
 	def outbound_sent_query(state):
-		return OutboundSent.objects.select_for_update(of=('self','outbound',)).filter(state=OutBoundState.objects.get(name=state),\
+		return OutboundSent.objects.select_for_update(of=('self',)).filter(outbound__state__name=state,\
 								date_modified__gte=timezone.now()-timezone.timedelta(hours=24))
 
 	def outbound_update(id_list, state, response):
