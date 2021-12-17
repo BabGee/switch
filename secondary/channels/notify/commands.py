@@ -74,7 +74,7 @@ async def notify_outbound_sent():
 
 				for o in outbound_sent_status:
 					lgr.info(f'{elapsed()}-Orig Outbound Sent Status: {o}')
-					outbound = orig_outbound_sent.filter(state=o['state_name'], response=o['response']).values_list('outbound__id',flat=True)[:1000]
+					outbound = orig_outbound_sent.filter(state=o['state__name'], response=o['response']).values_list('outbound__id',flat=True)[:1000]
 					orig_outbound = await sync_to_async(outbound_update, thread_sensitive=True)(id_list=outbound, state=o['state__name'], response=o['response']) 
 					lgr.info(f'{elapsed()}-Orig Outbound: {orig_outbound}')
 
