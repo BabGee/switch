@@ -69,7 +69,7 @@ async def notify_outbound_sent_delivered():
 			tasks = list()
 			with transaction.atomic():
 				lgr.info(f'Outbound Delivered-Elapsed {elapsed()}')
-				orig_outbound_delivered = await sync_to_async(outbound_delivered_query, thread_sensitive=True)(state=['SENT','FAILED']) 
+				orig_outbound_delivered = await sync_to_async(outbound_delivered_query, thread_sensitive=True)(state=['SENT']) 
 
 				outbound_delivered_status = orig_outbound_delivered.values('state__name','response').annotate(Count('state__name'), Count('response'))
 
@@ -92,7 +92,7 @@ async def notify_outbound_sent():
 	"""
 	lgr.info('Notify Outbound Sent.........')
 	def outbound_sent_query(state):
-		return OutboundSent.objects.filter(outbound__state__name=state, date_modified__gte=timezone.now()-timezone.timedelta(hours=24))
+		return OutboundSent.objects.filter(outbound__state__name__in=state, date_modified__gte=timezone.now()-timezone.timedelta(hours=24))
 
 	def outbound_update(id_list, state, response):
 		return Outbound.objects.select_for_update(of=('self',)).filter(id__in=id_list).update(state=OutBoundState.objects.get(name=state), 
@@ -107,7 +107,7 @@ async def notify_outbound_sent():
 			tasks = list()
 			with transaction.atomic():
 				lgr.info(f'Outbound Sent-Elapsed {elapsed()}')
-				orig_outbound_sent = await sync_to_async(outbound_sent_query, thread_sensitive=True)(state='PROCESSING') 
+				orig_outbound_sent = await sync_to_async(outbound_sent_query, thread_sensitive=True)(state=['PROCESSING']) 
 
 				outbound_sent_status = orig_outbound_sent.values('state__name','response').annotate(Count('state__name'), Count('response'))
 
