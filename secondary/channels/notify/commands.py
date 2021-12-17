@@ -47,6 +47,45 @@ thread_pool = ThreadPoolExecutor(max_workers=16)
 
 
 @_faust.command()
+async def notify_outbound_sent_delivered():
+	"""This docstring is used as the command help in --help.
+	This service processes transactions in the background service activity table hence requires a threadpool
+	"""
+	lgr.info('Notify Outbound Delivered.........')
+	def outbound_delivered_query(state):
+		return OutboundSentDelivered.objects.filter(outbound_sent__outbound__state__name__in=state, 
+                                                            date_modified__gte=timezone.now()-timezone.timedelta(hours=24))
+
+	def outbound_update(id_list, state, response):
+		return Outbound.objects.select_for_update(of=('self',)).filter(id__in=id_list).update(state=OutBoundState.objects.get(name=state), 
+												    response=response, date_modified=timezone.now())
+
+	while 1:
+		try:
+			lgr.info('Outbound Delivered Running')
+			s = time.perf_counter()
+			elapsed = lambda: time.perf_counter() - s
+
+			tasks = list()
+			with transaction.atomic():
+				lgr.info(f'Outbound Delivered-Elapsed {elapsed()}')
+				orig_outbound_delivered = await sync_to_async(outbound_delivered_query, thread_sensitive=True)(state=['SENT','FAILED']) 
+
+				outbound_delivered_status = orig_outbound_delivered.values('state__name','response').annotate(Count('state__name'), Count('response'))
+
+				for o in outbound_delivered_status:
+					lgr.info(f'{elapsed()}-Orig Outbound Delivered Status: {o}')
+					outbound = orig_outbound_delivered.filter(state__name=o['state__name'], response=o['response']).values_list('outbound__id',flat=True)[:1000]
+					orig_outbound = await sync_to_async(outbound_update, thread_sensitive=True)(id_list=outbound, state=o['state__name'], response=o['response']) 
+					lgr.info(f'{elapsed()}-Orig Outbound: {orig_outbound}')
+
+			lgr.info(f'{elapsed()}-Completed Notify Outbound Delivered')
+			await asyncio.sleep(10.0)
+		except Exception as e: 
+			lgr.error(f'Notify Outbound Delivered: {e}')
+
+
+@_faust.command()
 async def notify_outbound_sent():
 	"""This docstring is used as the command help in --help.
 	This service processes transactions in the background service activity table hence requires a threadpool
