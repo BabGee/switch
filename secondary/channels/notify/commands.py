@@ -75,7 +75,7 @@ async def notify_outbound_sent_delivered():
 
 				for o in outbound_delivered_status:
 					lgr.info(f'{elapsed()}-Orig Outbound Delivered Status: {o}')
-					outbound = orig_outbound_delivered.filter(state__name=o['state__name'], response=o['response']).values_list('outbound__id',flat=True)[:1000]
+					outbound = orig_outbound_delivered.filter(state__name=o['state__name'], response=o['response']).values_list('outbound_sent__outbound__id',flat=True)[:10000]
 					orig_outbound = await sync_to_async(outbound_update, thread_sensitive=True)(id_list=outbound, state=o['state__name'], response=o['response']) 
 					lgr.info(f'{elapsed()}-Orig Outbound: {orig_outbound}')
 
@@ -113,7 +113,7 @@ async def notify_outbound_sent():
 
 				for o in outbound_sent_status:
 					lgr.info(f'{elapsed()}-Orig Outbound Sent Status: {o}')
-					outbound = orig_outbound_sent.filter(state__name=o['state__name'], response=o['response']).values_list('outbound__id',flat=True)[:1000]
+					outbound = orig_outbound_sent.filter(state__name=o['state__name'], response=o['response']).values_list('outbound__id',flat=True)[:10000]
 					orig_outbound = await sync_to_async(outbound_update, thread_sensitive=True)(id_list=outbound, state=o['state__name'], response=o['response']) 
 					lgr.info(f'{elapsed()}-Orig Outbound: {orig_outbound}')
 
