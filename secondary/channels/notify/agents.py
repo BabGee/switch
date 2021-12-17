@@ -145,8 +145,6 @@ async def delivery_status(messages):
 			    outbound_sent_delivered.recipient = message['recipient']
 			    outbound_sent_delivered.state = OutBoundState.objects.get(name=message['response_state'])
 			    outbound_sent_delivered.response = message['response_code']
-			    outbound_sent_delivered.product_id = message['product_id']
-			    outbound_sent_delivered.message = message['message']
 
 			    return outbound_sent_delivered.save
 
