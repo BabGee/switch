@@ -129,12 +129,12 @@ class OutboundAdmin(admin.ModelAdmin):
 admin.site.register(Outbound, OutboundAdmin)
 
 class OutboundSentAdmin(admin.ModelAdmin):
-	list_display = ('timestamp','batch_id','outbound','recipient','state','response','product','message',
+	list_display = ('batch_id','outbound','recipient','state','response','product','message',
 			'date_modified','date_created')
 admin.site.register(OutboundSent, OutboundSentAdmin)
 
 class OutboundSentDeliveredAdmin(admin.ModelAdmin):
-	list_display = ('timestamp','batch_id','outbound_sent','recipient','state','response','date_modified','date_created')
+	list_display = ('batch_id','outbound_sent','recipient','state','response','date_modified','date_created')
 admin.site.register(OutboundSentDelivered, OutboundSentDeliveredAdmin)
 
 class SessionSubscriptionStatusAdmin(admin.ModelAdmin):

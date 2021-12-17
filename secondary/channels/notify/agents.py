@@ -85,7 +85,7 @@ async def sent_messages(messages):
 			elapsed = lambda: time.perf_counter() - s
 			lgr.info(f'RECEIVED Sent Message {message}')
 
-			timestamp = dateutil.parser.parse(message['timestamp'])
+			#timestamp = dateutil.parser.parse(message['timestamp'])
 			#date_created = timestamp.date()
 			#query = """INSERT INTO switch.notify_outbound (product_id, outbound_id, batch_id, 
 			#	channel, code, date_created, date_modified, message, mno, recipient, response, state) 
@@ -100,7 +100,6 @@ async def sent_messages(messages):
 
 			def outbound_sent_insert(message):
 			    outbound_sent = OutboundSent()
-			    outbound_sent.timestamp = timestamp
 			    outbound_sent.batch_id = message['batch_id']
 
 			    #outbound_sent.outbound_id = message['outbound_id']
@@ -130,7 +129,7 @@ async def delivery_status(messages):
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
 			lgr.info(f'RECEIVED Delivery Status {message}')
-			timestamp = dateutil.parser.parse(message['timestamp'])
+			#timestamp = dateutil.parser.parse(message['timestamp'])
 			#query = """UPDATE notify.send_notification SET  state=?, response=?, date_modified=? where product_id=? and outbound_id=?;"""
 			#prepared_query = await session.prepare_future(query)
 			#bound = prepared_query.bind((message['response_state'], message['response_code'], timestamp,  int(message['product_id']), int(message['outbound_id']),))
@@ -140,7 +139,6 @@ async def delivery_status(messages):
 			#result = await session.execute_future(bound)
 			def outbound_sent_delivered_insert(message):
 			    outbound_sent_delivered = OutboundSentDelivered()
-			    outbound_sent_delivered.timestamp = timestamp
 			    outbound_sent_delivered.batch_id = message['batch_id']
 
 			    outbound_sent = OutboundSent.objects.filter(batch_id=message['batch_id'])
