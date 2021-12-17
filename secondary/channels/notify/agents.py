@@ -102,7 +102,11 @@ async def sent_messages(messages):
 			    outbound_sent = OutboundSent()
 			    outbound_sent.timestamp = timestamp
 			    outbound_sent.batch_id = message['batch_id']
-			    outbound_sent.outbound_id = message['outbound_id']
+
+			    #outbound_sent.outbound_id = message['outbound_id']
+			    outbound = Outbound.objects.filter(id=message['outbound_id'])
+			    outbound_sent.outbound = outbound.last() if len(outbound) else None
+
 			    outbound_sent.recipient = message['recipient']
 			    outbound_sent.state = OutBoundState.objects.get(name=message['response_state'])
 			    outbound_sent.response = message['response_code']
