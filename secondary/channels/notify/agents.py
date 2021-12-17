@@ -109,7 +109,7 @@ async def sent_messages(messages):
 			    outbound_sent.product_id = message['product_id']
 			    outbound_sent.message = message['message']
 
-			    return outbound_sent.save
+			    return outbound_sent.save()
 
 			result = await sync_to_async(outbound_sent_insert, thread_sensitive=True)(message)
 
@@ -146,7 +146,7 @@ async def delivery_status(messages):
 			    outbound_sent_delivered.state = OutBoundState.objects.get(name=message['response_state'])
 			    outbound_sent_delivered.response = message['response_code']
 
-			    return outbound_sent_delivered.save
+			    return outbound_sent_delivered.save()
 
 			result = await sync_to_async(outbound_sent_delivered_insert, thread_sensitive=True)(message)
 
