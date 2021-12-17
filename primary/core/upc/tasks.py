@@ -2688,6 +2688,7 @@ class System(Wrappers):
 				except IntegrityError as e:
 				    #Add a try exception for IntegrityError (System malfunction. duplicate key value violates unique constraint "auth_user_username_key" DETAIL: Key (username)=(+XXXXXXX) already exists.)
 				    user = None
+				    payload['integrity_error'] = int(payload['integrity_error'])+1 if payload.get('integrity_error') else 1
 				    lgr.info(f'IntegrityError Exception {e}')
 
 				if user:
@@ -2762,10 +2763,13 @@ class System(Wrappers):
 				    payload['response'] = 'User Profile Created'
 				    payload['response_status'] = '00'
 				    payload['session_gateway_profile_id'] = create_gateway_profile.id
-				else:
+				elif payload.get('integrity_error') <= 3:
 				    time.sleep(0.1) #Wait for 100 milliseconds for profile to create if in progress
+				    lgr.info('Checking For Created User')
 				    payload = get_profile(payload, node_info) #Capture profile
-
+				else:
+				    payload['response'] = 'Repeat Integrity Error'
+				    payload['response_status'] = '95'
 		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
