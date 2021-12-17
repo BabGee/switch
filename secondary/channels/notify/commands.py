@@ -53,8 +53,7 @@ async def notify_outbound_sent():
 	"""
 	lgr.info('Notify Outbound Sent.........')
 	def outbound_sent_query(state):
-		return OutboundSent.objects.select_for_update(of=('self',)).filter(outbound__state__name=state,\
-								date_modified__gte=timezone.now()-timezone.timedelta(hours=24))
+		return OutboundSent.objects.filter(outbound__state__name=state, date_modified__gte=timezone.now()-timezone.timedelta(hours=24))
 
 	def outbound_update(id_list, state, response):
 		return Outbound.objects.select_for_update(of=('self',)).filter(id__in=id_list).update(state=OutBoundState.objects.get(name=state), 
@@ -80,7 +79,7 @@ async def notify_outbound_sent():
 					lgr.info(f'{elapsed()}-Orig Outbound: {orig_outbound}')
 
 			lgr.info(f'{elapsed()}-Completed Notify Outbound Sent')
-			await asyncio.sleep(1.0)
+			await asyncio.sleep(10.0)
 		except Exception as e: 
 			lgr.error(f'Notify Outbound Sent: {e}')
 
