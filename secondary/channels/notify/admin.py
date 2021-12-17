@@ -128,6 +128,11 @@ class OutboundAdmin(admin.ModelAdmin):
 
 admin.site.register(Outbound, OutboundAdmin)
 
+class OutboundSentAdmin(admin.ModelAdmin):
+	list_display = ('timestamp','batch_id','outbound','recipient','state','response','product','message',
+                        'date_modified','date_created')
+admin.site.register(OutboundSent, OutboundSentAdmin)
+
 class SessionSubscriptionStatusAdmin(admin.ModelAdmin):
 	list_display = ('name','description')
 admin.site.register(SessionSubscriptionStatus, SessionSubscriptionStatusAdmin)

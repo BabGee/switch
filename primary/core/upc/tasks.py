@@ -2682,80 +2682,89 @@ class System(Wrappers):
 
 				payload['username'] = username
 				username = username.lower()
-				user = User.objects.create_user(username, email,'')#username,email,password
-				lgr.info("Created User: %s" % user)
+				try:
+				    user = User.objects.create_user(username, email,'')#username,email,password
+				    lgr.info("Created User: %s" % user)
+				except IntegrityError as e:
+				    #Add a try exception for IntegrityError (System malfunction. duplicate key value violates unique constraint "auth_user_username_key" DETAIL: Key (username)=(+XXXXXXX) already exists.)
+				    user = None
+				    lgr.info(f'IntegrityError Exception {e}')
 
-				chars = string.ascii_letters + string.punctuation + string.digits
-				rnd = random.SystemRandom()
-				api_key = ''.join(rnd.choice(chars) for i in range(10))
+				if user:
+				    chars = string.ascii_letters + string.punctuation + string.digits
+				    rnd = random.SystemRandom()
+				    api_key = ''.join(rnd.choice(chars) for i in range(10))
 
-				#Create co-ordinates if dont exist
-				lng = payload['lng'] if 'lng' in payload.keys() else 0.0
-				lat = payload['lat'] if 'lat' in payload.keys() else 0.0
-				trans_point = Point(float(lng), float(lat))
+				    #Create co-ordinates if dont exist
+				    lng = payload['lng'] if 'lng' in payload.keys() else 0.0
+				    lat = payload['lat'] if 'lat' in payload.keys() else 0.0
+				    trans_point = Point(float(lng), float(lat))
 
-				profile_status = ProfileStatus.objects.get(name="REGISTERED")
-				profile = Profile(api_key=base64.urlsafe_b64encode(api_key.encode()).decode('utf-8'),timezone=gateway_profile.user.profile.timezone,\
-					language=gateway_profile.user.profile.language,geometry=trans_point,
-					user=user)
-				#profile.status = profile_status
-				profile.save()
-				user, payload = self.profile_update(user, payload)
+				    profile_status = ProfileStatus.objects.get(name="REGISTERED")
+				    profile = Profile(api_key=base64.urlsafe_b64encode(api_key.encode()).decode('utf-8'),timezone=gateway_profile.user.profile.timezone,\
+					    language=gateway_profile.user.profile.language,geometry=trans_point,
+					    user=user)
+				    #profile.status = profile_status
+				    profile.save()
+				    user, payload = self.profile_update(user, payload)
 
-				create_gateway_profile = GatewayProfile(user=user, gateway=gateway_profile.gateway, status=profile_status)
+				    create_gateway_profile = GatewayProfile(user=user, gateway=gateway_profile.gateway, status=profile_status)
 
-				if "msisdn" in payload.keys() and self.get_msisdn(payload):
-					msisdn = self.get_msisdn(payload)
-					try:msisdn = MSISDN.objects.get(phone_number=msisdn)
-					except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
-					if create_gateway_profile.msisdn in [None,'']:
-						create_gateway_profile.msisdn = msisdn
-				if "access_level_id" in payload.keys() and create_gateway_profile.institution in [None,'']:
-					access_level = AccessLevel.objects.get(id=payload["access_level_id"])
-					if 'institution_id' in payload.keys():
-						create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
-					elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
-						create_gateway_profile.institution = gateway_profile.institution 
-				elif "role_id" in payload.keys() and create_gateway_profile.institution in [None,'']:
-					role = Role.objects.get(id=payload["role_id"])
-					access_level = role.access_level
-					create_gateway_profile.role = role
-					if 'institution_id' in payload.keys():
-						create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
-					elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
-						create_gateway_profile.institution = gateway_profile.institution 
-				elif "access_level" in payload.keys() and create_gateway_profile.institution in [None,'']:
-					access_level = AccessLevel.objects.get(name=payload["access_level"])
-					if 'institution_id' in payload.keys():
-						create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
-					elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
-						create_gateway_profile.institution = gateway_profile.institution 
-				elif "role" in payload.keys() and create_gateway_profile.institution in [None,'']:
-					role = Role.objects.get(gateway=gateway_profile.gateway,name=payload["role"])
-					access_level = role.access_level
-					create_gateway_profile.role = role
-					if 'institution_id' in payload.keys():
-						create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
-					elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
-						create_gateway_profile.institution = gateway_profile.institution 
+				    if "msisdn" in payload.keys() and self.get_msisdn(payload):
+					    msisdn = self.get_msisdn(payload)
+					    try:msisdn = MSISDN.objects.get(phone_number=msisdn)
+					    except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
+					    if create_gateway_profile.msisdn in [None,'']:
+						    create_gateway_profile.msisdn = msisdn
+				    if "access_level_id" in payload.keys() and create_gateway_profile.institution in [None,'']:
+					    access_level = AccessLevel.objects.get(id=payload["access_level_id"])
+					    if 'institution_id' in payload.keys():
+						    create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
+					    elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
+						    create_gateway_profile.institution = gateway_profile.institution 
+				    elif "role_id" in payload.keys() and create_gateway_profile.institution in [None,'']:
+					    role = Role.objects.get(id=payload["role_id"])
+					    access_level = role.access_level
+					    create_gateway_profile.role = role
+					    if 'institution_id' in payload.keys():
+						    create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
+					    elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
+						    create_gateway_profile.institution = gateway_profile.institution 
+				    elif "access_level" in payload.keys() and create_gateway_profile.institution in [None,'']:
+					    access_level = AccessLevel.objects.get(name=payload["access_level"])
+					    if 'institution_id' in payload.keys():
+						    create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
+					    elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
+						    create_gateway_profile.institution = gateway_profile.institution 
+				    elif "role" in payload.keys() and create_gateway_profile.institution in [None,'']:
+					    role = Role.objects.get(gateway=gateway_profile.gateway,name=payload["role"])
+					    access_level = role.access_level
+					    create_gateway_profile.role = role
+					    if 'institution_id' in payload.keys():
+						    create_gateway_profile.institution = Institution.objects.get(id=payload['institution_id'])
+					    elif 'institution_id' not in payload.keys() and access_level.name not in ['CUSTOMER','SUPER ADMINISTRATOR'] and gateway_profile.institution:
+						    create_gateway_profile.institution = gateway_profile.institution 
 
+				    else:
+					    access_level = AccessLevel.objects.get(name="CUSTOMER")
+
+				    '''
+				    if create_gateway_profile.access_level in [None,''] or (create_gateway_profile.access_level not in \
+				     [None,''] and create_gateway_profile.access_level.hierarchy>access_level.hierarchy):
+					    create_gateway_profile.access_level = access_level
+				    '''
+				    if access_level.name == 'SYSTEM': create_gateway_profile.access_level = AccessLevel.objects.get(name="CUSTOMER")
+				    else: create_gateway_profile.access_level = access_level
+				    #if create_gateway_profile.created_by in [None,'']:create_gateway_profile.created_by = gateway_profile.user.profile 
+				    create_gateway_profile.save()
+
+				    payload["profile_id"] = create_gateway_profile.user.profile.id
+				    payload['response'] = 'User Profile Created'
+				    payload['response_status'] = '00'
+				    payload['session_gateway_profile_id'] = create_gateway_profile.id
 				else:
-					access_level = AccessLevel.objects.get(name="CUSTOMER")
-
-				'''
-				if create_gateway_profile.access_level in [None,''] or (create_gateway_profile.access_level not in \
-				 [None,''] and create_gateway_profile.access_level.hierarchy>access_level.hierarchy):
-					create_gateway_profile.access_level = access_level
-				'''
-				if access_level.name == 'SYSTEM': create_gateway_profile.access_level = AccessLevel.objects.get(name="CUSTOMER")
-				else: create_gateway_profile.access_level = access_level
-				#if create_gateway_profile.created_by in [None,'']:create_gateway_profile.created_by = gateway_profile.user.profile 
-				create_gateway_profile.save()
-
-				payload["profile_id"] = create_gateway_profile.user.profile.id
-				payload['response'] = 'User Profile Created'
-				payload['response_status'] = '00'
-				payload['session_gateway_profile_id'] = create_gateway_profile.id
+				    time.sleep(0.1) #Wait for 100 milliseconds for profile to create if in progress
+				    payload = get_profile(payload, node_info) #Capture profile
 
 		except Exception as e:
 			payload['response'] = str(e)
