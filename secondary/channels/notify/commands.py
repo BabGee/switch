@@ -68,18 +68,18 @@ async def notify_outbound_sent():
 
 			tasks = list()
 			with transaction.atomic():
-			    lgr.info(f'Outbound Sent-Elapsed {elapsed()}')
-			    orig_outbound_sent = await sync_to_async(outbound_sent_query, thread_sensitive=True)(state='PROCESSING') 
+				lgr.info(f'Outbound Sent-Elapsed {elapsed()}')
+				orig_outbound_sent = await sync_to_async(outbound_sent_query, thread_sensitive=True)(state='PROCESSING') 
 
-			    outbound_sent_status = orig_outbound_sent.values('state__name','response').distinct()
+				outbound_sent_status = orig_outbound_sent.values('state__name','response').distinct()
 
-			for o in outbound_sent_status:
-			    lgr.info(f'{elapsed()}-Orig Outbound Sent Status: {o}')
-			    outbound = orig_outbound_sent.filter(state=o['state_name'], response=o['response']).values_list('outbound__id',flat=True)[:1000]
-			    orig_outbound = await sync_to_async(outbound_update, thread_sensitive=True)(id_list=outbound, state=o['state__name'], response=o['response']) 
-			    lgr.info(f'{elapsed()}-Orig Outbound: {orig_outbound}')
+				for o in outbound_sent_status:
+					lgr.info(f'{elapsed()}-Orig Outbound Sent Status: {o}')
+					outbound = orig_outbound_sent.filter(state=o['state_name'], response=o['response']).values_list('outbound__id',flat=True)[:1000]
+					orig_outbound = await sync_to_async(outbound_update, thread_sensitive=True)(id_list=outbound, state=o['state__name'], response=o['response']) 
+					lgr.info(f'{elapsed()}-Orig Outbound: {orig_outbound}')
 
-			lgr.info(f'{elapsed()}-Processed: {processed}')
+			lgr.info(f'{elapsed()}-Completed Notify Outbound Sent')
 			await asyncio.sleep(1.0)
 		except Exception as e: 
 			lgr.error(f'Notify Outbound Sent: {e}')
