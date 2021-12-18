@@ -1040,6 +1040,7 @@ class System(Wrappers):
 			#transaction.set_rollback(True)
 
 		except Exception as e:
+			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on Crediting Float: %s" % e)
 		return payload
