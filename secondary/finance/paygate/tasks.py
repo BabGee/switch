@@ -962,14 +962,15 @@ class System(Wrappers):
 
 
 			if len(float_type) and Decimal(payload['float_amount']) > Decimal(0):
+				_float_type = float_type.last()
 				if payload.get('institution_id'):
-					float_balance = FloatManager.objects.select_for_update().filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])).order_by('-id')
+					float_balance = FloatManager.objects.select_for_update().filter(Q(float_type=_float_type,gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])).order_by('-id')
 				else:
-					float_balance = FloatManager.objects.select_for_update().filter(float_type=float_type[0],gateway=gateway_profile.gateway, institution=None).order_by('-id')
+					float_balance = FloatManager.objects.select_for_update().filter(float_type=_float_type,gateway=gateway_profile.gateway, institution=None).order_by('-id')
 
 				if len(float_balance):
 					charge = Decimal(0)
-					charge_list = FloatCharge.objects.filter(Q(float_type=float_type[0], min_amount__lte=Decimal(payload['float_amount']),\
+					charge_list = FloatCharge.objects.filter(Q(float_type=_float_type, min_amount__lte=Decimal(payload['float_amount']),\
 							max_amount__gt=Decimal(payload['float_amount']),credit=False),\
 							Q(Q(gateway=gateway_profile.gateway)|Q(gateway=None))) #Credit Float reverses debits and adds charges
 
@@ -1013,7 +1014,7 @@ class System(Wrappers):
 						float_amount=Decimal(payload['float_amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
 						charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
 						balance_bf=balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN),\
-						float_type=float_type[0], gateway=gateway)
+						float_type=_float_type, gateway=gateway)
 
 					if institution:
 						float_record.institution = institution
@@ -1171,28 +1172,19 @@ class System(Wrappers):
 			else:
 				float_type = float_type.filter(product_type=None)
 			#lgr.info('Float Type: %s' % float_type)
-			if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-				#float_balance = FloatManager.objects.select_for_update(of=('self',),nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
-				'''
-				float_balance = FloatManager.objects.select_for_update(nowait=True).filter(float_type=float_type[0],gateway=gateway_profile.gateway).order_by('-date_created')
-				if 'institution_id' in payload.keys():
-					float_balance = float_balance.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+			if len(float_type) and Decimal(payload['float_amount']) > Decimal(0):
+				_float_type = float_type.last()
+				if payload.get('institution_id'):
+					float_balance = FloatManager.objects.select_for_update().filter(Q(float_type=_float_type,gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])).order_by('-id')
 				else:
-					float_balance = float_balance.filter(institution=None)
-				'''
-
-				if 'institution_id' in payload.keys():
-					#float_balance = FloatManager.objects.select_for_update().filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])|Q(institution=None)).order_by('-id')
-					float_balance = FloatManager.objects.select_for_update().filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])).order_by('-id')
-				else:
-					float_balance = FloatManager.objects.select_for_update().filter(float_type=float_type[0],gateway=gateway_profile.gateway, institution=None).order_by('-id')
+					float_balance = FloatManager.objects.select_for_update().filter(float_type=_float_type,gateway=gateway_profile.gateway, institution=None).order_by('-id')
 
 				#lgr.info('Float Balance: %s' % float_balance)
 				#check float exists
 				if float_balance.exists() and Decimal(float_balance[0].balance_bf) >= Decimal(payload['float_amount']):
 					#lgr.info('Float Exists')
 					charge = Decimal(0)
-					charge_list = FloatCharge.objects.filter(Q(float_type=float_type[0], min_amount__lte=Decimal(payload['float_amount']),\
+					charge_list = FloatCharge.objects.filter(Q(float_type=_float_type, min_amount__lte=Decimal(payload['float_amount']),\
 							max_amount__gt=Decimal(payload['float_amount']),credit=False),\
 							Q(Q(gateway=gateway_profile.gateway)|Q(gateway=None)))
 
@@ -1234,7 +1226,7 @@ class System(Wrappers):
 							float_amount=Decimal(payload['float_amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
 							charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
 							balance_bf=balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN),\
-							float_type=float_type[0], gateway=gateway)
+							float_type=_float_type, gateway=gateway)
 
 						if institution:
 							float_record.institution = institution
