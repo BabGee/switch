@@ -233,7 +233,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk),
 					Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),
 					contact__product__trading_box__close_time__gte=timezone.localtime().time())),
-					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=24)))\
+					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(days=30)))\
 					.select_related('contact','template','state')
 
 			#lgr.info('Orig Outbound: %s' % orig_outbound)
