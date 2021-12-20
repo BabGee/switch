@@ -1039,11 +1039,11 @@ class System(Wrappers):
 				payload['response_status'] = '00'
 			#except DatabaseError as e:
 			#transaction.set_rollback(True)
-
 		except Exception as e:
-			payload['response'] = str(e)
+			payload['response'] = 'Error %s' % e
 			payload['response_status'] = '96'
-			lgr.info("Error on Crediting Float: %s" % e)
+			lgr.info("Error on Reverse Debiting Float: %s" % e)
+
 		return payload
 
 	def check_float(self, payload, node_info):
