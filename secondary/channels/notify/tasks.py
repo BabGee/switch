@@ -65,7 +65,8 @@ class Wrappers:
 				#df_email=df_data['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,3}$)')
 				#df_email = df_email[~df_email['email'].isnull()]
 				#_recipient = df_email['email'].values
-				df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,3}$)')
+				#df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,3}$)')
+				df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,}$)')
 				df['recipient'] = df_email['email']
 				df = df[~df['recipient'].isnull()]
 				df.drop_duplicates(inplace=True)
@@ -215,7 +216,8 @@ class Wrappers:
 			#_recipient = df_email['email'].values
 			#message_len = 1
 
-			df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,3}$)')
+			#df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,3}$)')
+			df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,}$)')
 			df['recipient'] = df_email['email']
 			df = df[~df['recipient'].isnull()]
 			df.drop_duplicates(inplace=True)
