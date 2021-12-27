@@ -100,6 +100,8 @@ class ServiceProcessor:
 		#do reverse
 		#for item in reversed(commands):
 		for item in commands:
+			payload['action_id'] = item.id
+
 			lgr.info('Got Reversal Items: %s' % item)
 			status = item.status
 			node_system = item.node_system
