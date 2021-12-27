@@ -698,123 +698,147 @@ class System(Wrappers):
         @transaction.atomic
         def credit_float(self, payload, node_info):
                 try:
-                        lgr.info("Add Float: %s" % payload)
-                        gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-                        float_type = FloatType.objects.filter(Q(service__name=payload['SERVICE'])|Q(service=None),\
-                                                Q(gateway=gateway_profile.gateway)|Q(gateway=None))
+                        #Inner Function for multiple retry attempt to resolve deadlocks
+                        def _credit_float(payload, node_info):
+                                retry = False
+                                try:
+                                        lgr.info("Add Float: %s" % payload)
+                                        gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+                                        float_type = FloatType.objects.filter(Q(service__name=payload['SERVICE'])|Q(service=None),\
+                                                                Q(gateway=gateway_profile.gateway)|Q(gateway=None))
 
-                        if 'payment_method' in payload.keys():
-                                float_type = float_type.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
+                                        if 'payment_method' in payload.keys():
+                                                float_type = float_type.filter(Q(payment_method__name=payload['payment_method'])|Q(payment_method=None))
 
-                        if 'institution_id' in payload.keys():
-                                float_type = float_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
-                        else:
-                                float_type = float_type.filter(institution=None)
-
-                        
-                        if 'product_item_id' in payload.keys():
-                                product_item = ProductItem.objects.get(id=payload['product_item_id'])
-                                float_type = float_type.filter(product_type=product_item.product_type)
-                        elif 'float_product_type_id' in payload.keys():
-                                float_type = float_type.filter(product_type__id=payload['float_product_type_id'])
-
-                        elif 'product_type_id' in payload.keys():
-                                float_type = float_type.filter(product_type__id=payload['product_type_id'])
-                        elif 'product_type' in payload.keys():
-                                float_type = float_type.filter(product_type__name=payload['product_type'])
-                        else:
-                                float_type = float_type.filter(product_type=None)
-                        lgr.info('Float Type: %s' % float_type)
-                        if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
-                                if payload.get('institution_id'):
-                                        float_balance = FloatManager.objects.select_for_update().filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])).order_by('-id')
-                                else:
-                                        float_balance = FloatManager.objects.select_for_update().filter(float_type=float_type[0],gateway=gateway_profile.gateway, institution=None).order_by('-id')
-
-                                lgr.info('Float Balance: %s' % float_balance)
-                                # Crediting Requires the institution_id to be expilicitly specified in the payload
-                                charge = Decimal(0)
-                                charge_list = FloatCharge.objects.filter(Q(float_type=float_type[0], min_amount__lte=Decimal(payload['float_amount']),\
-                                                max_amount__gt=Decimal(payload['float_amount']),credit=False),\
-                                                Q(Q(gateway=gateway_profile.gateway)|Q(gateway=None))) #Credit Float reverses debits and adds charges
-
-
-                                if 'product_item_id' in payload.keys():
-                                        product_item = ProductItem.objects.get(id=payload['product_item_id'])
-                                        charge_list = charge_list.filter(product_type=product_item.product_type)
-                                elif 'float_product_type_id' in payload.keys():
-                                        charge_list = charge_list.filter(product_type__id=payload['float_product_type_id'])
-                                elif 'product_type_id' in payload.keys():
-                                        charge_list = charge_list.filter(product_type__id=payload['product_type_id'])
-                                elif 'product_type' in payload.keys():
-                                        charge_list = charge_list.filter(product_type__name=payload['product_type'])
-                                else:
-                                        charge_list = charge_list.filter(product_type=None)
-
-
-                                if 'institution_id' in payload.keys():
-                                        charge_list = charge_list.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
-                                else:
-                                        charge_list = charge_list.filter(institution=None)
-
-                                for c in charge_list:
-                                        if c.is_percentage:
-                                                charge = charge + ((c.charge_value/100)*Decimal(payload['float_amount']))
+                                        if 'institution_id' in payload.keys():
+                                                float_type = float_type.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
                                         else:
-                                                charge = charge+c.charge_value
+                                                float_type = float_type.filter(institution=None)
+
+                                        
+                                        if 'product_item_id' in payload.keys():
+                                                product_item = ProductItem.objects.get(id=payload['product_item_id'])
+                                                float_type = float_type.filter(product_type=product_item.product_type)
+                                        elif 'float_product_type_id' in payload.keys():
+                                                float_type = float_type.filter(product_type__id=payload['float_product_type_id'])
+
+                                        elif 'product_type_id' in payload.keys():
+                                                float_type = float_type.filter(product_type__id=payload['product_type_id'])
+                                        elif 'product_type' in payload.keys():
+                                                float_type = float_type.filter(product_type__name=payload['product_type'])
+                                        else:
+                                                float_type = float_type.filter(product_type=None)
+                                        lgr.info('Float Type: %s' % float_type)
+                                        if float_type.exists() and Decimal(payload['float_amount']) > Decimal(0):
+                                                if payload.get('institution_id'):
+                                                        float_balance = FloatManager.objects.select_for_update().filter(Q(float_type=float_type[0],gateway=gateway_profile.gateway), Q(institution__id=payload['institution_id'])).order_by('-id')
+                                                else:
+                                                        float_balance = FloatManager.objects.select_for_update().filter(float_type=float_type[0],gateway=gateway_profile.gateway, institution=None).order_by('-id')
+
+                                                lgr.info('Float Balance: %s' % float_balance)
+                                                # Crediting Requires the institution_id to be expilicitly specified in the payload
+                                                charge = Decimal(0)
+                                                charge_list = FloatCharge.objects.filter(Q(float_type=float_type[0], min_amount__lte=Decimal(payload['float_amount']),\
+                                                                max_amount__gt=Decimal(payload['float_amount']),credit=False),\
+                                                                Q(Q(gateway=gateway_profile.gateway)|Q(gateway=None))) #Credit Float reverses debits and adds charges
 
 
-                                if float_balance.exists():
-                                        #Last Balance Check
-                                        float_balance.filter(id=float_balance[:1][0].id).update(updated=True)
-                                        balance_bf = Decimal(float_balance[0].balance_bf) + (Decimal(payload['float_amount']) - charge)
-                                        lgr.info("New Balance Brought Forward: %s" % balance_bf)
-                                        institution = float_balance[0].institution
-                                        gateway = float_balance[0].gateway
+                                                if 'product_item_id' in payload.keys():
+                                                        product_item = ProductItem.objects.get(id=payload['product_item_id'])
+                                                        charge_list = charge_list.filter(product_type=product_item.product_type)
+                                                elif 'float_product_type_id' in payload.keys():
+                                                        charge_list = charge_list.filter(product_type__id=payload['float_product_type_id'])
+                                                elif 'product_type_id' in payload.keys():
+                                                        charge_list = charge_list.filter(product_type__id=payload['product_type_id'])
+                                                elif 'product_type' in payload.keys():
+                                                        charge_list = charge_list.filter(product_type__name=payload['product_type'])
+                                                else:
+                                                        charge_list = charge_list.filter(product_type=None)
 
-                                        float_record = FloatManager(credit=True,\
-                                                float_amount=Decimal(payload['float_amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
-                                                charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
-                                                balance_bf=balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN),\
-                                                float_type=float_type[0], gateway=gateway)
 
-                                        float_record.institution = institution
-                                else:
-                                        balance_bf = (Decimal(payload['float_amount']) - charge)
-                                        lgr.info("New Balance Brought Forward: %s" % balance_bf)
-                                        institution =  Institutions.objects.get(id=payload['institution_id']) if payload.get('institution_id') else None
-                                        gateway = gateway_profile.gateway
+                                                if 'institution_id' in payload.keys():
+                                                        charge_list = charge_list.filter(Q(institution__id=payload['institution_id'])|Q(institution=None))
+                                                else:
+                                                        charge_list = charge_list.filter(institution=None)
 
-                                        float_record = FloatManager(credit=True,\
-                                                float_amount=Decimal(payload['float_amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
-                                                charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
-                                                balance_bf=balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN),\
-                                                float_type=float_type[0], gateway=gateway)
+                                                for c in charge_list:
+                                                        if c.is_percentage:
+                                                                charge = charge + ((c.charge_value/100)*Decimal(payload['float_amount']))
+                                                        else:
+                                                                charge = charge+c.charge_value
 
-                                        float_record.institution = institution
-                                
-                                if 'ext_outbound_id' in payload.keys() and payload['ext_outbound_id'] not in [None,""]:
-                                        float_record.ext_outbound_id = payload['ext_outbound_id']
-                                elif 'bridge__transaction_id' in payload.keys():
-                                        float_record.ext_outbound_id = payload['bridge__transaction_id']
 
-                                float_record.save()
+                                                if float_balance.exists():
+                                                        #Last Balance Check
+                                                        float_balance.filter(id=float_balance[:1][0].id).update(updated=True)
+                                                        balance_bf = Decimal(float_balance[0].balance_bf) + (Decimal(payload['float_amount']) - charge)
+                                                        lgr.info("New Balance Brought Forward: %s" % balance_bf)
+                                                        institution = float_balance[0].institution
+                                                        gateway = float_balance[0].gateway
 
-                                payload['response'] = 'Float Credited with: %s balance: %s' % (payload['float_amount'], balance_bf)
-                                payload['float_balance_bf'] = balance_bf
-                                payload['response_status'] = '00'
-                        
-                        elif Decimal(payload['float_amount']) <= 0:
-                                payload['response'] = 'No float amount to Credit'
-                                payload['response_status'] = '00'
+                                                        float_record = FloatManager(credit=True,\
+                                                                float_amount=Decimal(payload['float_amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
+                                                                charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
+                                                                balance_bf=balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN),\
+                                                                float_type=float_type[0], gateway=gateway)
 
-                        #except DatabaseError as e:
-                        #transaction.set_rollback(True)
+                                                        float_record.institution = institution
+                                                else:
+                                                        balance_bf = (Decimal(payload['float_amount']) - charge)
+                                                        lgr.info("New Balance Brought Forward: %s" % balance_bf)
+                                                        institution =  Institutions.objects.get(id=payload['institution_id']) if payload.get('institution_id') else None
+                                                        gateway = gateway_profile.gateway
 
+                                                        float_record = FloatManager(credit=True,\
+                                                                float_amount=Decimal(payload['float_amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
+                                                                charge=charge.quantize(Decimal('.01'), rounding=ROUND_DOWN),
+                                                                balance_bf=balance_bf.quantize(Decimal('.01'), rounding=ROUND_DOWN),\
+                                                                float_type=float_type[0], gateway=gateway)
+
+                                                        float_record.institution = institution
+                                                
+                                                if 'ext_outbound_id' in payload.keys() and payload['ext_outbound_id'] not in [None,""]:
+                                                        float_record.ext_outbound_id = payload['ext_outbound_id']
+                                                elif 'bridge__transaction_id' in payload.keys():
+                                                        float_record.ext_outbound_id = payload['bridge__transaction_id']
+
+                                                float_record.save()
+
+                                                payload['response'] = 'Float Credited with: %s balance: %s' % (payload['float_amount'], balance_bf)
+                                                payload['float_balance_bf'] = balance_bf
+                                                payload['response_status'] = '00'
+                                        
+                                        elif Decimal(payload['float_amount']) <= 0:
+                                                payload['response'] = 'No float amount to Credit'
+                                                payload['response_status'] = '00'
+
+                                        #except DatabaseError as e:
+                                        #transaction.set_rollback(True)
+                                except OperationalError as e:
+                                        lgr.info(f"OperationalError on Credit Float: {type(e).__name__}: {e}")
+                                        retry = True
+                                        payload['response'] = 'Operational Error Attempt'
+                                        payload['response_status'] = '95'
+
+                                except Exception as e:
+                                        payload['response_status'] = '96'
+                                        lgr.info("Error on Crediting Float: %s" % e)
+
+                                return payload, retry
+
+                        attempt = 0
+                        while attempt <= 3:
+                                time.sleep(0.1*attempt)
+                                lgr.info(f'Credit Float Command - Attempt: {attempt}')
+                                payload, retry = _credit_float(payload, node_info)
+                                if retry: attempt += 1
+                                else: break
                 except Exception as e:
+                        payload['response'] = 'Error %s' % e
                         payload['response_status'] = '96'
-                        lgr.info("Error on Crediting Float: %s" % e)
+                        lgr.info("Error on Credit Float: %s" % e)
                 return payload
+
 
         @transaction.atomic
         def credit_agent_float(self, payload, node_info):
@@ -1046,7 +1070,7 @@ class System(Wrappers):
                                 except OperationalError as e:
                                         lgr.info(f"OperationalError on Reverse Debiting Float: {type(e).__name__}: {e}")
                                         retry = True
-                                        payload['response'] = 'End Operational Error Attempts'
+                                        payload['response'] = 'Operational Error Attempt'
                                         payload['response_status'] = '95'
 
                                 except Exception as e:
@@ -1285,9 +1309,9 @@ class System(Wrappers):
                                         ##except DatabaseError as e:
                                         ##transaction.set_rollback(True)
                                 except OperationalError as e:
-                                        lgr.info(f"OperationalError on Reverse Debiting Float: {type(e).__name__}: {e}")
+                                        lgr.info(f"OperationalError on Debiting Float: {type(e).__name__}: {e}")
                                         retry = True
-                                        payload['response'] = 'End Operational Error Attempts'
+                                        payload['response'] = 'Operational Error Attempt'
                                         payload['response_status'] = '95'
 
                                 except Exception as e:
