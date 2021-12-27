@@ -695,10 +695,10 @@ class System(Wrappers):
                         lgr.info("Error on Remittance: %s" % e)
                 return payload
 
-        @transaction.atomic
         def credit_float(self, payload, node_info):
                 try:
                         #Inner Function for multiple retry attempt to resolve deadlocks
+                        @transaction.atomic
                         def _credit_float(payload, node_info):
                                 retry = False
                                 try:
@@ -816,6 +816,7 @@ class System(Wrappers):
                                         #transaction.set_rollback(True)
                                 except OperationalError as e:
                                         lgr.info(f"OperationalError on Credit Float: {type(e).__name__}: {e}")
+                                        transaction.set_rollback(True)
                                         retry = True
                                         payload['response'] = 'Operational Error Attempt'
                                         payload['response_status'] = '95'
@@ -954,10 +955,10 @@ class System(Wrappers):
                 return payload
 
 
-        @transaction.atomic
         def reverse_debit_float(self, payload, node_info):
                 try:
                         #Inner Function for multiple retry attempt to resolve deadlocks
+                        @transaction.atomic
                         def _reverse_debit_float(payload, node_info):
                                 retry = False
                                 try:
@@ -1069,6 +1070,7 @@ class System(Wrappers):
                                         #transaction.set_rollback(True)
                                 except OperationalError as e:
                                         lgr.info(f"OperationalError on Reverse Debiting Float: {type(e).__name__}: {e}")
+                                        transaction.set_rollback(True)
                                         retry = True
                                         payload['response'] = 'Operational Error Attempt'
                                         payload['response_status'] = '95'
@@ -1189,10 +1191,10 @@ class System(Wrappers):
                         lgr.info("Error on Checking Float: %s" % e)
                 return payload
 
-        @transaction.atomic
         def debit_float(self, payload, node_info):
                 try:
                         #Inner Function for multiple retry attempt to resolve deadlocks
+                        @transaction.atomic
                         def _debit_float(payload, node_info):
                                 retry = False
                                 #service to user verify_institution to avoid institutions using other institutions float
@@ -1310,6 +1312,7 @@ class System(Wrappers):
                                         ##transaction.set_rollback(True)
                                 except OperationalError as e:
                                         lgr.info(f"OperationalError on Debiting Float: {type(e).__name__}: {e}")
+                                        transaction.set_rollback(True)
                                         retry = True
                                         payload['response'] = 'Operational Error Attempt'
                                         payload['response_status'] = '95'
