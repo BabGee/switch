@@ -41,7 +41,7 @@ from typing import (
 
 lgr = logging.getLogger(__name__)
 
-service_topic = app.topic('switch.primary.core.upc.api.service')
+service_topic = _faust.topic('switch.primary.core.upc.api.service')
 
 @_faust.agent(service_topic)
 async def service(message):
