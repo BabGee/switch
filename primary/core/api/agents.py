@@ -44,7 +44,7 @@ lgr = logging.getLogger(__name__)
 service_topic = _faust.topic('switch.primary.core.upc.api.service')
 
 @_faust.agent(service_topic)
-async def service(message):
+async def service(messages):
     async for message in messages:
         try:
             lgr.info(f'RECEIVED Service Request {message}')
