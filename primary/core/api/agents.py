@@ -41,9 +41,9 @@ from typing import (
 
 lgr = logging.getLogger(__name__)
 
-service_call_topic = app.topic('primary.core.upc.api.service_call')
+service_topic = app.topic('switch.primary.core.upc.api.service')
 
-@_faust.agent(service_call_topic)
+@_faust.agent(service_topic)
 async def iterrate(stream):
     async for event in stream.events():
         try:
