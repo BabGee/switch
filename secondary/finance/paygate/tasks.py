@@ -404,10 +404,8 @@ class System(Wrappers):
 					retry = False
 					try:
 
-
 						#Avoid Race condition in transactions inserts to ensure unique entries for ext_inbound_id
-						last_incoming  = Incoming.objects.select_for_update().filter(reference=reference, remittance_product=product, 
-											date_created__gte=timezone.now()-timezone.timedelta(hours=24) ).order_by('-id')
+						last_incoming  = Incoming.objects.select_for_update().filter(reference=reference, remittance_product=product).order_by('-id')
 						if len(last_incoming): last_incoming.filter(id=last_incoming.first().id).update(updated=True)
 
 						lgr.info('Past Race Condition Check')
