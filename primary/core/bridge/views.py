@@ -321,7 +321,7 @@ class ServiceProcessor:
 				del payload['transaction_auth']
 				for t in transaction_list:
 					try:
-						background_transact.delay(gateway_profile.id, t.id, t.service.id, payload, response_tree)
+						background_transact(gateway_profile.id, t.id, t.service.id, payload, response_tree)
 						lgr.info('Transaction Auth: %s' % t)
 					except Exception as e:
 						lgr.info('Error On Background Transact')
@@ -335,7 +335,7 @@ class ServiceProcessor:
 				del payload['repeat_bridge_transaction']
 				for t in transaction_list:
 					try:
-						background_transact.delay(t.gateway_profile.id, t.id, t.service.id, payload, response_tree)
+						background_transact(t.gateway_profile.id, t.id, t.service.id, payload, response_tree)
 						lgr.info('Repeat Bridge Transaction: %s' % t)
 					except Exception as e:
 						lgr.info('Error On Background Transact')
