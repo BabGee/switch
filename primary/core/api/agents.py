@@ -45,7 +45,7 @@ lgr = logging.getLogger(__name__)
 
 service_topic = _faust.topic('switch.primary.core.upc.api.service')
 
-thread_pool = ThreadPoolExecutor(max_workers=16)
+thread_pool = ThreadPoolExecutor(max_workers=4)
 
 
 #@_faust.agent(service_topic)
@@ -172,7 +172,7 @@ def api_service_call(payload):
 
         return payload
 
-@_faust.agent(service_topic)
+@_faust.agent(service_topic, concurrency=4)
 async def service(stream):
     async for event in stream.events():
         try:
