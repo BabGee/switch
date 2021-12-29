@@ -4,6 +4,7 @@ from switch.celery import app
 from celery.utils.log import get_task_logger
 from switch.celery import single_instance_task
 import asyncio
+from asgiref.sync import sync_to_async
 
 from primary.core.bridge.models import *
 from primary.core.bridge.backend.loggers import Loggers
@@ -339,7 +340,7 @@ class ServiceProcessor:
                                         try:
                                                 #background_transact(t.gateway_profile.id, t.id, t.service.id, payload, response_tree)
                                                 lgr.info(f'Captured Task: {t}')
-                                                tasks.append((background_transact(t.gateway_profile.id, t.id, t.service.id, payload, response_tree)))
+                                                tasks.append((sync_to_async(background_transact, thread_sensitive=True)(t.gateway_profile.id, t.id, t.service.id, payload, response_tree)))
                                                 lgr.info('Repeat Bridge Transaction: %s' % t)
                                         except Exception as e:
                                                 lgr.info('Error On Background Transact')
