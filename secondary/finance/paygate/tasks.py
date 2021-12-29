@@ -302,150 +302,182 @@ class System(Wrappers):
                 return payload
 
 
-        @transaction.atomic
         def payment_notification(self, payload, node_info):
                 try:
-                        gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-                        reference = payload['reference'].strip() if 'reference' in payload.keys() else ""
+                        #Inner Function for multiple retry attempt to resolve deadlocks
+                        @transaction.atomic
+                        def _payment_notification(payload, node_info):
+                                retry = False
+                                try:
+                                        gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+                                        reference = payload['reference'].strip() if 'reference' in payload.keys() else ""
 
-                        institution_incoming_service = None
-                        lgr.info('Payment Notification')
+                                        institution_incoming_service = None
+                                        lgr.info('Payment Notification')
 
-                        #capture remittance
-                        remittance_product = RemittanceProduct.objects.filter(Q(service__name=payload['SERVICE']),\
-                                                Q(remittance__gateway=gateway_profile.gateway)|Q(remittance__gateway=None))
+                                        #capture remittance
+                                        remittance_product = RemittanceProduct.objects.filter(Q(service__name=payload['SERVICE']),\
+                                                                Q(remittance__gateway=gateway_profile.gateway)|Q(remittance__gateway=None))
 
-                        lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
+                                        lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
 
-                        if 'currency' in payload.keys() and payload['currency'] not in ["",None]:
-                                remittance_product = remittance_product.filter(currency__code=payload['currency'])
-
-                        lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
-
-                        if 'payment_method' in payload.keys() and payload['payment_method'] not in ["",None]:
-                                remittance_product = remittance_product.filter(payment_method__name=payload['payment_method'])
-
-                        lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
-
-                        if 'ext_service_id' in payload.keys():
-                                remittance_product = remittance_product.filter(remittance__ext_service_id=payload['ext_service_id'])
-
-                        lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
-
-                        if 'ext_product_id' in payload.keys():
-                                remittance_product = remittance_product.filter(ext_product_id=payload['ext_product_id'])
-
-                        lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
-
-                        if remittance_product.exists():
-                                product = remittance_product.first()
-
-                                try: 
-                                    gateway_institution_notification = product.gatewayinstitutionnotification
-                                    response_status = ResponseStatus.objects.get(response='DEFAULT')
-                                    state = IncomingState.objects.get(name="CREATED")
-                                except: 
-                                    gateway_institution_notification = None
-                                    response_status = ResponseStatus.objects.get(response='00')
-                                    state = IncomingState.objects.get(name="DELIVERED")
-
-                                    #Capture all. Whether Paid or Unpaid, as long as it hasn't expired/Solves multiple payment requests issue where once paid, the unpaid ones match institution incoming service
-                                    purchase_order = PurchaseOrder.objects.filter(reference__iexact=reference, expiry__gte=timezone.now(), gateway_profile__gateway=gateway_profile.gateway)
-                                    lgr.info('Order: %s' % purchase_order)
-
-                                    if not purchase_order.exists():
-                                            ######### Institution Incoming Service ###############
-
-                                            #keyword = reference[:4] #Add regex to get Keyword in future
-                                            keyword = ''.join(re.findall(r'(^[A-Za-z]+)(?<=[\S])|(?<=[\d])', reference)).lower()  #Add Intent Classification Model to get Keyword/intent in future
-                                            lgr.info('Keyword: %s' % keyword)
-                                            institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(remittance_product=product)|Q(remittance_product=None),\
-                                                                                    Q(keyword__iexact=keyword)|Q(keyword='')|Q(keyword__isnull=True))
-
-                                            lgr.info('Keyword: %s' % institution_incoming_service_list)
-                                            if len(institution_incoming_service_list):
-                                                    if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
-                                                            amount = Decimal(payload['amount'])
-                                                            institution_incoming_service_list = institution_incoming_service_list.filter(Q(min_amount__gte=amount)|Q(min_amount__isnull=True),\
-                                                                                                                                            Q(max_amount__lte=amount)|Q(max_amount__isnull=True))
-
-                                                    if institution_incoming_service_list.count() == 1:
-                                                            lgr.info('Keyword Found')
-                                                            institution_incoming_service = institution_incoming_service_list.last()
-                                                    else:
-                                                            lgr.info('Multi Keyword Found') #Take the one with an empty keyword
-                                                            _institution_incoming_service_list = institution_incoming_service_list.filter(Q(keyword__in=[''])|Q(keyword__isnull=True))
-                                                            institution_incoming_service = _institution_incoming_service_list.first() if _institution_incoming_service_list.exists() else institution_incoming_service_list.last()
-
-                                                    lgr.info('Institution Service: %s' % institution_incoming_service)
-
-                                            ######### Institution Incoming Service ###############
-
-                                # Capture remittance product institution
-
-                                lgr.info('Capture Institution')
-                                if 'institution_id' not in payload.keys() and product.institution:
-                                        payload['institution_id'] = product.institution.id
-
-                                #institution_notification = InstitutionNotification.objects.filter(remittance_product=product)
-                                
-                                try: institution_notification = product.institutionnotification
-                                except: institution_notification = None
-
-                                ext_inbound_id = payload['ext_inbound_id'] if 'ext_inbound_id' in payload.keys() else payload['bridge__transaction_id']
-
-                                #Avoid Race condition in transactions inserts to ensure unique entries for ext_inbound_id
-                                last_incoming  = Incoming.objects.select_for_update().filter(remittance_product=product, 
-                                                                        date_created__gte=timezone.now()-timezone.timedelta(hours=24) ).order_by('-id')
-                                if len(last_incoming): last_incoming.filter(id=last_incoming.first().id).update(updated=True)
-
-                                #Check if transaction exists
-                                if Incoming.objects.filter(remittance_product=product,ext_inbound_id=ext_inbound_id).exists():
-                                        payload['response_status'] = '94'
-                                        payload['response'] = 'External Inbound ID Exists'
-                                else:
-
-                                        incoming = Incoming(remittance_product=product,reference=reference,\
-                                                request=self.transaction_payload(payload),channel=Channel.objects.get(id=payload['chid']),\
-                                                response_status=response_status, ext_inbound_id=ext_inbound_id,state=state)
-                                        if 'ext_first_name' in payload.keys() and payload['ext_first_name'] not in ["",None]: incoming.ext_first_name = payload['ext_first_name']
-                                        if 'ext_middle_name' in payload.keys() and payload['ext_middle_name'] not in ["",None]: incoming.ext_middle_name = payload['ext_middle_name']
-                                        if 'ext_last_name' in payload.keys() and payload['ext_last_name'] not in ["",None]: incoming.ext_last_name = payload['ext_last_name']
                                         if 'currency' in payload.keys() and payload['currency'] not in ["",None]:
-                                                incoming.currency = Currency.objects.get(code=payload['currency'])
-                                        if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
-                                                incoming.amount = Decimal(payload['amount'])
-                                        if 'charge' in payload.keys() and payload['charge'] not in ["",None]:
-                                                incoming.charge = Decimal(payload['charge'])
+                                                remittance_product = remittance_product.filter(currency__code=payload['currency'])
 
-                                        if product.institution:
-                                                incoming.institution = product.institution
-                                        if institution_incoming_service is not None:
-                                                incoming.institution_incoming_service = institution_incoming_service
-                                        if institution_notification:
-                                                incoming.institution_notification = institution_notification
+                                        lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
 
-                                        msisdn = UPCWrappers().get_msisdn(payload)
-                                        if msisdn is not None:
-                                                try:msisdn = MSISDN.objects.get(phone_number=msisdn)
-                                                except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
-                                                incoming.msisdn = msisdn
+                                        if 'payment_method' in payload.keys() and payload['payment_method'] not in ["",None]:
+                                                remittance_product = remittance_product.filter(payment_method__name=payload['payment_method'])
 
-                                        incoming.save()
+                                        lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
 
-                                        if product.credit_account: payload['trigger'] = 'credit_account%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
-                                        if product.notification: payload['trigger'] = 'notification%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+                                        if 'ext_service_id' in payload.keys():
+                                                remittance_product = remittance_product.filter(remittance__ext_service_id=payload['ext_service_id'])
 
-                                        payload['paygate_incoming_id'] = incoming.id
-                                        payload['response_status'] = '00'
-                                        payload['response'] = 'Payment Received'
-                        else:
-                                        payload['response_status'] = '25'
-                                        payload['response'] = 'Remittance Product Not Found'
+                                        lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
+
+                                        if 'ext_product_id' in payload.keys():
+                                                remittance_product = remittance_product.filter(ext_product_id=payload['ext_product_id'])
+
+                                        lgr.info('Payment Notification: Remittance Product: %s' % remittance_product)
+
+                                        if remittance_product.exists():
+                                                product = remittance_product.first()
+
+                                                try: 
+                                                    gateway_institution_notification = product.gatewayinstitutionnotification
+                                                    response_status = ResponseStatus.objects.get(response='DEFAULT')
+                                                    state = IncomingState.objects.get(name="CREATED")
+                                                except: 
+                                                    gateway_institution_notification = None
+                                                    response_status = ResponseStatus.objects.get(response='00')
+                                                    state = IncomingState.objects.get(name="DELIVERED")
+
+                                                    #Capture all. Whether Paid or Unpaid, as long as it hasn't expired/Solves multiple payment requests issue where once paid, the unpaid ones match institution incoming service
+                                                    purchase_order = PurchaseOrder.objects.filter(reference__iexact=reference, expiry__gte=timezone.now(), gateway_profile__gateway=gateway_profile.gateway)
+                                                    lgr.info('Order: %s' % purchase_order)
+
+                                                    if not purchase_order.exists():
+                                                            ######### Institution Incoming Service ###############
+
+                                                            #keyword = reference[:4] #Add regex to get Keyword in future
+                                                            keyword = ''.join(re.findall(r'(^[A-Za-z]+)(?<=[\S])|(?<=[\d])', reference)).lower()  #Add Intent Classification Model to get Keyword/intent in future
+                                                            lgr.info('Keyword: %s' % keyword)
+                                                            institution_incoming_service_list = InstitutionIncomingService.objects.filter(Q(remittance_product=product)|Q(remittance_product=None),\
+                                                                                                    Q(keyword__iexact=keyword)|Q(keyword='')|Q(keyword__isnull=True))
+
+                                                            lgr.info('Keyword: %s' % institution_incoming_service_list)
+                                                            if len(institution_incoming_service_list):
+                                                                    if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
+                                                                            amount = Decimal(payload['amount'])
+                                                                            institution_incoming_service_list = institution_incoming_service_list.filter(Q(min_amount__gte=amount)|Q(min_amount__isnull=True),\
+                                                                                                                                                            Q(max_amount__lte=amount)|Q(max_amount__isnull=True))
+
+                                                                    if institution_incoming_service_list.count() == 1:
+                                                                            lgr.info('Keyword Found')
+                                                                            institution_incoming_service = institution_incoming_service_list.last()
+                                                                    else:
+                                                                            lgr.info('Multi Keyword Found') #Take the one with an empty keyword
+                                                                            _institution_incoming_service_list = institution_incoming_service_list.filter(Q(keyword__in=[''])|Q(keyword__isnull=True))
+                                                                            institution_incoming_service = _institution_incoming_service_list.first() if _institution_incoming_service_list.exists() else institution_incoming_service_list.last()
+
+                                                                    lgr.info('Institution Service: %s' % institution_incoming_service)
+
+                                                            ######### Institution Incoming Service ###############
+
+                                                # Capture remittance product institution
+
+                                                lgr.info('Capture Institution')
+                                                if 'institution_id' not in payload.keys() and product.institution:
+                                                        payload['institution_id'] = product.institution.id
+
+                                                #institution_notification = InstitutionNotification.objects.filter(remittance_product=product)
+                                                
+                                                try: institution_notification = product.institutionnotification
+                                                except: institution_notification = None
+
+                                                ext_inbound_id = payload['ext_inbound_id'] if 'ext_inbound_id' in payload.keys() else payload['bridge__transaction_id']
+
+
+                                                #Avoid Race condition in transactions inserts to ensure unique entries for ext_inbound_id
+                                                last_incoming  = Incoming.objects.select_for_update().filter(remittance_product=product, 
+                                                                                        date_created__gte=timezone.now()-timezone.timedelta(hours=24) ).order_by('-id')
+                                                if len(last_incoming): last_incoming.filter(id=last_incoming.first().id).update(updated=True)
+
+                                                #Check if transaction exists
+                                                if Incoming.objects.filter(remittance_product=product,ext_inbound_id=ext_inbound_id).exists():
+                                                        payload['response_status'] = '94'
+                                                        payload['response'] = 'External Inbound ID Exists'
+                                                else:
+
+                                                        incoming = Incoming(remittance_product=product,reference=reference,\
+                                                                request=self.transaction_payload(payload),channel=Channel.objects.get(id=payload['chid']),\
+                                                                response_status=response_status, ext_inbound_id=ext_inbound_id,state=state)
+                                                        if 'ext_first_name' in payload.keys() and payload['ext_first_name'] not in ["",None]: incoming.ext_first_name = payload['ext_first_name']
+                                                        if 'ext_middle_name' in payload.keys() and payload['ext_middle_name'] not in ["",None]: incoming.ext_middle_name = payload['ext_middle_name']
+                                                        if 'ext_last_name' in payload.keys() and payload['ext_last_name'] not in ["",None]: incoming.ext_last_name = payload['ext_last_name']
+                                                        if 'currency' in payload.keys() and payload['currency'] not in ["",None]:
+                                                                incoming.currency = Currency.objects.get(code=payload['currency'])
+                                                        if 'amount' in payload.keys() and payload['amount'] not in ["",None]:
+                                                                incoming.amount = Decimal(payload['amount'])
+                                                        if 'charge' in payload.keys() and payload['charge'] not in ["",None]:
+                                                                incoming.charge = Decimal(payload['charge'])
+
+                                                        if product.institution:
+                                                                incoming.institution = product.institution
+                                                        if institution_incoming_service is not None:
+                                                                incoming.institution_incoming_service = institution_incoming_service
+                                                        if institution_notification:
+                                                                incoming.institution_notification = institution_notification
+
+                                                        msisdn = UPCWrappers().get_msisdn(payload)
+                                                        if msisdn is not None:
+                                                                try:msisdn = MSISDN.objects.get(phone_number=msisdn)
+                                                                except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
+                                                                incoming.msisdn = msisdn
+
+                                                        incoming.save()
+
+                                                        if product.credit_account: payload['trigger'] = 'credit_account%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+                                                        if product.notification: payload['trigger'] = 'notification%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
+
+                                                        payload['paygate_incoming_id'] = incoming.id
+                                                        payload['response_status'] = '00'
+                                                        payload['response'] = 'Payment Received'
+                                        else:
+                                                        payload['response_status'] = '25'
+                                                        payload['response'] = 'Remittance Product Not Found'
+
+                                        #except DatabaseError as e:
+                                        #transaction.set_rollback(True)
+                                except OperationalError as e:
+                                        lgr.info(f"OperationalError on Payment Notification: {type(e).__name__}: {e}")
+                                        transaction.set_rollback(True)
+                                        retry = True
+                                        payload['response'] = 'Operational Error Attempt'
+                                        payload['response_status'] = '95'
+
+
+                                except Exception as e:
+                                        payload['response_status'] = '96'
+                                        lgr.info("Error on Payment Notification: %s" % e)
+
+                                return payload, retry
+
+                        attempt = 0
+                        while attempt <= 3:
+                                time.sleep(0.1*attempt)
+                                lgr.info(f'Payment Notification Command - Attempt: {attempt}')
+                                payload, retry = _payment_notification(payload, node_info)
+                                if retry: attempt += 1
+                                else: break
+
                 except Exception as e:
+                        payload['response'] = 'Error %s' % e
                         payload['response_status'] = '96'
                         lgr.info("Error on Payment Notification: %s" % e)
                 return payload
+
 
 
         def remit_confirmation(self, payload, node_info):
