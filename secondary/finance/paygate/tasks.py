@@ -387,13 +387,16 @@ class System(Wrappers):
 				if 'institution_id' not in payload.keys() and product.institution:
 					payload['institution_id'] = product.institution.id
 
+				lgr.info('Institution Captured')
 				#institution_notification = InstitutionNotification.objects.filter(remittance_product=product)
 				
 				try: institution_notification = product.institutionnotification
 				except: institution_notification = None
 
+				lgr.info(f'Institution Notification: {institution_notification}')
 				ext_inbound_id = payload['ext_inbound_id'] if 'ext_inbound_id' in payload.keys() else payload['bridge__transaction_id']
 
+				lgr.info(f'EXT Outbound ID: {ext_outbound_id}')
 
 				#Inner Function for multiple retry attempt to resolve deadlocks
 				@transaction.atomic
@@ -407,6 +410,7 @@ class System(Wrappers):
 											date_created__gte=timezone.now()-timezone.timedelta(hours=24) ).order_by('-id')
 						if len(last_incoming): last_incoming.filter(id=last_incoming.first().id).update(updated=True)
 
+						lgr.info('Past Race Condition Check')
 						#Check if transaction exists
 						if Incoming.objects.filter(remittance_product=product,ext_inbound_id=ext_inbound_id).exists():
 							payload['response_status'] = '94'
@@ -426,6 +430,7 @@ class System(Wrappers):
 							if 'charge' in payload.keys() and payload['charge'] not in ["",None]:
 								incoming.charge = Decimal(payload['charge'])
 
+							lgr.info('1.0 Incoming')
 							if product.institution:
 								incoming.institution = product.institution
 							if institution_incoming_service is not None:
@@ -433,17 +438,21 @@ class System(Wrappers):
 							if institution_notification:
 								incoming.institution_notification = institution_notification
 
+							lgr.info('1.1 Incoming')
 							msisdn = UPCWrappers().get_msisdn(payload)
 							if msisdn is not None:
 								try:msisdn = MSISDN.objects.get(phone_number=msisdn)
 								except MSISDN.DoesNotExist: msisdn = MSISDN(phone_number=msisdn);msisdn.save();
 								incoming.msisdn = msisdn
 
+							lgr.info('1.2 Incoming')
 							incoming.save()
 
+							lgr.info('1.3 Incoming')
 							if product.credit_account: payload['trigger'] = 'credit_account%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 							if product.notification: payload['trigger'] = 'notification%s' % (','+payload['trigger'] if 'trigger' in payload.keys() else '')
 
+							lgr.info('1.4 Incoming')
 							payload['paygate_incoming_id'] = incoming.id
 							payload['response_status'] = '00'
 							payload['response'] = 'Payment Received'
