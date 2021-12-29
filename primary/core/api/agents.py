@@ -192,9 +192,9 @@ async def service(stream):
 
             ###################
 
-
-
             lgr.info(f'{elapsed()} Service Call Task Completed')
+            await asyncio.sleep(0.5)
+
         except Exception as e: lgr.info(f'Error on Service Call: {e}')
 
 
