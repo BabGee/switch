@@ -394,9 +394,9 @@ class System(Wrappers):
 				except: institution_notification = None
 
 				lgr.info(f'Institution Notification: {institution_notification}')
-				ext_inbound_id = payload['ext_inbound_id'] if 'ext_inbound_id' in payload.keys() else payload['bridge__transaction_id']
+				ext_inbound_id = payload['ext_inbound_id']
 
-				lgr.info(f'EXT Outbound ID: {ext_inbound_id}')
+				lgr.info(f'EXT Inbound ID: {ext_inbound_id}')
 
 				#Inner Function for multiple retry attempt to resolve deadlocks
 				@transaction.atomic
@@ -405,7 +405,8 @@ class System(Wrappers):
 					try:
 
 						#Avoid Race condition in transactions inserts to ensure unique entries for ext_inbound_id
-						last_incoming  = Incoming.objects.select_for_update().filter(reference=reference, remittance_product=product).order_by('-id')
+						last_incoming  = Incoming.objects.select_for_update().filter(reference=reference, remittance_product=product,
+                                                                                                            ext_inbound_id=ext_inbound_id).order_by('-id')
 						if len(last_incoming): last_incoming.filter(id=last_incoming.first().id).update(updated=True)
 
 						lgr.info('Past Race Condition Check')
