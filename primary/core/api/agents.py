@@ -12,6 +12,7 @@ from django.db.models import Q,F
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from functools import reduce
 from mode import Service
+from concurrent.futures import ThreadPoolExecutor
 
 from primary.core.api.views import ServiceCall
 from secondary.channels.vcs.models import *
@@ -43,6 +44,9 @@ from typing import (
 lgr = logging.getLogger(__name__)
 
 service_topic = _faust.topic('switch.primary.core.upc.api.service')
+
+thread_pool = ThreadPoolExecutor(max_workers=16)
+
 
 #@_faust.agent(service_topic)
 #async def service(messages):
@@ -171,7 +175,9 @@ async def service(stream):
                     service = Service.objects.using('read').filter(Q(name=service_name),Q(Q(access_level=gateway_profile.access_level)|Q(access_level=None))).select_related() 
                     #lgr.info('Got Service: %s (%s)' % (service, service_name))
                     if service.exists():
-                            payload = await sync_to_async(ServiceCall().api_service_call, thread_sensitive=True)(service.first(), gateway_profile, payload)
+                            #payload = await sync_to_async(ServiceCall().api_service_call, thread_sensitive=True)(service.first(), gateway_profile, payload)
+                            payload = await _faust.loop.run_in_executor(thread_pool, ServiceCall().api_service_call, *[service.first(), gateway_profile, payload])
+
                             lgr.info(f'{elapsed()} Service Call Result {payload}')
                     else:
 
