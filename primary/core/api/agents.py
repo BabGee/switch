@@ -62,10 +62,11 @@ async def service(stream):
             s = time.perf_counter()
             elapsed = lambda: time.perf_counter() - s
             lgr.info(f'RECEIVED Service Call {event}')
+            key = event.key
             value = event.value
             offset = event.message.offset
             headers = event.headers
-            lgr.info(f'Value: {value} | Offset {offset} | Headers: {headers}')
+            lgr.info(f'Key: {key} | Value: {value} | Offset {offset} | Headers: {headers}')
             lgr.info(f'{elapsed()} Service Call Task Completed')
         except Exception as e: lgr.info(f'Error on Service Call: {e}')
 
