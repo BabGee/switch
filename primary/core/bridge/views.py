@@ -338,11 +338,12 @@ class ServiceProcessor:
                                 for t in transaction_list:
                                         try:
                                                 #background_transact(t.gateway_profile.id, t.id, t.service.id, payload, response_tree)
+                                                lgr.info(f'Captured Task: {t}')
                                                 tasks.append((background_transact(t.gateway_profile.id, t.id, t.service.id, payload, response_tree)))
                                                 lgr.info('Repeat Bridge Transaction: %s' % t)
                                         except Exception as e:
                                                 lgr.info('Error On Background Transact')
-
+                                lgr.info(f'All Tasks: {tasks}')
                                 event_loop.run_until_complete(asyncio.wait(tasks))
                                 response_tree['response_status'] = '00'
                                 response_tree['response'] = 'Auth Transaction Captured'
