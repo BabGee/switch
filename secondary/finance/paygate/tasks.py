@@ -396,7 +396,7 @@ class System(Wrappers):
 				lgr.info(f'Institution Notification: {institution_notification}')
 				ext_inbound_id = payload['ext_inbound_id'] if 'ext_inbound_id' in payload.keys() else payload['bridge__transaction_id']
 
-				lgr.info(f'EXT Outbound ID: {ext_outbound_id}')
+				lgr.info(f'EXT Outbound ID: {ext_inbound_id}')
 
 				#Inner Function for multiple retry attempt to resolve deadlocks
 				@transaction.atomic
