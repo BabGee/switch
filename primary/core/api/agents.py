@@ -43,31 +43,32 @@ lgr = logging.getLogger(__name__)
 
 service_topic = _faust.topic('switch.primary.core.upc.api.service')
 
-#@_faust.agent(service_topic)
-#async def service(messages):
-#    async for message in messages:
-#        try:
-#            s = time.perf_counter()
-#            elapsed = lambda: time.perf_counter() - s
-#
-#            lgr.info(f'RECEIVED Service Request {message}')
-#            lgr.info(f'{elapsed()} Service Call Task Completed')
-#        except Exception as e: lgr.info(f'Error on Service Call: {e}')
-
-
 @_faust.agent(service_topic)
-async def service(stream):
-    async for event in stream.events():
+async def service(messages):
+    async for message in messages:
         try:
             s = time.perf_counter()
             elapsed = lambda: time.perf_counter() - s
-            lgr.info(f'RECEIVED Service Call {event}')
-            value = event.value
-            offset = event.message.offset
-            headers = event.headers
-            lgr.info(f'Value: {value} | Offset {offset} | Headers: {headers}')
+
+            lgr.info(f'RECEIVED Service Request {message}')
+            lgr.info(f'RECEIVED Service Request {message.headers}')
             lgr.info(f'{elapsed()} Service Call Task Completed')
         except Exception as e: lgr.info(f'Error on Service Call: {e}')
+
+
+#@_faust.agent(service_topic)
+#async def service(stream):
+#    async for event in stream.events():
+#        try:
+#            s = time.perf_counter()
+#            elapsed = lambda: time.perf_counter() - s
+#            lgr.info(f'RECEIVED Service Call {event}')
+#            value = event.value
+#            offset = event.message.offset
+#            headers = event.headers
+#            lgr.info(f'Value: {value} | Offset {offset} | Headers: {headers}')
+#            lgr.info(f'{elapsed()} Service Call Task Completed')
+#        except Exception as e: lgr.info(f'Error on Service Call: {e}')
 
 
 #@_faust.agent(service_call_topic, concurrency=16)
