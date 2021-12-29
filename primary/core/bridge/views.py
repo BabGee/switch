@@ -3,7 +3,7 @@ from celery import shared_task
 from switch.celery import app
 from celery.utils.log import get_task_logger
 from switch.celery import single_instance_task
-
+import asyncio
 
 from primary.core.bridge.models import *
 from primary.core.bridge.backend.loggers import Loggers
@@ -333,12 +333,17 @@ class ServiceProcessor:
 				transaction_list = Transaction.objects.using('read').filter(id__in=str(payload['repeat_bridge_transaction']).split(",")).select_related()
 				lgr.info("Repeat Transaction List: %s" % transaction_list)
 				del payload['repeat_bridge_transaction']
+                                event_loop = asyncio.get_event_loop()
+                                tasks = []
 				for t in transaction_list:
 					try:
-						background_transact(t.gateway_profile.id, t.id, t.service.id, payload, response_tree)
+						#background_transact(t.gateway_profile.id, t.id, t.service.id, payload, response_tree)
+                                                tasks.append((background_transact(t.gateway_profile.id, t.id, t.service.id, payload, response_tree)))
 						lgr.info('Repeat Bridge Transaction: %s' % t)
 					except Exception as e:
 						lgr.info('Error On Background Transact')
+
+                                event_loop.run_until_complete(asyncio.wait(tasks))
 				response_tree['response_status'] = '00'
 				response_tree['response'] = 'Auth Transaction Captured'
 			else:
