@@ -14,6 +14,7 @@ from functools import reduce
 from mode import Service
 
 from primary.core.api.views import ServiceCall
+from secondary.channels.vcs.models import *
 
 from itertools import islice, chain
 import pandas as pd
