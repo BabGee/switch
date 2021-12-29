@@ -62,13 +62,13 @@ async def service(stream):
         try:
             s = time.perf_counter()
             elapsed = lambda: time.perf_counter() - s
-            lgr.info(f'RECEIVED Service Call {event}')
+            lgr.info(f'{elapsed()}RECEIVED Service Call {event}')
             key = event.key
             value = event.value
             offset = event.message.offset
             headers = event.headers
 
-            lgr.info(f'Key: {key} | Value: {value} | Offset {offset} | Headers: {headers}')
+            lgr.info(f'{elapsed()} Key: {key} | Value: {value} | Offset {offset} | Headers: {headers}')
             ####################
             payload = value.copy()
             service_name = payload.get('SERVICE')
@@ -166,13 +166,13 @@ async def service(stream):
                     lgr.info('None of the Above')
 
             if gateway_profile_list.exists():
-                    lgr.info('Got Gateway Profile')
+                    lgr.info(f'{elapsed()} Got Gateway Profile')
                     gateway_profile = gateway_profile_list.first()
                     service = Service.objects.using('read').filter(Q(name=service_name),Q(Q(access_level=gateway_profile.access_level)|Q(access_level=None))).select_related() 
                     #lgr.info('Got Service: %s (%s)' % (service, service_name))
                     if service.exists():
                             payload = await sync_to_async(ServiceCall().api_service_call, thread_sensitive=True)(service.first(), gateway_profile, payload)
-                            lgr.info(f'Service Call Result {payload}')
+                            lgr.info(f'{elapsed()} Service Call Result {payload}')
                     else:
 
                             lgr.info(f'Service Does not Exist')
