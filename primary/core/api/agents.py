@@ -48,17 +48,6 @@ service_topic = _faust.topic('switch.primary.core.upc.api.service')
 thread_pool = ThreadPoolExecutor(max_workers=4)
 
 
-#@_faust.agent(service_topic)
-#async def service(messages):
-#    async for message in messages:
-#        try:
-#            s = time.perf_counter()
-#            elapsed = lambda: time.perf_counter() - s
-#
-#            lgr.info(f'RECEIVED Service Request {message}')
-#            lgr.info(f'{elapsed()} Service Call Task Completed')
-#        except Exception as e: lgr.info(f'Error on Service Call: {e}')
-
 def api_service_call(payload):
         service_name = payload.get('SERVICE')
         if 'session_id' not in payload.keys() and 'credentials' not in payload.keys():
@@ -172,31 +161,50 @@ def api_service_call(payload):
 
         return payload
 
-@_faust.agent(service_topic, concurrency=4)
-async def service(stream):
-    async for event in stream.events():
+
+@_faust.agent(service_topic)
+async def service(messages):
+    async for message in messages:
         try:
             s = time.perf_counter()
             elapsed = lambda: time.perf_counter() - s
-            lgr.info(f'{elapsed()}RECEIVED Service Call {event}')
-            key = event.key
-            value = event.value
-            offset = event.message.offset
-            headers = event.headers
 
-            lgr.info(f'{elapsed()} Key: {key} | Value: {value} | Offset {offset} | Headers: {headers}')
-            ####################
-            payload = value.copy()
+            lgr.info(f'RECEIVED Service Request {message}')
+            payload = message.copy()
 
             payload = await _faust.loop.run_in_executor(thread_pool, api_service_call, *[payload])
 
-            ###################
-
             lgr.info(f'{elapsed()} Service Call Task Completed')
-            await asyncio.sleep(0.5)
 
+            await asyncio.sleep(0.5)
         except Exception as e: lgr.info(f'Error on Service Call: {e}')
 
+
+#@_faust.agent(service_topic, concurrency=4)
+#async def service(stream):
+#    async for event in stream.events():
+#        try:
+#            s = time.perf_counter()
+#            elapsed = lambda: time.perf_counter() - s
+#            lgr.info(f'{elapsed()}RECEIVED Service Call {event}')
+#            key = event.key
+#            value = event.value
+#            offset = event.message.offset
+#            headers = event.headers
+#
+#            lgr.info(f'{elapsed()} Key: {key} | Value: {value} | Offset {offset} | Headers: {headers}')
+#            ####################
+#            payload = value.copy()
+#
+#            payload = await _faust.loop.run_in_executor(thread_pool, api_service_call, *[payload])
+#
+#            ###################
+#
+#            lgr.info(f'{elapsed()} Service Call Task Completed')
+#            await asyncio.sleep(0.5)
+#
+#        except Exception as e: lgr.info(f'Error on Service Call: {e}')
+#
 
 #@_faust.agent(service_call_topic, concurrency=16)
 #async def service_call(messages):
