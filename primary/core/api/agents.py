@@ -159,7 +159,7 @@ def api_service_call(payload):
         else:
                 lgr.info(f'Gateway Profile Does not Exist')
 
-        #return payload
+        return json.loads(payload)
 
 
 @_faust.agent(service_topic, concurrency=4)
