@@ -45,7 +45,7 @@ lgr = logging.getLogger(__name__)
 
 service_topic = _faust.topic('switch.primary.core.upc.api.service')
 
-thread_pool = ThreadPoolExecutor(max_workers=4)
+thread_pool = ThreadPoolExecutor(max_workers=10)
 
 
 def api_service_call(payload):
@@ -162,7 +162,7 @@ def api_service_call(payload):
         return json.dumps(payload)
 
 
-@_faust.agent(service_topic, concurrency=4)
+@_faust.agent(service_topic, concurrency=10)
 async def service(messages):
     async for message_list in messages.take(10, within=0.5):
         try:
@@ -183,7 +183,7 @@ async def service(messages):
 
             lgr.info(f'{elapsed()} Service Call Task Completed')
 
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.5)
         except Exception as e: lgr.info(f'Error on Service Call: {e}')
 
 
