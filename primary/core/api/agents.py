@@ -179,7 +179,7 @@ async def service(messages):
                     tasks.append((sc))
 
             #Run Tasks
-            response = await asyncio.gather(*tasks)
+            response = await asyncio.gather(tasks)
 
             lgr.info(f'{elapsed()} Service Call Task Completed')
 
