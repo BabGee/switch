@@ -162,7 +162,7 @@ def api_service_call(payload):
         return payload
 
 
-@_faust.agent(service_topic)
+@_faust.agent(service_topic, concurrency=4)
 async def service(messages):
     async for message in messages:
         try:

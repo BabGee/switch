@@ -186,7 +186,7 @@ async def bridge_background_service():
 			    #    									    scheduled_send__lte=timezone.now())
 
 			    lgr.info(f'{elapsed()}-Orig Background: {orig_background}')
-			    background = list(orig_background.values_list('id',flat=True)[:25])
+			    background = list(orig_background.values_list('id',flat=True)[:10])
 
 			    processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
 			    for b in background:
