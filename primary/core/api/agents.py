@@ -175,7 +175,7 @@ async def service(messages):
                     lgr.info(f'RECEIVED Service Request {message}')
                     payload = message.copy()
 
-                    sc = await _faust.loop.run_in_executor(thread_pool, api_service_call, *[payload])
+                    sc = _faust.loop.run_in_executor(thread_pool, api_service_call, *[payload])
                     tasks.append((sc))
 
             #Run Tasks
