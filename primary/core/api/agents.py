@@ -164,21 +164,46 @@ def api_service_call(payload):
 
 @_faust.agent(service_topic, concurrency=4)
 async def service(messages):
-    async for message in messages:
+    async for message_list in messages.take(10, within=0.5):
         try:
             s = time.perf_counter()
             elapsed = lambda: time.perf_counter() - s
 
-            lgr.info(f'RECEIVED Service Request {message}')
-            payload = message.copy()
+            lgr.info(f'RECEIVED Service Request {message_list}')
+            tasks = []
+            for message in message_list:
+                    lgr.info(f'RECEIVED Service Request {message}')
+                    payload = message.copy()
 
-            payload = await _faust.loop.run_in_executor(thread_pool, api_service_call, *[payload])
+                    sc = await _faust.loop.run_in_executor(thread_pool, api_service_call, *[payload])
+                    tasks.append(sc)
+
+            #Run Tasks
+            response = await asyncio.gather(*tasks)
 
             lgr.info(f'{elapsed()} Service Call Task Completed')
 
             await asyncio.sleep(0.1)
         except Exception as e: lgr.info(f'Error on Service Call: {e}')
 
+
+#@_faust.agent(service_topic, concurrency=4)
+#async def service(messages):
+#    async for message in messages:
+#        try:
+#            s = time.perf_counter()
+#            elapsed = lambda: time.perf_counter() - s
+#
+#            lgr.info(f'RECEIVED Service Request {message}')
+#            payload = message.copy()
+#
+#            payload = await _faust.loop.run_in_executor(thread_pool, api_service_call, *[payload])
+#
+#            lgr.info(f'{elapsed()} Service Call Task Completed')
+#
+#            await asyncio.sleep(0.1)
+#        except Exception as e: lgr.info(f'Error on Service Call: {e}')
+#
 
 #@_faust.agent(service_topic, concurrency=4)
 #async def service(stream):
