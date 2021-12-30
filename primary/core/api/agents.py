@@ -176,10 +176,10 @@ async def service(messages):
                     payload = message.copy()
 
                     sc = await _faust.loop.run_in_executor(thread_pool, api_service_call, *[payload])
-                    tasks.append((sc))
+                    tasks.append(sc)
 
             #Run Tasks
-            response = await asyncio.gather(tasks)
+            response = await asyncio.gather(*tasks)
 
             lgr.info(f'{elapsed()} Service Call Task Completed')
 
