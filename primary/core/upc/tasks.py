@@ -1776,10 +1776,11 @@ class System(Wrappers):
 	def set_profile_activated(self, payload, node_info):
 		try:
 			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
-			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
+			lgr.info('GatewayProfile: %s' % gateway_profile)
+#			session_gateway_profile = GatewayProfile.objects.get(id=payload['session_gateway_profile_id'])
 
-			session_gateway_profile.status = ProfileStatus.objects.get(name='ACTIVATED')
-			session_gateway_profile.save()
+			gateway_profile.status = ProfileStatus.objects.get(name='ACTIVATED')
+			gateway_profile.save()
 			payload['response'] = 'Profile Activated'
 			payload['response_status'] = '00'
 
@@ -2925,21 +2926,31 @@ class System(Wrappers):
 
 			payload['oauth_token_verified'] = False
 
-			lgr.info("PAYLOAD(SOCIAL): %s" % payload)
+			lgr.info("PAYLOAD.keys(ALLUTH): %s" % payload.keys())
 			if 'facebook' in payload.keys():
 				# verify token and retrieve profile from facebook
-				import facebook
+				# verify token and retrieve profile from google               
+				from allauth.socialaccount.models import SocialToken, SocialApp
+                
+				# (Receive token from payload)
 				access_token = payload['facebook']['authResponse']['accessToken']
-				graph = facebook.GraphAPI(access_token=access_token, version="3.0")
-				profile = graph.get_object(id='me', fields='name,email')                
+				try:                 
+					app = SocialApp.objects.get(provider='facebook')
+					token = SocialToken(app=app, token=access_token)
+					lgr.info("Token(FB): %s" % token)
+					#graph.facebook.com/debug_token?input_token={token-to-inspect}&access_token={app-token-or-admin-token}
+					# payload['email'] = payload['google']['email']
+					# payload['first_name'] = payload['google']['firstName']
+					# payload['last_name'] = payload['google']['lastName']                    
+					# payload['photo'] = payload['google']['imageUrl']
+					# update token verified flag
+					payload['oauth_token_verified'] = True
+					payload['response_status'] = '00'
+					payload['response'] = 'Social Profile Google Verified'
 
-#				lgr.info("PROFILE: %s" % profile)                               
-				payload['full_names'] = profile['name']
-				payload['email'] = profile['email']
-				# update token verified flag
-				payload['oauth_token_verified'] = True
-				payload['response_status'] = '00'
-				payload['response'] = 'Social Profile Facebook Verified'
+				except ValueError:
+					# Invalid token
+					raise 
 
 
 			elif 'google' in payload.keys():
@@ -3251,6 +3262,22 @@ class System(Wrappers):
 		except Exception as e:
 			lgr.info('Error Creating Subdomain: %s' % e,exc_info=True)
 			payload['response_status'] = '96'
+		return payload    
+
+
+	def set_access_level_administrator(self, payload, node_info):
+		try:
+			gateway_profile = GatewayProfile.objects.get(id=payload['gateway_profile_id'])
+			gateway_profile.access_level = AccessLevel.objects.get(name='ADMINISTRATOR')
+			gateway_profile.save()
+			lgr.info("GatewayProfile: %s" % gateway_profile)            
+			lgr.info("GatewayProfile Access Level: %s" % gateway_profile.access_level)            
+			payload['response'] = 'Access Level set to ADMINISTRATOR'
+			payload['response_status'] = '00'
+		except Exception as e:
+			payload['response'] = str(e)
+			payload['response_status'] = '96'
+			lgr.info("Error on setting gateway Profile to ADMINISTRATOR: %s" % e)
 		return payload    
     
     

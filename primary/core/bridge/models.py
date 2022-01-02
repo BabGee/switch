@@ -463,24 +463,4 @@ class GatewayProfileChangeActivity(models.Model):
 	pn_ack = models.BooleanField('Push Notification Acknowledged', default=False, help_text="Push Notification Acknowledged")
 	def __str__(self):
 		return u'%s %s' % (self.change, self.gateway_profile)
-
-
-class QuicksetupServices(models.Model):
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	def __str__(self):
-		return u'%s' % (self.name)
-    
-class NetworkProvider(models.Model):
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	def __str__(self):
-		return u'%s' % (self.name)    
-    
-class AccountType(models.Model):
-	name = models.CharField(max_length=45, unique=True)
-	description = models.CharField(max_length=100)
-	def __str__(self):
-		return u'%s' % (self.name)
-    
     
