@@ -406,7 +406,7 @@ class System(Wrappers):
 
 						#Avoid Race condition in transactions inserts to ensure unique entries for ext_inbound_id
 						last_incoming  = Incoming.objects.select_for_update().filter(reference=reference, remittance_product=product,
-                                                                                                            ext_inbound_id=ext_inbound_id).order_by('-id')
+													    ext_inbound_id=ext_inbound_id).order_by('-id')
 						if len(last_incoming): last_incoming.filter(id=last_incoming.first().id).update(updated=True)
 
 						lgr.info('Past Race Condition Check')
@@ -1069,15 +1069,14 @@ class System(Wrappers):
 								else:
 									charge = charge+c.charge_value
 
+							#Last Balance Check
+							float_balance.filter(id=float_balance[:1][0].id).update(updated=True)
+
 							balance_bf = Decimal(float_balance[0].balance_bf) + (Decimal(payload['float_amount']) + charge) #Credit Float reverses debits and adds charges
 							lgr.info("Balance Brought Forward: %s" % balance_bf)
 
 							institution = float_balance[0].institution
 							gateway = float_balance[0].gateway
-
-
-							#Last Balance Check
-							float_balance.filter(id=float_balance[:1][0].id).update(updated=True)
 
 							float_record = FloatManager(credit=True,\
 								float_amount=Decimal(payload['float_amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
@@ -1307,14 +1306,14 @@ class System(Wrappers):
 								else:
 									charge = charge+c.charge_value		
 
+							#Last Balance Check
+							float_balance.filter(id=float_balance[:1][0].id).update(updated=True)
+							#float_balance.filter(updated=False).update(updated=True)
+
 							balance_bf = Decimal(float_balance[0].balance_bf) - (Decimal(payload['float_amount']) + charge)
 							if balance_bf >= Decimal(0):
 								institution = float_balance[0].institution
 								gateway = float_balance[0].gateway
-
-								#Last Balance Check
-								float_balance.filter(id=float_balance[:1][0].id).update(updated=True)
-								#float_balance.filter(updated=False).update(updated=True)
 
 								float_record = FloatManager(credit=False,\
 									float_amount=Decimal(payload['float_amount']).quantize(Decimal('.01'), rounding=ROUND_DOWN),
