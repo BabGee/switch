@@ -3274,6 +3274,7 @@ class System(Wrappers):
 			lgr.info("GatewayProfile Access Level: %s" % gateway_profile.access_level)            
 			payload['response'] = 'Access Level set to ADMINISTRATOR'
 			payload['response_status'] = '00'
+			lgr.info("Full Payload: %s" % payload)            
 		except Exception as e:
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
