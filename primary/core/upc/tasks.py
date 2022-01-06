@@ -2834,12 +2834,6 @@ class System(Wrappers):
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on getting session gateway Profile: %s" % e)
-		return payload
-
-	def strip_msisdn(self, payload, node_info):
-		payload['stripped_msisdn'] = '+254790111111'.strip('+')
-		payload['response'] = 'MSISDN stripped'
-		payload['response_status'] = '00'        
 		return payload        
         
     
