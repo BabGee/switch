@@ -63,7 +63,7 @@ class FileUploadActivityStatusStatusAdmin(admin.ModelAdmin):
 admin.site.register(FileUploadActivityStatus, FileUploadActivityStatusStatusAdmin)
 
 class FileUploadActivityAdmin(admin.ModelAdmin):
-	list_display = ('id','name','description','file_path','file_upload','processed_file_path',\
+	list_display = ('id','name','description','file_path','file_upload','original_file_path',\
 			'status','gateway_profile','details','channel','date_created',)
 admin.site.register(FileUploadActivity, FileUploadActivityAdmin)
 

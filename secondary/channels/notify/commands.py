@@ -9,7 +9,7 @@ from switch.faust_app import app as _faust
 
 from django.db import transaction
 from .models import *
-from django.db.models import Q,F
+from django.db.models import Q, F, Count, Sum
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from functools import reduce
 from concurrent.futures import ThreadPoolExecutor
@@ -25,7 +25,7 @@ import asyncio
 import random
 import logging
 import aiohttp
-from http.client import HTTPConnection  # py3
+from http.client import HTTPConnection	# py3
 from typing import (
     Any,
     Callable,
@@ -45,6 +45,82 @@ lgr = logging.getLogger(__name__)
 #thread_pool = ThreadPoolExecutor(max_workers=16) #Heavy on database
 thread_pool = ThreadPoolExecutor(max_workers=16)
 
+
+@_faust.command()
+async def notify_outbound_sent_delivered():
+	"""This docstring is used as the command help in --help.
+	This service processes transactions in the background service activity table hence requires a threadpool
+	"""
+	lgr.info('Notify Outbound Delivered.........')
+	def outbound_delivered_query(state):
+		return OutboundSentDelivered.objects.filter(outbound_sent__outbound__state__name__in=state, 
+                                                            date_modified__gte=timezone.now()-timezone.timedelta(hours=24))
+
+	def outbound_update(id_list, state, response):
+		return Outbound.objects.select_for_update(of=('self',)).filter(id__in=id_list).update(state=OutBoundState.objects.get(name=state), 
+												    response=response, date_modified=timezone.now())
+
+	while 1:
+		try:
+			lgr.info('Outbound Delivered Running')
+			s = time.perf_counter()
+			elapsed = lambda: time.perf_counter() - s
+
+			tasks = list()
+			with transaction.atomic():
+				lgr.info(f'Outbound Delivered-Elapsed {elapsed()}')
+				orig_outbound_delivered = await sync_to_async(outbound_delivered_query, thread_sensitive=True)(state=['SENT']) 
+
+				outbound_delivered_status = orig_outbound_delivered.values('state__name','response').annotate(Count('state__name'), Count('response'))
+
+				for o in outbound_delivered_status:
+					lgr.info(f'{elapsed()}-Orig Outbound Delivered Status: {o}')
+					outbound = orig_outbound_delivered.filter(state__name=o['state__name'], response=o['response']).values_list('outbound_sent__outbound__id',flat=True)[:10000]
+					orig_outbound = await sync_to_async(outbound_update, thread_sensitive=True)(id_list=outbound, state=o['state__name'], response=o['response']) 
+					lgr.info(f'{elapsed()}-Orig Outbound: {orig_outbound}')
+
+			lgr.info(f'{elapsed()}-Completed Notify Outbound Delivered')
+			await asyncio.sleep(10.0)
+		except Exception as e: 
+			lgr.error(f'Notify Outbound Delivered: {e}')
+
+
+@_faust.command()
+async def notify_outbound_sent():
+	"""This docstring is used as the command help in --help.
+	This service processes transactions in the background service activity table hence requires a threadpool
+	"""
+	lgr.info('Notify Outbound Sent.........')
+	def outbound_sent_query(state):
+		return OutboundSent.objects.filter(outbound__state__name__in=state, date_modified__gte=timezone.now()-timezone.timedelta(hours=24))
+
+	def outbound_update(id_list, state, response):
+		return Outbound.objects.select_for_update(of=('self',)).filter(id__in=id_list).update(state=OutBoundState.objects.get(name=state), 
+												    response=response, date_modified=timezone.now())
+
+	while 1:
+		try:
+			lgr.info('Outbound Sent Running')
+			s = time.perf_counter()
+			elapsed = lambda: time.perf_counter() - s
+
+			tasks = list()
+			with transaction.atomic():
+				lgr.info(f'Outbound Sent-Elapsed {elapsed()}')
+				orig_outbound_sent = await sync_to_async(outbound_sent_query, thread_sensitive=True)(state=['PROCESSING']) 
+
+				outbound_sent_status = orig_outbound_sent.values('state__name','response').annotate(Count('state__name'), Count('response'))
+
+				for o in outbound_sent_status:
+					lgr.info(f'{elapsed()}-Orig Outbound Sent Status: {o}')
+					outbound = orig_outbound_sent.filter(state__name=o['state__name'], response=o['response']).values_list('outbound__id',flat=True)[:10000]
+					orig_outbound = await sync_to_async(outbound_update, thread_sensitive=True)(id_list=outbound, state=o['state__name'], response=o['response']) 
+					lgr.info(f'{elapsed()}-Orig Outbound: {orig_outbound}')
+
+			lgr.info(f'{elapsed()}-Completed Notify Outbound Sent')
+			await asyncio.sleep(10.0)
+		except Exception as e: 
+			lgr.error(f'Notify Outbound Sent: {e}')
 
 #def _send_notification_log(topic_list, partition_rate=1000, trigger_rate=100):
 #	try:
@@ -146,21 +222,27 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 		with transaction.atomic():
 			#.order_by('contact__product__priority').select_related('contact','template','state').all
 			#|Q(state__name="PROCESSING",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60))\
-			orig_outbound = Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name__in=['SMS','WHATSAPP']),~Q(recipient=None),
+			#orig_outbound = Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name__in=['SMS','WHATSAPP','EMAIL']),~Q(recipient=None),
+			#		Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk),
+			#		Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),
+			#		contact__product__trading_box__close_time__gte=timezone.localtime().time())),
+			#		Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
+			#		|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60)))\
+			#		.select_related('contact','template','state')
+			orig_outbound = Outbound.objects.select_for_update(of=('self',)).filter(Q(contact__subscribed=True),Q(contact__product__notification__code__channel__name__in=['SMS','WHATSAPP','EMAIL']),~Q(recipient=None),
 					Q(contact__status__name='ACTIVE',contact__product__is_bulk=is_bulk),
 					Q(Q(contact__product__trading_box=None)|Q(contact__product__trading_box__open_time__lte=timezone.localtime().time(),
 					contact__product__trading_box__close_time__gte=timezone.localtime().time())),
-					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(hours=24))\
-					|Q(state__name="FAILED",date_modified__lte=timezone.now()-timezone.timedelta(minutes=20),date_created__gte=timezone.now()-timezone.timedelta(minutes=60)))\
+					Q(scheduled_send__lte=timezone.now(),state__name='CREATED',date_created__gte=timezone.now()-timezone.timedelta(days=30)))\
 					.select_related('contact','template','state')
 
 			#lgr.info('Orig Outbound: %s' % orig_outbound)
 
 			outbound = orig_outbound[:limit_batch].values_list('id','recipient','contact__product__id','contact__product__notification__endpoint__batch','ext_outbound_id',
-                                                'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',
-                                                'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',
-                                                'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url','contact__product__notification__endpoint__request',
-						'contact__product__notification__code__channel__name','contact__product__notification__code__mno__name')
+						'contact__product__notification__ext_service_id','contact__product__notification__code__code','message','contact__product__notification__endpoint__account_id',
+						'contact__product__notification__endpoint__password','contact__product__notification__endpoint__username','contact__product__notification__endpoint__api_key',
+						'contact__subscription_details','contact__linkid','contact__product__notification__endpoint__url','contact__product__notification__endpoint__request',
+						'contact__product__notification__code__channel__name','contact__product__notification__code__mno__name','heading')
 
 			lgr.info(f'1:Elapsed {elapsed()}')
 			#lgr.info('Outbound: %s' % outbound)
@@ -174,7 +256,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 
 				df = pd.DataFrame({'outbound_id':messages[:,0], 'recipient':messages[:,1], 'product_id':messages[:,2], 'batch':messages[:,3], 'ext_service_id':messages[:,5],'code':messages[:,6],\
 					'message':messages[:,7],'endpoint_account_id':messages[:,8],'endpoint_password':messages[:,9],'endpoint_username':messages[:,10],\
-					'endpoint_api_key':messages[:,11],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'channel':messages[:,16],  'mno':messages[:,17]})
+					'endpoint_api_key':messages[:,11],'linkid':messages[:,13],'endpoint_url':messages[:,14], 'endpoint_request':messages[:,15], 'channel':messages[:,16],  'mno':messages[:,17],  'heading':messages[:,18]})
 
 				lgr.info(f'3:Elapsed {elapsed()}')
 				#lgr.info('DF: %s' % df)
@@ -182,18 +264,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 				df = df.dropna(axis='columns',how='all')
 
 				#lgr.info(f'DF 0 {df}')
-
-				#if 'endpoint_request' in df.columns: 
-				#	#df['endpoint_request'] = df['endpoint_request'].to_json()
-				#	df['endpoint_request'] = pd.json_normalize(df['endpoint_request'])
-				#	##df['endpoint_request'] = df['endpoint_request'].astype(str)
-				#	##if not df['endpoint_request'].empty:
-				#	#df['endpoint_request']= df['endpoint_request'].fillna({i: {} for i in df.index})
-				#	##df['endpoint_request'] = df['endpoint_request'].apply(ast.literal_eval)
-				#	#lgr.info(f'DF 1 {df}')
-				#	#df = df.join(pd.json_normalize(df['endpoint_request']))
-				#	#lgr.info(f'DF 2 {df}')
-				#	#df.drop(columns=['endpoint_request'], inplace=True)
+				if 'endpoint_request' in df.columns: df['endpoint_request']= df['endpoint_request'].apply(lambda x: json.dumps(x))
 
 				#lgr.info(f'DF 3 {df}')
 				cols = df.columns.tolist()
@@ -201,7 +272,9 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 				#df = df.sort_index()
 				cols.remove('outbound_id')
 				cols.remove('recipient')
-				grouped_df = df.groupby(cols)
+
+				#grouped_df = df.groupby(cols)
+				grouped_df = df.groupby(cols, dropna=False)
 				#lgr.info('Grouped DF: %s' % grouped_df)
 
 
@@ -211,16 +284,20 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 					outbound_id_list = group_df['outbound_id'].tolist()
 					recipient_list = group_df['recipient'].tolist()
 					recipients = tuple(zip(outbound_id_list, recipient_list))
-					payload = dict(timestamp=timezone.now().isoformat())    
+					payload = dict(timestamp=timezone.now().isoformat())	
 					for c in cols: payload[c] = str(group_df[c].unique()[0])
 					#lgr.info('MULTI: %s \n %s' % (group_df.shape,group_df.head()))
-					if batch_size>1 and len(group_df.shape)>1 and group_df.shape[0]>1:
+					#if batch_size>1 and len(group_df.shape)>1 and group_df.shape[0]>1:
+					if batch_size and batch_size>1 and len(group_df.shape)>1 and group_df.shape[0]>1:
 						objs = recipients
 						lgr.info(f'Got Here (multi): {len(objs)}')
-						start = 0
+						#start = int(0)
+						start = int(0)
 						while True:
-							batch = list(islice(objs, start, start+batch_size))
-							start+=batch_size
+							#batch = list(islice(objs, start, start+batch_size))
+							batch = list(islice(objs, int(start), int(start)+int(batch_size)))
+							#start+=batch_size
+							start+=int(batch_size)
 							if not batch: break
 							payload['recipients'] = batch
 							#lgr.info(f'{elapsed()} Producer Payload: {payload}')
@@ -231,7 +308,7 @@ def _send_outbound_messages(is_bulk=True, limit_batch=100):
 					elif len(group_df.shape)>1 :
 						lgr.info(f'Got Here (list of singles): {len(recipients)}')
 						for d in recipients:
-							payload['recipients'] = [d]       
+							payload['recipients'] = [d]	  
 							#lgr.info(f'{elapsed()} Producer Payload: {payload}')
 							response = kafka_producer.publish_message(
 									payload['endpoint_url'], 

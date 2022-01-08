@@ -28,7 +28,7 @@ import random
 import logging
 import aiohttp
 import datetime
-from http.client import HTTPConnection  # py3
+from http.client import HTTPConnection	# py3
 from typing import (
     Any,
     Callable,
@@ -44,47 +44,86 @@ from typing import (
 )
 
 lgr = logging.getLogger(__name__)
+thread_pool = ThreadPoolExecutor(max_workers=16)
+
+def process_file_upload(activity_id, status):
+	try:
+		s = time.perf_counter()
+		elapsed = lambda: time.perf_counter() - s
+
+		u = FileUploadActivity.objects.get(id=activity_id)
+
+		rf = u.file_path
+		df = pd.read_csv(rf)
+
+		lgr.info('Data Frame Columns: %s' % df.columns)
+		lgr.info('Data Frame: \n%s' % df.head())
+		lgr.info('Data Frame: \n%s' % df.tail())
+
+		columns = [c.strip().lower().replace(' ','_')	for c in df.columns]
+
+		lgr.info('Data Frame Columns: %s' % columns)
+
+		service = u.file_upload.activity_service
+		topic = u.file_upload.activity_topic
+		gateway_profile = u.gateway_profile
+
+		if service: 
+		    for r in zip(*df.to_dict("list").values()):
+			    payload = dict(zip(columns, r))
+			    payload.update(u.details)
+
+			    lgr.info(f'1: Elapsed {elapsed()} File Upload  - {payload}')
+			    response = BridgeWrappers().background_service_call(service, gateway_profile, payload)
+		else:
+		    for r in zip(*df.to_dict("list").values()):
+			    payload = dict(zip(columns, r))
+			    payload.update(u.details)
+
+			    lgr.info(f'1: Elapsed {elapsed()} File Upload  - {payload}')
+			    response = kafka_producer.publish_message(topic, None, json.dumps(payload) )
+
+		lgr.info(f'2: Elapsed {elapsed()} File Upload - {response}')
+
+		u.status=FileUploadActivityStatus.objects.get(name='PROCESSED')
+		u.save()
+
+	except Exception as e: lgr.info('Unable to process file upload: %s' % e)
+
 
 @_faust.command()
-async def dsc_file_upload_activity():
+async def dsc_file_upload():
 	"""This docstring is used as the command help in --help."""
-	lgr.info('Session Subscription.........')
-	def poll_query(status, last_run):
-		return Poll.objects.select_for_update(of=('self',)).filter(
-								status__name=status, 
-								last_run__lte=last_run
-								)
+	lgr.info('File Upload.........')
+	def upload_query(status):
+		return FileUploadActivity.objects.select_for_update(of=('self',)).filter(Q(status__name=status),
+							Q(~Q(file_upload__activity_service=None)|~Q(file_upload__activity_topic=None)))
 	while 1:
 		try:
-			lgr.info('Poll Running')
-
+			lgr.info('File Upload Running')
 			s = time.perf_counter()
 			elapsed = lambda: time.perf_counter() - s
-
 			tasks = list()
+			activity = list()
 			with transaction.atomic():
+				lgr.info(f'1:File Upload-Elapsed {elapsed()}')
+				orig_file_upload = await sync_to_async(upload_query, thread_sensitive=True)(status='CREATED')
+				lgr.info(f'{elapsed()}-Orig File Upload: {orig_file_upload}')
+				activity = list(orig_file_upload.values_list('id',flat=True)[:5])
 
-				lgr.info(f'1:Poll-Elapsed {elapsed()}')
-				orig_poll = await sync_to_async(poll_query, thread_sensitive=True)(status='PROCESSED', 
-								last_run=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every"))
+				processing = orig_file_upload.filter(id__in=activity).update(status=FileUploadActivityStatus.objects.get(name='PROCESSING'), date_modified=timezone.now())
 
-				lgr.info(f'{elapsed()}-Orig Poll: {orig_poll}')
+				for a in activity:
+				    lgr.info(f'File Upload: {a}')
+				    fu = _faust.loop.run_in_executor(thread_pool, process_file_upload, *[a, True])
 
-				for p in orig_poll:
-					lgr.info(f'Poll: {p}')
-					bg = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)(p.service, p.gateway_profile, p.request)
-					tasks.append(bg)
-
-				lgr.info(f'2:Poll-Elapsed {elapsed()}')
-				#orig_poll.update(status=PollStatus.objects.get(name='PROCESSING'))
-				if tasks:
-					response = await asyncio.gather(*tasks)
-					orig_poll.update(last_run=timezone.now())
-				lgr.info(f'3:Poll-Elapsed {elapsed()}')
-
+				    tasks.append(fu)
+			#End Atomic Transaction
+			lgr.info(f'2:File Upload-Elapsed {elapsed()}')
+			if tasks: response = await asyncio.gather(*tasks)
+			lgr.info(f'3:File Upload-Elapsed {elapsed()}')
 			await asyncio.sleep(1.0)
-
 		except Exception as e: 
-			lgr.error(f'Session Subscription Error: {e}')
+			lgr.error(f'File Upload Error: {e}')
 			break
 

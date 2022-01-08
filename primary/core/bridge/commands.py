@@ -170,7 +170,7 @@ async def bridge_background_service():
 		return BackgroundServiceActivity.objects.select_for_update(of=('self',)).filter(response_status__response=response,\
 								status__name=status,
 								scheduled_send__lte=scheduled_send,
-								 date_created__date=timezone.now().date())
+							        date_modified__gte=timezone.now()-timezone.timedelta(hours=24))
 	while 1:
 		try:
 			lgr.info('Background Running')
@@ -186,7 +186,7 @@ async def bridge_background_service():
 			    #    									    scheduled_send__lte=timezone.now())
 
 			    lgr.info(f'{elapsed()}-Orig Background: {orig_background}')
-			    background = list(orig_background.values_list('id',flat=True)[:100])
+			    background = list(orig_background.values_list('id',flat=True)[:10])
 
 			    processing = orig_background.filter(id__in=background).update(status=TransactionStatus.objects.get(name='PROCESSING'), date_modified=timezone.now(), sends=F('sends')+1)
 			    for b in background:
@@ -203,5 +203,4 @@ async def bridge_background_service():
 			await asyncio.sleep(1.0)
 		except Exception as e: 
 			lgr.error(f'Bridge Background Service: {e}')
-			break
 

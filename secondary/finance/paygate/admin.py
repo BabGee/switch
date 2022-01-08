@@ -81,7 +81,7 @@ admin.site.register(InstitutionNotification, InstitutionNotificationAdmin)
 
 class InstitutionIncomingServiceAdmin(admin.ModelAdmin):
 		list_display = ('id','service','description','keyword','product_item','gateway','details',\
-				'process_order','remittance_product','min_amount','max_amount',)
+				'process_order','remittance_product','min_amount','max_amount')
 admin.site.register(InstitutionIncomingService, InstitutionIncomingServiceAdmin)
 
 class IncomingStateAdmin(admin.ModelAdmin):
@@ -93,8 +93,8 @@ class IncomingAdmin(admin.ModelAdmin):
 			'response_status','message','ext_inbound_id','ext_first_name','ext_middle_name',\
 			'ext_last_name','inst_notified','inst_num_tries',\
 			'state','processed','institution_incoming_service',\
-			'channel','institution_notification','updated','msisdn',)
-	search_fields = ('request','reference','message',)
+			'channel','institution_notification','updated','msisdn','date_modified','date_created',)
+	search_fields = ('reference','ext_inbound_id','message','request')
 admin.site.register(Incoming, IncomingAdmin)
 
 class IncomingPollerStatusAdmin(admin.ModelAdmin):
@@ -112,9 +112,9 @@ admin.site.register(OutgoingState, OutgoingStateAdmin)
 class OutgoingAdmin(admin.ModelAdmin):
 	list_display = ('id','remittance_product','reference','request','amount','charge','currency',\
 			'scheduled_send','response_status','message','sends','ext_outbound_id',\
-			'inst_notified','inst_num_tries','state','institution_notification',)
+			'inst_notified','inst_num_tries','state','institution_notification','date_modified','date_created',)
 
 	list_filter = ('remittance_product','currency','response_status','state',)
-	search_fields = ('reference','request','ext_outbound_id','message',)
+	search_fields = ('reference','ext_outbound_id','message','request')
 admin.site.register(Outgoing, OutgoingAdmin)
 

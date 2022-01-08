@@ -10,6 +10,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField' #'django.db.models.BigAutoField' - Change in app.py for bigger tables
 
+#FILE_UPLOAD_PERMISSIONS = 0o644
+FILE_UPLOAD_PERMISSIONS = 0o777
+
 import configparser
 
 cf = configparser.ConfigParser()

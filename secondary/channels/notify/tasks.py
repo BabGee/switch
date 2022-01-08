@@ -59,15 +59,25 @@ class Wrappers:
 		obj_list = []
 		r, c = df_data.shape
 		for key, value in notifications.items():
+			df = df_data.copy()
 			contact = Contact.objects.get(id=value['contact_id'])
 			if contact.product.notification.code.channel.name == 'EMAIL':
-				df_email=df_data['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,3}$)')
-				df_email = df_email[~df_email['email'].isnull()]
-				_recipient = df_email['email'].values
+				#df_email=df_data['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,3}$)')
+				#df_email = df_email[~df_email['email'].isnull()]
+				#_recipient = df_email['email'].values
+				#df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,3}$)')
+				df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,}$)')
+				df['recipient'] = df_email['email']
+				df = df[~df['recipient'].isnull()]
+				df.drop_duplicates(inplace=True)
 			elif contact.product.notification.code.channel.name == 'WHATSAPP':
-				df_msisdn=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(:?[\d]*)$|(?:[\d]*)$)')
-				df_msisdn = df_msisdn[~df_msisdn['msisdn'].isnull()]
-				_recipient = df_msisdn['msisdn'].values
+				#df_msisdn=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(:?[\d]*)$|(?:[\d]*)$)')
+				#df_msisdn = df_msisdn[~df_msisdn['msisdn'].isnull()]
+				#_recipient = df_msisdn['msisdn'].values
+				df_msisdn=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(:?[\d]*)$|(?:[\d]*)$)')
+				df['recipient'] = df_msisdn['msisdn']
+				df = df[~df['recipient'].isnull()]
+				df.drop_duplicates(inplace=True)
 			else:
 				mno = contact.product.notification.code.mno
 				mno_prefix = MNOPrefix.objects.filter(mno=mno).values_list('prefix', flat=True)
@@ -76,21 +86,30 @@ class Wrappers:
 				prefix = '|'.join(code)
 				fprefix = '|'.join(mno_prefix).replace('+','')
 
-				df_prefix=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
-				df_fprefix=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
+				#df_prefix=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
+				#df_fprefix=df_data['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
+				#df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
+				#df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
+				#df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
+				#df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
+				#_recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
 
-				df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
-				df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
-				df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
-
-				df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
-
-				_recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
+				df_prefix=ccode+df['recipient'].astype(str).str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')['msisdn'].str.lstrip('0')
+				df_prefix=pd.to_numeric(df_prefix).astype('Int64')
+				df_fprefix=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')['msisdn']
+				df_fprefix=pd.to_numeric(df_fprefix).astype('Int64')
+				df['recipient'] = df_prefix.combine_first(df_fprefix)
+				df = df[~df['recipient'].isnull()]
+				df.drop_duplicates(inplace=True)
 
 			#Capture Recipients
-			_recipient = np.unique(_recipient)
-			lgr.info('\n\n\n\n\n\tRecipient: %s' % _recipient)
-			_recipient_count = _recipient.size
+			#_recipient = np.unique(_recipient)
+			#lgr.info('\n\n\n\n\n\tRecipient: %s' % _recipient)
+			#_recipient_count = _recipient.size
+			allowed_columns = list(set(df.columns).intersection(set(['message','recipient','message_len'])))
+			df[allowed_columns]
+			lgr.info('\n\n\n\n\n\n\t DF Data: %s' % df.head())
+			_recipient_count = df.shape[0]
 
 
 			heading, template = None, None
@@ -123,10 +142,9 @@ class Wrappers:
 
 			#lgr.info('Message and Contact Captured: %s | %s | %s' % (mno.name, prefix, _recipient_count) )
 			if r >= 100:
-				df = pd.DataFrame({'recipient': _recipient})
+				#df = pd.DataFrame({'recipient': _recipient})
 				if template: df['template'] = template
 				df['heading'] = heading
-				df['message'] = payload['message']
 				df['scheduled_send'] = scheduled_send
 				df['contact'] = value['contact_id']
 				df['state'] = state.id
@@ -138,7 +156,7 @@ class Wrappers:
 				df['pn_ack'] = False
 				df['ext_outbound_id'] = ext_outbound_id
 				df['inst_notified'] = False
-				df['message_len'] = value['message_len'] if 'message_len' in value.keys() else 1
+				if 'message_len' not in df.columns: df['message_len'] = value['message_len'] if 'message_len' in value.keys() else 1
 
 				df_list.append(df)
 			else:
@@ -146,10 +164,15 @@ class Wrappers:
 				contact_group = payload['contact_group'] if 'contact_group' in payload.keys() else None
 				message_len =  value['message_len'] if 'message_len' in value.keys() else 1
 				#Append by adding
+				#obj_list = obj_list+[Outbound(contact=contact, template=template, heading=heading, \
+				#				message=payload['message'], scheduled_send=scheduled_send,\
+				#				state=state, recipient=r, sends=0, ext_outbound_id=ext_outbound_id,\
+				#				 contact_group=contact_group, message_len=message_len) for r in _recipient]
+
 				obj_list = obj_list+[Outbound(contact=contact, template=template, heading=heading, \
-								message=payload['message'], scheduled_send=scheduled_send,\
-								state=state, recipient=r, sends=0, ext_outbound_id=ext_outbound_id,\
-								 contact_group=contact_group, message_len=message_len) for r in _recipient]
+								message=r[0], scheduled_send=scheduled_send,\
+								state=state, recipient=r[1], sends=0, ext_outbound_id=ext_outbound_id,\
+								 contact_group=contact_group, message_len=message_len) for r in zip(df['message'], df['recipient'])]
 
 				lgr.info('\n\n\n\n\n\tObject List: %s' % obj_list)
 		outbound_log = None
@@ -170,11 +193,12 @@ class Wrappers:
 
 		return outbound_log
 
-	def batch_product_notifications(self, payload, df, product, message, gateway_profile):
+	def batch_product_notifications(self, payload, df_data, product, message, gateway_profile):
 		notifications = {}
 		notifications_preview = {}
 		lgr.info('Product: %s' % product)
 
+		df = df_data.copy()
 		contact = Contact.objects.filter(product=product, gateway_profile=gateway_profile)
 		status = ContactStatus.objects.get(name='ACTIVE') #User is active to receive notification
 		if not len(contact):
@@ -187,49 +211,67 @@ class Wrappers:
 			new_contact.subscribed=True
 			new_contact.save()
 		if product.notification.code.channel.name == 'EMAIL':
-			df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,3}$)')
-			df_email = df_email[~df_email['email'].isnull()]
-			_recipient = df_email['email'].values
-			message_len = 1
+			#df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,3}$)')
+			#df_email = df_email[~df_email['email'].isnull()]
+			#_recipient = df_email['email'].values
+			#message_len = 1
+
+			#df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,3}$)')
+			df_email=df['recipient'].astype(str).str.extract(r'(?P<email>^[\w\.\+\-]+\@[\w\.]+\.[a-z]{2,}$)')
+			df['recipient'] = df_email['email']
+			df = df[~df['recipient'].isnull()]
+			df.drop_duplicates(inplace=True)
+			message_len = 1 #Length of the message string
 		elif product.notification.code.channel.name == 'WHATSAPP':
+			#df_msisdn=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(:?[\d]*)$|(?:[\d]*)$)')
+			#df_msisdn = df_msisdn[~df_msisdn['msisdn'].isnull()]
+			#_recipient = df_msisdn['msisdn'].values
+			#message_len = 1
+
 			df_msisdn=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(:?[\d]*)$|(?:[\d]*)$)')
-			df_msisdn = df_msisdn[~df_msisdn['msisdn'].isnull()]
-			_recipient = df_msisdn['msisdn'].values
-			message_len = 1
+			df['recipient'] = df_msisdn['msisdn']
+			df = df[~df['recipient'].isnull()]
+			df.drop_duplicates(inplace=True)
+			message_len = 1 #Length of the message string
 		else:
 			#For SMS
 			chunks, chunk_size = len(message), 160	# SMS Unit is 160 characters (NB: IN FUTURE!!, pick message_len from DB - notification_product)
 			messages = [message[i:i + chunk_size] for i in range(0, chunks, chunk_size)]
 			message_len = len(messages)
 
-			mno_prefix = MNOPrefix.objects.filter(mno=product.notification.code.mno).values_list('prefix', flat=True)
-
+			mno = product.notification.code.mno
+			mno_prefix = MNOPrefix.objects.filter(mno=mno).values_list('prefix', flat=True)
 			ccode=product.notification.code.mno.country.ccode
-
 			code = [re.findall(r'^\+'+ccode+'([\d]*)$', p)[0] for p in mno_prefix]
-
 			prefix = '|'.join(code)
-
 			fprefix = '|'.join(mno_prefix).replace('+','')
 
-			lgr.info('Full Prefix: %s' % fprefix)
-			lgr.info('Prefix: %s' % prefix)
+			##df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$))')
+			#df_prefix=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
+			#df_fprefix=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
+			#df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
+			#df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
+			#df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
+			#df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
+			#_recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
 
-			#df_prefix=df['recipient'].str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$))')
-			df_prefix=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')
-			df_fprefix=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')
+			df_prefix=ccode+df['recipient'].astype(str).str.extract(r'(?P<msisdn>^(?:('+prefix+')([\d]*)$)|^0(?:('+prefix+')([\d]*)$))')['msisdn'].str.lstrip('0')
+			df_prefix=pd.to_numeric(df_prefix).astype('Int64')
+			df_fprefix=df['recipient'].astype(str).str.extract(r'(?P<msisdn>^\+(?:('+fprefix+')[\d]*)$|^(?:('+fprefix+')([\d]*)$))')['msisdn']
+			df_fprefix=pd.to_numeric(df_fprefix).astype('Int64')
+			df['recipient'] = df_prefix.combine_first(df_fprefix)
+			df = df[~df['recipient'].isnull()]
+			df.drop_duplicates(inplace=True)
 
-			df_prefix = df_prefix[~df_prefix['msisdn'].isnull()]
-			df_prefix['msisdn']=df_prefix['msisdn'].str.lstrip('0')
-			df_prefix['msisdn']=ccode+df_prefix['msisdn'].astype(str)
+		##Capture Recipients
+		#_recipient = np.unique(_recipient)
+		#_recipient_count = _recipient.size
 
-			df_fprefix = df_fprefix[~df_fprefix['msisdn'].isnull()]
+		allowed_columns = list(set(df.columns).intersection(set(['message','recipient','message_len'])))
+		df[allowed_columns]
+		lgr.info('\n\n\n\n\n\n\t DF Data: %s' % df.head())
+		_recipient_count = df.shape[0]
 
-			_recipient = np.concatenate([df_prefix['msisdn'].values, df_fprefix['msisdn'].values])
-
-		#Capture Recipients
-		_recipient = np.unique(_recipient)
-		_recipient_count = _recipient.size
 
 		if _recipient_count:
 			unit_charge = (product.unit_credit_charge) #Pick the notification product cost
@@ -400,6 +442,7 @@ class System(Wrappers):
 
 			lgr.info(f'Recipient Contact Captured Data: {df_data.shape[0]}')
 			if payload.get('message') and df_data.shape[0] and len(notifications):
+				df_data['message'] = payload['message']
 				outbound_log = self.batch_product_send(payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
 				lgr.info('Recipient Outbound Bulk Logger Completed Task')
 
@@ -1621,6 +1664,7 @@ class System(Wrappers):
 			df_data = pd.DataFrame({'recipient': recipient})
 
 			if 'message' in payload.keys() and payload['message'] not in ['',None] and recipient.size and len(notifications):
+				df_data['message'] = payload['message']
 				outbound_log = self.batch_product_send(payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
 				lgr.info('Recipient Outbound Bulk Logger Completed Task')
 				payload['response'] = 'Batch Notification Sent'
@@ -2150,6 +2194,7 @@ class System(Wrappers):
 			df_data = df[['recipient']]
 			lgr.info(f'Recipient Contact Captured Data: {df.shape[0]}')
 			if 'message' in payload.keys() and df.shape[0] and len(notifications):
+				df_data['message'] = payload['message']
 				outbound_log = self.batch_product_send(payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
 				lgr.info('Recipient Outbound Bulk Logger Completed Task')
 
@@ -2204,6 +2249,7 @@ class System(Wrappers):
 
 
 			if 'message' in payload.keys() and recipient.size and len(notifications):
+				df_data['message'] = payload['message']
 				outbound_log = self.batch_product_send(payload, df_data, date_obj, notifications, ext_outbound_id, gateway_profile)
 				lgr.info('Recipient Outbound Bulk Logger Completed Task')
 
