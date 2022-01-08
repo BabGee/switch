@@ -44,7 +44,7 @@ class VAS:
 					self.prefix = MNOPrefix.objects.filter(prefix=self.payload["msisdn"][:code1])
 		elif 'create_menu' in args:
 			#If authenticated session, keep all navigation authenticated 
-			authenticated = self.navigator.filter(pin_auth=True)
+			authenticated = self.navigator.filter(pin_auth=True)           
 			if authenticated.exists() or self.pin_auth:
 				self.pin_auth = True
 				self.navigator = self.navigator.filter(pin_auth=True)
@@ -293,11 +293,11 @@ class VAS:
 				lgr.info('\n\n\tCreate Code:  5\n\n\n')
 				self.access_point = '*%s#' % self.access_point
 			else:
-				lgr.info('\n\n\tCreate Code:  6\n\n\n')
+				lgr.info('\n\n\tCreate Code:  6\n\n\n')               
 
                         #Capture access_point created from shortcut or such
 			self.payload['access_point'] = self.access_point
-			lgr.info('Payload: %s' % self.payload)
+			lgr.info('Payload(create_menu): %s' % self.payload)
 		#Inject input if still missing (for all channels)
 		if 'input' not in self.payload.keys():
 			#Injecting Zero ensures that the menu does not progress in case of bad input, but remains on the same page as back entry is initiated
@@ -566,13 +566,14 @@ class VAS:
 			self.payload = payload
 			#Get the sessionId, input. 
 			#Check if sessionId exists in navigator, 
-
 			self.navigator = Navigator.objects.filter(session__channel__id=self.payload["chid"], \
-			session__date_created__gte = timezone.localtime(timezone.now())-timezone.timedelta(seconds=self.initialize('timelimit'))).order_by('-date_created','-nav_step','-menu__level')
-
+			session__date_created__gte = timezone.localtime(timezone.now())-timezone.timedelta(seconds=self.initialize('timelimit'))).order_by('-date_created','-nav_step','-menu__level')            
+            
 			if 'sessionid' in self.payload.keys() and len(self.navigator)>0:
 				self.navigator = self.navigator.filter(session__session_id=self.payload['sessionid'])
 
+			lgr.info('PAYLOAD(menu_input before create_menu): %s' % self.payload)                
+                
 			self.create_menu()
 		except Exception as e:
 			lgr.critical('An error getting the page because of the Error: %s' % e)

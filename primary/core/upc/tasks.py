@@ -160,6 +160,7 @@ class Wrappers:
 		return user, payload
 
 	def profile_update(self, user, payload):
+		lgr.info('PAYLOAD(profile_update): %s' % payload)        
 		if 'full_names' in payload.keys():
 			full_names = payload["full_names"].strip().split(" ")
 			if len(full_names) == 1:
@@ -816,6 +817,7 @@ class System(Wrappers):
 			lgr.info('Error on contact check: %s' % e)
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
+		lgr.info('PAYLOAD(contact_check_end): %s' % payload)            
 		return payload
 
 
@@ -2824,7 +2826,7 @@ class System(Wrappers):
 				elif 'email' in payload.keys(): del payload['email']
 
 				payload['response_status'] = '00'
-				payload['response'] = 'Session Profile Captured'
+				payload['response'] = 'Session Profile Captured'                
 
 			else:
 				payload = self.create_user_profile(payload, node_info)
@@ -2834,6 +2836,7 @@ class System(Wrappers):
 			payload['response'] = str(e)
 			payload['response_status'] = '96'
 			lgr.info("Error on getting session gateway Profile: %s" % e)
+		lgr.info('PAYLOAD(get_profile_end): %s' % payload)            
 		return payload        
         
     
