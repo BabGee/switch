@@ -77,6 +77,7 @@ async def paygate_process_incoming():
 					gateway_institution_notification = i.remittance_product.gatewayinstitutionnotification
 					payload = i.request
 
+					payload['paygate_incoming_id'] = i.id
 					payload['amount'] = str(i.amount)
 					payload['reference'] = i.reference
 					if i.currency is not None:
