@@ -261,7 +261,7 @@ class VAS:
 		self.menu = Menu.objects.filter(menu_status__name='ENABLED')
 		self.pin_auth = False
 		self.selection = None
-
+		lgr.info('GOT HERE(create_menu)')
 		#Get Access Point
 		if 'access_point' in kwargs.keys():
 			self.access_point = kwargs['access_point']
