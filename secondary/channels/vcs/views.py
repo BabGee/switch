@@ -52,7 +52,10 @@ class VAS:
 			#END affects menu's that use a page_string_response rather than page_string as page string response can take a state other than the main menu state
 			if len(self.navigator) > 0 and self.payload['input'] not in ['00','<BEG>','<SBEG>'] and self.navigator[0].session_state.name != 'END':#Not a Main Menu Request
 				if self.gateway_profile.exists():
-					self.navigator = self.navigator.filter(session__gateway_profile=self.gateway_profile[0])
+					navigator = self.navigator.filter(session__gateway_profile=self.gateway_profile[0])
+                                        #If profile results in no menu, use session navigator with no profile
+                                        if len(navigator): self.navigator = navigator
+
 				self.nav = self.navigator[0]
 				self.level= str(self.kwargs['level']) if 'level' in self.kwargs.keys() else str(int(self.nav.menu.level)+1)
 				self.group_select=self.kwargs['group_select'] if 'group_select' in self.kwargs.keys() else self.nav.menu.group_select
