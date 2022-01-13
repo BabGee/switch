@@ -53,8 +53,8 @@ class VAS:
 			if len(self.navigator) > 0 and self.payload['input'] not in ['00','<BEG>','<SBEG>'] and self.navigator[0].session_state.name != 'END':#Not a Main Menu Request
 				if self.gateway_profile.exists():
 					navigator = self.navigator.filter(session__gateway_profile=self.gateway_profile[0])
-                                        #If profile results in no menu, use session navigator with no profile
-                                        if len(navigator): self.navigator = navigator
+					#If profile results in no menu, use session navigator with no profile
+					if len(navigator): self.navigator = navigator
 
 				self.nav = self.navigator[0]
 				self.level= str(self.kwargs['level']) if 'level' in self.kwargs.keys() else str(int(self.nav.menu.level)+1)
