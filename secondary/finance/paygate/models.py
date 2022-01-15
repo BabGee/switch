@@ -319,6 +319,8 @@ class IncomingPoller(models.Model):
 	next_run = models.DateTimeField()
 	status = models.ForeignKey(IncomingPollerStatus, on_delete=models.CASCADE)
 	gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
+	last_run = models.DateTimeField(auto_now=True, blank=True, null=True)
+	gateway_profile = models.ForeignKey(GatewayProfile, on_delete=models.CASCADE, blank=True, null=True)
 	def __str__(self):
 		return u'%s' % (self.name)
 
