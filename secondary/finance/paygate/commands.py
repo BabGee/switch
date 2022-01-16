@@ -102,10 +102,11 @@ async def paygate_process_incoming_poller():
 												 ext_inbound_id=payload['ext_inbound_id'])
 
 								if incoming.exists(): pass
-								else: lgr.info('Not Found: Process BG')
+								else: 
+								    lgr.info('Not Found: Process BG')
 
-								#    bg = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)(p.service, p.gateway_profile, payload)
-								#    tasks.append(bg)
+								    bg = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)(p.service, p.gateway_profile, payload)
+								    tasks.append(bg)
 
 				lgr.info(f'2:Poll-Elapsed {elapsed()}')
 				#orig_poll.update(status=PollStatus.objects.get(name='PROCESSING'))
