@@ -47,6 +47,85 @@ lgr = logging.getLogger(__name__)
 thread_pool = ThreadPoolExecutor(max_workers=16)
 
 @_faust.command()
+async def paygate_process_incoming_poller():
+	"""This docstring is used as the command help in --help.
+	This service does not process transactions and only does an insert to the background service activity table.
+	"""
+	lgr.info('Paygate Process Incoming Poller.........')
+	def poll_query(status, last_run):
+		return IncomingPoller.objects.select_for_update(of=('self',)).filter(
+								status__name__in=status, 
+								last_run__lte=last_run
+								)
+	while 1:
+		try:
+			lgr.info('Incoming Poller Running')
+
+			s = time.perf_counter()
+			elapsed = lambda: time.perf_counter() - s
+
+			tasks = list()
+			with transaction.atomic():
+
+				lgr.info(f'1:Poll-Elapsed {elapsed()}')
+				orig_poll = await sync_to_async(poll_query, thread_sensitive=True)(status=['ACTIVE'], 
+								last_run=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every"))
+
+				lgr.info(f'{elapsed()}-Orig Incoming Poll: {orig_poll}')
+
+				for p in orig_poll:
+
+					lgr.info(f'Incoming Poller: {p}')
+					params = p.remittance_product.endpoint.request
+					if params: params.update(p.request)
+					else: params = p.request
+
+					params['account_id'] = p.remittance_product.endpoint.account_id
+					params['username'] = p.remittance_product.endpoint.username
+					params['password'] = p.remittance_product.endpoint.password
+
+					url = p.remittance_product.endpoint.url
+
+					lgr.info(f'Params: {params}')
+
+					async with _faust.http_client.post(url, data=json.dumps(params), headers={'Content-Type': 'application/json'}, timeout=30) as response:
+						lgr.info("Status: %s" % response.status)
+						#lgr.info("Content-type: %s" % response.headers['content-type'])
+						params = await response.json()
+
+						lgr.info(f'Response: {params}')
+						if 'data' in params.get('response') and params['response'].get('data'):
+							for payload in json.loads(params['response']['data']):
+								lgr.info(f'Payload: {payload}')
+
+								incoming = Incoming.objects.filter(remittance_product=p.remittance_product, reference=payload['reference'],\
+												 ext_inbound_id=payload['ext_inbound_id'])
+
+								if incoming.exists(): pass
+								else: 
+								    lgr.info('Not Found: Process BG')
+
+								    bg = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)(p.service, p.gateway_profile, payload)
+								    tasks.append(bg)
+
+				lgr.info(f'2:Incoming Poll-Elapsed {elapsed()}')
+				#orig_poll.update(status=PollStatus.objects.get(name='PROCESSING'))
+
+				if tasks:
+					response = await asyncio.gather(*tasks)
+
+				#Update Last Run if exists
+				if len(orig_poll): orig_poll.update(last_run=timezone.now())
+
+				lgr.info(f'3:Incoming Poll-Elapsed {elapsed()}')
+
+			await asyncio.sleep(1.0)
+
+		except Exception as e: 
+			lgr.error(f'Paygate Incoming Poller Error: {e}')
+
+
+@_faust.command()
 async def paygate_process_incoming():
 	"""This docstring is used as the command help in --help.
 	This service does not process transactions and only does an insert to the background service activity table.
@@ -54,7 +133,7 @@ async def paygate_process_incoming():
 	lgr.info('Paygate Incoming.........')
 	def incoming_query(state, response):
 		return Incoming.objects.select_for_update(of=('self',)).filter(state__name=state, response_status__response=response,
-                                                                    date_modified__lte=timezone.now()-timezone.timedelta(seconds=2))
+								    date_modified__lte=timezone.now()-timezone.timedelta(seconds=2))
 
 	while 1:
 		try:

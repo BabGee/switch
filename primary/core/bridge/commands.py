@@ -90,7 +90,6 @@ async def bridge_background_service_poll():
 
 		except Exception as e: 
 			lgr.error(f'Bridge Background Service Poll Error: {e}')
-			break
 
 def process_bridge_background_service_call(activity_id, status):
 	try:

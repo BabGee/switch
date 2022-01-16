@@ -102,7 +102,8 @@ class IncomingPollerStatusAdmin(admin.ModelAdmin):
 admin.site.register(IncomingPollerStatus, IncomingPollerStatusAdmin)
 
 class IncomingPollerAdmin(admin.ModelAdmin):
-	list_display = ('name','description','request','remittance_product','frequency','service','next_run','status','gateway',)
+	list_display = ('name','description','request','remittance_product','frequency','service','next_run',
+                        'status','gateway','last_run','gateway_profile',)
 admin.site.register(IncomingPoller, IncomingPollerAdmin)
  
 class OutgoingStateAdmin(admin.ModelAdmin):
