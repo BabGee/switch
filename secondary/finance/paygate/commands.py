@@ -122,7 +122,7 @@ async def paygate_process_incoming_poller():
 			await asyncio.sleep(1.0)
 
 		except Exception as e: 
-			lgr.error(f'Bridge Background Service Poll Error: {e}')
+			lgr.error(f'Paygate Incoming Poller Error: {e}')
 			break
 
 
