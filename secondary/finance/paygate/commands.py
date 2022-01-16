@@ -51,7 +51,7 @@ async def paygate_process_incoming_poller():
 	"""This docstring is used as the command help in --help.
 	This service does not process transactions and only does an insert to the background service activity table.
 	"""
-	lgr.info('Bridge Background Service Poll.........')
+	lgr.info('Paygate Process Incoming Poller.........')
 	def poll_query(status, last_run):
 		return IncomingPoller.objects.select_for_update(of=('self',)).filter(
 								status__name__in=status, 
@@ -77,6 +77,8 @@ async def paygate_process_incoming_poller():
 
 					lgr.info(f'Poll: {p}')
 					params = p.remittance_product.endpoint.request
+                                        if params: params.update(p.request)
+                                        else: params = p.request
 
 					params['account_id'] = p.remittance_product.endpoint.account_id
 					params['username'] = p.remittance_product.endpoint.username
