@@ -68,7 +68,7 @@ async def paygate_process_incoming_poller():
 			with transaction.atomic():
 
 				lgr.info(f'1:Poll-Elapsed {elapsed()}')
-				orig_poll = await sync_to_async(poll_query, thread_sensitive=True)(status=['PROCESSED'], 
+				orig_poll = await sync_to_async(poll_query, thread_sensitive=True)(status=['ACTIVE'], 
 								last_run=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every"))
 
 				lgr.info(f'{elapsed()}-Orig Poll: {orig_poll}')
@@ -109,9 +109,13 @@ async def paygate_process_incoming_poller():
 
 				lgr.info(f'2:Poll-Elapsed {elapsed()}')
 				#orig_poll.update(status=PollStatus.objects.get(name='PROCESSING'))
+
 				if tasks:
 					response = await asyncio.gather(*tasks)
-					orig_poll.update(last_run=timezone.now())
+
+				#Update Last Run if exists
+				if len(orig_poll): orig_poll.update(last_run=timezone.now())
+
 				lgr.info(f'3:Poll-Elapsed {elapsed()}')
 
 			await asyncio.sleep(1.0)
