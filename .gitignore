@@ -11,7 +11,7 @@
 *.sw[nop]
 switch/media.bkp/
 .idea/
-
+*.sql
 #Leave products folder, ignore contents
 products/**
 !products
