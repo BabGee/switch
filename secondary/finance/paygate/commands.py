@@ -123,7 +123,6 @@ async def paygate_process_incoming_poller():
 
 		except Exception as e: 
 			lgr.error(f'Paygate Incoming Poller Error: {e}')
-			break
 
 
 @_faust.command()
