@@ -88,14 +88,14 @@ async def paygate_process_incoming_poller():
 
 					lgr.info(f'Params: {params}')
 
-					async with _faust.http_client.post(url, data=json.dumps(params), headers={'Content-Type': 'application/json'}, timeout=10) as response:
+					async with _faust.http_client.post(url, data=json.dumps(params), headers={'Content-Type': 'application/json'}, timeout=30) as response:
 						lgr.info("Status: %s" % response.status)
 						#lgr.info("Content-type: %s" % response.headers['content-type'])
 						params = await response.json()
 
 						lgr.info(f'Response: {params}')
 						if 'data' in params.get('response') and params['response'].get('data'):
-							for payload in params['response']['data']:
+							for payload in json.loads(params['response']['data']):
 								lgr.info(f'Payload: {payload}')
 
 								#incoming = Incoming.objects.filter(remittance_product=p.remittance_product, reference=payload['reference'],\
