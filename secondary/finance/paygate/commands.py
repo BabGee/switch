@@ -71,11 +71,11 @@ async def paygate_process_incoming_poller():
 				orig_poll = await sync_to_async(poll_query, thread_sensitive=True)(status=['ACTIVE'], 
 								last_run=timezone.now() - timezone.timedelta(seconds=1)*F("frequency__run_every"))
 
-				lgr.info(f'{elapsed()}-Orig Poll: {orig_poll}')
+				lgr.info(f'{elapsed()}-Orig Incoming Poll: {orig_poll}')
 
 				for p in orig_poll:
 
-					lgr.info(f'Poll: {p}')
+					lgr.info(f'Incoming Poller: {p}')
 					params = p.remittance_product.endpoint.request
 					if params: params.update(p.request)
 					else: params = p.request
@@ -108,7 +108,7 @@ async def paygate_process_incoming_poller():
 								    bg = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)(p.service, p.gateway_profile, payload)
 								    tasks.append(bg)
 
-				lgr.info(f'2:Poll-Elapsed {elapsed()}')
+				lgr.info(f'2:Incoming Poll-Elapsed {elapsed()}')
 				#orig_poll.update(status=PollStatus.objects.get(name='PROCESSING'))
 
 				if tasks:
@@ -117,7 +117,7 @@ async def paygate_process_incoming_poller():
 				#Update Last Run if exists
 				if len(orig_poll): orig_poll.update(last_run=timezone.now())
 
-				lgr.info(f'3:Poll-Elapsed {elapsed()}')
+				lgr.info(f'3:Incoming Poll-Elapsed {elapsed()}')
 
 			await asyncio.sleep(1.0)
 
