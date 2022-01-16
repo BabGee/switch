@@ -98,11 +98,11 @@ async def paygate_process_incoming_poller():
 							for payload in json.loads(params['response']['data']):
 								lgr.info(f'Payload: {payload}')
 
-								#incoming = Incoming.objects.filter(remittance_product=p.remittance_product, reference=payload['reference'],\
-								#				 ext_inbound_id=payload['ext_inbound_id'])
+								incoming = Incoming.objects.filter(remittance_product=p.remittance_product, reference=payload['reference'],\
+												 ext_inbound_id=payload['ext_inbound_id'])
 
-								#if incoming.exists(): pass
-								#else:
+								if incoming.exists(): pass
+								else: lgr.info('Not Found: Process BG')
 
 								#    bg = sync_to_async(BridgeWrappers().background_service_call, thread_sensitive=True)(p.service, p.gateway_profile, payload)
 								#    tasks.append(bg)
