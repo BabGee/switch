@@ -77,8 +77,8 @@ async def paygate_process_incoming_poller():
 
 					lgr.info(f'Poll: {p}')
 					params = p.remittance_product.endpoint.request
-                                        if params: params.update(p.request)
-                                        else: params = p.request
+					if params: params.update(p.request)
+					else: params = p.request
 
 					params['account_id'] = p.remittance_product.endpoint.account_id
 					params['username'] = p.remittance_product.endpoint.username
