@@ -29,6 +29,8 @@ from .models import *
 import logging
 lgr = logging.getLogger('primary.core.bridge')
 
+
+
 class Wrappers:
 	def response_payload(self, payload):
 
@@ -121,6 +123,8 @@ class Wrappers:
 			lgr.info('Unable to make service call: %s' % e)
 		return payload
 
+    
+    
 	def background_service_call(self, service, gateway_profile, payload, details={}):
 		try:
 			status = TransactionStatus.objects.get(name='CREATED')

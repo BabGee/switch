@@ -1787,8 +1787,8 @@ class System(Wrappers):
 			payload['response_status'] = '00'
 
 		except Exception as e:
-			lgr.info('Error on Validating One Time Pin: %s' % e)
-			payload['response_status'] = '96'
+			lgr.info('Error on AActivating Profile: %s' % e)
+			payload['response_status'] = '96'            
 		return payload
 
 
@@ -2950,7 +2950,7 @@ class System(Wrappers):
 					lgr.info("Token(FB): %s" % token)
 					#graph.facebook.com/debug_token?input_token={token-to-inspect}&access_token={app-token-or-admin-token}
 					# payload['email'] = payload['google']['email']
-					# payload['first_name'] = payload['google']['firstName']
+					payload['full_names'] = payload['facebook']['name']
 					# payload['last_name'] = payload['google']['lastName']                    
 					# payload['photo'] = payload['google']['imageUrl']
 					# update token verified flag
